@@ -3,27 +3,19 @@ using System.Text.Json;
 using CommunityToolkit.Mvvm.Input;
 using Mnemora.Desktop.Settings;
 using System.Windows;
+using Mnemora.Desktop.Navigation;
 using Mnemora.Desktop.ViewModels.Common;
 
 namespace Mnemora.Desktop.ViewModels.Onboarding;
 
-public sealed class ProfileSetupViewModel : ViewModelBase
+public sealed partial class ProfileSetupViewModel(
+    ISettingsService settingsService,
+    INavigationService navigationService,
+    OnboardingState onboardingState)
+    : ViewModelBase
 {
-    private readonly ISettingsService _settingsService;
-
-    private string? _name;
+    private string? _name = onboardingState.UserName;
     private string? _saveError;
-
-    public ProfileSetupViewModel(
-        ISettingsService settingsService)
-    {
-        _settingsService = settingsService;
-
-        ExitCommand = new RelayCommand(Exit);
-        ContinueCommand = new AsyncRelayCommand(
-            ContinueAsync,
-            CanContinue);
-    }
 
     public string? Name
     {
@@ -35,6 +27,7 @@ public sealed class ProfileSetupViewModel : ViewModelBase
                 return;
             }
 
+            onboardingState.UserName = value;
             _saveError = null;
 
             OnPropertyChanged(nameof(Initial));
@@ -64,13 +57,8 @@ public sealed class ProfileSetupViewModel : ViewModelBase
             ? null
             : ValidateName(Name));
 
-    public IRelayCommand ExitCommand { get; }
-
-    public IAsyncRelayCommand ContinueCommand { get; }
-
-    public event EventHandler? ProfileCompleted;
-
-    private void Exit()
+    [RelayCommand]
+    private static void Exit()
     {
         Application.Current.Shutdown();
     }
@@ -80,6 +68,7 @@ public sealed class ProfileSetupViewModel : ViewModelBase
         return IsNameValid;
     }
 
+    [RelayCommand(CanExecute = nameof(CanContinue))]
     private async Task ContinueAsync()
     {
         string? validationMessage = ValidateName(Name);
@@ -92,16 +81,21 @@ public sealed class ProfileSetupViewModel : ViewModelBase
 
         try
         {
-            await _settingsService.SaveUserNameAsync(Name!.Trim());
+            string userName = Name!.Trim();
 
-            ProfileCompleted?.Invoke(this, EventArgs.Empty);
+            onboardingState.UserName = userName;
+
+            await settingsService.SaveUserNameAsync(userName);
+
+            navigationService.NavigateTo<StorageSetupViewModel>();
         }
         catch (Exception exception)
             when (exception is IOException
-                  or UnauthorizedAccessException
-                  or JsonException)
+                      or UnauthorizedAccessException
+                      or JsonException)
         {
-            _saveError = "Не удалось сохранить имя. Попробуйте ещё раз.";
+            _saveError =
+                "Не удалось сохранить имя. Попробуйте ещё раз.";
 
             OnPropertyChanged(nameof(ValidationMessage));
         }

@@ -9,10 +9,26 @@ public sealed partial class StorageSetupViewModel(INavigationService navigationS
     public string Title => "Настройка хранилища";
 
     public string Description => "Здесь будет выбрана папка для материалов Mnemora.";
+    
+    public string? StoragePath { get; }
+
+    public string? StorageStatusTitle { get; }
+
+    public string? StorageStatusMessage { get; }
 
     [RelayCommand]
     private void Back()
     {
         navigationService.NavigateTo<ProfileSetupViewModel>();
+    }
+    
+    [RelayCommand]
+    private void SelectFolder()
+    {
+    }
+
+    [RelayCommand]
+    private void Continue()
+    {
     }
 }

@@ -1,6 +1,7 @@
-﻿using System.Windows;
+﻿using System.IO;
+using System.Text.Json;
+using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Mnemora.Desktop.Navigation;
 using Mnemora.Desktop.Settings;
 using Mnemora.Desktop.ViewModels.Onboarding;
@@ -10,55 +11,72 @@ namespace Mnemora.Desktop;
 
 public partial class App : Application
 {
-    private readonly IHost _host;
+    private ServiceProvider? _serviceProvider;
 
-    public App()
-    {
-        HostApplicationBuilder builder = Host.CreateApplicationBuilder();
-        ConfigureServices(builder.Services);
-        _host = builder.Build();
-    }
-
-    protected override void OnStartup(StartupEventArgs e)
+    protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
-        _host.Start();
 
-        MainWindow mainWindow = _host.Services.GetRequiredService<MainWindow>();
+        var services = new ServiceCollection();
 
-        MainWindow = mainWindow;
+        ConfigureServices(services);
 
-        INavigationService navigationService =
-            _host.Services
-                .GetRequiredService<INavigationService>();
+        _serviceProvider = services.BuildServiceProvider();
+
+        await LoadSettingsAsync(_serviceProvider);
+
+        // Получаем окно после загрузки настроек,
+        // чтобы ViewModel создавались с заполненным OnboardingState.
+        MainWindow mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
+
+        INavigationService navigationService = _serviceProvider.GetRequiredService<INavigationService>();
 
         navigationService.NavigateTo<ProfileSetupViewModel>();
 
+        MainWindow = mainWindow;
         mainWindow.Show();
     }
 
-    protected override void OnExit(ExitEventArgs e)
+    private static async Task LoadSettingsAsync(
+        IServiceProvider serviceProvider)
     {
-        _host.StopAsync()
-            .GetAwaiter()
-            .GetResult();
+        ISettingsService settingsService = serviceProvider.GetRequiredService<ISettingsService>();
+        OnboardingState onboardingState = serviceProvider.GetRequiredService<OnboardingState>();
 
-        _host.Dispose();
+        try
+        {
+            AppSettings settings =
+                await settingsService.LoadAsync();
 
-        base.OnExit(e);
+            onboardingState.UserName =
+                string.IsNullOrWhiteSpace(settings.UserName)
+                    ? null
+                    : settings.UserName.Trim();
+        }
+        catch (Exception exception)
+            when (exception is IOException
+                  or UnauthorizedAccessException
+                  or JsonException)
+        {
+            // Повреждённые или недоступные настройки
+            // не должны блокировать запуск приложения.
+            onboardingState.UserName = null;
+        }
     }
 
     private static void ConfigureServices(
         IServiceCollection services)
     {
-        services.AddSingleton<INavigationService, NavigationService>();
+        services.AddSingleton<OnboardingState>();
 
-        services.AddSingleton<MainWindowViewModel>();
-        services.AddSingleton<MainWindow>();
+        services.AddSingleton<ISettingsService, JsonSettingsService>();
+
+        services.AddSingleton<INavigationService, NavigationService>();
 
         services.AddTransient<ProfileSetupViewModel>();
         services.AddTransient<StorageSetupViewModel>();
 
-        services.AddSingleton<ISettingsService, JsonSettingsService>();
+        services.AddSingleton<MainWindow>();
+        services.AddSingleton<MainWindowViewModel>();
     }
 }

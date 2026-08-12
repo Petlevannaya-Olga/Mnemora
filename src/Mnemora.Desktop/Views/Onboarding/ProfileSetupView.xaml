@@ -467,7 +467,7 @@
                         <StackPanel Grid.Row="3"
                                     Margin="0 24 0 0"
                                     Orientation="Horizontal"
-                                    HorizontalAlignment="Center">
+                                    HorizontalAlignment="Left">
                             <materialDesign:PackIcon
                                 Kind="ShieldLock"
                                 Width="20"
