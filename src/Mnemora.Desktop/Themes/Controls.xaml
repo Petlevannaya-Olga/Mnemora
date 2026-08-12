@@ -1,0 +1,125 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+
+    <!-- Светлая карточка Mnemora -->
+
+    <Style
+        x:Key="Mnemora.Card"
+        TargetType="{x:Type materialDesign:Card}">
+
+        <Setter
+            Property="Background"
+            Value="{DynamicResource Mnemora.Brush.Surface}" />
+
+        <Setter
+            Property="Padding"
+            Value="40" />
+
+        <Setter
+            Property="UniformCornerRadius"
+            Value="20" />
+
+        <Setter
+            Property="materialDesign:ElevationAssist.Elevation"
+            Value="Dp4" />
+    </Style>
+
+    <!-- Основная кнопка -->
+
+    <Style
+        x:Key="Mnemora.PrimaryButton"
+        TargetType="{x:Type Button}"
+        BasedOn="{StaticResource MaterialDesignRaisedButton}">
+
+        <Setter
+            Property="MinHeight"
+            Value="48" />
+
+        <Setter
+            Property="Padding"
+            Value="24,12" />
+
+        <Setter
+            Property="FontSize"
+            Value="16" />
+
+        <Setter
+            Property="FontWeight"
+            Value="SemiBold" />
+
+        <Setter
+            Property="Background"
+            Value="{DynamicResource Mnemora.Brush.Primary}" />
+
+        <Setter
+            Property="Foreground"
+            Value="{DynamicResource Mnemora.Brush.Navy}" />
+    </Style>
+
+    <!-- Второстепенная кнопка -->
+
+    <Style
+        x:Key="Mnemora.SecondaryButton"
+        TargetType="{x:Type Button}"
+        BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+
+        <Setter
+            Property="MinHeight"
+            Value="48" />
+
+        <Setter
+            Property="Padding"
+            Value="24,12" />
+
+        <Setter
+            Property="FontSize"
+            Value="16" />
+
+        <Setter
+            Property="BorderBrush"
+            Value="{DynamicResource Mnemora.Brush.Secondary}" />
+
+        <Setter
+            Property="Foreground"
+            Value="{DynamicResource Mnemora.Brush.Secondary}" />
+    </Style>
+
+    <!-- Заголовки -->
+
+    <Style
+        x:Key="Mnemora.Heading"
+        TargetType="{x:Type TextBlock}">
+
+        <Setter
+            Property="FontSize"
+            Value="32" />
+
+        <Setter
+            Property="FontWeight"
+            Value="SemiBold" />
+
+        <Setter
+            Property="Foreground"
+            Value="{DynamicResource Mnemora.Brush.TextPrimary}" />
+    </Style>
+
+    <Style
+        x:Key="Mnemora.Description"
+        TargetType="{x:Type TextBlock}">
+
+        <Setter
+            Property="FontSize"
+            Value="17" />
+
+        <Setter
+            Property="Foreground"
+            Value="{DynamicResource Mnemora.Brush.TextSecondary}" />
+
+        <Setter
+            Property="TextWrapping"
+            Value="Wrap" />
+    </Style>
+
+</ResourceDictionary>

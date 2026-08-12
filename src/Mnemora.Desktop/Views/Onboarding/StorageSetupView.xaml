@@ -1,0 +1,34 @@
+﻿<UserControl x:Class="Mnemora.Desktop.Views.Onboarding.StorageSetupView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+
+    <Grid Background="{DynamicResource Mnemora.Brush.OnboardingBackground}">
+
+        <materialDesign:Card
+            Width="620"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Style="{StaticResource Mnemora.Card}">
+
+            <StackPanel>
+                <TextBlock
+                    Style="{StaticResource Mnemora.Heading}"
+                    Text="{Binding Title}" />
+
+                <TextBlock
+                    Margin="0,12,0,0"
+                    Style="{StaticResource Mnemora.Description}"
+                    Text="{Binding Description}" />
+
+                <Button
+                    Margin="0,32,0,0"
+                    HorizontalAlignment="Left"
+                    Content="Назад"
+                    Command="{Binding BackCommand}"
+                    Style="{StaticResource Mnemora.SecondaryButton}" />
+            </StackPanel>
+
+        </materialDesign:Card>
+    </Grid>
+</UserControl>

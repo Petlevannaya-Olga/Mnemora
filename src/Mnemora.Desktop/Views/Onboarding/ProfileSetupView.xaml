@@ -1,0 +1,533 @@
+﻿<UserControl x:Class="Mnemora.Desktop.Views.Onboarding.ProfileSetupView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d"
+             d:DesignWidth="1600"
+             d:DesignHeight="900"
+             UseLayoutRounding="True"
+             SnapsToDevicePixels="True">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <Style x:Key="OnboardingPrimaryButtonStyle"
+               TargetType="Button">
+            <Setter Property="Height"
+                    Value="52" />
+            <Setter Property="MinWidth"
+                    Value="230" />
+            <Setter Property="Padding"
+                    Value="26,0" />
+            <Setter Property="Foreground"
+                    Value="White" />
+            <Setter Property="FontSize"
+                    Value="18" />
+            <Setter Property="FontWeight"
+                    Value="SemiBold" />
+            <Setter Property="BorderThickness"
+                    Value="0" />
+            <Setter Property="Cursor"
+                    Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonBorder"
+                                Background="{StaticResource Mnemora.Brush.BrandGradient}"
+                                CornerRadius="9">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver"
+                                     Value="True">
+                                <Setter TargetName="ButtonBorder"
+                                        Property="Opacity"
+                                        Value="0.9" />
+                            </Trigger>
+                            <Trigger Property="IsPressed"
+                                     Value="True">
+                                <Setter TargetName="ButtonBorder"
+                                        Property="Opacity"
+                                        Value="0.76" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled"
+                                     Value="False">
+                                <Setter TargetName="ButtonBorder"
+                                        Property="Opacity"
+                                        Value="0.45" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="OnboardingTextButtonStyle"
+               TargetType="Button">
+            <Setter Property="Padding"
+                    Value="12,8" />
+            <Setter Property="Foreground"
+                    Value="{StaticResource Mnemora.Brush.TextPrimary}" />
+            <Setter Property="Background"
+                    Value="Transparent" />
+            <Setter Property="BorderThickness"
+                    Value="0" />
+            <Setter Property="FontSize"
+                    Value="16" />
+            <Setter Property="FontWeight"
+                    Value="SemiBold" />
+            <Setter Property="Cursor"
+                    Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonBorder"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="OnboardingTextBoxStyle"
+               TargetType="TextBox">
+            <Setter Property="Height"
+                    Value="52" />
+            <Setter Property="Padding"
+                    Value="18,0,52,0" />
+            <Setter Property="VerticalContentAlignment"
+                    Value="Center" />
+            <Setter Property="FontSize"
+                    Value="19" />
+            <Setter Property="Foreground"
+                    Value="{StaticResource Mnemora.Brush.TextPrimary}" />
+            <Setter Property="Background"
+                    Value="{StaticResource Mnemora.Brush.Surface}" />
+            <Setter Property="BorderBrush"
+                    Value="{StaticResource Mnemora.Brush.Border}" />
+            <Setter Property="BorderThickness"
+                    Value="1.5" />
+            <Setter Property="CaretBrush"
+                    Value="{StaticResource Mnemora.Brush.Primary}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="InputBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8">
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocused"
+                                     Value="True">
+                                <Setter TargetName="InputBorder"
+                                        Property="BorderBrush"
+                                        Value="{StaticResource Mnemora.Brush.Primary}" />
+                                <Setter TargetName="InputBorder"
+                                        Property="BorderThickness"
+                                        Value="2" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="OnboardingInactiveStepStyle"
+               TargetType="Border">
+            <Setter Property="Width"
+                    Value="40" />
+            <Setter Property="Height"
+                    Value="40" />
+            <Setter Property="CornerRadius"
+                    Value="20" />
+            <Setter Property="BorderBrush"
+                    Value="#53618C" />
+            <Setter Property="BorderThickness"
+                    Value="2" />
+            <Setter Property="HorizontalAlignment"
+                    Value="Center" />
+            <Setter Property="VerticalAlignment"
+                    Value="Center" />
+        </Style>
+
+    </UserControl.Resources>
+
+    <Grid Background="{StaticResource Mnemora.Brush.OnboardingBackground}"
+          ClipToBounds="True">
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*"
+                           MinHeight="24" />
+            <RowDefinition Height="3*"
+                           MinHeight="436"
+                           MaxHeight="460" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="2*"
+                           MinHeight="24" />
+        </Grid.RowDefinitions>
+
+        <!-- Логотип -->
+        <Image Grid.Row="0"
+               Source="pack://application:,,,/Assets/Images/MnemoraLogo.png"
+               Width="360"
+               Height="90"
+               Margin="28,12,28,10"
+               HorizontalAlignment="Left"
+               VerticalAlignment="Center"
+               Stretch="Uniform"
+               RenderOptions.BitmapScalingMode="HighQuality"
+               SnapsToDevicePixels="True" />
+
+        <!-- Шаги онбординга.
+             Ширина соединителей теперь вычисляется автоматически,
+             а для названий выделены отдельные широкие колонки. -->
+
+        <Grid Grid.Row="1"
+              MaxWidth="720"
+              Margin="24,0,24,10"
+              HorizontalAlignment="Stretch">
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="44" />
+                <RowDefinition Height="24" />
+            </Grid.RowDefinitions>
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="96" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="96" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="96" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="96" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Row="0"
+                    Grid.Column="0"
+                    Width="40"
+                    Height="40"
+                    CornerRadius="20"
+                    BorderBrush="{StaticResource Mnemora.Brush.Primary}"
+                    BorderThickness="2"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+                <TextBlock Text="1"
+                           Foreground="{StaticResource Mnemora.Brush.Primary}"
+                           FontSize="16"
+                           FontWeight="SemiBold"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center" />
+            </Border>
+
+            <Border Grid.Row="0"
+                    Grid.Column="1"
+                    Height="3"
+                    Margin="4,0"
+                    Background="{StaticResource Mnemora.Brush.Primary}"
+                    CornerRadius="2"
+                    VerticalAlignment="Center" />
+
+            <Border Grid.Row="0"
+                    Grid.Column="2"
+                    Style="{StaticResource OnboardingInactiveStepStyle}">
+                <TextBlock Text="2"
+                           Foreground="#D5DAED"
+                           FontSize="16"
+                           FontWeight="SemiBold"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center" />
+            </Border>
+
+            <Border Grid.Row="0"
+                    Grid.Column="3"
+                    Height="3"
+                    Margin="4,0"
+                    Background="#53618C"
+                    CornerRadius="2"
+                    VerticalAlignment="Center" />
+
+            <Border Grid.Row="0"
+                    Grid.Column="4"
+                    Style="{StaticResource OnboardingInactiveStepStyle}">
+                <TextBlock Text="3"
+                           Foreground="#D5DAED"
+                           FontSize="16"
+                           FontWeight="SemiBold"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center" />
+            </Border>
+
+            <Border Grid.Row="0"
+                    Grid.Column="5"
+                    Height="3"
+                    Margin="4,0"
+                    Background="#53618C"
+                    CornerRadius="2"
+                    VerticalAlignment="Center" />
+
+            <Border Grid.Row="0"
+                    Grid.Column="6"
+                    Style="{StaticResource OnboardingInactiveStepStyle}">
+                <TextBlock Text="4"
+                           Foreground="#D5DAED"
+                           FontSize="16"
+                           FontWeight="SemiBold"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center" />
+            </Border>
+
+            <TextBlock Grid.Row="1"
+                       Grid.Column="0"
+                       Text="Профиль"
+                       Foreground="{StaticResource Mnemora.Brush.Primary}"
+                       FontSize="14"
+                       TextAlignment="Center" />
+
+            <TextBlock Grid.Row="1"
+                       Grid.Column="2"
+                       Text="Хранилище"
+                       Foreground="#C9CFE3"
+                       FontSize="14"
+                       TextAlignment="Center" />
+
+            <TextBlock Grid.Row="1"
+                       Grid.Column="4"
+                       Text="ИИ"
+                       Foreground="#C9CFE3"
+                       FontSize="14"
+                       TextAlignment="Center" />
+
+            <TextBlock Grid.Row="1"
+                       Grid.Column="6"
+                       Text="Начало"
+                       Foreground="#C9CFE3"
+                       FontSize="14"
+                       TextAlignment="Center" />
+
+        </Grid>
+
+        <!-- Основная карточка занимает доступное место.
+             При нехватке высоты прокручивается только содержимое,
+             нижняя панель с кнопками всегда остаётся на экране. -->
+
+        <Border Grid.Row="3"
+                MaxWidth="720"
+                Margin="48,0"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Background="{StaticResource Mnemora.Brush.Surface}"
+                CornerRadius="22">
+
+            <Border.Effect>
+                <DropShadowEffect Color="#020A20"
+                                  BlurRadius="28"
+                                  ShadowDepth="8"
+                                  Opacity="0.34" />
+            </Border.Effect>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <ScrollViewer Grid.Row="0"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled"
+                              CanContentScroll="True">
+
+                    <Grid Margin="56,16,56,14">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0"
+                              Margin="0 16 0 0"
+                              Width="80"
+                              Height="80"
+                              HorizontalAlignment="Center">
+                            <Ellipse Fill="{StaticResource Mnemora.Brush.SurfaceMuted}"
+                                     Stroke="{StaticResource Mnemora.Brush.BrandGradient}"
+                                     StrokeThickness="3" />
+                            <TextBlock Text="{Binding Name[0]}"
+                                       Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
+                                       FontSize="36"
+                                       FontWeight="Light"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" />
+                        </Grid>
+
+                        <StackPanel Grid.Row="1"
+                                    Margin="0,24,0,10">
+                            <TextBlock Text="Давайте познакомимся"
+                                       Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
+                                       FontSize="28"
+                                       FontWeight="Bold"
+                                       TextAlignment="Center" />
+                            <TextBlock Text="Как к вам обращаться в Mnemora?"
+                                       Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
+                                       FontSize="17"
+                                       TextAlignment="Center"
+                                       Margin="0,4,0,0" />
+                        </StackPanel>
+
+                        <Grid Grid.Row="2">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="1" Margin="0 16 0 0">
+
+                                <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                                         Style="{StaticResource OnboardingTextBoxStyle}"
+                                         MaxLength="50" />
+
+                                <!-- Зелёная галочка -->
+
+                                <materialDesign:PackIcon Kind="CheckBold"
+                                                         Width="22"
+                                                         Height="22"
+                                                         Foreground="#12B84F"
+                                                         HorizontalAlignment="Right"
+                                                         VerticalAlignment="Center"
+                                                         Margin="0,0,18,0"
+                                                         IsHitTestVisible="False">
+
+                                    <materialDesign:PackIcon.Style>
+                                        <Style TargetType="{x:Type materialDesign:PackIcon}">
+                                            <Setter Property="Visibility"
+                                                    Value="Collapsed" />
+
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsNameValid}"
+                                                             Value="True">
+                                                    <Setter Property="Visibility"
+                                                            Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </materialDesign:PackIcon.Style>
+
+                                </materialDesign:PackIcon>
+
+                                <!-- Красный крест -->
+
+                                <materialDesign:PackIcon Kind="CloseThick"
+                                                         Width="22"
+                                                         Height="22"
+                                                         Foreground="#D53E4F"
+                                                         HorizontalAlignment="Right"
+                                                         VerticalAlignment="Center"
+                                                         Margin="0,0,18,0"
+                                                         IsHitTestVisible="False">
+
+                                    <materialDesign:PackIcon.Style>
+                                        <Style TargetType="{x:Type materialDesign:PackIcon}">
+                                            <Setter Property="Visibility"
+                                                    Value="Collapsed" />
+
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsNameInvalid}"
+                                                             Value="True">
+                                                    <Setter Property="Visibility"
+                                                            Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </materialDesign:PackIcon.Style>
+
+                                </materialDesign:PackIcon>
+
+                            </Grid>
+
+                            <TextBlock Grid.Row="2"
+                                       Text="{Binding ValidationMessage}"
+                                       Foreground="#D53E4F"
+                                       FontSize="12"
+                                       MinHeight="16"
+                                       Margin="3,4,0,0" />
+                        </Grid>
+
+                        <StackPanel Grid.Row="3"
+                                    Margin="0 24 0 0"
+                                    Orientation="Horizontal"
+                                    HorizontalAlignment="Center">
+                            <materialDesign:PackIcon
+                                Kind="ShieldLock"
+                                Width="20"
+                                Height="20"
+                                Foreground="{StaticResource Mnemora.Brush.Secondary}"
+                                VerticalAlignment="Center" />
+                            <TextBlock Text="Имя хранится только на этом устройстве"
+                                       Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
+                                       FontSize="14"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"
+                                       Margin="8,0,0,0" />
+                        </StackPanel>
+
+                    </Grid>
+
+                </ScrollViewer>
+
+                <Border Grid.Row="1"
+                        BorderBrush="{StaticResource Mnemora.Brush.Border}"
+                        BorderThickness="0,1,0,0"
+                        Padding="42,16">
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button Grid.Column="0"
+                                Content="Выйти"
+                                Command="{Binding ExitCommand}"
+                                Style="{StaticResource OnboardingTextButtonStyle}" />
+
+                        <Button Grid.Column="2"
+                                Command="{Binding ContinueCommand}"
+                                Style="{StaticResource OnboardingPrimaryButtonStyle}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Продолжить" />
+                                <TextBlock Text="→"
+                                           FontSize="23"
+                                           Margin="18,-2,0,0" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+
+                </Border>
+
+            </Grid>
+
+        </Border>
+
+        <TextBlock Grid.Row="4"
+                   Text="Шаг 1 из 4"
+                   Foreground="White"
+                   FontSize="15"
+                   HorizontalAlignment="Center"
+                   Margin="0,24,0,0" />
+
+    </Grid>
+
+</UserControl>

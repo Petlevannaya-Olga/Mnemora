@@ -12,4 +12,18 @@
     <ProjectReference Include="..\Mnemora.Infrastructure\Mnemora.Infrastructure.csproj"/>
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="MaterialDesignThemes" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Assets\Images\Logo.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\Images\MnemoraLogo.png" />
+  </ItemGroup>
+
 </Project>

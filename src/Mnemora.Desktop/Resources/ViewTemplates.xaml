@@ -1,0 +1,17 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:onboardingViews="clr-namespace:Mnemora.Desktop.Views.Onboarding"
+    xmlns:onboardingViewModels="clr-namespace:Mnemora.Desktop.ViewModels.Onboarding">
+
+    <DataTemplate
+        DataType="{x:Type onboardingViewModels:ProfileSetupViewModel}">
+        <onboardingViews:ProfileSetupView />
+    </DataTemplate>
+
+    <DataTemplate
+        DataType="{x:Type onboardingViewModels:StorageSetupViewModel}">
+        <onboardingViews:StorageSetupView />
+    </DataTemplate>
+
+</ResourceDictionary>
