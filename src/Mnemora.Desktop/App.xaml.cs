@@ -84,6 +84,7 @@ public partial class App : Application
         services.AddTransient<WelcomeViewModel>();
         services.AddTransient<ProfileSetupViewModel>();
         services.AddTransient<StorageSetupViewModel>();
+        services.AddTransient<AiSetupViewModel>();
 
         services.AddSingleton<MainWindow>();
         services.AddSingleton<MainWindowViewModel>();

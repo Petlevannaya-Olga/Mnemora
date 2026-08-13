@@ -18,5 +18,10 @@
         DataType="{x:Type onboardingViewModels:WelcomeViewModel}">
         <onboardingViews:WelcomeView />
     </DataTemplate>
+    
+    <DataTemplate
+        DataType="{x:Type onboardingViewModels:AiSetupViewModel}">
+        <onboardingViews:AiSetupView />
+    </DataTemplate>
 
 </ResourceDictionary>
