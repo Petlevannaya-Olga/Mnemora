@@ -8,10 +8,6 @@ namespace Mnemora.Desktop.ViewModels.Shell;
 public sealed partial class AppShellViewModel
     : ViewModelBase
 {
-    private const double ExpandedSidebarWidth = 230;
-
-    private const double CollapsedSidebarWidth = 80;
-
     private readonly IPageNavigationService
         _pageNavigationService;
 
@@ -55,24 +51,11 @@ public sealed partial class AppShellViewModel
     {
         get => _isSidebarExpanded;
 
-        private set
-        {
-            if (!SetProperty(
-                    ref _isSidebarExpanded,
-                    value))
-            {
-                return;
-            }
-
-            OnPropertyChanged(
-                nameof(SidebarWidth));
-        }
+        private set =>
+            SetProperty(
+                ref _isSidebarExpanded,
+                value);
     }
-
-    public double SidebarWidth =>
-        IsSidebarExpanded
-            ? ExpandedSidebarWidth
-            : CollapsedSidebarWidth;
 
     [RelayCommand]
     private void ToggleSidebar()

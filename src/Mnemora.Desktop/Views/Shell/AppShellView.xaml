@@ -5,7 +5,6 @@
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
 
     <UserControl.Resources>
-
         <!-- Обычный пункт меню -->
 
         <Style
@@ -196,8 +195,80 @@
 
         <Border
             Grid.Column="0"
-            Width="{Binding SidebarWidth}"
-            Background="{StaticResource Mnemora.Brush.SidebarBackground}">
+            Background="{StaticResource Mnemora.Brush.SidebarBackground}"
+            ClipToBounds="True">
+
+            <Border.Style>
+                <Style TargetType="Border">
+
+                    <!-- Раскрытое состояние -->
+
+                    <Setter
+                        Property="Width"
+                        Value="240" />
+
+                    <Style.Triggers>
+
+                        <DataTrigger
+                            Binding="{Binding IsSidebarExpanded}"
+                            Value="False">
+
+                            <!-- Конечная ширина -->
+
+                            <Setter
+                                Property="Width"
+                                Value="80" />
+
+                            <!-- Плавное закрытие -->
+
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard FillBehavior="Stop">
+
+                                        <DoubleAnimation
+                                            Storyboard.TargetProperty="Width"
+                                            From="240"
+                                            To="80"
+                                            Duration="0:0:0.40">
+
+                                            <DoubleAnimation.EasingFunction>
+                                                <SineEase EasingMode="EaseInOut" />
+                                            </DoubleAnimation.EasingFunction>
+
+                                        </DoubleAnimation>
+
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+
+                            <!-- Плавное раскрытие -->
+
+                            <DataTrigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard FillBehavior="Stop">
+
+                                        <DoubleAnimation
+                                            Storyboard.TargetProperty="Width"
+                                            From="80"
+                                            To="240"
+                                            Duration="0:0:0.46">
+
+                                            <DoubleAnimation.EasingFunction>
+                                                <SineEase EasingMode="EaseInOut" />
+                                            </DoubleAnimation.EasingFunction>
+
+                                        </DoubleAnimation>
+
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.ExitActions>
+
+                        </DataTrigger>
+
+                    </Style.Triggers>
+
+                </Style>
+            </Border.Style>
 
             <Grid>
 
@@ -224,10 +295,6 @@
 
                         <StackPanel.Style>
                             <Style TargetType="StackPanel">
-
-                                <Setter
-                                    Property="Visibility"
-                                    Value="Visible" />
 
                                 <Style.Triggers>
 
