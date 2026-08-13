@@ -425,37 +425,151 @@
                             <!-- Выбор папки -->
 
                             <Grid Grid.Row="2">
+
                                 <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
 
-                                <Grid Grid.Row="1" Margin="0 12 0 0">
+                                <Grid Grid.Row="1"
+                                      Margin="0,12,0,0">
+
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="12" />
                                         <ColumnDefinition Width="150" />
                                     </Grid.ColumnDefinitions>
 
-                                    <TextBox Grid.Column="0"
-                                             Text="{Binding StoragePath, Mode=OneWay}"
-                                             Style="{StaticResource StoragePathTextBoxStyle}"
-                                             IsReadOnly="True" />
+                                    <!-- Поле пути и валидация -->
+
+                                    <Grid Grid.Column="0">
+
+                                        <TextBox Text="{Binding StoragePath, Mode=OneWay}"
+                                                 Style="{StaticResource StoragePathTextBoxStyle}"
+                                                 Padding="16,0,48,0"
+                                                 IsReadOnly="True" />
+
+                                        <!-- Корректная папка -->
+
+                                        <materialDesign:PackIcon Kind="CheckBold"
+                                                                 Width="22"
+                                                                 Height="22"
+                                                                 Foreground="#12B84F"
+                                                                 HorizontalAlignment="Right"
+                                                                 VerticalAlignment="Center"
+                                                                 Margin="0,0,16,0"
+                                                                 IsHitTestVisible="False">
+
+                                            <materialDesign:PackIcon.Style>
+                                                <Style TargetType="{x:Type materialDesign:PackIcon}">
+
+                                                    <Setter Property="Visibility"
+                                                            Value="Collapsed" />
+
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsStorageValid}"
+                                                                     Value="True">
+                                                            <Setter Property="Visibility"
+                                                                    Value="Visible" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+
+                                                </Style>
+                                            </materialDesign:PackIcon.Style>
+
+                                        </materialDesign:PackIcon>
+
+                                        <!-- Некорректная папка -->
+
+                                        <materialDesign:PackIcon Kind="CloseThick"
+                                                                 Width="22"
+                                                                 Height="22"
+                                                                 Foreground="#D53E4F"
+                                                                 HorizontalAlignment="Right"
+                                                                 VerticalAlignment="Center"
+                                                                 Margin="0,0,16,0"
+                                                                 IsHitTestVisible="False">
+
+                                            <materialDesign:PackIcon.Style>
+                                                <Style TargetType="{x:Type materialDesign:PackIcon}">
+
+                                                    <Setter Property="Visibility"
+                                                            Value="Collapsed" />
+
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsStorageInvalid}"
+                                                                     Value="True">
+                                                            <Setter Property="Visibility"
+                                                                    Value="Visible" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+
+                                                </Style>
+                                            </materialDesign:PackIcon.Style>
+
+                                        </materialDesign:PackIcon>
+
+                                    </Grid>
+
+                                    <!-- Выбор папки -->
 
                                     <Button Grid.Column="2"
                                             Command="{Binding SelectFolderCommand}"
                                             Style="{StaticResource OnboardingOutlineButtonStyle}">
+
                                         <StackPanel Orientation="Horizontal">
+
                                             <materialDesign:PackIcon Kind="FolderOpenOutline"
                                                                      Width="22"
                                                                      Height="22"
                                                                      VerticalAlignment="Center" />
+
                                             <TextBlock Text="Выбрать"
                                                        Margin="10,0,0,0"
                                                        VerticalAlignment="Center" />
+
                                         </StackPanel>
+
                                     </Button>
+
                                 </Grid>
+                                <TextBlock Grid.Row="2"
+                                           Margin="4,6,0,0"
+                                           FontSize="12"
+                                           Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
+                                           TextWrapping="Wrap">
+
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+
+                                            <Setter Property="Text"
+                                                    Value="Выберите пустую папку или ранее созданное хранилище Mnemora." />
+
+                                            <Style.Triggers>
+
+                                                <DataTrigger Binding="{Binding IsStorageValid}"
+                                                             Value="True">
+                                                    <Setter Property="Text"
+                                                            Value="Папка подходит для хранения материалов." />
+                                                    <Setter Property="Foreground"
+                                                            Value="#12B84F" />
+                                                </DataTrigger>
+
+                                                <DataTrigger Binding="{Binding IsStorageInvalid}"
+                                                             Value="True">
+                                                    <Setter Property="Text"
+                                                            Value="Папка должна быть пустой или содержать прежнее хранилище Mnemora." />
+                                                    <Setter Property="Foreground"
+                                                            Value="#D53E4F" />
+                                                </DataTrigger>
+
+                                            </Style.Triggers>
+
+                                        </Style>
+                                    </TextBlock.Style>
+
+                                </TextBlock>
                             </Grid>
 
                             <!-- Статус папки -->

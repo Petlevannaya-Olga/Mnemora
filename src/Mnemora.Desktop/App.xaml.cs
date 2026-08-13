@@ -4,6 +4,7 @@ using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Mnemora.Desktop.Navigation;
 using Mnemora.Desktop.Settings;
+using Mnemora.Desktop.Storage;
 using Mnemora.Desktop.ViewModels.Onboarding;
 using Mnemora.Desktop.ViewModels.Shell;
 
@@ -72,6 +73,8 @@ public partial class App : Application
         services.AddSingleton<ISettingsService, JsonSettingsService>();
 
         services.AddSingleton<INavigationService, NavigationService>();
+        
+        services.AddSingleton<IFolderPickerService, FolderPickerService>();
 
         services.AddTransient<ProfileSetupViewModel>();
         services.AddTransient<StorageSetupViewModel>();
