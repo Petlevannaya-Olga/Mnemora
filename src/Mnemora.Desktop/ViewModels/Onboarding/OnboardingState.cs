@@ -12,4 +12,6 @@ public sealed class OnboardingState
 
     [JsonIgnore]
     public string? PendingApiKey { get; set; }
+    
+    public bool IsOnboardingCompleted { get; set; }
 }

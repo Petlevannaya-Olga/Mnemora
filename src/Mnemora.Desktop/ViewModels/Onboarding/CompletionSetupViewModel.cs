@@ -1,12 +1,18 @@
-﻿using CommunityToolkit.Mvvm.Input;
+﻿using System.IO;
+using System.Security.Cryptography;
+using CommunityToolkit.Mvvm.Input;
 using Mnemora.Desktop.Navigation;
+using Mnemora.Desktop.Security;
+using Mnemora.Desktop.Settings;
 using Mnemora.Desktop.ViewModels.Common;
 
 namespace Mnemora.Desktop.ViewModels.Onboarding;
 
 public sealed partial class CompletionSetupViewModel(
     INavigationService navigationService,
-    OnboardingState onboardingState)
+    OnboardingState onboardingState,
+    IApiKeyStore apiKeyStore,
+    ISettingsService settingsService)
     : ViewModelBase
 {
     public string UserName =>
@@ -33,8 +39,45 @@ public sealed partial class CompletionSetupViewModel(
     }
 
     [RelayCommand]
-    private void OpenMnemora()
+    private async Task OpenMnemoraAsync(
+        CancellationToken cancellationToken)
     {
-        // Переход на главный экран добавим после его создания.
+        try
+        {
+            if (onboardingState.IsAiConfigured)
+            {
+                if (string.IsNullOrWhiteSpace(
+                        onboardingState.PendingApiKey))
+                {
+                    return;
+                }
+
+                apiKeyStore.Save(
+                    onboardingState.PendingApiKey.Trim());
+            }
+
+            await settingsService.CompleteOnboardingAsync(
+                onboardingState.IsAiConfigured,
+                cancellationToken);
+
+            onboardingState.IsOnboardingCompleted = true;
+            onboardingState.PendingApiKey = null;
+
+            // Здесь позже откроем главный экран Mnemora.
+        }
+        catch (OperationCanceledException)
+            when (cancellationToken.IsCancellationRequested)
+        {
+            // Завершение отменено.
+        }
+        catch (Exception exception)
+            when (exception is IOException
+                      or UnauthorizedAccessException
+                      or CryptographicException
+                      or PlatformNotSupportedException)
+        {
+            // Позже выведем ошибку на экран.
+            // Мастер при этом остаётся незавершённым.
+        }
     }
 }

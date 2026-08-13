@@ -30,11 +30,19 @@ public partial class App : Application
 
         // Получаем окно после загрузки настроек,
         // чтобы ViewModel создавались с заполненным OnboardingState.
-        MainWindow mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
+        var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
 
-        INavigationService navigationService = _serviceProvider.GetRequiredService<INavigationService>();
-
-        navigationService.NavigateTo<WelcomeViewModel>();
+        var navigationService = _serviceProvider.GetRequiredService<INavigationService>();
+        var onboardingState = _serviceProvider.GetRequiredService<OnboardingState>();
+        
+        if (onboardingState.IsOnboardingCompleted)
+        {
+            navigationService.NavigateTo<MainWindowViewModel>();
+        }
+        else
+        {
+            navigationService.NavigateTo<WelcomeViewModel>();
+        }
 
         MainWindow = mainWindow;
         mainWindow.Show();
@@ -61,15 +69,19 @@ public partial class App : Application
                     : settings.StoragePath.Trim();
 
             onboardingState.IsAiConfigured = settings.IsAiConfigured;
+
+            onboardingState.IsOnboardingCompleted = settings.IsOnboardingCompleted;
         }
         catch (Exception exception)
             when (exception is IOException
                       or UnauthorizedAccessException
                       or JsonException)
         {
-            // Повреждённые или недоступные настройки
-            // не должны блокировать запуск приложения.
             onboardingState.UserName = null;
+            onboardingState.StoragePath = null;
+            onboardingState.IsAiConfigured = false;
+            onboardingState.IsOnboardingCompleted = false;
+            onboardingState.PendingApiKey = null;
         }
     }
 
@@ -87,8 +99,6 @@ public partial class App : Application
         services.AddSingleton<IApiKeyStore, DpapiApiKeyStore>();
 
         services.AddSingleton<IAiConnectionService, DevelopmentAiConnectionService>();
-
-        services.AddTransient<AiSetupViewModel>();
 
         services.AddTransient<WelcomeViewModel>();
         services.AddTransient<ProfileSetupViewModel>();

@@ -18,9 +18,7 @@ public sealed class JsonSettingsService :
         {
             PropertyNamingPolicy =
                 JsonNamingPolicy.CamelCase,
-
             WriteIndented = true,
-
             Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
         };
 
@@ -221,5 +219,23 @@ public sealed class JsonSettingsService :
         }
 
         _semaphore.Dispose();
+    }
+
+    public Task CompleteOnboardingAsync(
+        bool isAiConfigured,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+
+        return UpdateAsync(
+            settings =>
+            {
+                settings.IsAiConfigured =
+                    isAiConfigured;
+
+                settings.IsOnboardingCompleted =
+                    true;
+            },
+            cancellationToken);
     }
 }
