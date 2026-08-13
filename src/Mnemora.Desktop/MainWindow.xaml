@@ -1,12 +1,13 @@
 ﻿<Window x:Class="Mnemora.Desktop.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Mnemora"
+        Title="Mnemora - место, где знания остаются с тобой"
         Width="1280"
         Height="800"
         MinWidth="1000"
         MinHeight="650"
         WindowStartupLocation="CenterScreen"
+        Icon="pack://application:,,,/Assets/Images/Mnemora.ico"
         Style="{StaticResource MaterialDesignWindow}">
 
     <ContentControl Content="{Binding CurrentViewModel}" />

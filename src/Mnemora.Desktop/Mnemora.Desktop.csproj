@@ -6,6 +6,10 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <ApplicationIcon>Assets\Images\Mnemora.ico</ApplicationIcon>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Mnemora.Application\Mnemora.Application.csproj"/>
     <ProjectReference Include="..\Mnemora.Contracts\Mnemora.Contracts.csproj"/>
@@ -20,6 +24,11 @@
 
   <ItemGroup>
     <None Remove="Assets\Images\Logo.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Assets\Images\Mnemora.ico" />
+    <Resource Include="Assets\Images\Mnemora.ico" />
   </ItemGroup>
 
   <ItemGroup>
