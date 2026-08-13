@@ -30,6 +30,8 @@ public sealed partial class AiSetupViewModel
 
     private bool _shouldPersistApiKey;
 
+    private readonly OnboardingState _onboardingState;
+
     private string _connectionTitle =
         "Подключение не проверено";
 
@@ -39,18 +41,15 @@ public sealed partial class AiSetupViewModel
     public AiSetupViewModel(
         IAiConnectionService aiConnectionService,
         IApiKeyStore apiKeyStore,
-        INavigationService navigationService)
+        INavigationService navigationService,
+        OnboardingState onboardingState)
     {
-        _aiConnectionService =
-            aiConnectionService;
+        _aiConnectionService = aiConnectionService;
+        _apiKeyStore = apiKeyStore;
+        _navigationService = navigationService;
+        _onboardingState = onboardingState;
 
-        _apiKeyStore =
-            apiKeyStore;
-
-        _navigationService =
-            navigationService;
-
-        LoadSavedApiKey();
+        LoadApiKey();
     }
 
     public string? ApiKey
@@ -62,6 +61,8 @@ public sealed partial class AiSetupViewModel
             {
                 return;
             }
+
+            _onboardingState.PendingApiKey = value;
 
             ResetConnectionState();
 
@@ -131,8 +132,7 @@ public sealed partial class AiSetupViewModel
         return !IsChecking;
     }
 
-    [RelayCommand(
-        CanExecute = nameof(CanCheckConnection))]
+    [RelayCommand(CanExecute = nameof(CanCheckConnection))]
     private async Task CheckConnectionAsync(
         CancellationToken cancellationToken)
     {
@@ -192,41 +192,23 @@ public sealed partial class AiSetupViewModel
         }
     }
 
-    [RelayCommand(
-        CanExecute = nameof(CanProceed))]
+    [RelayCommand(CanExecute = nameof(CanProceed))]
     private void Proceed()
     {
-        try
+        if (IsAiConfigured)
         {
-            if (IsAiConfigured &&
-                _shouldPersistApiKey)
-            {
-                string apiKey =
-                    ApiKey!.Trim();
+            _onboardingState.PendingApiKey =
+                ApiKey!.Trim();
 
-                _apiKeyStore.Save(apiKey);
-
-                _shouldPersistApiKey = false;
-            }
-            else if (!IsAiConfigured)
-            {
-                _apiKeyStore.Delete();
-            }
+            _onboardingState.IsAiConfigured = true;
         }
-        catch (Exception exception)
-            when (exception is IOException
-                      or UnauthorizedAccessException
-                      or CryptographicException
-                      or PlatformNotSupportedException)
+        else
         {
-            SetConnectionFailure(
-                "Не удалось сохранить API-ключ в защищённом хранилище.");
-
-            return;
+            _onboardingState.PendingApiKey = null;
+            _onboardingState.IsAiConfigured = false;
         }
 
-        // Добавим после создания ViewModel четвёртого шага:
-        // _navigationService.NavigateTo<...>();
+        _navigationService.NavigateTo<CompletionSetupViewModel>();
     }
 
     [RelayCommand]
@@ -235,13 +217,50 @@ public sealed partial class AiSetupViewModel
         _navigationService
             .NavigateTo<StorageSetupViewModel>();
     }
+    
+    private void LoadApiKey()
+    {
+        if (!string.IsNullOrWhiteSpace(
+                _onboardingState.PendingApiKey))
+        {
+            _apiKey =
+                _onboardingState.PendingApiKey;
+
+            return;
+        }
+
+        // Загрузка окончательно сохранённого ключа
+        // из DpapiApiKeyStore.
+        LoadSavedApiKey();
+    }
 
     private void LoadSavedApiKey()
     {
+        if (_onboardingState.PendingApiKey is not null)
+        {
+            _apiKey = _onboardingState.PendingApiKey;
+
+            _isAiConfigured = _onboardingState.IsAiConfigured;
+
+            if (_isAiConfigured)
+            {
+                _connectionTitle = "Подключение установлено";
+
+                _connectionMessage = "API-ключ уже проверен";
+            }
+
+            return;
+        }
+
         try
         {
-            _apiKey =
-                _apiKeyStore.Load();
+            _apiKey = _apiKeyStore.Load();
+
+            if (string.IsNullOrWhiteSpace(_apiKey))
+            {
+                _onboardingState.IsAiConfigured = false;
+                return;
+            }
 
             if (string.IsNullOrWhiteSpace(_apiKey))
             {
@@ -249,13 +268,13 @@ public sealed partial class AiSetupViewModel
             }
 
             _isAiConfigured = true;
+            _onboardingState.IsAiConfigured = true;
             _shouldPersistApiKey = false;
+            _onboardingState.PendingApiKey = ApiKey;
 
-            _connectionTitle =
-                "Подключение настроено";
+            _connectionTitle = "Подключение настроено";
 
-            _connectionMessage =
-                "Сохранённый API-ключ будет использован Mnemora";
+            _connectionMessage = "Сохранённый API-ключ будет использован Mnemora";
         }
         catch (Exception exception)
             when (exception is IOException
@@ -265,12 +284,11 @@ public sealed partial class AiSetupViewModel
         {
             _isConnectionInvalid = true;
             _shouldPersistApiKey = false;
+            _onboardingState.IsAiConfigured = false;
 
-            _connectionTitle =
-                "Не удалось прочитать API-ключ";
+            _connectionTitle = "Не удалось прочитать API-ключ";
 
-            _connectionMessage =
-                "Введите ключ заново и проверьте подключение";
+            _connectionMessage = "Введите ключ заново и проверьте подключение";
         }
     }
 
@@ -281,11 +299,11 @@ public sealed partial class AiSetupViewModel
         IsAiConfigured = false;
         IsConnectionInvalid = false;
 
-        ConnectionTitle =
-            "Подключение не проверено";
+        ConnectionTitle = "Подключение не проверено";
 
-        ConnectionMessage =
-            "Введите ключ и проверьте подключение";
+        ConnectionMessage = "Введите ключ и проверьте подключение";
+
+        _onboardingState.IsAiConfigured = false;
     }
 
     private void SetConnectionFailure(

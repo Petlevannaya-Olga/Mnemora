@@ -48,8 +48,7 @@ public partial class App : Application
 
         try
         {
-            AppSettings settings =
-                await settingsService.LoadAsync();
+            AppSettings settings = await settingsService.LoadAsync();
 
             onboardingState.UserName =
                 string.IsNullOrWhiteSpace(settings.UserName)
@@ -60,6 +59,8 @@ public partial class App : Application
                 string.IsNullOrWhiteSpace(settings.StoragePath)
                     ? null
                     : settings.StoragePath.Trim();
+
+            onboardingState.IsAiConfigured = settings.IsAiConfigured;
         }
         catch (Exception exception)
             when (exception is IOException
@@ -88,11 +89,12 @@ public partial class App : Application
         services.AddSingleton<IAiConnectionService, DevelopmentAiConnectionService>();
 
         services.AddTransient<AiSetupViewModel>();
-        
+
         services.AddTransient<WelcomeViewModel>();
         services.AddTransient<ProfileSetupViewModel>();
         services.AddTransient<StorageSetupViewModel>();
         services.AddTransient<AiSetupViewModel>();
+        services.AddTransient<CompletionSetupViewModel>();
 
         services.AddSingleton<MainWindow>();
         services.AddSingleton<MainWindowViewModel>();

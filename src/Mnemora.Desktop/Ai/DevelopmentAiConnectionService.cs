@@ -21,7 +21,7 @@ public sealed class DevelopmentAiConnectionService
             StringComparison.Ordinal)
             ? AiConnectionCheckResult.Connected(
                 "Тестовое подключение установлено.",
-                shouldPersist: false)
+                shouldPersist: true)
             : AiConnectionCheckResult.Failed(
                 "Тестовый сервис отклонил ключ.");
     }

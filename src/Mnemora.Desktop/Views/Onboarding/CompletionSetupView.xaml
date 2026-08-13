@@ -1,0 +1,638 @@
+﻿<UserControl x:Class="Mnemora.Desktop.Views.Onboarding.CompletionSetupView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d"
+             d:DesignWidth="1600"
+             d:DesignHeight="900"
+             UseLayoutRounding="True"
+             SnapsToDevicePixels="True">
+
+    <UserControl.Resources>
+
+        <Style x:Key="OnboardingPrimaryButtonStyle"
+               TargetType="Button">
+            <Setter Property="Height"
+                    Value="52" />
+            <Setter Property="MinWidth"
+                    Value="230" />
+            <Setter Property="Padding"
+                    Value="26,0" />
+            <Setter Property="Foreground"
+                    Value="White" />
+            <Setter Property="FontSize"
+                    Value="18" />
+            <Setter Property="FontWeight"
+                    Value="SemiBold" />
+            <Setter Property="BorderThickness"
+                    Value="0" />
+            <Setter Property="Cursor"
+                    Value="Hand" />
+            <Setter Property="FocusVisualStyle"
+                    Value="{x:Null}" />
+
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonBorder"
+                                Background="{StaticResource Mnemora.Brush.BrandGradient}"
+                                CornerRadius="9">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver"
+                                     Value="True">
+                                <Setter TargetName="ButtonBorder"
+                                        Property="Opacity"
+                                        Value="0.9" />
+                            </Trigger>
+
+                            <Trigger Property="IsPressed"
+                                     Value="True">
+                                <Setter TargetName="ButtonBorder"
+                                        Property="Opacity"
+                                        Value="0.76" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="OnboardingOutlineButtonStyle"
+               TargetType="Button">
+            <Setter Property="Height"
+                    Value="52" />
+            <Setter Property="Padding"
+                    Value="20,0" />
+            <Setter Property="Foreground"
+                    Value="{StaticResource Mnemora.Brush.PrimaryDark}" />
+            <Setter Property="Background"
+                    Value="Transparent" />
+            <Setter Property="BorderBrush"
+                    Value="{StaticResource Mnemora.Brush.Primary}" />
+            <Setter Property="BorderThickness"
+                    Value="1.5" />
+            <Setter Property="FontSize"
+                    Value="16" />
+            <Setter Property="FontWeight"
+                    Value="SemiBold" />
+            <Setter Property="Cursor"
+                    Value="Hand" />
+            <Setter Property="FocusVisualStyle"
+                    Value="{x:Null}" />
+
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver"
+                                     Value="True">
+                                <Setter TargetName="ButtonBorder"
+                                        Property="Background"
+                                        Value="#F0FFFC" />
+                            </Trigger>
+
+                            <Trigger Property="IsPressed"
+                                     Value="True">
+                                <Setter TargetName="ButtonBorder"
+                                        Property="Opacity"
+                                        Value="0.72" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SettingsRowStyle"
+               TargetType="Border">
+            <Setter Property="Height"
+                    Value="50" />
+            <Setter Property="Padding"
+                    Value="16,0" />
+            <Setter Property="Background"
+                    Value="{StaticResource Mnemora.Brush.Surface}" />
+            <Setter Property="BorderBrush"
+                    Value="{StaticResource Mnemora.Brush.Border}" />
+            <Setter Property="BorderThickness"
+                    Value="1" />
+            <Setter Property="CornerRadius"
+                    Value="8" />
+        </Style>
+
+    </UserControl.Resources>
+
+    <Grid Background="{StaticResource Mnemora.Brush.OnboardingBackground}"
+          ClipToBounds="True">
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Логотип -->
+
+        <Image Grid.Row="0"
+               Source="pack://application:,,,/Assets/Images/MnemoraLogo.png"
+               Width="360"
+               Height="90"
+               Margin="28,12,28,10"
+               HorizontalAlignment="Left"
+               VerticalAlignment="Center"
+               Stretch="Uniform"
+               RenderOptions.BitmapScalingMode="HighQuality"
+               SnapsToDevicePixels="True" />
+
+        <!-- Шаги -->
+
+        <Grid Grid.Row="1"
+              MaxWidth="720"
+              Margin="24,0"
+              HorizontalAlignment="Stretch">
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="44" />
+                <RowDefinition Height="24" />
+            </Grid.RowDefinitions>
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="96" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="96" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="96" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="96" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Профиль -->
+
+            <Border Grid.Row="0"
+                    Grid.Column="0"
+                    Width="40"
+                    Height="40"
+                    CornerRadius="20"
+                    BorderBrush="{StaticResource Mnemora.Brush.Primary}"
+                    BorderThickness="2">
+                <materialDesign:PackIcon Kind="CheckBold"
+                                         Width="18"
+                                         Height="18"
+                                         Foreground="{StaticResource Mnemora.Brush.Primary}"
+                                         HorizontalAlignment="Center"
+                                         VerticalAlignment="Center" />
+            </Border>
+
+            <Border Grid.Row="0"
+                    Grid.Column="1"
+                    Height="3"
+                    Margin="4,0"
+                    Background="{StaticResource Mnemora.Brush.Primary}"
+                    CornerRadius="2"
+                    VerticalAlignment="Center" />
+
+            <!-- Хранилище -->
+
+            <Border Grid.Row="0"
+                    Grid.Column="2"
+                    Width="40"
+                    Height="40"
+                    CornerRadius="20"
+                    BorderBrush="{StaticResource Mnemora.Brush.Primary}"
+                    BorderThickness="2">
+                <materialDesign:PackIcon Kind="CheckBold"
+                                         Width="18"
+                                         Height="18"
+                                         Foreground="{StaticResource Mnemora.Brush.Primary}"
+                                         HorizontalAlignment="Center"
+                                         VerticalAlignment="Center" />
+            </Border>
+
+            <Border Grid.Row="0"
+                    Grid.Column="3"
+                    Height="3"
+                    Margin="4,0"
+                    Background="{StaticResource Mnemora.Brush.Primary}"
+                    CornerRadius="2"
+                    VerticalAlignment="Center" />
+
+            <!-- ИИ -->
+
+            <Border Grid.Row="0"
+                    Grid.Column="4"
+                    Width="40"
+                    Height="40"
+                    CornerRadius="20"
+                    BorderBrush="{StaticResource Mnemora.Brush.Primary}"
+                    BorderThickness="2">
+                <materialDesign:PackIcon Kind="CheckBold"
+                                         Width="18"
+                                         Height="18"
+                                         Foreground="{StaticResource Mnemora.Brush.Primary}"
+                                         HorizontalAlignment="Center"
+                                         VerticalAlignment="Center" />
+            </Border>
+
+            <Border Grid.Row="0"
+                    Grid.Column="5"
+                    Height="3"
+                    Margin="4,0"
+                    Background="{StaticResource Mnemora.Brush.Primary}"
+                    CornerRadius="2"
+                    VerticalAlignment="Center" />
+
+            <!-- Текущий шаг -->
+
+            <Border Grid.Row="0"
+                    Grid.Column="6"
+                    Width="40"
+                    Height="40"
+                    CornerRadius="20"
+                    BorderBrush="{StaticResource Mnemora.Brush.Primary}"
+                    BorderThickness="2">
+                <TextBlock Text="4"
+                           Foreground="{StaticResource Mnemora.Brush.Primary}"
+                           FontSize="16"
+                           FontWeight="SemiBold"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center" />
+            </Border>
+
+            <TextBlock Grid.Row="1"
+                       Grid.Column="0"
+                       Text="Профиль"
+                       Foreground="#C9CFE3"
+                       FontSize="14"
+                       TextAlignment="Center" />
+
+            <TextBlock Grid.Row="1"
+                       Grid.Column="2"
+                       Text="Хранилище"
+                       Foreground="#C9CFE3"
+                       FontSize="14"
+                       TextAlignment="Center" />
+
+            <TextBlock Grid.Row="1"
+                       Grid.Column="4"
+                       Text="ИИ"
+                       Foreground="#C9CFE3"
+                       FontSize="14"
+                       TextAlignment="Center" />
+
+            <TextBlock Grid.Row="1"
+                       Grid.Column="6"
+                       Text="Начало"
+                       Foreground="{StaticResource Mnemora.Brush.Primary}"
+                       FontSize="14"
+                       FontWeight="SemiBold"
+                       TextAlignment="Center" />
+
+        </Grid>
+
+        <!-- Карточка -->
+
+        <Grid Grid.Row="2">
+
+            <StackPanel Margin="0,40,0,0"
+                        VerticalAlignment="Top">
+
+                <Border Height="520"
+                        MaxWidth="724"
+                        Margin="48,0"
+                        HorizontalAlignment="Stretch"
+                        Background="{StaticResource Mnemora.Brush.Surface}"
+                        CornerRadius="22">
+
+                    <Border.Effect>
+                        <DropShadowEffect Color="#020A20"
+                                          BlurRadius="28"
+                                          ShadowDepth="8"
+                                          Opacity="0.34" />
+                    </Border.Effect>
+
+                    <Grid>
+
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <!-- Содержимое -->
+
+                        <Grid Grid.Row="0"
+                              Margin="56,32,56,14">
+
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <!-- Иконка -->
+
+                            <Grid Grid.Row="0"
+                                  Width="76"
+                                  Height="76"
+                                  HorizontalAlignment="Center">
+
+                                <Ellipse Fill="{StaticResource Mnemora.Brush.SurfaceMuted}"
+                                         Stroke="{StaticResource Mnemora.Brush.BrandGradient}"
+                                         StrokeThickness="3" />
+
+                                <materialDesign:PackIcon Kind="BookOpenPageVariantOutline"
+                                                         Width="38"
+                                                         Height="38"
+                                                         Foreground="{StaticResource Mnemora.Brush.BrandGradient}"
+                                                         HorizontalAlignment="Center"
+                                                         VerticalAlignment="Center" />
+                            </Grid>
+
+                            <!-- Заголовок -->
+
+                            <StackPanel Grid.Row="1"
+                                        Margin="0,20,0,12">
+
+                                <TextBlock Text="{Binding UserName,
+                                            StringFormat='Всё готово, {0}!'}"
+                                           Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
+                                           FontSize="27"
+                                           FontWeight="Bold"
+                                           TextAlignment="Center" />
+
+                                <TextBlock Text="Mnemora настроена и готова к работе"
+                                           Margin="0,4,0,0"
+                                           Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
+                                           FontSize="16"
+                                           TextAlignment="Center" />
+                            </StackPanel>
+
+                            <TextBlock Grid.Row="2"
+                                       Text="Ваши настройки"
+                                       Margin="0,0,0,8"
+                                       Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
+                                       FontSize="16"
+                                       FontWeight="SemiBold" />
+
+                            <!-- Настройки -->
+
+                            <StackPanel Grid.Row="3">
+
+                                <!-- Профиль -->
+
+                                <Border Style="{StaticResource SettingsRowStyle}">
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="46" />
+                                            <ColumnDefinition Width="170" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="32" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <materialDesign:PackIcon Grid.Column="0"
+                                                                 Kind="AccountOutline"
+                                                                 Width="24"
+                                                                 Height="24"
+                                                                 Foreground="{StaticResource Mnemora.Brush.Secondary}"
+                                                                 VerticalAlignment="Center" />
+
+                                        <TextBlock Grid.Column="1"
+                                                   Text="Профиль"
+                                                   Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
+                                                   FontSize="15"
+                                                   FontWeight="SemiBold"
+                                                   VerticalAlignment="Center" />
+
+                                        <TextBlock Grid.Column="2"
+                                                   Text="{Binding UserName}"
+                                                   Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
+                                                   FontSize="14"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   VerticalAlignment="Center" />
+
+                                        <materialDesign:PackIcon Grid.Column="3"
+                                                                 Kind="CheckCircleOutline"
+                                                                 Width="25"
+                                                                 Height="25"
+                                                                 Foreground="#12B84F"
+                                                                 HorizontalAlignment="Right"
+                                                                 VerticalAlignment="Center" />
+                                    </Grid>
+
+                                </Border>
+
+                                <!-- Хранилище -->
+
+                                <Border Margin="0,6,0,0"
+                                        Style="{StaticResource SettingsRowStyle}">
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="46" />
+                                            <ColumnDefinition Width="170" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="32" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <materialDesign:PackIcon Grid.Column="0"
+                                                                 Kind="FolderOutline"
+                                                                 Width="24"
+                                                                 Height="24"
+                                                                 Foreground="{StaticResource Mnemora.Brush.Secondary}"
+                                                                 VerticalAlignment="Center" />
+
+                                        <TextBlock Grid.Column="1"
+                                                   Text="Хранилище"
+                                                   Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
+                                                   FontSize="15"
+                                                   FontWeight="SemiBold"
+                                                   VerticalAlignment="Center" />
+
+                                        <TextBlock Grid.Column="2"
+                                                   Text="{Binding StorageStatus}"
+                                                   Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
+                                                   FontSize="14"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   VerticalAlignment="Center" />
+
+                                        <materialDesign:PackIcon Grid.Column="3"
+                                                                 Kind="CheckCircleOutline"
+                                                                 Width="25"
+                                                                 Height="25"
+                                                                 Foreground="#12B84F"
+                                                                 HorizontalAlignment="Right"
+                                                                 VerticalAlignment="Center" />
+                                    </Grid>
+
+                                </Border>
+
+                                <!-- ИИ -->
+
+                                <Border Margin="0,6,0,0"
+                                        Style="{StaticResource SettingsRowStyle}">
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="46" />
+                                            <ColumnDefinition Width="170" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="32" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <materialDesign:PackIcon Grid.Column="0"
+                                                                 Kind="CreationOutline"
+                                                                 Width="24"
+                                                                 Height="24"
+                                                                 Foreground="{StaticResource Mnemora.Brush.Secondary}"
+                                                                 VerticalAlignment="Center" />
+
+                                        <TextBlock Grid.Column="1"
+                                                   Text="ИИ"
+                                                   Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
+                                                   FontSize="15"
+                                                   FontWeight="SemiBold"
+                                                   VerticalAlignment="Center" />
+
+                                        <TextBlock Grid.Column="2"
+                                                   Text="{Binding AiStatus}"
+                                                   Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
+                                                   FontSize="14"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   VerticalAlignment="Center" />
+
+                                        <materialDesign:PackIcon Grid.Column="3"
+                                                                 Width="25"
+                                                                 Height="25"
+                                                                 HorizontalAlignment="Right"
+                                                                 VerticalAlignment="Center">
+
+                                            <materialDesign:PackIcon.Style>
+                                                <Style TargetType="{x:Type materialDesign:PackIcon}">
+                                                    <Setter Property="Kind"
+                                                            Value="MinusCircleOutline" />
+                                                    <Setter Property="Foreground"
+                                                            Value="{StaticResource Mnemora.Brush.TextSecondary}" />
+
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsAiConfigured}"
+                                                                     Value="True">
+                                                            <Setter Property="Kind"
+                                                                    Value="CheckCircleOutline" />
+                                                            <Setter Property="Foreground"
+                                                                    Value="#12B84F" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </materialDesign:PackIcon.Style>
+                                        </materialDesign:PackIcon>
+                                    </Grid>
+
+                                </Border>
+
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="4"
+                                        Margin="8,14,8,0"
+                                        Orientation="Horizontal"
+                                        HorizontalAlignment="Left">
+
+                                <materialDesign:PackIcon Kind="CogOutline"
+                                                         Width="20"
+                                                         Height="20"
+                                                         Foreground="{StaticResource Mnemora.Brush.Secondary}"
+                                                         VerticalAlignment="Center" />
+
+                                <TextBlock Text="Все настройки можно изменить позже"
+                                           Margin="10,0,0,0"
+                                           Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
+                                           FontSize="14"
+                                           VerticalAlignment="Center" />
+
+                            </StackPanel>
+
+                        </Grid>
+
+                        <!-- Нижняя панель -->
+
+                        <Border Grid.Row="1"
+                                Padding="42,16"
+                                BorderBrush="{StaticResource Mnemora.Brush.Border}"
+                                BorderThickness="0,1,0,0">
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <Button Grid.Column="0"
+                                        Width="120"
+                                        Command="{Binding BackCommand}"
+                                        Style="{StaticResource OnboardingOutlineButtonStyle}">
+
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="ArrowLeft"
+                                                                 Width="21"
+                                                                 Height="21"
+                                                                 VerticalAlignment="Center" />
+
+                                        <TextBlock Text="Назад"
+                                                   Margin="10,0,0,0"
+                                                   VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+
+                                <Button Grid.Column="2"
+                                        Command="{Binding OpenMnemoraCommand}"
+                                        Style="{StaticResource OnboardingPrimaryButtonStyle}">
+
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Открыть Mnemora"
+                                                   VerticalAlignment="Center" />
+
+                                        <materialDesign:PackIcon Kind="ArrowRight"
+                                                                 Width="21"
+                                                                 Height="21"
+                                                                 Margin="18,0,0,0"
+                                                                 VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+
+                            </Grid>
+
+                        </Border>
+
+                    </Grid>
+
+                </Border>
+
+                <TextBlock Text="Шаг 4 из 4"
+                           Margin="0,24,0,0"
+                           Foreground="White"
+                           FontSize="15"
+                           HorizontalAlignment="Center" />
+
+            </StackPanel>
+
+        </Grid>
+
+    </Grid>
+
+</UserControl>

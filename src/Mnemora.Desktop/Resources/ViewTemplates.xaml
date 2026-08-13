@@ -23,5 +23,11 @@
         DataType="{x:Type onboardingViewModels:AiSetupViewModel}">
         <onboardingViews:AiSetupView />
     </DataTemplate>
+    
+    <DataTemplate
+        DataType="{x:Type onboardingViewModels:CompletionSetupViewModel}">
+        <onboardingViews:CompletionSetupView />
+    </DataTemplate>
+
 
 </ResourceDictionary>
