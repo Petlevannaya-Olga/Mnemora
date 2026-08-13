@@ -357,7 +357,7 @@
                         VerticalAlignment="Top">
 
                 <Border Height="420"
-                        MaxWidth="720"
+                        MaxWidth="724"
                         Margin="48,0"
                         HorizontalAlignment="Stretch"
                         Background="{StaticResource Mnemora.Brush.Surface}"
@@ -409,7 +409,7 @@
                             <!-- Заголовок -->
 
                             <StackPanel Grid.Row="1"
-                                        Margin="0,20,0,12">
+                                        Margin="0,24,0,12">
                                 <TextBlock Text="Выберите хранилище"
                                            Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
                                            FontSize="28"

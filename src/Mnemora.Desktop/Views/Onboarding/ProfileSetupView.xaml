@@ -169,7 +169,7 @@
             <RowDefinition Height="*"
                            MinHeight="24" />
             <RowDefinition Height="3*"
-                           MinHeight="436"
+                           MinHeight="420"
                            MaxHeight="460" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="2*"
@@ -465,7 +465,7 @@
                         </Grid>
 
                         <StackPanel Grid.Row="3"
-                                    Margin="0 24 0 0"
+                                    Margin="0 8 0 0"
                                     Orientation="Horizontal"
                                     HorizontalAlignment="Left">
                             <materialDesign:PackIcon
@@ -508,9 +508,11 @@
                                 Style="{StaticResource OnboardingPrimaryButtonStyle}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="Продолжить" />
-                                <TextBlock Text="→"
-                                           FontSize="23"
-                                           Margin="18,-2,0,0" />
+                                <materialDesign:PackIcon Kind="ArrowRight"
+                                                         Width="21"
+                                                         Height="21"
+                                                         Margin="18,0,0,0"
+                                                         VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
                     </Grid>
