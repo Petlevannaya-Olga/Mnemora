@@ -368,12 +368,13 @@
                             <StackPanel Grid.Row="1"
                                         Margin="0,20,0,12">
 
-                                <TextBlock Text="{Binding UserName,
+                                <TextBlock
+                                    Text="{Binding UserName,
                                             StringFormat='Всё готово, {0}!'}"
-                                           Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
-                                           FontSize="27"
-                                           FontWeight="Bold"
-                                           TextAlignment="Center" />
+                                    Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
+                                    FontSize="27"
+                                    FontWeight="Bold"
+                                    TextAlignment="Center" />
 
                                 <TextBlock Text="Mnemora настроена и готова к работе"
                                            Margin="0,4,0,0"
@@ -548,21 +549,67 @@
                             </StackPanel>
 
                             <StackPanel Grid.Row="4"
-                                        Margin="8,14,8,0"
-                                        Orientation="Horizontal"
-                                        HorizontalAlignment="Left">
+                                        Margin="8,14,8,0">
 
-                                <materialDesign:PackIcon Kind="CogOutline"
-                                                         Width="20"
-                                                         Height="20"
-                                                         Foreground="{StaticResource Mnemora.Brush.Secondary}"
-                                                         VerticalAlignment="Center" />
+                                <StackPanel Orientation="Horizontal">
 
-                                <TextBlock Text="Все настройки можно изменить позже"
-                                           Margin="10,0,0,0"
-                                           Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
-                                           FontSize="14"
-                                           VerticalAlignment="Center" />
+                                    <materialDesign:PackIcon Kind="CogOutline"
+                                                             Width="20"
+                                                             Height="20"
+                                                             Foreground="{StaticResource Mnemora.Brush.Secondary}"
+                                                             VerticalAlignment="Center" />
+
+                                    <TextBlock Text="Все настройки можно изменить позже"
+                                               Margin="10,0,0,0"
+                                               Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
+                                               FontSize="14"
+                                               VerticalAlignment="Center" />
+
+                                </StackPanel>
+
+                                <Border Margin="0,10,0,0"
+                                        Padding="12,10"
+                                        Background="#FFF1F1"
+                                        CornerRadius="8">
+
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Visibility"
+                                                    Value="Collapsed" />
+
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasCompletionError}"
+                                                             Value="True">
+                                                    <Setter Property="Visibility"
+                                                            Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <materialDesign:PackIcon Kind="AlertCircleOutline"
+                                                                 Width="20"
+                                                                 Height="20"
+                                                                 Foreground="#C62828"
+                                                                 VerticalAlignment="Top" />
+
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding CompletionErrorMessage}"
+                                                   Margin="10,0,0,0"
+                                                   Foreground="#A52222"
+                                                   FontSize="13"
+                                                   LineHeight="19"
+                                                   TextWrapping="Wrap"
+                                                   VerticalAlignment="Center" />
+                                    </Grid>
+
+                                </Border>
 
                             </StackPanel>
 
@@ -604,14 +651,46 @@
                                         Style="{StaticResource OnboardingPrimaryButtonStyle}">
 
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Открыть Mnemora"
-                                                   VerticalAlignment="Center" />
 
-                                        <materialDesign:PackIcon Kind="ArrowRight"
-                                                                 Width="21"
+                                        <TextBlock VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Text"
+                                                            Value="Открыть Mnemora" />
+
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsCompleting}"
+                                                                     Value="True">
+                                                            <Setter Property="Text"
+                                                                    Value="Сохраняем..." />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+
+                                        <materialDesign:PackIcon Width="21"
                                                                  Height="21"
                                                                  Margin="18,0,0,0"
-                                                                 VerticalAlignment="Center" />
+                                                                 VerticalAlignment="Center">
+
+                                            <materialDesign:PackIcon.Style>
+                                                <Style TargetType="{x:Type materialDesign:PackIcon}">
+                                                    <Setter Property="Kind"
+                                                            Value="ArrowRight" />
+
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsCompleting}"
+                                                                     Value="True">
+                                                            <Setter Property="Kind"
+                                                                    Value="ClockOutline" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </materialDesign:PackIcon.Style>
+
+                                        </materialDesign:PackIcon>
+
                                     </StackPanel>
                                 </Button>
 

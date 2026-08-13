@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Security.Cryptography;
+using System.Text.Json;
 using CommunityToolkit.Mvvm.Input;
 using Mnemora.Desktop.Navigation;
 using Mnemora.Desktop.Security;
@@ -15,6 +16,50 @@ public sealed partial class CompletionSetupViewModel(
     ISettingsService settingsService)
     : ViewModelBase
 {
+    private bool _isCompleting;
+
+    private string? _completionErrorMessage;
+
+    public bool IsCompleting
+    {
+        get => _isCompleting;
+        private set
+        {
+            if (!SetProperty(ref _isCompleting, value))
+            {
+                return;
+            }
+
+            OpenMnemoraCommand.NotifyCanExecuteChanged();
+        }
+    }
+
+    public string? CompletionErrorMessage
+    {
+        get => _completionErrorMessage;
+        private set
+        {
+            if (!SetProperty(
+                    ref _completionErrorMessage,
+                    value))
+            {
+                return;
+            }
+
+            OnPropertyChanged(
+                nameof(HasCompletionError));
+        }
+    }
+
+    public bool HasCompletionError =>
+        !string.IsNullOrWhiteSpace(
+            CompletionErrorMessage);
+
+    private bool CanOpenMnemora()
+    {
+        return !IsCompleting;
+    }
+
     public string UserName =>
         onboardingState.UserName?.Trim()
         ?? string.Empty;
@@ -38,10 +83,14 @@ public sealed partial class CompletionSetupViewModel(
         navigationService.NavigateTo<AiSetupViewModel>();
     }
 
-    [RelayCommand]
+    [RelayCommand(
+        CanExecute = nameof(CanOpenMnemora))]
     private async Task OpenMnemoraAsync(
         CancellationToken cancellationToken)
     {
+        IsCompleting = true;
+        CompletionErrorMessage = null;
+
         try
         {
             if (onboardingState.IsAiConfigured)
@@ -49,6 +98,9 @@ public sealed partial class CompletionSetupViewModel(
                 if (string.IsNullOrWhiteSpace(
                         onboardingState.PendingApiKey))
                 {
+                    CompletionErrorMessage =
+                        "Не найден проверенный API-ключ. Вернитесь на предыдущий шаг и проверьте подключение.";
+
                     return;
                 }
 
@@ -56,28 +108,37 @@ public sealed partial class CompletionSetupViewModel(
                     onboardingState.PendingApiKey.Trim());
             }
 
-            await settingsService.CompleteOnboardingAsync(
-                onboardingState.IsAiConfigured,
-                cancellationToken);
+            await settingsService
+                .CompleteOnboardingAsync(
+                    onboardingState.IsAiConfigured,
+                    cancellationToken);
 
-            onboardingState.IsOnboardingCompleted = true;
+            onboardingState.IsOnboardingCompleted =
+                true;
+
             onboardingState.PendingApiKey = null;
 
-            // Здесь позже откроем главный экран Mnemora.
+            // Переход на главный экран добавим
+            // после создания его ViewModel.
         }
         catch (OperationCanceledException)
             when (cancellationToken.IsCancellationRequested)
         {
-            // Завершение отменено.
+            // Отмена закрытия или завершения не считается ошибкой.
         }
         catch (Exception exception)
             when (exception is IOException
                       or UnauthorizedAccessException
                       or CryptographicException
-                      or PlatformNotSupportedException)
+                      or PlatformNotSupportedException
+                      or JsonException)
         {
-            // Позже выведем ошибку на экран.
-            // Мастер при этом остаётся незавершённым.
+            CompletionErrorMessage =
+                "Не удалось завершить настройку. Проверьте доступ к файлам и попробуйте ещё раз.";
+        }
+        finally
+        {
+            IsCompleting = false;
         }
     }
 }
