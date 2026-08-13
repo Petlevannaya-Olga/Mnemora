@@ -8,4 +8,8 @@ public interface ISettingsService
     Task SaveUserNameAsync(
         string userName,
         CancellationToken cancellationToken = default);
+
+    Task SaveStoragePathAsync(
+        string storagePath,
+        CancellationToken cancellationToken = default);
 }

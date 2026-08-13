@@ -356,7 +356,7 @@
             <StackPanel Margin="0,46,0,0"
                         VerticalAlignment="Top">
 
-                <Border Height="420"
+                <Border Height="450"
                         MaxWidth="724"
                         Margin="48,0"
                         HorizontalAlignment="Stretch"
