@@ -2,7 +2,9 @@
 using System.Text.Json;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
+using Mnemora.Desktop.Ai;
 using Mnemora.Desktop.Navigation;
+using Mnemora.Desktop.Security;
 using Mnemora.Desktop.Settings;
 using Mnemora.Desktop.Storage;
 using Mnemora.Desktop.ViewModels.Onboarding;
@@ -81,6 +83,12 @@ public partial class App : Application
 
         services.AddSingleton<IFolderPickerService, FolderPickerService>();
 
+        services.AddSingleton<IApiKeyStore, DpapiApiKeyStore>();
+
+        services.AddSingleton<IAiConnectionService, DevelopmentAiConnectionService>();
+
+        services.AddTransient<AiSetupViewModel>();
+        
         services.AddTransient<WelcomeViewModel>();
         services.AddTransient<ProfileSetupViewModel>();
         services.AddTransient<StorageSetupViewModel>();

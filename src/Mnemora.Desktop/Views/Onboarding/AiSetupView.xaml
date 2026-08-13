@@ -511,68 +511,40 @@
                                            FontSize="14"
                                            FontWeight="SemiBold" />
 
-                                <Grid Grid.Row="1"
-                                      Margin="0,8,0,0">
+                                <Border Grid.Row="1"
+                                        Margin="0,8,0,0"
+                                        Height="52"
+                                        CornerRadius="8"
+                                        BorderThickness="1.5"
+                                        Background="{StaticResource Mnemora.Brush.Surface}">
 
-                                    <TextBox Text="{Binding ApiKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-                                        <TextBox.Style>
-                                            <Style TargetType="TextBox"
-                                                   BasedOn="{StaticResource ApiKeyTextBoxStyle}">
-                                                <Setter Property="Visibility"
-                                                        Value="Collapsed" />
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsApiKeyVisible}"
-                                                                 Value="True">
-                                                        <Setter Property="Visibility"
-                                                                Value="Visible" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBox.Style>
-                                    </TextBox>
+                                    <Border.Style>
+                                        <Style TargetType="{x:Type Border}">
+                                            <Setter Property="BorderBrush"
+                                                    Value="{StaticResource Mnemora.Brush.Border}" />
 
-                                    <PasswordBox materialDesign:PasswordBoxAssist.Password="{Binding ApiKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-                                        <PasswordBox.Style>
-                                            <Style TargetType="PasswordBox"
-                                                   BasedOn="{StaticResource ApiKeyPasswordBoxStyle}">
-                                                <Setter Property="Visibility"
-                                                        Value="Visible" />
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsApiKeyVisible}"
-                                                                 Value="True">
-                                                        <Setter Property="Visibility"
-                                                                Value="Collapsed" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </PasswordBox.Style>
-                                    </PasswordBox>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsKeyboardFocusWithin"
+                                                         Value="True">
+                                                    <Setter Property="BorderBrush"
+                                                            Value="{StaticResource Mnemora.Brush.Primary}" />
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
 
-                                    <ToggleButton IsChecked="{Binding IsApiKeyVisible, Mode=TwoWay}"
-                                                  Margin="0,0,4,0"
-                                                  HorizontalAlignment="Right"
-                                                  VerticalAlignment="Center"
-                                                  Style="{StaticResource ApiKeyRevealButtonStyle}">
-                                        <materialDesign:PackIcon Width="22"
-                                                                 Height="22"
-                                                                 Foreground="{StaticResource Mnemora.Brush.TextSecondary}">
-                                            <materialDesign:PackIcon.Style>
-                                                <Style TargetType="{x:Type materialDesign:PackIcon}">
-                                                    <Setter Property="Kind"
-                                                            Value="EyeOffOutline" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsApiKeyVisible}"
-                                                                     Value="True">
-                                                            <Setter Property="Kind"
-                                                                    Value="EyeOutline" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </materialDesign:PackIcon.Style>
-                                        </materialDesign:PackIcon>
-                                    </ToggleButton>
-
-                                </Grid>
+                                    <PasswordBox Padding="16,0,16,0"
+                                                 FontSize="17"
+                                                 VerticalContentAlignment="Center"
+                                                 Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
+                                                 Background="Transparent"
+                                                 BorderBrush="Transparent"
+                                                 BorderThickness="0"
+                                                 FocusVisualStyle="{x:Null}"
+                                                 materialDesign:PasswordBoxAssist.Password="{Binding ApiKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                 materialDesign:TextFieldAssist.DecorationVisibility="Collapsed"
+                                                 Style="{StaticResource MaterialDesignFloatingHintRevealPasswordBox}" />
+                                </Border>
 
                                 <!-- Результат проверки -->
 
@@ -687,23 +659,16 @@
                                         <StackPanel Grid.Column="1"
                                                     Margin="12,0"
                                                     VerticalAlignment="Center">
-                                            <TextBlock FontSize="14"
-                                                       FontWeight="SemiBold"
-                                                       Foreground="{StaticResource Mnemora.Brush.TextPrimary}">
+                                            <TextBlock Text="{Binding ConnectionTitle}"
+                                                       FontSize="14"
+                                                       FontWeight="SemiBold">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
-                                                        <Setter Property="Text"
-                                                                Value="Подключение не проверено" />
+                                                        <Setter Property="Foreground"
+                                                                Value="{StaticResource Mnemora.Brush.TextPrimary}" />
                                                         <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding IsAiConfigured}"
-                                                                         Value="True">
-                                                                <Setter Property="Text"
-                                                                        Value="Подключение установлено" />
-                                                            </DataTrigger>
                                                             <DataTrigger Binding="{Binding IsConnectionInvalid}"
                                                                          Value="True">
-                                                                <Setter Property="Text"
-                                                                        Value="Не удалось подключиться" />
                                                                 <Setter Property="Foreground"
                                                                         Value="#D53E4F" />
                                                             </DataTrigger>
@@ -712,28 +677,10 @@
                                                 </TextBlock.Style>
                                             </TextBlock>
 
-                                            <TextBlock Margin="0,2,0,0"
+                                            <TextBlock Text="{Binding ConnectionMessage}"
+                                                       Margin="0,2,0,0"
                                                        FontSize="12"
-                                                       Foreground="{StaticResource Mnemora.Brush.TextSecondary}">
-                                                <TextBlock.Style>
-                                                    <Style TargetType="TextBlock">
-                                                        <Setter Property="Text"
-                                                                Value="Введите ключ и проверьте подключение" />
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding IsAiConfigured}"
-                                                                         Value="True">
-                                                                <Setter Property="Text"
-                                                                        Value="Проверка ответов и голосовой ввод доступны" />
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding IsConnectionInvalid}"
-                                                                         Value="True">
-                                                                <Setter Property="Text"
-                                                                        Value="Проверьте ключ и повторите попытку" />
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </TextBlock.Style>
-                                            </TextBlock>
+                                                       Foreground="{StaticResource Mnemora.Brush.TextSecondary}" />
                                         </StackPanel>
 
                                         <Button Grid.Column="2"
@@ -742,7 +689,21 @@
                                                 Padding="14,0"
                                                 Command="{Binding CheckConnectionCommand}"
                                                 Style="{StaticResource OnboardingOutlineButtonStyle}">
-                                            <TextBlock FontSize="13" Text="Проверить подключение" />
+                                            <TextBlock FontSize="13">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Text"
+                                                                Value="Проверить подключение" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsChecking}"
+                                                                         Value="True">
+                                                                <Setter Property="Text"
+                                                                        Value="Проверяем…" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
                                         </Button>
 
                                     </Grid>
