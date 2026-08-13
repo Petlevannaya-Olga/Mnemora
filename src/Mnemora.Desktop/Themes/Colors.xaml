@@ -72,6 +72,27 @@
             Offset="1"
             Color="#281166" />
     </LinearGradientBrush>
+    
+    <!-- Фон боковой панели -->
+
+    <LinearGradientBrush
+        x:Key="Mnemora.Brush.SidebarBackground"
+        StartPoint="0,0"
+        EndPoint="0,1">
+
+        <GradientStop
+            Offset="0"
+            Color="#061735" />
+
+        <GradientStop
+            Offset="0.55"
+            Color="#08224B" />
+
+        <GradientStop
+            Offset="1"
+            Color="#04142F" />
+
+    </LinearGradientBrush>
 
     <!-- Фирменный градиент -->
 

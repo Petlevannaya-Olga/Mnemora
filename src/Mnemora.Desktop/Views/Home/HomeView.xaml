@@ -1,0 +1,43 @@
+﻿<UserControl
+    x:Class="Mnemora.Desktop.Views.Home.HomeView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid Background="{StaticResource Mnemora.Brush.SurfaceMuted}">
+
+        <Border Width="620"
+                Padding="40"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Background="{StaticResource Mnemora.Brush.Surface}"
+                CornerRadius="20">
+
+            <Border.Effect>
+                <DropShadowEffect Color="#061735"
+                                  BlurRadius="24"
+                                  ShadowDepth="6"
+                                  Opacity="0.16" />
+            </Border.Effect>
+
+            <StackPanel>
+
+                <TextBlock Text="Добро пожаловать в Mnemora"
+                           Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
+                           FontSize="30"
+                           FontWeight="Bold"
+                           HorizontalAlignment="Center" />
+
+                <TextBlock Text="Настройка завершена. Главный экран подключён."
+                           Margin="0,14,0,0"
+                           Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
+                           FontSize="16"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap" />
+
+            </StackPanel>
+
+        </Border>
+
+    </Grid>
+
+</UserControl>

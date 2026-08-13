@@ -24,6 +24,8 @@
 
   <ItemGroup>
     <Resource Include="Assets\Images\MnemoraLogo.png" />
+    <None Remove="Assets\Images\MnemoraLogoIcon.png" />
+    <Resource Include="Assets\Images\MnemoraLogoIcon.png" />
   </ItemGroup>
 
 </Project>

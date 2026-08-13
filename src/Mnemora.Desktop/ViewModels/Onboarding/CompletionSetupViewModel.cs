@@ -6,6 +6,8 @@ using Mnemora.Desktop.Navigation;
 using Mnemora.Desktop.Security;
 using Mnemora.Desktop.Settings;
 using Mnemora.Desktop.ViewModels.Common;
+using Mnemora.Desktop.ViewModels.Home;
+using Mnemora.Desktop.ViewModels.Shell;
 
 namespace Mnemora.Desktop.ViewModels.Onboarding;
 
@@ -118,8 +120,12 @@ public sealed partial class CompletionSetupViewModel(
 
             onboardingState.PendingApiKey = null;
 
-            // Переход на главный экран добавим
-            // после создания его ViewModel.
+            onboardingState.IsOnboardingCompleted =
+                true;
+
+            onboardingState.PendingApiKey = null;
+
+            navigationService.NavigateTo<AppShellViewModel>();
         }
         catch (OperationCanceledException)
             when (cancellationToken.IsCancellationRequested)

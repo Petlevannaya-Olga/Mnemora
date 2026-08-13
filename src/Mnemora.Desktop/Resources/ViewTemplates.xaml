@@ -2,7 +2,11 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:onboardingViews="clr-namespace:Mnemora.Desktop.Views.Onboarding"
-    xmlns:onboardingViewModels="clr-namespace:Mnemora.Desktop.ViewModels.Onboarding">
+    xmlns:onboardingViewModels="clr-namespace:Mnemora.Desktop.ViewModels.Onboarding"
+    xmlns:home="clr-namespace:Mnemora.Desktop.Views.Home"
+    xmlns:homeViewModels="clr-namespace:Mnemora.Desktop.ViewModels.Home"
+    xmlns:shell="clr-namespace:Mnemora.Desktop.Views.Shell"
+    xmlns:shellViewModels="clr-namespace:Mnemora.Desktop.ViewModels.Shell">
 
     <DataTemplate
         DataType="{x:Type onboardingViewModels:ProfileSetupViewModel}">
@@ -29,5 +33,14 @@
         <onboardingViews:CompletionSetupView />
     </DataTemplate>
 
+    <DataTemplate
+        DataType="{x:Type homeViewModels:HomeViewModel}">
+        <home:HomeView />
+    </DataTemplate>
+    
+    <DataTemplate
+        DataType="{x:Type shellViewModels:AppShellViewModel}">
+        <shell:AppShellView />
+    </DataTemplate>
 
 </ResourceDictionary>

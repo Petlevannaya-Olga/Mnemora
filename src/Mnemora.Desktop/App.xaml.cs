@@ -7,6 +7,7 @@ using Mnemora.Desktop.Navigation;
 using Mnemora.Desktop.Security;
 using Mnemora.Desktop.Settings;
 using Mnemora.Desktop.Storage;
+using Mnemora.Desktop.ViewModels.Home;
 using Mnemora.Desktop.ViewModels.Onboarding;
 using Mnemora.Desktop.ViewModels.Shell;
 
@@ -34,10 +35,10 @@ public partial class App : Application
 
         var navigationService = _serviceProvider.GetRequiredService<INavigationService>();
         var onboardingState = _serviceProvider.GetRequiredService<OnboardingState>();
-        
+
         if (onboardingState.IsOnboardingCompleted)
         {
-            navigationService.NavigateTo<MainWindowViewModel>();
+            navigationService.NavigateTo<AppShellViewModel>();
         }
         else
         {
@@ -93,12 +94,16 @@ public partial class App : Application
         services.AddSingleton<ISettingsService, JsonSettingsService>();
 
         services.AddSingleton<INavigationService, NavigationService>();
+        services.AddSingleton<IPageNavigationService, PageNavigationService>();
 
         services.AddSingleton<IFolderPickerService, FolderPickerService>();
 
         services.AddSingleton<IApiKeyStore, DpapiApiKeyStore>();
 
         services.AddSingleton<IAiConnectionService, DevelopmentAiConnectionService>();
+
+        services.AddTransient<HomeViewModel>();
+        services.AddSingleton<AppShellViewModel>();
 
         services.AddTransient<WelcomeViewModel>();
         services.AddTransient<ProfileSetupViewModel>();
