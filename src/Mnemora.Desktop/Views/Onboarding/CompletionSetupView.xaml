@@ -11,58 +11,6 @@
              SnapsToDevicePixels="True">
 
     <UserControl.Resources>
-
-        <Style x:Key="OnboardingPrimaryButtonStyle"
-               TargetType="Button">
-            <Setter Property="Height"
-                    Value="52" />
-            <Setter Property="MinWidth"
-                    Value="230" />
-            <Setter Property="Padding"
-                    Value="26,0" />
-            <Setter Property="Foreground"
-                    Value="White" />
-            <Setter Property="FontSize"
-                    Value="18" />
-            <Setter Property="FontWeight"
-                    Value="SemiBold" />
-            <Setter Property="BorderThickness"
-                    Value="0" />
-            <Setter Property="Cursor"
-                    Value="Hand" />
-            <Setter Property="FocusVisualStyle"
-                    Value="{x:Null}" />
-
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="ButtonBorder"
-                                Background="{StaticResource Mnemora.Brush.BrandGradient}"
-                                CornerRadius="9">
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center" />
-                        </Border>
-
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver"
-                                     Value="True">
-                                <Setter TargetName="ButtonBorder"
-                                        Property="Opacity"
-                                        Value="0.9" />
-                            </Trigger>
-
-                            <Trigger Property="IsPressed"
-                                     Value="True">
-                                <Setter TargetName="ButtonBorder"
-                                        Property="Opacity"
-                                        Value="0.76" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
         <Style x:Key="OnboardingOutlineButtonStyle"
                TargetType="Button">
             <Setter Property="Height"
@@ -648,7 +596,7 @@
 
                                 <Button Grid.Column="2"
                                         Command="{Binding OpenMnemoraCommand}"
-                                        Style="{StaticResource OnboardingPrimaryButtonStyle}">
+                                        Style="{StaticResource Mnemora.PrimaryButton}">
 
                                     <StackPanel Orientation="Horizontal">
 

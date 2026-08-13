@@ -89,6 +89,8 @@ public partial class App : Application
     private static void ConfigureServices(
         IServiceCollection services)
     {
+        services.AddSingleton(TimeProvider.System);
+
         services.AddSingleton<OnboardingState>();
 
         services.AddSingleton<ISettingsService, JsonSettingsService>();
@@ -97,6 +99,7 @@ public partial class App : Application
         services.AddSingleton<IPageNavigationService, PageNavigationService>();
 
         services.AddSingleton<IFolderPickerService, FolderPickerService>();
+        services.AddSingleton<IFolderLauncherService, FolderLauncherService>();
 
         services.AddSingleton<IApiKeyStore, DpapiApiKeyStore>();
 

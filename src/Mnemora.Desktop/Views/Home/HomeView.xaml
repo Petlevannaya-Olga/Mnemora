@@ -1,42 +1,892 @@
 ﻿<UserControl
     x:Class="Mnemora.Desktop.Views.Home.HomeView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
 
-    <Grid Background="{StaticResource Mnemora.Brush.SurfaceMuted}">
+    <Grid
+        Background="{StaticResource Mnemora.Brush.SurfaceMuted}">
 
-        <Border Width="620"
-                Padding="40"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                Background="{StaticResource Mnemora.Brush.Surface}"
-                CornerRadius="20">
+        <ScrollViewer
+            HorizontalScrollBarVisibility="Disabled"
+            VerticalScrollBarVisibility="Auto">
 
-            <Border.Effect>
-                <DropShadowEffect Color="#061735"
-                                  BlurRadius="24"
-                                  ShadowDepth="6"
-                                  Opacity="0.16" />
-            </Border.Effect>
+            <Grid Margin="34,28,34,30">
 
-            <StackPanel>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="20" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="18" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
-                <TextBlock Text="Добро пожаловать в Mnemora"
-                           Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
-                           FontSize="30"
-                           FontWeight="Bold"
-                           HorizontalAlignment="Center" />
+                <!-- Приветствие -->
 
-                <TextBlock Text="Настройка завершена. Главный экран подключён."
-                           Margin="0,14,0,0"
-                           Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
-                           FontSize="16"
-                           TextAlignment="Center"
-                           TextWrapping="Wrap" />
+                <StackPanel Grid.Row="0">
 
-            </StackPanel>
+                    <TextBlock
+                        Text="{Binding Greeting}"
+                        Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
+                        FontSize="34"
+                        FontWeight="SemiBold" />
 
-        </Border>
+                    <TextBlock
+                        Text="Начнём собирать вашу базу знаний"
+                        Margin="0,7,0,0"
+                        Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
+                        FontSize="17" />
+
+                </StackPanel>
+
+                <!-- Содержимое главной страницы -->
+
+                <Grid Grid.Row="2">
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1.55*" />
+                        <ColumnDefinition Width="22" />
+                        <ColumnDefinition Width="1*" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Пустая библиотека -->
+
+                    <Border
+                        Grid.Column="0"
+                        MinHeight="520"
+                        Padding="38,32"
+                        Background="{StaticResource Mnemora.Brush.Surface}"
+                        BorderBrush="{StaticResource Mnemora.Brush.Border}"
+                        BorderThickness="1"
+                        CornerRadius="12">
+
+                        <Border.Effect>
+
+                            <DropShadowEffect
+                                Color="#061735"
+                                BlurRadius="14"
+                                ShadowDepth="2"
+                                Opacity="0.07" />
+
+                        </Border.Effect>
+
+                        <Grid>
+
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="30" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="30" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <!-- Иконка библиотеки -->
+
+                            <Border
+                                Grid.Row="0"
+                                Width="94"
+                                Height="94"
+                                HorizontalAlignment="Center"
+                                Background="#F0F1FF"
+                                CornerRadius="47">
+
+                                <materialDesign:PackIcon
+                                    Kind="FolderOpenOutline"
+                                    Width="54"
+                                    Height="54"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Foreground="{StaticResource Mnemora.Brush.Secondary}" />
+
+                            </Border>
+
+                            <!-- Описание -->
+
+                            <StackPanel
+                                Grid.Row="1"
+                                Margin="0,18,0,0">
+
+                                <TextBlock
+                                    Text="В библиотеке пока нет материалов"
+                                    Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
+                                    FontSize="22"
+                                    FontWeight="SemiBold"
+                                    TextAlignment="Center" />
+
+                                <TextBlock
+                                    Margin="26,11,26,0"
+                                    Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
+                                    FontSize="15"
+                                    LineHeight="22"
+                                    TextAlignment="Center"
+                                    TextWrapping="Wrap">
+
+                                    <Run
+                                        Text="Создайте раздел, добавьте в него тему," />
+
+                                    <LineBreak />
+
+                                    <Run
+                                        Text="а затем подключите статью или вопрос в формате Markdown" />
+
+                                </TextBlock>
+
+                            </StackPanel>
+
+                            <!-- Шаги -->
+
+                            <Grid Grid.Row="3">
+
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="56" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="56" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="56" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Шаг 1 -->
+
+                                <StackPanel Grid.Column="0">
+
+                                    <Border
+                                        Width="42"
+                                        Height="42"
+                                        HorizontalAlignment="Center"
+                                        Background="White"
+                                        BorderBrush="{StaticResource Mnemora.Brush.Primary}"
+                                        BorderThickness="1.5"
+                                        CornerRadius="9">
+
+                                        <TextBlock
+                                            Text="1"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Foreground="{StaticResource Mnemora.Brush.PrimaryDark}"
+                                            FontSize="20"
+                                            FontWeight="SemiBold" />
+
+                                    </Border>
+
+                                    <TextBlock
+                                        Text="Создать раздел"
+                                        Margin="4,13,4,0"
+                                        Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
+                                        FontSize="14"
+                                        FontWeight="SemiBold"
+                                        TextAlignment="Center"
+                                        TextWrapping="Wrap" />
+
+                                    <TextBlock
+                                        Text="Например, Backend"
+                                        Margin="4,6,4,0"
+                                        Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
+                                        FontSize="12"
+                                        TextAlignment="Center"
+                                        TextWrapping="Wrap" />
+
+                                </StackPanel>
+
+                                <!-- Соединитель 1–2 -->
+
+                                <Border
+                                    Grid.Column="1"
+                                    Width="46"
+                                    Height="2"
+                                    Margin="0,20,0,0"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Top"
+                                    Background="#AEB4CC"
+                                    CornerRadius="1" />
+
+                                <!-- Шаг 2 -->
+
+                                <StackPanel Grid.Column="2">
+
+                                    <Border
+                                        Width="42"
+                                        Height="42"
+                                        HorizontalAlignment="Center"
+                                        Background="White"
+                                        BorderBrush="#3E89FF"
+                                        BorderThickness="1.5"
+                                        CornerRadius="9">
+
+                                        <TextBlock
+                                            Text="2"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Foreground="#2468E7"
+                                            FontSize="20"
+                                            FontWeight="SemiBold" />
+
+                                    </Border>
+
+                                    <TextBlock
+                                        Text="Добавить тему"
+                                        Margin="4,13,4,0"
+                                        Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
+                                        FontSize="14"
+                                        FontWeight="SemiBold"
+                                        TextAlignment="Center"
+                                        TextWrapping="Wrap" />
+
+                                    <TextBlock
+                                        Text="Например, EF Core"
+                                        Margin="4,6,4,0"
+                                        Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
+                                        FontSize="12"
+                                        TextAlignment="Center"
+                                        TextWrapping="Wrap" />
+
+                                </StackPanel>
+
+                                <!-- Соединитель 2–3 -->
+
+                                <Border
+                                    Grid.Column="3"
+                                    Width="46"
+                                    Height="2"
+                                    Margin="0,20,0,0"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Top"
+                                    Background="#AEB4CC"
+                                    CornerRadius="1" />
+
+                                <!-- Шаг 3 -->
+
+                                <StackPanel Grid.Column="4">
+
+                                    <Border
+                                        Width="42"
+                                        Height="42"
+                                        HorizontalAlignment="Center"
+                                        Background="White"
+                                        BorderBrush="{StaticResource Mnemora.Brush.Secondary}"
+                                        BorderThickness="1.5"
+                                        CornerRadius="9">
+
+                                        <TextBlock
+                                            Text="3"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Foreground="{StaticResource Mnemora.Brush.Secondary}"
+                                            FontSize="20"
+                                            FontWeight="SemiBold" />
+
+                                    </Border>
+
+                                    <TextBlock
+                                        Text="Добавить материал"
+                                        Margin="4,13,4,0"
+                                        Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
+                                        FontSize="14"
+                                        FontWeight="SemiBold"
+                                        TextAlignment="Center"
+                                        TextWrapping="Wrap" />
+
+                                    <TextBlock
+                                        Text="Статья или вопрос"
+                                        Margin="4,6,4,0"
+                                        Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
+                                        FontSize="12"
+                                        TextAlignment="Center"
+                                        TextWrapping="Wrap" />
+
+                                </StackPanel>
+
+                                <!-- Соединитель 3–4 -->
+
+                                <Border
+                                    Grid.Column="5"
+                                    Width="46"
+                                    Height="2"
+                                    Margin="0,20,0,0"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Top"
+                                    Background="#AEB4CC"
+                                    CornerRadius="1" />
+
+                                <!-- Шаг 4 -->
+
+                                <StackPanel Grid.Column="6">
+
+                                    <Border
+                                        Width="42"
+                                        Height="42"
+                                        HorizontalAlignment="Center"
+                                        Background="White"
+                                        BorderBrush="#B752D7"
+                                        BorderThickness="1.5"
+                                        CornerRadius="9">
+
+                                        <TextBlock
+                                            Text="4"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Foreground="#A33AC8"
+                                            FontSize="20"
+                                            FontWeight="SemiBold" />
+
+                                    </Border>
+
+                                    <TextBlock
+                                        Text="Начать обучение"
+                                        Margin="4,13,4,0"
+                                        Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
+                                        FontSize="14"
+                                        FontWeight="SemiBold"
+                                        TextAlignment="Center"
+                                        TextWrapping="Wrap" />
+
+                                    <TextBlock
+                                        Text="Теория и вопросы"
+                                        Margin="4,6,4,0"
+                                        Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
+                                        FontSize="12"
+                                        TextAlignment="Center"
+                                        TextWrapping="Wrap" />
+
+                                </StackPanel>
+
+                            </Grid>
+
+                            <!-- Создание первого раздела -->
+
+                            <Button
+                                Grid.Row="5"
+                                Width="350"
+                                HorizontalAlignment="Center"
+                                Style="{StaticResource Mnemora.PrimaryButton}">
+
+                                <StackPanel Orientation="Horizontal">
+
+                                    <TextBlock
+                                        Text="Создать первый раздел"
+                                        VerticalAlignment="Center" />
+
+                                    <materialDesign:PackIcon
+                                        Kind="ArrowRight"
+                                        Width="21"
+                                        Height="21"
+                                        Margin="18,0,0,0"
+                                        VerticalAlignment="Center" />
+
+                                </StackPanel>
+
+                            </Button>
+
+                        </Grid>
+
+                    </Border>
+
+                    <!-- Правая колонка -->
+
+                    <Grid Grid.Column="2">
+
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="16" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <!-- Как устроена Mnemora -->
+
+                        <Border
+                            Grid.Row="0"
+                            Padding="26,22"
+                            Background="{StaticResource Mnemora.Brush.OnboardingBackground}"
+                            CornerRadius="12">
+
+                            <Grid>
+
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="16" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="1" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="1" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="16" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <TextBlock
+                                    Grid.Row="0"
+                                    Text="Как устроена Mnemora"
+                                    Foreground="White"
+                                    FontSize="21"
+                                    FontWeight="SemiBold" />
+
+                                <!-- Раздел -->
+
+                                <Grid Grid.Row="2">
+
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="34" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <materialDesign:PackIcon
+                                        Kind="FolderOpenOutline"
+                                        Width="24"
+                                        Height="24"
+                                        Foreground="{StaticResource Mnemora.Brush.Primary}"
+                                        VerticalAlignment="Center" />
+
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        Text="Раздел объединяет связанные темы"
+                                        Foreground="White"
+                                        FontSize="14"
+                                        VerticalAlignment="Center"
+                                        TextWrapping="Wrap" />
+
+                                </Grid>
+
+                                <Border
+                                    Grid.Row="3"
+                                    Margin="0,13"
+                                    Background="#29406D" />
+
+                                <!-- Тема -->
+
+                                <Grid Grid.Row="4"
+                                      Margin="0,8,0,0">
+
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="34" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <materialDesign:PackIcon
+                                        Kind="FileDocumentOutline"
+                                        Width="24"
+                                        Height="24"
+                                        Foreground="#65A1FF"
+                                        VerticalAlignment="Center" />
+
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        Text="В теме хранятся статьи и вопросы"
+                                        Foreground="White"
+                                        FontSize="14"
+                                        VerticalAlignment="Center"
+                                        TextWrapping="Wrap" />
+
+                                </Grid>
+
+                                <Border
+                                    Grid.Row="5"
+                                    Margin="0,13"
+                                    Background="#29406D" />
+
+                                <!-- Связанные вопросы -->
+
+                                <Grid Grid.Row="6"
+                                      Margin="0,8,0,0">
+
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="34" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <materialDesign:PackIcon
+                                        Kind="LinkVariant"
+                                        Width="24"
+                                        Height="24"
+                                        Foreground="{StaticResource Mnemora.Brush.Secondary}"
+                                        VerticalAlignment="Center" />
+
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        Text="У статьи могут быть связанные вопросы"
+                                        Foreground="White"
+                                        FontSize="14"
+                                        VerticalAlignment="Center"
+                                        TextWrapping="Wrap" />
+
+                                </Grid>
+
+                                <!-- Правило изучения -->
+
+                                <TextBlock
+                                    Grid.Row="8"
+                                    Text="Статья считается изученной после уверенных ответов на связанные вопросы"
+                                    Foreground="#D6DDF2"
+                                    FontSize="13"
+                                    LineHeight="19"
+                                    TextWrapping="Wrap" />
+
+                            </Grid>
+
+                        </Border>
+
+                        <!-- Прогресс -->
+
+                        <Border
+                            Grid.Row="2"
+                            Padding="24,20"
+                            Background="{StaticResource Mnemora.Brush.Surface}"
+                            BorderBrush="{StaticResource Mnemora.Brush.Border}"
+                            BorderThickness="1"
+                            CornerRadius="12">
+
+                            <Border.Effect>
+
+                                <DropShadowEffect
+                                    Color="#061735"
+                                    BlurRadius="14"
+                                    ShadowDepth="2"
+                                    Opacity="0.06" />
+
+                            </Border.Effect>
+
+                            <Grid>
+
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="12" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="16" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <TextBlock
+                                    Grid.Row="0"
+                                    Text="Мой прогресс"
+                                    Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
+                                    FontSize="20"
+                                    FontWeight="SemiBold" />
+
+                                <TextBlock
+                                    Grid.Row="1"
+                                    Margin="0,10,0,0"
+                                    Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
+                                    FontSize="31"
+                                    FontWeight="SemiBold">
+
+                                    <Run Text="{Binding ExperiencePoints, Mode=OneWay}" />
+
+                                    <Run Text=" XP" />
+
+                                </TextBlock>
+
+                                <TextBlock
+                                    Grid.Row="2"
+                                    Margin="0,3,0,0"
+                                    Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
+                                    FontSize="15"
+                                    FontWeight="SemiBold">
+
+                                    <Run Text="Уровень " />
+
+                                    <Run
+                                        Text="{Binding Level, Mode=OneWay}" />
+
+                                </TextBlock>
+
+                                <ProgressBar
+                                    Grid.Row="4"
+                                    Height="9"
+                                    Minimum="0"
+                                    Maximum="{Binding ExperienceForNextLevel, Mode=OneWay}"
+                                    Value="{Binding CurrentLevelExperience, Mode=OneWay}"
+                                    Background="#E9EBF6"
+                                    Foreground="{StaticResource Mnemora.Brush.Primary}"
+                                    BorderThickness="0" />
+
+                                <TextBlock
+                                    Grid.Row="5"
+                                    Margin="0,8,0,0"
+                                    Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
+                                    FontSize="13">
+
+                                    <Run Text="{Binding CurrentLevelExperience, Mode=OneWay}" />
+
+                                    <Run Text=" / " />
+
+                                    <Run Text="{Binding ExperienceForNextLevel, Mode=OneWay}" />
+
+                                    <Run Text=" до уровня " />
+
+                                    <Run Text="{Binding NextLevel, Mode=OneWay}" />
+
+                                </TextBlock>
+
+                                <!-- Показатели -->
+
+                                <Grid Grid.Row="7">
+
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="12" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Серия дней -->
+
+                                    <Border
+                                        Grid.Column="0"
+                                        MinHeight="68"
+                                        Padding="12"
+                                        Background="#FAFAFE"
+                                        BorderBrush="{StaticResource Mnemora.Brush.Border}"
+                                        BorderThickness="1"
+                                        CornerRadius="9">
+
+                                        <Grid>
+
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="34" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <materialDesign:PackIcon
+                                                Kind="Fire"
+                                                Width="27"
+                                                Height="27"
+                                                Foreground="{StaticResource Mnemora.Brush.Secondary}"
+                                                VerticalAlignment="Center" />
+
+                                            <TextBlock
+                                                Grid.Column="1"
+                                                Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
+                                                FontSize="12"
+                                                LineHeight="17"
+                                                VerticalAlignment="Center"
+                                                TextWrapping="Wrap">
+
+                                                <Run
+                                                    Text="{Binding StreakDays, Mode=OneWay}" />
+
+                                                <Run Text=" дней" />
+
+                                                <LineBreak />
+
+                                                <Run Text="подряд" />
+
+                                            </TextBlock>
+
+                                        </Grid>
+
+                                    </Border>
+
+                                    <!-- Ответы -->
+
+                                    <Border
+                                        Grid.Column="2"
+                                        MinHeight="68"
+                                        Padding="12"
+                                        Background="#FAFAFE"
+                                        BorderBrush="{StaticResource Mnemora.Brush.Border}"
+                                        BorderThickness="1"
+                                        CornerRadius="9">
+
+                                        <Grid>
+
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="34" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <materialDesign:PackIcon
+                                                Kind="CreationOutline"
+                                                Width="27"
+                                                Height="27"
+                                                Foreground="{StaticResource Mnemora.Brush.Secondary}"
+                                                VerticalAlignment="Center" />
+
+                                            <TextBlock
+                                                Grid.Column="1"
+                                                Text="{Binding AnswerSummary}"
+                                                Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
+                                                FontSize="12"
+                                                VerticalAlignment="Center"
+                                                TextWrapping="Wrap" />
+
+                                        </Grid>
+
+                                    </Border>
+
+                                </Grid>
+
+                            </Grid>
+
+                        </Border>
+
+                    </Grid>
+
+                </Grid>
+
+                <!-- Хранилище -->
+
+                <Border
+                    Grid.Row="4"
+                    Padding="22,17"
+                    Background="{StaticResource Mnemora.Brush.Surface}"
+                    BorderBrush="{StaticResource Mnemora.Brush.Border}"
+                    BorderThickness="1"
+                    CornerRadius="12">
+
+                    <Border.Effect>
+
+                        <DropShadowEffect
+                            Color="#061735"
+                            BlurRadius="12"
+                            ShadowDepth="2"
+                            Opacity="0.05" />
+
+                    </Border.Effect>
+
+                    <Grid>
+
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid>
+
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="54" />
+                                <ColumnDefinition Width="16" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="20" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Иконка -->
+
+                            <Border
+                                Grid.Column="0"
+                                Width="54"
+                                Height="54"
+                                Background="#EEFFFC"
+                                BorderBrush="{StaticResource Mnemora.Brush.Primary}"
+                                BorderThickness="1"
+                                CornerRadius="10">
+
+                                <materialDesign:PackIcon
+                                    Kind="FolderCheckOutline"
+                                    Width="30"
+                                    Height="30"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Foreground="{StaticResource Mnemora.Brush.PrimaryDark}" />
+
+                            </Border>
+
+                            <!-- Состояние и путь -->
+
+                            <StackPanel
+                                Grid.Column="2"
+                                VerticalAlignment="Center">
+
+                                <TextBlock
+                                    Text="Хранилище готово"
+                                    Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
+                                    FontSize="17"
+                                    FontWeight="SemiBold" />
+
+                                <TextBlock
+                                    Text="{Binding StoragePathDisplay,
+                                   Mode=OneWay}"
+                                    Margin="0,5,0,0"
+                                    Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
+                                    FontSize="13"
+                                    TextTrimming="CharacterEllipsis"
+                                    ToolTip="{Binding StoragePath,
+                                      Mode=OneWay}" />
+
+                            </StackPanel>
+
+                            <!-- Открытие папки -->
+
+                            <Button
+                                Grid.Column="4"
+                                Width="170"
+                                Command="{Binding OpenStorageFolderCommand}"
+                                Style="{StaticResource Mnemora.SecondaryButton}"
+                                BorderBrush="{StaticResource Mnemora.Brush.Primary}"
+                                Foreground="{StaticResource Mnemora.Brush.PrimaryDark}">
+
+                                <StackPanel Orientation="Horizontal">
+
+                                    <TextBlock
+                                        Text="Открыть папку"
+                                        VerticalAlignment="Center" />
+
+                                    <materialDesign:PackIcon
+                                        Kind="FolderOpenOutline"
+                                        Width="20"
+                                        Height="20"
+                                        Margin="10,0,0,0"
+                                        VerticalAlignment="Center" />
+
+                                </StackPanel>
+
+                            </Button>
+
+                        </Grid>
+
+                        <!-- Ошибка открытия -->
+
+                        <Border
+                            Grid.Row="1"
+                            Margin="70,12,190,0"
+                            Padding="11,8"
+                            Background="#FFF1F1"
+                            CornerRadius="7">
+
+                            <Border.Style>
+
+                                <Style TargetType="Border">
+
+                                    <Setter
+                                        Property="Visibility"
+                                        Value="Collapsed" />
+
+                                    <Style.Triggers>
+
+                                        <DataTrigger
+                                            Binding="{Binding HasStorageError}"
+                                            Value="True">
+
+                                            <Setter
+                                                Property="Visibility"
+                                                Value="Visible" />
+
+                                        </DataTrigger>
+
+                                    </Style.Triggers>
+
+                                </Style>
+
+                            </Border.Style>
+
+                            <TextBlock
+                                Text="{Binding StorageErrorMessage,
+                               Mode=OneWay}"
+                                Foreground="#A52222"
+                                FontSize="12"
+                                TextWrapping="Wrap" />
+
+                        </Border>
+
+                    </Grid>
+
+                </Border>
+            </Grid>
+
+        </ScrollViewer>
 
     </Grid>
 
