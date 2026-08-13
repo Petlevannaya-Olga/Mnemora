@@ -13,5 +13,10 @@
         DataType="{x:Type onboardingViewModels:StorageSetupViewModel}">
         <onboardingViews:StorageSetupView />
     </DataTemplate>
+    
+    <DataTemplate
+        DataType="{x:Type onboardingViewModels:WelcomeViewModel}">
+        <onboardingViews:WelcomeView />
+    </DataTemplate>
 
 </ResourceDictionary>

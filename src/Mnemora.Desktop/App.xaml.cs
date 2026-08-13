@@ -32,7 +32,7 @@ public partial class App : Application
 
         INavigationService navigationService = _serviceProvider.GetRequiredService<INavigationService>();
 
-        navigationService.NavigateTo<ProfileSetupViewModel>();
+        navigationService.NavigateTo<WelcomeViewModel>();
 
         MainWindow = mainWindow;
         mainWindow.Show();
@@ -53,11 +53,16 @@ public partial class App : Application
                 string.IsNullOrWhiteSpace(settings.UserName)
                     ? null
                     : settings.UserName.Trim();
+
+            onboardingState.StoragePath =
+                string.IsNullOrWhiteSpace(settings.StoragePath)
+                    ? null
+                    : settings.StoragePath.Trim();
         }
         catch (Exception exception)
             when (exception is IOException
-                  or UnauthorizedAccessException
-                  or JsonException)
+                      or UnauthorizedAccessException
+                      or JsonException)
         {
             // Повреждённые или недоступные настройки
             // не должны блокировать запуск приложения.
@@ -73,9 +78,10 @@ public partial class App : Application
         services.AddSingleton<ISettingsService, JsonSettingsService>();
 
         services.AddSingleton<INavigationService, NavigationService>();
-        
+
         services.AddSingleton<IFolderPickerService, FolderPickerService>();
 
+        services.AddTransient<WelcomeViewModel>();
         services.AddTransient<ProfileSetupViewModel>();
         services.AddTransient<StorageSetupViewModel>();
 
