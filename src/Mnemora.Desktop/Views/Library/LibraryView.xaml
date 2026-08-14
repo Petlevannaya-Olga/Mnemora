@@ -1021,6 +1021,7 @@
                 x:Name="TilesScrollViewer"
                 HorizontalContentAlignment="Stretch"
                 HorizontalScrollBarVisibility="Disabled"
+                VerticalContentAlignment="Top"
                 VerticalScrollBarVisibility="Auto">
 
                 <ScrollViewer.Style>
@@ -1069,6 +1070,7 @@
                     Width="{Binding ViewportWidth,
         ElementName=TilesScrollViewer}"
                     HorizontalAlignment="Stretch"
+                    VerticalAlignment="Top"
                     ItemsSource="{Binding Sections}">
 
                     <ItemsControl.ItemsPanel>
@@ -1076,7 +1078,8 @@
 
                             <UniformGrid
                                 Columns="3"
-                                HorizontalAlignment="Stretch" />
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Top" />
 
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
@@ -1088,6 +1091,7 @@
                                 MinHeight="224"
                                 Margin="0,0,18,18"
                                 Padding="22"
+                                VerticalAlignment="Top"
                                 Background="{DynamicResource Mnemora.Brush.Surface}"
                                 BorderBrush="{DynamicResource Mnemora.Brush.Border}"
                                 BorderThickness="1"
