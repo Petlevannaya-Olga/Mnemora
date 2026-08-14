@@ -1,19 +1,31 @@
 ﻿using System.IO;
 using System.Text.Json;
 using System.Windows;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Mnemora.Application;
+using Mnemora.Application.Commands;
+using Mnemora.Application.Queries;
 using Mnemora.Desktop.Ai;
+using Mnemora.Desktop.Commands;
+using Mnemora.Desktop.Dialogs;
 using Mnemora.Desktop.Navigation;
+using Mnemora.Desktop.Queries;
 using Mnemora.Desktop.Security;
 using Mnemora.Desktop.Settings;
 using Mnemora.Desktop.Storage;
 using Mnemora.Desktop.ViewModels.Home;
+using Mnemora.Desktop.ViewModels.Library;
 using Mnemora.Desktop.ViewModels.Onboarding;
+using Mnemora.Desktop.ViewModels.Sections;
 using Mnemora.Desktop.ViewModels.Shell;
+using Mnemora.Infrastructure;
+using Mnemora.Infrastructure.Persistence;
 
 namespace Mnemora.Desktop;
 
-public partial class App : Application
+public partial class App : System.Windows.Application
 {
     private ServiceProvider? _serviceProvider;
 
@@ -28,6 +40,7 @@ public partial class App : Application
         _serviceProvider = services.BuildServiceProvider();
 
         await LoadSettingsAsync(_serviceProvider);
+        await InitializeDatabaseAsync(_serviceProvider);
 
         // Получаем окно после загрузки настроек,
         // чтобы ViewModel создавались с заполненным OnboardingState.
@@ -86,9 +99,28 @@ public partial class App : Application
         }
     }
 
-    private static void ConfigureServices(
-        IServiceCollection services)
+    private static async Task InitializeDatabaseAsync(
+        IServiceProvider serviceProvider)
     {
+        var dbContextFactory = serviceProvider.GetRequiredService<IDbContextFactory<MnemoraDbContext>>();
+        await using MnemoraDbContext dbContext = await dbContextFactory.CreateDbContextAsync();
+        await dbContext.Database.MigrateAsync();
+    }
+
+    private static void ConfigureServices(IServiceCollection services)
+    {
+        services.AddLogging(builder =>
+        {
+            builder.AddDebug();
+            builder.SetMinimumLevel(LogLevel.Information);
+        });
+
+        services.AddInfrastructure();
+        services.AddApplication();
+
+        services.AddSingleton<ICommandDispatcher, CommandDispatcher>();
+        services.AddSingleton<IQueryDispatcher, QueryDispatcher>();
+
         services.AddSingleton(TimeProvider.System);
 
         services.AddSingleton<OnboardingState>();
@@ -105,6 +137,11 @@ public partial class App : Application
 
         services.AddSingleton<IAiConnectionService, DevelopmentAiConnectionService>();
 
+        services.AddSingleton<ICreateSectionDialogService, CreateSectionDialogService>();
+
+        services.AddTransient<LibraryViewModel>();
+        services.AddTransient<CreateSectionDialogViewModel>();
+        services.AddTransient<CreateSectionDialogViewModel>();
         services.AddTransient<HomeViewModel>();
         services.AddSingleton<AppShellViewModel>();
 

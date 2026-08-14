@@ -6,7 +6,9 @@
     xmlns:home="clr-namespace:Mnemora.Desktop.Views.Home"
     xmlns:homeViewModels="clr-namespace:Mnemora.Desktop.ViewModels.Home"
     xmlns:shell="clr-namespace:Mnemora.Desktop.Views.Shell"
-    xmlns:shellViewModels="clr-namespace:Mnemora.Desktop.ViewModels.Shell">
+    xmlns:shellViewModels="clr-namespace:Mnemora.Desktop.ViewModels.Shell"
+    xmlns:library="clr-namespace:Mnemora.Desktop.Views.Library"
+    xmlns:libraryViewModels="clr-namespace:Mnemora.Desktop.ViewModels.Library">
 
     <DataTemplate
         DataType="{x:Type onboardingViewModels:ProfileSetupViewModel}">
@@ -41,6 +43,10 @@
     <DataTemplate
         DataType="{x:Type shellViewModels:AppShellViewModel}">
         <shell:AppShellView />
+    </DataTemplate>
+    
+    <DataTemplate DataType="{x:Type libraryViewModels:LibraryViewModel}">
+        <library:LibraryView />
     </DataTemplate>
 
 </ResourceDictionary>

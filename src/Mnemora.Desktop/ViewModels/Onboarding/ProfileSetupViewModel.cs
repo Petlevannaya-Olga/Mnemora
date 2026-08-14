@@ -60,7 +60,7 @@ public sealed partial class ProfileSetupViewModel(
     [RelayCommand]
     private static void Exit()
     {
-        Application.Current.Shutdown();
+        System.Windows.Application.Current.Shutdown();
     }
 
     private bool CanContinue()

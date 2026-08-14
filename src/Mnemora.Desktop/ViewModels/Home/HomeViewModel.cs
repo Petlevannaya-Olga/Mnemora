@@ -98,21 +98,18 @@ public sealed partial class HomeViewModel
             StoragePath);
     }
 
-    [RelayCommand(
-        CanExecute = nameof(CanOpenStorageFolder))]
+    [RelayCommand(CanExecute = nameof(CanOpenStorageFolder))]
     private void OpenStorageFolder()
     {
         StorageErrorMessage = null;
 
         try
         {
-            _folderLauncherService.Open(
-                StoragePath!);
+            _folderLauncherService.Open(StoragePath!);
         }
         catch (DirectoryNotFoundException)
         {
-            StorageErrorMessage =
-                "Папка хранилища больше не существует. Выберите другую папку в настройках.";
+            StorageErrorMessage = "Папка хранилища больше не существует. Выберите другую папку в настройках.";
         }
         catch (Exception exception)
             when (exception is Win32Exception
@@ -121,8 +118,7 @@ public sealed partial class HomeViewModel
                       or NotSupportedException
                       or ArgumentException)
         {
-            StorageErrorMessage =
-                "Не удалось открыть папку хранилища.";
+            StorageErrorMessage = "Не удалось открыть папку хранилища.";
         }
     }
 

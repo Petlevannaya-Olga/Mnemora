@@ -8,33 +8,18 @@ public sealed class FolderLauncherService
 {
     public void Open(string folderPath)
     {
-        if (string.IsNullOrWhiteSpace(folderPath))
-        {
-            throw new ArgumentException(
-                "Путь к папке не указан.",
-                nameof(folderPath));
-        }
+        ArgumentException.ThrowIfNullOrWhiteSpace(folderPath);
 
-        string fullPath =
-            Path.GetFullPath(folderPath);
-
-        if (!Directory.Exists(fullPath))
+        if (!Directory.Exists(folderPath))
         {
             throw new DirectoryNotFoundException(
-                $"Папка '{fullPath}' не найдена.");
+                $"Папка хранилища '{folderPath}' не найдена.");
         }
 
-        Process? process = Process.Start(
-            new ProcessStartInfo
-            {
-                FileName = fullPath,
-                UseShellExecute = true,
-            });
-
-        if (process is null)
+        Process.Start(new ProcessStartInfo
         {
-            throw new InvalidOperationException(
-                "Не удалось открыть папку.");
-        }
+            FileName = folderPath,
+            UseShellExecute = true
+        });
     }
 }

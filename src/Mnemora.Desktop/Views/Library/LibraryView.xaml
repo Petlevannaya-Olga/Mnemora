@@ -1,0 +1,311 @@
+﻿<UserControl x:Class="Mnemora.Desktop.Views.Library.LibraryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             Loaded="LibraryView_OnLoaded"
+             Unloaded="LibraryView_OnUnloaded">
+
+    <Grid Background="{DynamicResource Mnemora.Brush.SurfaceMuted}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Заголовок -->
+
+        <Grid Margin="32,28,32,24">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Text="Библиотека"
+                           Style="{StaticResource Mnemora.Heading}" />
+
+                <TextBlock Margin="0,6,0,0"
+                           Text="Организуйте знания по разделам и темам"
+                           Style="{StaticResource Mnemora.Description}" />
+            </StackPanel>
+
+            <Button Grid.Column="1"
+                    MinWidth="190"
+                    Command="{Binding AddSectionCommand}"
+                    Style="{StaticResource OnboardingPrimaryButtonStyle}">
+
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Width="21"
+                                             Height="21"
+                                             Kind="Plus"
+                                             VerticalAlignment="Center" />
+
+                    <TextBlock Margin="14,0,0,0"
+                               VerticalAlignment="Center"
+                               Text="Создать раздел" />
+                </StackPanel>
+            </Button>
+        </Grid>
+
+        <!-- Содержимое -->
+
+        <Grid Grid.Row="1"
+              Margin="32,0,32,28">
+
+            <!-- Загрузка -->
+
+            <StackPanel HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility"
+                                Value="Collapsed" />
+
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsLoading}"
+                                         Value="True">
+                                <Setter Property="Visibility"
+                                        Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+
+                <ProgressBar Width="220"
+                             Height="4"
+                             Foreground="{DynamicResource Mnemora.Brush.Primary}"
+                             IsIndeterminate="True" />
+
+                <TextBlock Margin="0,18,0,0"
+                           HorizontalAlignment="Center"
+                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                           FontSize="16"
+                           Text="Загружаем библиотеку..." />
+            </StackPanel>
+
+            <!-- Ошибка -->
+
+            <Border Padding="40"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Background="{DynamicResource Mnemora.Brush.Surface}"
+                    BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                    BorderThickness="1"
+                    CornerRadius="16">
+
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Visibility"
+                                Value="Collapsed" />
+
+                        <Style.Triggers>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding HasError}"
+                                               Value="True" />
+
+                                    <Condition Binding="{Binding IsLoading}"
+                                               Value="False" />
+                                </MultiDataTrigger.Conditions>
+
+                                <Setter Property="Visibility"
+                                        Value="Visible" />
+                            </MultiDataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+
+                <StackPanel Width="420">
+                    <materialDesign:PackIcon Width="44"
+                                             Height="44"
+                                             HorizontalAlignment="Center"
+                                             Foreground="{DynamicResource Mnemora.Brush.Secondary}"
+                                             Kind="AlertCircleOutline" />
+
+                    <TextBlock Margin="0,18,0,0"
+                               HorizontalAlignment="Center"
+                               Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                               FontSize="21"
+                               FontWeight="SemiBold"
+                               Text="Не удалось загрузить библиотеку" />
+
+                    <TextBlock Margin="0,10,0,0"
+                               HorizontalAlignment="Center"
+                               TextAlignment="Center"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                               FontSize="15"
+                               Text="{Binding ErrorMessage}" />
+
+                    <Button Margin="0,24,0,0"
+                            HorizontalAlignment="Center"
+                            Command="{Binding ReloadCommand}"
+                            Content="Попробовать снова"
+                            Style="{StaticResource Mnemora.SecondaryButton}" />
+                </StackPanel>
+            </Border>
+
+            <!-- Пустая библиотека -->
+
+            <Border Padding="48"
+                    Background="{DynamicResource Mnemora.Brush.Surface}"
+                    BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                    BorderThickness="1"
+                    CornerRadius="16">
+
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Visibility"
+                                Value="Collapsed" />
+
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsEmpty}"
+                                         Value="True">
+                                <Setter Property="Visibility"
+                                        Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+
+                <StackPanel Width="540"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+
+                    <materialDesign:PackIcon Width="72"
+                                             Height="72"
+                                             HorizontalAlignment="Center"
+                                             Foreground="{DynamicResource Mnemora.Brush.Primary}"
+                                             Kind="FolderOutline" />
+
+                    <TextBlock Margin="0,22,0,0"
+                               HorizontalAlignment="Center"
+                               Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                               FontSize="25"
+                               FontWeight="SemiBold"
+                               Text="В библиотеке пока нет разделов" />
+
+                    <TextBlock Margin="0,10,0,0"
+                               HorizontalAlignment="Center"
+                               TextAlignment="Center"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                               FontSize="16"
+                               Text="Создайте первый раздел, а затем добавьте в него темы и материалы." />
+
+                    <Button Margin="0,28,0,0"
+                            MinWidth="210"
+                            HorizontalAlignment="Center"
+                            Command="{Binding AddSectionCommand}"
+                            Style="{StaticResource OnboardingPrimaryButtonStyle}">
+
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Width="21"
+                                                     Height="21"
+                                                     Kind="Plus"
+                                                     VerticalAlignment="Center" />
+
+                            <TextBlock Margin="14,0,0,0"
+                                       VerticalAlignment="Center"
+                                       Text="Создать раздел" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Border>
+
+            <!-- Список разделов -->
+
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+
+                <ScrollViewer.Style>
+                    <Style TargetType="ScrollViewer">
+                        <Setter Property="Visibility"
+                                Value="Collapsed" />
+
+                        <Style.Triggers>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding HasSections}"
+                                               Value="True" />
+
+                                    <Condition Binding="{Binding IsLoading}"
+                                               Value="False" />
+
+                                    <Condition Binding="{Binding HasError}"
+                                               Value="False" />
+                                </MultiDataTrigger.Conditions>
+
+                                <Setter Property="Visibility"
+                                        Value="Visible" />
+                            </MultiDataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ScrollViewer.Style>
+
+                <ItemsControl ItemsSource="{Binding Sections}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Width="290"
+                                    Height="170"
+                                    Margin="0,0,18,18"
+                                    Padding="22"
+                                    Background="{DynamicResource Mnemora.Brush.Surface}"
+                                    BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                                    BorderThickness="1"
+                                    CornerRadius="14">
+
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <materialDesign:PackIcon Width="38"
+                                                             Height="38"
+                                                             Foreground="{DynamicResource Mnemora.Brush.Primary}"
+                                                             Kind="FolderOutline" />
+
+                                    <TextBlock Grid.Row="1"
+                                               Margin="0,18,0,0"
+                                               Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                               FontSize="20"
+                                               FontWeight="SemiBold"
+                                               Text="{Binding Name}"
+                                               TextTrimming="CharacterEllipsis"
+                                               TextWrapping="Wrap" />
+
+                                    <Grid Grid.Row="2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                   FontSize="13"
+                                                   Text="{Binding CreatedAt,
+                                                       StringFormat='Создан {0:dd.MM.yyyy}'}" />
+
+                                        <materialDesign:PackIcon Grid.Column="1"
+                                                                 Width="20"
+                                                                 Height="20"
+                                                                 Foreground="{DynamicResource Mnemora.Brush.Secondary}"
+                                                                 Kind="ArrowRight" />
+                                    </Grid>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</UserControl>
