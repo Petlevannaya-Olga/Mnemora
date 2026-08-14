@@ -11,6 +11,7 @@ public sealed record SectionColorOption(
 public sealed record SectionIconOption(
     SectionIcon Value,
     string Name,
+    string Category,
     PackIconKind Kind);
 
 public static class SectionAppearanceOptions
@@ -34,51 +35,109 @@ public static class SectionAppearanceOptions
 
     private static IReadOnlyList<SectionIconOption> CreateIcons()
     {
-        var definitions = new (SectionIcon Value, string Name, string Kind)[]
-        {
-            (SectionIcon.Folder, "Папка", "FolderOutline"), (SectionIcon.Code, "Код", "CodeBraces"),
-            (SectionIcon.Database, "База данных", "DatabaseOutline"),
-            (SectionIcon.Server, "Сервер", "ServerOutline"), (SectionIcon.Cloud, "Облако", "CloudOutline"),
-            (SectionIcon.Book, "Книга", "BookOpenPageVariantOutline"), (SectionIcon.Brain, "Знания", "Brain"),
-            (SectionIcon.Education, "Обучение", "SchoolOutline"), (SectionIcon.Web, "Веб", "Web"),
-            (SectionIcon.Api, "API", "Api"), (SectionIcon.Console, "Консоль", "ConsoleLine"),
-            (SectionIcon.CSharp, "C#", "LanguageCsharp"), (SectionIcon.Git, "Git", "Git"),
-            (SectionIcon.Docker, "Docker", "Docker"), (SectionIcon.Kubernetes, "Kubernetes", "Kubernetes"),
-            (SectionIcon.Azure, "Azure", "MicrosoftAzure"),
-            (SectionIcon.Security, "Безопасность", "ShieldCheckOutline"),
-            (SectionIcon.Testing, "Тестирование", "TestTube"), (SectionIcon.Bug, "Ошибки", "BugOutline"),
-            (SectionIcon.Settings, "Настройки", "CogOutline"), (SectionIcon.Team, "Команда", "AccountGroupOutline"),
-            (SectionIcon.Work, "Работа", "BriefcaseOutline"), (SectionIcon.Finance, "Финансы", "Finance"),
-            (SectionIcon.Idea, "Идеи", "LightbulbOutline"), (SectionIcon.Rocket, "Проекты", "RocketLaunchOutline"),
-            (SectionIcon.Mobile, "Мобильная разработка", "Cellphone"), (SectionIcon.Desktop, "Desktop", "Monitor"),
-            (SectionIcon.Network, "Сети", "Lan"), (SectionIcon.Document, "Документы", "FileDocumentOutline"),
-            (SectionIcon.Chart, "Аналитика", "ChartLine"),
-            (SectionIcon.Calculator, "Алгоритмы", "CalculatorVariantOutline"),
-            (SectionIcon.Architecture, "Архитектура", "SitemapOutline"),
-        };
+        var definitions = new (
+            SectionIcon Value,
+            string Name,
+            string Category,
+            string Kind,
+            string Fallback)[]
+            {
+                (SectionIcon.Folder, "Общее", "Общие", "FolderOutline", "Folder"),
+                (SectionIcon.Book, "Книги", "Общие", "BookOpenPageVariantOutline", "BookOutline"),
+                (SectionIcon.Brain, "Знания", "Общие", "Brain", "LightbulbOutline"),
+                (SectionIcon.Education, "Обучение", "Общие", "SchoolOutline", "BookOutline"),
+                (SectionIcon.Document, "Документы", "Общие", "FileDocumentOutline", "FileOutline"),
+                (SectionIcon.Team, "Команда", "Общие", "AccountGroupOutline", "AccountMultipleOutline"),
+                (SectionIcon.Work, "Работа", "Общие", "BriefcaseOutline", "FolderOutline"),
+                (SectionIcon.Finance, "Финансы", "Общие", "Finance", "ChartLine"),
+                (SectionIcon.Idea, "Идеи", "Общие", "LightbulbOutline", "Brain"),
+                (SectionIcon.Rocket, "Проекты", "Общие", "RocketLaunchOutline", "RocketOutline"),
+                (SectionIcon.DotNet, ".NET", "Платформы", "DotNet", "CodeBraces"),
+                (SectionIcon.CSharp, "C#", "Платформы", "LanguageCsharp", "CodeBraces"),
+                (SectionIcon.AspNet, "ASP.NET", "Платформы", "ApplicationBracesOutline", "Web"),
+                (SectionIcon.Blazor, "Blazor", "Платформы", "WebBox", "Web"),
+                (SectionIcon.Maui, ".NET MAUI", "Платформы", "CellphoneLink", "Cellphone"),
+                (SectionIcon.JavaScript, "JavaScript", "Платформы", "LanguageJavascript", "CodeBraces"),
+                (SectionIcon.TypeScript, "TypeScript", "Платформы", "LanguageTypescript", "CodeBraces"),
+                (SectionIcon.Python, "Python", "Платформы", "LanguagePython", "CodeBraces"),
+                (SectionIcon.Java, "Java", "Платформы", "LanguageJava", "CodeBraces"),
+                (SectionIcon.Linux, "Linux", "Платформы", "Linux", "ConsoleLine"),
+                (SectionIcon.Windows, "Windows", "Платформы", "MicrosoftWindows", "Monitor"),
+                (SectionIcon.Code, "Программирование", "Разработка", "CodeBraces", "CodeTags"),
+                (SectionIcon.Api, "API", "Разработка", "Api", "Connection"),
+                (SectionIcon.Backend, "Backend", "Разработка", "ServerOutline", "Server"),
+                (SectionIcon.Frontend, "Frontend", "Разработка", "MonitorDashboard", "Monitor"),
+                (SectionIcon.Web, "Web", "Разработка", "Web", "Monitor"),
+                (SectionIcon.Mobile, "Mobile", "Разработка", "Cellphone", "CellphoneLink"),
+                (SectionIcon.Desktop, "Desktop", "Разработка", "Monitor", "Laptop"),
+                (SectionIcon.Database, "Базы данных", "Данные", "DatabaseOutline", "Database"),
+                (SectionIcon.Sql, "SQL", "Данные", "DatabaseSearchOutline", "Database"),
+                (SectionIcon.PostgreSql, "PostgreSQL", "Данные", "DatabaseCogOutline", "Database"),
+                (SectionIcon.SqlServer, "SQL Server", "Данные", "Microsoft", "Database"),
+                (SectionIcon.Redis, "Redis", "Данные", "DatabaseClockOutline", "Database"),
+                (SectionIcon.ElasticSearch, "Elasticsearch", "Данные", "Magnify", "DatabaseSearchOutline"),
+                (SectionIcon.DataScience, "Data Science", "Данные", "ChartScatterPlot", "ChartLine"),
+                (SectionIcon.Architecture, "Архитектура", "Архитектура", "SitemapOutline", "GraphOutline"),
+                (SectionIcon.Ddd, "DDD", "Архитектура", "HexagonMultipleOutline", "HexagonOutline"),
+                (SectionIcon.Microservices, "Микросервисы", "Архитектура", "HubOutline", "Lan"),
+                (SectionIcon.Algorithms, "Алгоритмы", "Архитектура", "FunctionVariant", "CalculatorVariantOutline"),
+                (SectionIcon.DataStructures, "Структуры данных", "Архитектура", "GraphOutline", "SitemapOutline"),
+                (SectionIcon.Server, "Серверы", "Инфраструктура", "ServerOutline", "Server"),
+                (SectionIcon.Cloud, "Облако", "Инфраструктура", "CloudOutline", "Cloud"),
+                (SectionIcon.Azure, "Azure", "Инфраструктура", "MicrosoftAzure", "CloudOutline"),
+                (SectionIcon.Aws, "AWS", "Инфраструктура", "Aws", "CloudOutline"),
+                (SectionIcon.Docker, "Docker", "Инфраструктура", "Docker", "CubeOutline"),
+                (SectionIcon.Kubernetes, "Kubernetes", "Инфраструктура", "Kubernetes", "HexagonOutline"),
+                (SectionIcon.Git, "Git", "Инфраструктура", "Git", "SourceBranch"),
+                (SectionIcon.DevOps, "DevOps", "Инфраструктура", "Infinity", "SourceBranch"),
+                (SectionIcon.CiCd, "CI/CD", "Инфраструктура", "SourceBranchSync", "SourceBranch"),
+                (SectionIcon.Network, "Сети", "Инфраструктура", "Lan", "AccessPointNetwork"),
+                (SectionIcon.Security, "Безопасность", "Качество", "ShieldCheckOutline", "ShieldOutline"),
+                (SectionIcon.Testing, "Тестирование", "Качество", "TestTube", "CheckCircleOutline"),
+                (SectionIcon.Bug, "Ошибки", "Качество", "BugOutline", "AlertCircleOutline"),
+                (SectionIcon.Performance, "Производительность", "Качество", "Speedometer", "ChartLine"),
+                (SectionIcon.Monitoring, "Мониторинг", "Качество", "MonitorEye", "Monitor"),
+                (SectionIcon.RabbitMq, "RabbitMQ", "Сообщения", "Rabbit", "MessageOutline"),
+                (SectionIcon.Kafka, "Kafka", "Сообщения", "MessageTextOutline", "MessageOutline"),
+                (SectionIcon.MessageQueue, "Очереди сообщений", "Сообщения", "TrayFull", "MessageOutline"),
+                (SectionIcon.ArtificialIntelligence, "Искусственный интеллект", "ИИ", "RobotOutline", "Brain"),
+                (SectionIcon.MachineLearning, "Machine Learning", "ИИ", "Brain", "RobotOutline")
+            };
 
         var icons = new List<SectionIconOption>();
 
         foreach (var definition in definitions)
         {
-            if (!Enum.TryParse<PackIconKind>(definition.Kind, out var kind))
-            {
-                continue;
-            }
+            var kind = ResolveIconKind(
+                definition.Kind,
+                definition.Fallback);
 
             icons.Add(new SectionIconOption(
                 definition.Value,
                 definition.Name,
+                definition.Category,
                 kind));
         }
 
-        if (icons.Count == 0)
+        return icons;
+    }
+
+    private static PackIconKind ResolveIconKind(
+        string preferredKind,
+        string fallbackKind)
+    {
+        if (Enum.TryParse<PackIconKind>(preferredKind, out var kind))
         {
-            throw new InvalidOperationException(
-                "Не удалось найти доступные иконки Material Design.");
+            return kind;
         }
 
-        return icons;
+        if (Enum.TryParse<PackIconKind>(fallbackKind, out kind))
+        {
+            return kind;
+        }
+
+        throw new InvalidOperationException(
+            $"Не найдена иконка '{preferredKind}' и её замена '{fallbackKind}'.");
     }
 
     private static SectionColorOption CreateColor(

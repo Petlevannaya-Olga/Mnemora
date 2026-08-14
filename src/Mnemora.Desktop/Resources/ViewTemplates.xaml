@@ -60,5 +60,10 @@
     <DataTemplate DataType="{x:Type topicViewModels:CreateTopicDialogViewModel}">
         <topics:CreateTopicDialogView />
     </DataTemplate>
+    
+    <DataTemplate
+        DataType="{x:Type sectionViewModels:SelectSectionIconDialogViewModel}">
+        <sections:SelectSectionIconDialogView />
+    </DataTemplate>
 
 </ResourceDictionary>

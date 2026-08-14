@@ -139,7 +139,8 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IAiConnectionService, DevelopmentAiConnectionService>();
 
         services.AddSingleton<IDialogService, DialogService>();
-        
+
+        services.AddTransient<SelectSectionIconDialogViewModel>();
         services.AddTransient<CreateTopicDialogViewModel>();
         services.AddTransient<LibraryViewModel>();
         services.AddTransient<CreateSectionDialogViewModel>();

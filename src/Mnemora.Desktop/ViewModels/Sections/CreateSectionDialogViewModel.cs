@@ -3,11 +3,13 @@ using Mnemora.Application.Commands;
 using Mnemora.Application.Sections.Create;
 using Mnemora.Desktop.Dialogs;
 using Mnemora.Desktop.ViewModels.Common;
+using Mnemora.Domain.Sections;
 
 namespace Mnemora.Desktop.ViewModels.Sections;
 
 public sealed partial class CreateSectionDialogViewModel(
-    ICommandDispatcher commandDispatcher)
+    ICommandDispatcher commandDispatcher,
+    IDialogService dialogService)
     : ViewModelBase,
       IDialogViewModel<Guid?>
 {
@@ -36,15 +38,9 @@ public sealed partial class CreateSectionDialogViewModel(
             }
 
             ErrorMessage = null;
-            OnPropertyChanged(nameof(PreviewName));
             CreateCommand.NotifyCanExecuteChanged();
         }
     }
-
-    public string PreviewName =>
-        string.IsNullOrWhiteSpace(Name)
-            ? "Название раздела"
-            : Name.Trim();
 
     public SectionColorOption SelectedColor
     {
@@ -169,6 +165,23 @@ public sealed partial class CreateSectionDialogViewModel(
             new DialogCloseRequestedEventArgs<Guid?>(
                 null,
                 false));
+    }
+    
+    [RelayCommand]
+    private void OpenIconPicker()
+    {
+        var selectedIcon = dialogService
+            .Show<SelectSectionIconDialogViewModel, SectionIcon?>(
+                viewModel => viewModel.Initialize(SelectedIcon.Value));
+
+        if (selectedIcon is null)
+        {
+            return;
+        }
+
+        SelectedIcon = IconOptions.FirstOrDefault(
+                           option => option.Value == selectedIcon.Value)
+                       ?? IconOptions[0];
     }
 
     private bool CanCancel()

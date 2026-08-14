@@ -20,13 +20,15 @@ internal sealed class DialogService(
 
         var result = default(TResult)!;
 
-        var dialog = new DialogWindow
-        {
-            DataContext = viewModel
-        };
+        var dialog = new DialogWindow { DataContext = viewModel };
 
-        var owner = System.Windows.Application.Current?.MainWindow;
-        var overlayHost = owner as IDialogOverlayHost;
+        var owner = System.Windows.Application.Current.Windows
+                        .OfType<Window>()
+                        .FirstOrDefault(window => window.IsActive)
+                    ?? System.Windows.Application.Current.MainWindow;
+
+        var overlayHost =
+            System.Windows.Application.Current.MainWindow as IDialogOverlayHost;
 
         if (owner is not null)
         {
