@@ -24,12 +24,31 @@ public sealed class CreateSectionCommandHandler(
             return nameResult.Error.ToErrors();
         }
 
+        var sectionExistsResult = await sectionsRepository.ExistsAsync(
+            section => section.Name == nameResult.Value,
+            cancellationToken);
+
+        if (sectionExistsResult.IsFailure)
+        {
+            return sectionExistsResult.Error.ToErrors();
+        }
+
+        if (sectionExistsResult.Value)
+        {
+            return new Error(
+                    "section.name.already.exists",
+                    "Раздел с таким названием уже существует",
+                    ErrorType.CONFLICT,
+                    nameof(CreateSectionCommand.Name))
+                .ToErrors();
+        }
+
         var section = Section.Create(nameResult.Value);
 
         sectionsRepository.Add(section);
 
-        var saveResult =
-            await transactionManager.SaveChangesAsync(cancellationToken);
+        var saveResult = await transactionManager.SaveChangesAsync(
+            cancellationToken);
 
         if (saveResult.IsFailure)
         {

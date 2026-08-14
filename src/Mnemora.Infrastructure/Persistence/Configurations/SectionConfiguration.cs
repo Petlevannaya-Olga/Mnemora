@@ -22,16 +22,14 @@ public sealed class SectionConfiguration
             .HasColumnName("id")
             .ValueGeneratedNever();
 
-        builder.Property(section =>
-                section.Name)
+        builder.Property(section => section.Name)
             .HasConversion(
                 name => name.Value,
-                value => SectionName
-                    .Create(value)
-                    .Value)
-            .HasColumnName("name")
+                value => SectionName.Create(value).Value)
             .HasMaxLength(SectionName.MAXLENGTH)
-            .IsRequired();
+            .UseCollation(SqliteCollations.UnicodeNoCase)
+            .IsRequired()
+            .HasColumnName("name");
 
         builder.Property(section => section.CreatedAt)
             .HasColumnName("created_at")

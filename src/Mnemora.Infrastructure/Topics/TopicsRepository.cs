@@ -2,32 +2,32 @@
 using CSharpFunctionalExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Mnemora.Application.Sections;
-using Mnemora.Domain.Sections;
+using Mnemora.Application.Topics;
+using Mnemora.Domain.Topics;
 using Mnemora.Infrastructure.Persistence;
 using Mnemora.Shared;
 
-namespace Mnemora.Infrastructure.Sections;
+namespace Mnemora.Infrastructure.Topics;
 
-internal sealed class SectionsRepository(
+internal sealed class TopicsRepository(
     MnemoraDbContext dbContext,
-    ILogger<SectionsRepository> logger)
-    : ISectionsRepository
+    ILogger<TopicsRepository> logger)
+    : ITopicsRepository
 {
-    public void Add(Section section)
+    public void Add(Topic topic)
     {
-        dbContext.Sections.Add(section);
+        dbContext.Topics.Add(topic);
     }
 
     public async Task<Result<bool, Error>> ExistsAsync(
-        Expression<Func<Section, bool>> predicate,
+        Expression<Func<Topic, bool>> predicate,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(predicate);
 
         try
         {
-            var exists = await dbContext.Sections.AnyAsync(
+            var exists = await dbContext.Topics.AnyAsync(
                 predicate,
                 cancellationToken);
 
@@ -37,17 +37,17 @@ internal sealed class SectionsRepository(
             when (cancellationToken.IsCancellationRequested)
         {
             return CommonErrors.OperationCancelled(
-                "section.exists.cancelled");
+                "topic.exists.cancelled");
         }
         catch (Exception exception)
         {
             logger.LogError(
                 exception,
-                "Не удалось проверить существование раздела");
+                "Не удалось проверить существование темы");
 
             return CommonErrors.Db(
-                "section.exists.failed",
-                "Не удалось проверить существование раздела");
+                "topic.exists.failed",
+                "Не удалось проверить существование темы");
         }
     }
 }

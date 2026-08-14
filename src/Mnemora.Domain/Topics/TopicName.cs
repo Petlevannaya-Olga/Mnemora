@@ -1,31 +1,30 @@
 ﻿using CSharpFunctionalExtensions;
 using Mnemora.Shared;
 
-namespace Mnemora.Domain.Sections;
+namespace Mnemora.Domain.Topics;
 
-public sealed class SectionName : ValueObject
+public sealed class TopicName : ValueObject
 {
-    public const int MINLENGTH = 3;
+    public const int MINLENGTH = 2;
     public const int MAXLENGTH = 150;
 
     public string Value { get; }
 
-    private SectionName(string value)
+    private TopicName(string value)
     {
         Value = value;
     }
 
-    public static Result<SectionName, Error> Create(string name)
+    public static Result<TopicName, Error> Create(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
             return CommonErrors.IsRequired(nameof(name));
         }
 
-        string normalizedName = name.Trim();
+        var normalizedName = name.Trim();
 
-        if (normalizedName.Length
-            is < MINLENGTH or > MAXLENGTH)
+        if (normalizedName.Length is < MINLENGTH or > MAXLENGTH)
         {
             return CommonErrors.LengthIsWrong(
                 nameof(name),
@@ -33,8 +32,7 @@ public sealed class SectionName : ValueObject
                 MAXLENGTH);
         }
 
-        return new SectionName(
-            normalizedName);
+        return new TopicName(normalizedName);
     }
 
     protected override IEnumerable<object> GetEqualityComponents()

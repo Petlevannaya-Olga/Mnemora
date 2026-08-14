@@ -7,8 +7,6 @@ namespace Mnemora.Infrastructure.Database.Errors;
 
 internal sealed class SectionSqliteErrorHandler : ISqliteErrorHandler
 {
-    private const int SQLITE_CONSTRAINT_UNIQUE = 2067;
-
     public bool TryMap(
         DbUpdateException exception,
         SqliteException sqliteException,
@@ -16,13 +14,12 @@ internal sealed class SectionSqliteErrorHandler : ISqliteErrorHandler
     {
         error = null!;
 
-        if (sqliteException.SqliteExtendedErrorCode != SQLITE_CONSTRAINT_UNIQUE)
+        if (sqliteException.SqliteExtendedErrorCode != SqliteExtendedErrorCodes.UniqueConstraint)
         {
             return false;
         }
 
-        var containsSection = exception
-            .Entries
+        var containsSection = exception.Entries
             .Any(entry => entry.Entity is Section);
 
         if (!containsSection)
