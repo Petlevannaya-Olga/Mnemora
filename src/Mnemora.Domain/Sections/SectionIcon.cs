@@ -1,0 +1,37 @@
+﻿namespace Mnemora.Domain.Sections;
+
+public enum SectionIcon
+{
+    Folder,
+    Code,
+    Database,
+    Server,
+    Cloud,
+    Book,
+    Brain,
+    Education,
+    Web,
+    Api,
+    Console,
+    CSharp,
+    Git,
+    Docker,
+    Kubernetes,
+    Azure,
+    Security,
+    Testing,
+    Bug,
+    Settings,
+    Team,
+    Work,
+    Finance,
+    Idea,
+    Rocket,
+    Mobile,
+    Desktop,
+    Network,
+    Document,
+    Chart,
+    Calculator,
+    Architecture
+}

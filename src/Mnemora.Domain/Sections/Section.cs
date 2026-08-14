@@ -5,6 +5,10 @@ public sealed class Section
     public SectionId Id { get; private set; } = null!;
 
     public SectionName Name { get; private set; } = null!;
+    
+    public SectionColor Color { get; private set; }
+
+    public SectionIcon Icon { get; private set; }
 
     public DateTime CreatedAt { get; private set; }
 
@@ -15,20 +19,24 @@ public sealed class Section
     {
     }
 
-    private Section(SectionName name)
+    private Section(SectionName name, SectionColor color, SectionIcon icon)
     {
-        DateTime now = DateTime.UtcNow;
+        var now = DateTime.UtcNow;
 
         Id = new SectionId(Guid.NewGuid());
-
         Name = name;
+        Color = color;
+        Icon = icon;
         CreatedAt = now;
         UpdatedAt = now;
     }
 
-    public static Section Create(SectionName name)
+    public static Section Create(
+        SectionName name,
+        SectionColor color,
+        SectionIcon icon)
     {
-        return new Section(name);
+        return new Section(name, color, icon);
     }
 
     public void UpdateName(SectionName name)

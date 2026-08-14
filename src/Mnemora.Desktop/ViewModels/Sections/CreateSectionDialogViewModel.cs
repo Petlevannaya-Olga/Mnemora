@@ -14,9 +14,16 @@ public sealed partial class CreateSectionDialogViewModel(
     private string _name = string.Empty;
     private string? _errorMessage;
     private bool _isCreating;
+    private SectionColorOption _selectedColor = SectionAppearanceOptions.Colors[0];
+    private SectionIconOption _selectedIcon = SectionAppearanceOptions.Icons[0];
 
-    public event EventHandler<DialogCloseRequestedEventArgs<Guid?>>?
-        CloseRequested;
+    public event EventHandler<DialogCloseRequestedEventArgs<Guid?>>? CloseRequested;
+
+    public IReadOnlyList<SectionColorOption> ColorOptions =>
+        SectionAppearanceOptions.Colors;
+
+    public IReadOnlyList<SectionIconOption> IconOptions =>
+        SectionAppearanceOptions.Icons;
 
     public string Name
     {
@@ -29,7 +36,41 @@ public sealed partial class CreateSectionDialogViewModel(
             }
 
             ErrorMessage = null;
+            OnPropertyChanged(nameof(PreviewName));
             CreateCommand.NotifyCanExecuteChanged();
+        }
+    }
+
+    public string PreviewName =>
+        string.IsNullOrWhiteSpace(Name)
+            ? "Название раздела"
+            : Name.Trim();
+
+    public SectionColorOption SelectedColor
+    {
+        get => _selectedColor;
+        set
+        {
+            if (!SetProperty(ref _selectedColor, value))
+            {
+                return;
+            }
+
+            ErrorMessage = null;
+        }
+    }
+
+    public SectionIconOption SelectedIcon
+    {
+        get => _selectedIcon;
+        set
+        {
+            if (!SetProperty(ref _selectedIcon, value))
+            {
+                return;
+            }
+
+            ErrorMessage = null;
         }
     }
 
@@ -68,15 +109,17 @@ public sealed partial class CreateSectionDialogViewModel(
     public bool IsBusy => IsCreating;
 
     [RelayCommand(CanExecute = nameof(CanCreate))]
-    private async Task CreateAsync(
-        CancellationToken cancellationToken)
+    private async Task CreateAsync(CancellationToken cancellationToken)
     {
         ErrorMessage = null;
         IsCreating = true;
 
         try
         {
-            var command = new CreateSectionCommand(Name);
+            var command = new CreateSectionCommand(
+                Name,
+                SelectedColor.Value,
+                SelectedIcon.Value);
 
             var result = await commandDispatcher
                 .SendAsync<CreateSectionCommand, Guid>(
@@ -103,8 +146,7 @@ public sealed partial class CreateSectionDialogViewModel(
                     result.Value,
                     true));
         }
-        catch (OperationCanceledException)
-            when (cancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             ErrorMessage = "Создание раздела было отменено";
         }

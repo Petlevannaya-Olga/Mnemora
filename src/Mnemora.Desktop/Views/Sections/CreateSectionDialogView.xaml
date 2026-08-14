@@ -3,32 +3,35 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              Width="560"
-             Background="Transparent"
-             ClipToBounds="False"
-             UseLayoutRounding="True"
-             SnapsToDevicePixels="True">
+             MaxHeight="740"
+             Background="Transparent">
 
-    <Grid Margin="26,22,26,30"
-          ClipToBounds="False">
+    <UserControl.InputBindings>
+        <KeyBinding
+            Key="Escape"
+            Command="{Binding CancelCommand}" />
+    </UserControl.InputBindings>
 
-        <Border Padding="30,26,30,30"
-                Background="{StaticResource Mnemora.Brush.Surface}"
-                BorderBrush="{StaticResource Mnemora.Brush.Border}"
-                BorderThickness="1"
-                CornerRadius="18"
-                ClipToBounds="False">
+    <Grid Margin="22">
+
+        <Border
+            Padding="30,26,30,30"
+            Background="{StaticResource Mnemora.Brush.Surface}"
+            BorderBrush="{StaticResource Mnemora.Brush.Border}"
+            BorderThickness="1"
+            CornerRadius="18">
 
             <Border.Effect>
-                <DropShadowEffect Color="#061735"
-                                  BlurRadius="26"
-                                  ShadowDepth="7"
-                                  Opacity="0.28" />
+                <DropShadowEffect
+                    Color="#061735"
+                    BlurRadius="26"
+                    ShadowDepth="7"
+                    Opacity="0.28" />
             </Border.Effect>
 
             <Grid>
+
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
@@ -37,125 +40,431 @@
                 <!-- Заголовок -->
 
                 <Grid Grid.Row="0">
+
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <Border Width="48"
-                            Height="48"
-                            Background="#EEFFFC"
-                            CornerRadius="12">
+                    <Border
+                        Width="48"
+                        Height="48"
+                        Background="#EEFFFC"
+                        CornerRadius="12">
 
-                        <materialDesign:PackIcon Width="27"
-                                                 Height="27"
-                                                 HorizontalAlignment="Center"
-                                                 VerticalAlignment="Center"
-                                                 Foreground="{StaticResource Mnemora.Brush.PrimaryDark}"
-                                                 Kind="FolderPlusOutline" />
+                        <materialDesign:PackIcon
+                            Kind="FolderPlusOutline"
+                            Width="27"
+                            Height="27"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Foreground="{StaticResource Mnemora.Brush.PrimaryDark}" />
+
                     </Border>
 
-                    <StackPanel Grid.Column="1"
-                                Margin="15,0"
-                                VerticalAlignment="Center">
+                    <StackPanel
+                        Grid.Column="1"
+                        Margin="15,0"
+                        VerticalAlignment="Center">
 
-                        <TextBlock Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
-                                   FontSize="21"
-                                   FontWeight="SemiBold"
-                                   Text="Новый раздел" />
+                        <TextBlock
+                            Text="Новый раздел"
+                            Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
+                            FontSize="21"
+                            FontWeight="SemiBold" />
 
-                        <TextBlock Margin="0,3,0,0"
-                                   Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
-                                   FontSize="13"
-                                   Text="Объедините связанные темы в одном месте" />
+                        <TextBlock
+                            Margin="0,3,0,0"
+                            Text="Создайте область для связанных тем"
+                            Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
+                            FontSize="13" />
+
                     </StackPanel>
 
-                    <Button Grid.Column="2"
-                            Command="{Binding CancelCommand}"
-                            Style="{StaticResource Mnemora.DialogCloseButton}">
+                    <Button
+                        Grid.Column="2"
+                        Command="{Binding CancelCommand}"
+                        Style="{StaticResource Mnemora.DialogCloseButton}">
 
                         <materialDesign:PackIcon
                             Kind="Close"
                             Width="20"
                             Height="20"
-                            Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                            Foreground="{Binding Foreground,
+                                RelativeSource={RelativeSource AncestorType=Button}}" />
 
                     </Button>
+
                 </Grid>
 
-                <!-- Подсказка -->
+                <!-- Содержимое -->
 
-                <TextBlock Grid.Row="1"
-                           Margin="0,22,0,0"
-                           Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
-                           FontSize="13"
-                           LineHeight="19"
-                           Text="Название должно описывать крупную область знаний, например Backend или Базы данных."
-                           TextWrapping="Wrap" />
+                <ScrollViewer
+                    Grid.Row="1"
+                    Margin="0,22,0,0"
+                    MaxHeight="510"
+                    VerticalScrollBarVisibility="Auto"
+                    HorizontalScrollBarVisibility="Disabled">
 
-                <!-- Название -->
+                    <StackPanel Margin="0,0,8,0">
 
-                <TextBox x:Name="NameTextBox"
-                         Grid.Row="2"
-                         MinHeight="54"
-                         Margin="0,18,0,0"
-                         MaxLength="150"
-                         VerticalContentAlignment="Center"
-                         Text="{Binding Name,
-                                        UpdateSourceTrigger=PropertyChanged}"
-                         materialDesign:HintAssist.Hint="Название раздела"
-                         materialDesign:TextFieldAssist.HasClearButton="True"
-                         Style="{StaticResource MaterialDesignOutlinedTextBox}" />
+                        <!-- Название -->
 
-                <!-- Ошибка -->
+                        <TextBox
+                            x:Name="NameTextBox"
+                            MaxLength="150"
+                            Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                            Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                            materialDesign:HintAssist.Hint="Название раздела"
+                            materialDesign:TextFieldAssist.HasClearButton="True" />
 
-                <Border Grid.Row="3"
-                        Margin="0,12,0,0"
-                        Padding="12,9"
-                        Background="#FFF1F1"
-                        CornerRadius="8">
+                        <!-- Цвет -->
 
-                    <Border.Style>
-                        <Style TargetType="Border">
-                            <Setter Property="Visibility"
-                                    Value="Collapsed" />
+                        <TextBlock
+                            Margin="0,21,0,10"
+                            Text="Цвет"
+                            Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
+                            FontSize="13"
+                            FontWeight="SemiBold" />
 
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding HasError}"
-                                             Value="True">
-                                    <Setter Property="Visibility"
-                                            Value="Visible" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Border.Style>
+                        <ListBox
+                            ItemsSource="{Binding ColorOptions}"
+                            SelectedItem="{Binding SelectedColor}"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            ScrollViewer.HorizontalScrollBarVisibility="Disabled">
 
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel />
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
 
-                        <materialDesign:PackIcon Width="19"
-                                                 Height="19"
-                                                 VerticalAlignment="Top"
-                                                 Foreground="#C62828"
-                                                 Kind="AlertCircleOutline" />
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
 
-                        <TextBlock Grid.Column="1"
-                                   Margin="9,0,0,0"
-                                   Foreground="#A52222"
-                                   FontSize="13"
-                                   Text="{Binding ErrorMessage}"
-                                   TextWrapping="Wrap" />
-                    </Grid>
-                </Border>
+                                    <Setter Property="Margin" Value="0,0,10,0" />
+                                    <Setter Property="Padding" Value="0" />
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+
+                                            <ControlTemplate TargetType="ListBoxItem">
+
+                                                <Border
+                                                    x:Name="SelectionBorder"
+                                                    Width="38"
+                                                    Height="38"
+                                                    BorderBrush="Transparent"
+                                                    BorderThickness="2"
+                                                    CornerRadius="19"
+                                                    Cursor="Hand">
+
+                                                    <Grid>
+
+                                                        <Ellipse
+                                                            Margin="5"
+                                                            Fill="{Binding Brush}" />
+
+                                                        <materialDesign:PackIcon
+                                                            x:Name="SelectedMark"
+                                                            Kind="Check"
+                                                            Width="17"
+                                                            Height="17"
+                                                            HorizontalAlignment="Center"
+                                                            VerticalAlignment="Center"
+                                                            Foreground="White"
+                                                            Visibility="Collapsed" />
+
+                                                    </Grid>
+
+                                                </Border>
+
+                                                <ControlTemplate.Triggers>
+
+                                                    <Trigger
+                                                        Property="IsMouseOver"
+                                                        Value="True">
+
+                                                        <Setter
+                                                            TargetName="SelectionBorder"
+                                                            Property="Opacity"
+                                                            Value="0.82" />
+
+                                                    </Trigger>
+
+                                                    <Trigger
+                                                        Property="IsSelected"
+                                                        Value="True">
+
+                                                        <Setter
+                                                            TargetName="SelectionBorder"
+                                                            Property="BorderBrush"
+                                                            Value="{StaticResource Mnemora.Brush.PrimaryDark}" />
+
+                                                        <Setter
+                                                            TargetName="SelectedMark"
+                                                            Property="Visibility"
+                                                            Value="Visible" />
+
+                                                    </Trigger>
+
+                                                </ControlTemplate.Triggers>
+
+                                            </ControlTemplate>
+
+                                        </Setter.Value>
+                                    </Setter>
+
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+
+                        </ListBox>
+
+                        <!-- Иконка -->
+
+                        <TextBlock
+                            Margin="0,20,0,10"
+                            Text="Иконка"
+                            Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
+                            FontSize="13"
+                            FontWeight="SemiBold" />
+
+                        <Border
+                            Height="134"
+                            Padding="6"
+                            Background="{StaticResource Mnemora.Brush.SurfaceMuted}"
+                            BorderBrush="{StaticResource Mnemora.Brush.Border}"
+                            BorderThickness="1"
+                            CornerRadius="10">
+
+                            <ListBox
+                                ItemsSource="{Binding IconOptions}"
+                                SelectedItem="{Binding SelectedIcon}"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                ScrollViewer.CanContentScroll="False"
+                                ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel />
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+
+                                        <Setter Property="Margin" Value="4" />
+                                        <Setter Property="Padding" Value="0" />
+                                        <Setter Property="Background" Value="Transparent" />
+                                        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                                        <Setter Property="ToolTip" Value="{Binding Name}" />
+
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+
+                                                <ControlTemplate TargetType="ListBoxItem">
+
+                                                    <Border
+                                                        x:Name="IconBorder"
+                                                        Width="43"
+                                                        Height="43"
+                                                        Background="{StaticResource Mnemora.Brush.Surface}"
+                                                        BorderBrush="{StaticResource Mnemora.Brush.Border}"
+                                                        BorderThickness="1"
+                                                        CornerRadius="9"
+                                                        Cursor="Hand">
+
+                                                        <materialDesign:PackIcon
+                                                            x:Name="Icon"
+                                                            Kind="{Binding Kind}"
+                                                            Width="23"
+                                                            Height="23"
+                                                            HorizontalAlignment="Center"
+                                                            VerticalAlignment="Center"
+                                                            Foreground="{StaticResource Mnemora.Brush.TextSecondary}" />
+
+                                                    </Border>
+
+                                                    <ControlTemplate.Triggers>
+
+                                                        <Trigger
+                                                            Property="IsMouseOver"
+                                                            Value="True">
+
+                                                            <Setter
+                                                                TargetName="IconBorder"
+                                                                Property="BorderBrush"
+                                                                Value="{StaticResource Mnemora.Brush.Primary}" />
+
+                                                        </Trigger>
+
+                                                        <Trigger
+                                                            Property="IsSelected"
+                                                            Value="True">
+
+                                                            <Setter
+                                                                TargetName="IconBorder"
+                                                                Property="Background"
+                                                                Value="#EEFFFC" />
+
+                                                            <Setter
+                                                                TargetName="IconBorder"
+                                                                Property="BorderBrush"
+                                                                Value="{StaticResource Mnemora.Brush.PrimaryDark}" />
+
+                                                            <Setter
+                                                                TargetName="Icon"
+                                                                Property="Foreground"
+                                                                Value="{StaticResource Mnemora.Brush.PrimaryDark}" />
+
+                                                        </Trigger>
+
+                                                    </ControlTemplate.Triggers>
+
+                                                </ControlTemplate>
+
+                                            </Setter.Value>
+                                        </Setter>
+
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+
+                            </ListBox>
+
+                        </Border>
+
+                        <!-- Предпросмотр -->
+
+                        <TextBlock
+                            Margin="0,20,0,10"
+                            Text="Предпросмотр"
+                            Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
+                            FontSize="13"
+                            FontWeight="SemiBold" />
+
+                        <Border
+                            Padding="14"
+                            Background="{StaticResource Mnemora.Brush.SurfaceMuted}"
+                            BorderBrush="{StaticResource Mnemora.Brush.Border}"
+                            BorderThickness="1"
+                            CornerRadius="11">
+
+                            <Grid>
+
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <Border
+                                    Width="52"
+                                    Height="52"
+                                    Background="{Binding SelectedColor.Brush}"
+                                    CornerRadius="12">
+
+                                    <materialDesign:PackIcon
+                                        Kind="{Binding SelectedIcon.Kind}"
+                                        Width="28"
+                                        Height="28"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Foreground="White" />
+
+                                </Border>
+
+                                <StackPanel
+                                    Grid.Column="1"
+                                    Margin="14,0,0,0"
+                                    VerticalAlignment="Center">
+
+                                    <TextBlock
+                                        Text="{Binding PreviewName}"
+                                        Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
+                                        FontSize="16"
+                                        FontWeight="SemiBold"
+                                        TextTrimming="CharacterEllipsis" />
+
+                                    <TextBlock
+                                        Margin="0,3,0,0"
+                                        Text="0 тем"
+                                        Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
+                                        FontSize="13" />
+
+                                </StackPanel>
+
+                            </Grid>
+
+                        </Border>
+
+                        <!-- Ошибка -->
+
+                        <Border
+                            Margin="0,14,0,0"
+                            Padding="12,9"
+                            Background="#FFF1F1"
+                            CornerRadius="8">
+
+                            <Border.Style>
+                                <Style TargetType="Border">
+
+                                    <Setter Property="Visibility" Value="Collapsed" />
+
+                                    <Style.Triggers>
+                                        <DataTrigger
+                                            Binding="{Binding HasError}"
+                                            Value="True">
+
+                                            <Setter
+                                                Property="Visibility"
+                                                Value="Visible" />
+
+                                        </DataTrigger>
+                                    </Style.Triggers>
+
+                                </Style>
+                            </Border.Style>
+
+                            <Grid>
+
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <materialDesign:PackIcon
+                                    Kind="AlertCircleOutline"
+                                    Width="19"
+                                    Height="19"
+                                    VerticalAlignment="Top"
+                                    Foreground="#C62828" />
+
+                                <TextBlock
+                                    Grid.Column="1"
+                                    Margin="9,0,0,0"
+                                    Text="{Binding ErrorMessage, Mode=OneWay}"
+                                    Foreground="#A52222"
+                                    FontSize="13"
+                                    TextWrapping="Wrap" />
+
+                            </Grid>
+
+                        </Border>
+
+                    </StackPanel>
+
+                </ScrollViewer>
 
                 <!-- Кнопки -->
 
-                <Grid Grid.Row="4"
-                      Margin="0,26,0,0">
+                <Grid
+                    Grid.Row="2"
+                    Margin="0,24,0,0">
 
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -163,37 +472,50 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
-                    <Button Grid.Column="0"
-                            Height="52"
-                            Command="{Binding CancelCommand}"
-                            Content="Отмена"
-                            Style="{StaticResource Mnemora.SecondaryButton}" />
+                    <Button
+                        Grid.Column="0"
+                        Content="Отмена"
+                        Command="{Binding CancelCommand}"
+                        Style="{StaticResource Mnemora.SecondaryButton}" />
 
-                    <Button Grid.Column="2"
-                            Height="52"
-                            IsDefault="True"
-                            Command="{Binding CreateCommand}"
-                            Style="{StaticResource Mnemora.PrimaryButton}">
+                    <Button
+                        Grid.Column="2"
+                        Command="{Binding CreateCommand}"
+                        Style="{StaticResource Mnemora.PrimaryButton}"
+                        IsDefault="True">
 
                         <TextBlock>
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
-                                    <Setter Property="Text"
-                                            Value="Создать раздел" />
+
+                                    <Setter
+                                        Property="Text"
+                                        Value="Создать раздел" />
 
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsCreating}"
-                                                     Value="True">
-                                            <Setter Property="Text"
-                                                    Value="Создаём..." />
+                                        <DataTrigger
+                                            Binding="{Binding IsCreating}"
+                                            Value="True">
+
+                                            <Setter
+                                                Property="Text"
+                                                Value="Создаём..." />
+
                                         </DataTrigger>
                                     </Style.Triggers>
+
                                 </Style>
                             </TextBlock.Style>
                         </TextBlock>
+
                     </Button>
+
                 </Grid>
+
             </Grid>
+
         </Border>
+
     </Grid>
+
 </UserControl>

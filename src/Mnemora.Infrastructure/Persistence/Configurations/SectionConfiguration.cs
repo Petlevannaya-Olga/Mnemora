@@ -31,6 +31,18 @@ public sealed class SectionConfiguration
             .IsRequired()
             .HasColumnName("name");
 
+        builder.Property(section => section.Color)
+            .HasColumnName("color")
+            .HasConversion<string>()
+            .HasMaxLength(20)
+            .IsRequired();
+
+        builder.Property(section => section.Icon)
+            .HasColumnName("icon")
+            .HasConversion<string>()
+            .HasMaxLength(40)
+            .IsRequired();
+
         builder.Property(section => section.CreatedAt)
             .HasColumnName("created_at")
             .IsRequired();

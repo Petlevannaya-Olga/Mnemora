@@ -43,7 +43,10 @@ public sealed class CreateSectionCommandHandler(
                 .ToErrors();
         }
 
-        var section = Section.Create(nameResult.Value);
+        var section = Section.Create(
+            nameResult.Value,
+            command.Color,
+            command.Icon);
 
         sectionsRepository.Add(section);
 
