@@ -1,4 +1,4 @@
-﻿namespace Mnemora.Desktop.Formatting;
+﻿namespace Mnemora.Shared;
 
 public static class DeclensionGenerator
 {

@@ -19,6 +19,43 @@ internal sealed class SectionsRepository(
         dbContext.Sections.Add(section);
     }
 
+    public void Remove(Section section)
+    {
+        dbContext.Sections.Remove(section);
+    }
+
+    public async Task<Result<Section?, Error>> GetByIdAsync(
+        SectionId sectionId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var section = await dbContext.Sections
+                .FirstOrDefaultAsync(
+                    section => section.Id == sectionId,
+                    cancellationToken);
+
+            return section;
+        }
+        catch (OperationCanceledException)
+            when (cancellationToken.IsCancellationRequested)
+        {
+            return CommonErrors.OperationCancelled(
+                "section.get.cancelled");
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(
+                exception,
+                "Не удалось получить раздел {SectionId}",
+                sectionId.Value);
+
+            return CommonErrors.Db(
+                "section.get.failed",
+                "Не удалось получить раздел");
+        }
+    }
+
     public async Task<Result<bool, Error>> ExistsAsync(
         Expression<Func<Section, bool>> predicate,
         CancellationToken cancellationToken)
@@ -27,9 +64,10 @@ internal sealed class SectionsRepository(
 
         try
         {
-            var exists = await dbContext.Sections.AnyAsync(
-                predicate,
-                cancellationToken);
+            var exists = await dbContext.Sections
+                .AnyAsync(
+                    predicate,
+                    cancellationToken);
 
             return exists;
         }

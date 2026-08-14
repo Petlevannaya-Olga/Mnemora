@@ -5,7 +5,7 @@ public sealed class Section
     public SectionId Id { get; private set; } = null!;
 
     public SectionName Name { get; private set; } = null!;
-    
+
     public SectionColor Color { get; private set; }
 
     public SectionIcon Icon { get; private set; }
@@ -19,7 +19,10 @@ public sealed class Section
     {
     }
 
-    private Section(SectionName name, SectionColor color, SectionIcon icon)
+    private Section(
+        SectionName name,
+        SectionColor color,
+        SectionIcon icon)
     {
         var now = DateTime.UtcNow;
 
@@ -36,17 +39,35 @@ public sealed class Section
         SectionColor color,
         SectionIcon icon)
     {
-        return new Section(name, color, icon);
+        return new Section(
+            name,
+            color,
+            icon);
     }
 
-    public void UpdateName(SectionName name)
+    public void Update(
+        SectionName name,
+        SectionColor color,
+        SectionIcon icon)
     {
-        if (Name == name)
+        if (Name == name &&
+            Color == color &&
+            Icon == icon)
         {
             return;
         }
 
         Name = name;
+        Color = color;
+        Icon = icon;
         UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateName(SectionName name)
+    {
+        Update(
+            name,
+            Color,
+            Icon);
     }
 }

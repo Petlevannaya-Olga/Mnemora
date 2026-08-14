@@ -10,7 +10,7 @@ public enum ErrorType
     /// <summary>
     /// Ничего не найдено
     /// </summary>
-    NOTFOUND,
+    NOT_FOUND,
 
     /// <summary>
     /// Серверная ошибка

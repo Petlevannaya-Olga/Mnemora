@@ -1,20 +1,20 @@
 ﻿<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:onboardingViews="clr-namespace:Mnemora.Desktop.Views.Onboarding"
-    xmlns:onboardingViewModels="clr-namespace:Mnemora.Desktop.ViewModels.Onboarding"
     xmlns:home="clr-namespace:Mnemora.Desktop.Views.Home"
     xmlns:homeViewModels="clr-namespace:Mnemora.Desktop.ViewModels.Home"
-    xmlns:shell="clr-namespace:Mnemora.Desktop.Views.Shell"
-    xmlns:shellViewModels="clr-namespace:Mnemora.Desktop.ViewModels.Shell"
     xmlns:library="clr-namespace:Mnemora.Desktop.Views.Library"
     xmlns:libraryViewModels="clr-namespace:Mnemora.Desktop.ViewModels.Library"
-    xmlns:sectionViewModels="clr-namespace:Mnemora.Desktop.ViewModels.Sections"
-    xmlns:sections="clr-namespace:Mnemora.Desktop.Views.Sections"
-    xmlns:topicViewModels="clr-namespace:Mnemora.Desktop.ViewModels.Topics"
-    xmlns:topics="clr-namespace:Mnemora.Desktop.Views.Topics"
+    xmlns:onboardingViews="clr-namespace:Mnemora.Desktop.Views.Onboarding"
+    xmlns:onboardingViewModels="clr-namespace:Mnemora.Desktop.ViewModels.Onboarding"
+    xmlns:pages="clr-namespace:Mnemora.Desktop.Views.Pages"
     xmlns:pageViewModels="clr-namespace:Mnemora.Desktop.ViewModels.Pages"
-    xmlns:pages="clr-namespace:Mnemora.Desktop.Views.Pages">
+    xmlns:sections="clr-namespace:Mnemora.Desktop.Views.Sections"
+    xmlns:sectionViewModels="clr-namespace:Mnemora.Desktop.ViewModels.Sections"
+    xmlns:shell="clr-namespace:Mnemora.Desktop.Views.Shell"
+    xmlns:shellViewModels="clr-namespace:Mnemora.Desktop.ViewModels.Shell"
+    xmlns:topics="clr-namespace:Mnemora.Desktop.Views.Topics"
+    xmlns:topicViewModels="clr-namespace:Mnemora.Desktop.ViewModels.Topics">
 
     <DataTemplate
         DataType="{x:Type onboardingViewModels:ProfileSetupViewModel}">
@@ -25,17 +25,17 @@
         DataType="{x:Type onboardingViewModels:StorageSetupViewModel}">
         <onboardingViews:StorageSetupView />
     </DataTemplate>
-    
+
     <DataTemplate
         DataType="{x:Type onboardingViewModels:WelcomeViewModel}">
         <onboardingViews:WelcomeView />
     </DataTemplate>
-    
+
     <DataTemplate
         DataType="{x:Type onboardingViewModels:AiSetupViewModel}">
         <onboardingViews:AiSetupView />
     </DataTemplate>
-    
+
     <DataTemplate
         DataType="{x:Type onboardingViewModels:CompletionSetupViewModel}">
         <onboardingViews:CompletionSetupView />
@@ -45,46 +45,64 @@
         DataType="{x:Type homeViewModels:HomeViewModel}">
         <home:HomeView />
     </DataTemplate>
-    
+
     <DataTemplate
         DataType="{x:Type shellViewModels:AppShellViewModel}">
         <shell:AppShellView />
     </DataTemplate>
-    
-    <DataTemplate DataType="{x:Type libraryViewModels:LibraryViewModel}">
+
+    <DataTemplate
+        DataType="{x:Type libraryViewModels:LibraryViewModel}">
         <library:LibraryView />
     </DataTemplate>
-    
-    <DataTemplate DataType="{x:Type sectionViewModels:CreateSectionDialogViewModel}">
+
+    <DataTemplate
+        DataType="{x:Type sectionViewModels:CreateSectionDialogViewModel}">
         <sections:CreateSectionDialogView />
     </DataTemplate>
 
-    <DataTemplate DataType="{x:Type topicViewModels:CreateTopicDialogViewModel}">
+    <DataTemplate
+        DataType="{x:Type sectionViewModels:EditSectionDialogViewModel}">
+        <sections:EditSectionDialogView />
+    </DataTemplate>
+
+    <DataTemplate
+        DataType="{x:Type sectionViewModels:DeleteSectionDialogViewModel}">
+        <sections:DeleteSectionDialogView />
+    </DataTemplate>
+
+    <DataTemplate
+        DataType="{x:Type topicViewModels:CreateTopicDialogViewModel}">
         <topics:CreateTopicDialogView />
     </DataTemplate>
-    
+
     <DataTemplate
         DataType="{x:Type sectionViewModels:SelectSectionIconDialogViewModel}">
         <sections:SelectSectionIconDialogView />
     </DataTemplate>
-    
-    <DataTemplate DataType="{x:Type pageViewModels:PracticeViewModel}">
+
+    <DataTemplate
+        DataType="{x:Type pageViewModels:PracticeViewModel}">
         <pages:PlaceholderPageView />
     </DataTemplate>
 
-    <DataTemplate DataType="{x:Type pageViewModels:TrainingViewModel}">
+    <DataTemplate
+        DataType="{x:Type pageViewModels:TrainingViewModel}">
         <pages:PlaceholderPageView />
     </DataTemplate>
 
-    <DataTemplate DataType="{x:Type pageViewModels:PlanViewModel}">
+    <DataTemplate
+        DataType="{x:Type pageViewModels:PlanViewModel}">
         <pages:PlaceholderPageView />
     </DataTemplate>
 
-    <DataTemplate DataType="{x:Type pageViewModels:ProgressViewModel}">
+    <DataTemplate
+        DataType="{x:Type pageViewModels:ProgressViewModel}">
         <pages:PlaceholderPageView />
     </DataTemplate>
 
-    <DataTemplate DataType="{x:Type pageViewModels:SettingsViewModel}">
+    <DataTemplate
+        DataType="{x:Type pageViewModels:SettingsViewModel}">
         <pages:PlaceholderPageView />
     </DataTemplate>
 

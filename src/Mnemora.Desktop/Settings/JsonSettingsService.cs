@@ -2,6 +2,7 @@
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.Unicode;
 
 namespace Mnemora.Desktop.Settings;
@@ -18,8 +19,17 @@ public sealed class JsonSettingsService :
         {
             PropertyNamingPolicy =
                 JsonNamingPolicy.CamelCase,
+
             WriteIndented = true,
-            Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
+
+            Encoder =
+                JavaScriptEncoder.Create(
+                    UnicodeRanges.All),
+
+            Converters =
+            {
+                new JsonStringEnumConverter(),
+            },
         };
 
     private readonly string _settingsDirectory =
@@ -44,7 +54,8 @@ public sealed class JsonSettingsService :
     {
         ThrowIfDisposed();
 
-        await _semaphore.WaitAsync(cancellationToken);
+        await _semaphore.WaitAsync(
+            cancellationToken);
 
         try
         {
@@ -71,7 +82,8 @@ public sealed class JsonSettingsService :
 
         return UpdateAsync(
             settings =>
-                settings.UserName = normalizedUserName,
+                settings.UserName =
+                    normalizedUserName,
             cancellationToken);
     }
 
@@ -85,11 +97,44 @@ public sealed class JsonSettingsService :
             storagePath);
 
         string normalizedStoragePath =
-            Path.GetFullPath(storagePath.Trim());
+            Path.GetFullPath(
+                storagePath.Trim());
 
         return UpdateAsync(
             settings =>
-                settings.StoragePath = normalizedStoragePath,
+                settings.StoragePath =
+                    normalizedStoragePath,
+            cancellationToken);
+    }
+
+    public Task SaveLibraryViewModeAsync(
+        LibraryViewMode viewMode,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+
+        return UpdateAsync(
+            settings =>
+                settings.LibraryViewMode =
+                    viewMode,
+            cancellationToken);
+    }
+
+    public Task CompleteOnboardingAsync(
+        bool isAiConfigured,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+
+        return UpdateAsync(
+            settings =>
+            {
+                settings.IsAiConfigured =
+                    isAiConfigured;
+
+                settings.IsOnboardingCompleted =
+                    true;
+            },
             cancellationToken);
     }
 
@@ -99,9 +144,11 @@ public sealed class JsonSettingsService :
     {
         ThrowIfDisposed();
 
-        ArgumentNullException.ThrowIfNull(update);
+        ArgumentNullException.ThrowIfNull(
+            update);
 
-        await _semaphore.WaitAsync(cancellationToken);
+        await _semaphore.WaitAsync(
+            cancellationToken);
 
         try
         {
@@ -152,13 +199,15 @@ public sealed class JsonSettingsService :
         Directory.CreateDirectory(
             _settingsDirectory);
 
-        string json = JsonSerializer.Serialize(
-            settings,
-            _jsonOptions);
+        string json =
+            JsonSerializer.Serialize(
+                settings,
+                _jsonOptions);
 
-        string temporaryPath = Path.Combine(
-            _settingsDirectory,
-            $"settings-{Guid.NewGuid():N}.tmp");
+        string temporaryPath =
+            Path.Combine(
+                _settingsDirectory,
+                $"settings-{Guid.NewGuid():N}.tmp");
 
         try
         {
@@ -176,11 +225,13 @@ public sealed class JsonSettingsService :
         }
         finally
         {
-            _ = TryDeleteFile(temporaryPath);
+            _ = TryDeleteFile(
+                temporaryPath);
         }
     }
 
-    private static bool TryDeleteFile(string path)
+    private static bool TryDeleteFile(
+        string path)
     {
         try
         {
@@ -219,23 +270,5 @@ public sealed class JsonSettingsService :
         }
 
         _semaphore.Dispose();
-    }
-
-    public Task CompleteOnboardingAsync(
-        bool isAiConfigured,
-        CancellationToken cancellationToken = default)
-    {
-        ThrowIfDisposed();
-
-        return UpdateAsync(
-            settings =>
-            {
-                settings.IsAiConfigured =
-                    isAiConfigured;
-
-                settings.IsOnboardingCompleted =
-                    true;
-            },
-            cancellationToken);
     }
 }

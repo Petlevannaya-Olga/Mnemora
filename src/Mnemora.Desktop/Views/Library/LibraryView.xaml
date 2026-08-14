@@ -1,14 +1,64 @@
-﻿<UserControl x:Class="Mnemora.Desktop.Views.Library.LibraryView"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-             xmlns:converters="clr-namespace:Mnemora.Desktop.Converters"
-             Loaded="LibraryView_OnLoaded"
-             Unloaded="LibraryView_OnUnloaded">
+﻿<UserControl
+    x:Class="Mnemora.Desktop.Views.Library.LibraryView"
+    x:Name="Root"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="clr-namespace:Mnemora.Desktop.Converters"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    Loaded="LibraryView_OnLoaded"
+    Unloaded="LibraryView_OnUnloaded"
+    SnapsToDevicePixels="True"
+    TextOptions.TextFormattingMode="Display"
+    TextOptions.TextRenderingMode="ClearType"
+    UseLayoutRounding="True">
 
     <UserControl.Resources>
-        <converters:SectionColorConverter x:Key="SectionColorConverter" />
-        <converters:SectionIconConverter x:Key="SectionIconConverter" />
+
+        <converters:SectionColorConverter
+            x:Key="SectionColorConverter" />
+
+        <converters:SectionIconConverter
+            x:Key="SectionIconConverter" />
+
+        <Style
+            x:Key="SectionMenuButtonStyle"
+            BasedOn="{StaticResource MaterialDesignFlatButton}"
+            TargetType="Button">
+
+            <Setter
+                Property="Height"
+                Value="48" />
+
+            <Setter
+                Property="MinWidth"
+                Value="0" />
+
+            <Setter
+                Property="Padding"
+                Value="10,0" />
+
+            <Setter
+                Property="Margin"
+                Value="0,1" />
+
+            <Setter
+                Property="Background"
+                Value="Transparent" />
+
+            <Setter
+                Property="Foreground"
+                Value="{DynamicResource Mnemora.Brush.TextPrimary}" />
+
+            <Setter
+                Property="HorizontalContentAlignment"
+                Value="Stretch" />
+
+            <Setter
+                Property="VerticalContentAlignment"
+                Value="Center" />
+
+        </Style>
+
     </UserControl.Resources>
 
     <Grid Background="{DynamicResource Mnemora.Brush.SurfaceMuted}">
@@ -25,23 +75,200 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
             <StackPanel VerticalAlignment="Center">
 
                 <TextBlock
-                    Text="Библиотека"
-                    Style="{StaticResource Mnemora.Heading}" />
+                    Style="{StaticResource Mnemora.Heading}"
+                    Text="Библиотека" />
 
                 <TextBlock
                     Margin="0,6,0,0"
-                    Text="Организуйте знания по разделам и темам"
-                    Style="{StaticResource Mnemora.Description}" />
+                    Style="{StaticResource Mnemora.Description}"
+                    Text="Организуйте знания по разделам и темам" />
 
             </StackPanel>
 
-            <Button
+            <!-- Переключатель вида -->
+
+            <Border
                 Grid.Column="1"
+                Width="110"
+                Padding="4"
+                VerticalAlignment="Center"
+                Background="{DynamicResource Mnemora.Brush.Surface}"
+                BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                BorderThickness="1"
+                CornerRadius="10">
+
+                <Grid>
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Подробный список -->
+
+                    <Button
+                        Grid.Column="0"
+                        Height="38"
+                        MinWidth="0"
+                        MinHeight="0"
+                        Padding="0"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"
+                        Command="{Binding ShowTableViewCommand}"
+                        ToolTip="Подробный список">
+
+                        <Button.Style>
+                            <Style
+                                BasedOn="{StaticResource MaterialDesignFlatButton}"
+                                TargetType="Button">
+
+                                <Setter
+                                    Property="Background"
+                                    Value="Transparent" />
+
+                                <Setter
+                                    Property="Foreground"
+                                    Value="{DynamicResource Mnemora.Brush.TextSecondary}" />
+
+                                <Setter
+                                    Property="MinWidth"
+                                    Value="0" />
+
+                                <Setter
+                                    Property="MinHeight"
+                                    Value="0" />
+
+                                <Setter
+                                    Property="Padding"
+                                    Value="0" />
+
+                                <Setter
+                                    Property="HorizontalContentAlignment"
+                                    Value="Center" />
+
+                                <Setter
+                                    Property="VerticalContentAlignment"
+                                    Value="Center" />
+
+                                <Style.Triggers>
+
+                                    <DataTrigger
+                                        Binding="{Binding IsTableView}"
+                                        Value="True">
+
+                                        <Setter
+                                            Property="Background"
+                                            Value="#EEFFFC" />
+
+                                        <Setter
+                                            Property="Foreground"
+                                            Value="{DynamicResource Mnemora.Brush.PrimaryDark}" />
+
+                                    </DataTrigger>
+
+                                </Style.Triggers>
+
+                            </Style>
+                        </Button.Style>
+
+                        <materialDesign:PackIcon
+                            Width="20"
+                            Height="20"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Kind="ViewAgendaOutline" />
+
+                    </Button>
+
+                    <!-- Плитки -->
+
+                    <Button
+                        Grid.Column="1"
+                        Height="38"
+                        MinWidth="0"
+                        MinHeight="0"
+                        Padding="0"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"
+                        Command="{Binding ShowTilesViewCommand}"
+                        ToolTip="Плитки">
+
+                        <Button.Style>
+                            <Style
+                                BasedOn="{StaticResource MaterialDesignFlatButton}"
+                                TargetType="Button">
+
+                                <Setter
+                                    Property="Background"
+                                    Value="Transparent" />
+
+                                <Setter
+                                    Property="Foreground"
+                                    Value="{DynamicResource Mnemora.Brush.TextSecondary}" />
+
+                                <Setter
+                                    Property="MinWidth"
+                                    Value="0" />
+
+                                <Setter
+                                    Property="MinHeight"
+                                    Value="0" />
+
+                                <Setter
+                                    Property="Padding"
+                                    Value="0" />
+
+                                <Setter
+                                    Property="HorizontalContentAlignment"
+                                    Value="Center" />
+
+                                <Setter
+                                    Property="VerticalContentAlignment"
+                                    Value="Center" />
+
+                                <Style.Triggers>
+
+                                    <DataTrigger
+                                        Binding="{Binding IsTilesView}"
+                                        Value="True">
+
+                                        <Setter
+                                            Property="Background"
+                                            Value="#F1ECFF" />
+
+                                        <Setter
+                                            Property="Foreground"
+                                            Value="{DynamicResource Mnemora.Brush.Secondary}" />
+
+                                    </DataTrigger>
+
+                                </Style.Triggers>
+
+                            </Style>
+                        </Button.Style>
+
+                        <materialDesign:PackIcon
+                            Width="20"
+                            Height="20"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Kind="ViewGridOutline" />
+
+                    </Button>
+
+                </Grid>
+
+            </Border>
+
+            <Button
+                Grid.Column="3"
                 MinWidth="190"
                 Command="{Binding AddSectionCommand}"
                 Style="{StaticResource Mnemora.PrimaryButton}">
@@ -51,8 +278,8 @@
                     <materialDesign:PackIcon
                         Width="21"
                         Height="21"
-                        Kind="Plus"
-                        VerticalAlignment="Center" />
+                        VerticalAlignment="Center"
+                        Kind="Plus" />
 
                     <TextBlock
                         Margin="14,0,0,0"
@@ -80,9 +307,12 @@
                 <StackPanel.Style>
                     <Style TargetType="StackPanel">
 
-                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Setter
+                            Property="Visibility"
+                            Value="Collapsed" />
 
                         <Style.Triggers>
+
                             <DataTrigger
                                 Binding="{Binding IsLoading}"
                                 Value="True">
@@ -92,6 +322,7 @@
                                     Value="Visible" />
 
                             </DataTrigger>
+
                         </Style.Triggers>
 
                     </Style>
@@ -106,8 +337,8 @@
                 <TextBlock
                     Margin="0,18,0,0"
                     HorizontalAlignment="Center"
-                    Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
                     FontSize="16"
+                    Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
                     Text="Загружаем библиотеку..." />
 
             </StackPanel>
@@ -126,12 +357,16 @@
                 <Border.Style>
                     <Style TargetType="Border">
 
-                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Setter
+                            Property="Visibility"
+                            Value="Collapsed" />
 
                         <Style.Triggers>
+
                             <MultiDataTrigger>
 
                                 <MultiDataTrigger.Conditions>
+
                                     <Condition
                                         Binding="{Binding HasError}"
                                         Value="True" />
@@ -139,6 +374,7 @@
                                     <Condition
                                         Binding="{Binding IsLoading}"
                                         Value="False" />
+
                                 </MultiDataTrigger.Conditions>
 
                                 <Setter
@@ -146,6 +382,7 @@
                                     Value="Visible" />
 
                             </MultiDataTrigger>
+
                         </Style.Triggers>
 
                     </Style>
@@ -163,19 +400,19 @@
                     <TextBlock
                         Margin="0,18,0,0"
                         HorizontalAlignment="Center"
-                        Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
                         FontSize="21"
                         FontWeight="SemiBold"
+                        Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
                         Text="Не удалось загрузить библиотеку" />
 
                     <TextBlock
                         Margin="0,10,0,0"
                         HorizontalAlignment="Center"
-                        TextAlignment="Center"
-                        TextWrapping="Wrap"
-                        Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
                         FontSize="15"
-                        Text="{Binding ErrorMessage}" />
+                        Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                        Text="{Binding ErrorMessage}"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap" />
 
                     <Button
                         Margin="0,24,0,0"
@@ -200,9 +437,12 @@
                 <Border.Style>
                     <Style TargetType="Border">
 
-                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Setter
+                            Property="Visibility"
+                            Value="Collapsed" />
 
                         <Style.Triggers>
+
                             <DataTrigger
                                 Binding="{Binding IsEmpty}"
                                 Value="True">
@@ -212,6 +452,7 @@
                                     Value="Visible" />
 
                             </DataTrigger>
+
                         </Style.Triggers>
 
                     </Style>
@@ -232,19 +473,19 @@
                     <TextBlock
                         Margin="0,22,0,0"
                         HorizontalAlignment="Center"
-                        Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
                         FontSize="25"
                         FontWeight="SemiBold"
+                        Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
                         Text="В библиотеке пока нет разделов" />
 
                     <TextBlock
                         Margin="0,10,0,0"
                         HorizontalAlignment="Center"
-                        TextAlignment="Center"
-                        TextWrapping="Wrap"
-                        Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
                         FontSize="16"
-                        Text="Создайте первый раздел, а затем добавьте в него темы и материалы." />
+                        Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                        Text="Создайте первый раздел, а затем добавьте в него темы и материалы."
+                        TextAlignment="Center"
+                        TextWrapping="Wrap" />
 
                     <Button
                         Margin="0,28,0,0"
@@ -258,8 +499,8 @@
                             <materialDesign:PackIcon
                                 Width="21"
                                 Height="21"
-                                Kind="Plus"
-                                VerticalAlignment="Center" />
+                                VerticalAlignment="Center"
+                                Kind="Plus" />
 
                             <TextBlock
                                 Margin="14,0,0,0"
@@ -274,21 +515,25 @@
 
             </Border>
 
-            <!-- Разделы -->
+            <!-- Подробный режим -->
 
             <ScrollViewer
-                VerticalScrollBarVisibility="Auto"
-                HorizontalScrollBarVisibility="Disabled">
+                HorizontalScrollBarVisibility="Disabled"
+                VerticalScrollBarVisibility="Auto">
 
                 <ScrollViewer.Style>
                     <Style TargetType="ScrollViewer">
 
-                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Setter
+                            Property="Visibility"
+                            Value="Collapsed" />
 
                         <Style.Triggers>
+
                             <MultiDataTrigger>
 
                                 <MultiDataTrigger.Conditions>
+
                                     <Condition
                                         Binding="{Binding HasSections}"
                                         Value="True" />
@@ -300,6 +545,11 @@
                                     <Condition
                                         Binding="{Binding HasError}"
                                         Value="False" />
+
+                                    <Condition
+                                        Binding="{Binding IsTableView}"
+                                        Value="True" />
+
                                 </MultiDataTrigger.Conditions>
 
                                 <Setter
@@ -307,6 +557,7 @@
                                     Value="Visible" />
 
                             </MultiDataTrigger>
+
                         </Style.Triggers>
 
                     </Style>
@@ -340,18 +591,20 @@
                                             <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="8" />
+                                            <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
 
                                         <Border
-                                            Width="52"
-                                            Height="52"
+                                            Width="48"
+                                            Height="48"
                                             Background="{Binding Color,
                                                 Converter={StaticResource SectionColorConverter}}"
-                                            CornerRadius="13">
+                                            CornerRadius="12">
 
                                             <materialDesign:PackIcon
-                                                Width="28"
-                                                Height="28"
+                                                Width="27"
+                                                Height="27"
                                                 HorizontalAlignment="Center"
                                                 VerticalAlignment="Center"
                                                 Foreground="White"
@@ -366,16 +619,16 @@
                                             VerticalAlignment="Center">
 
                                             <TextBlock
-                                                Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
                                                 FontSize="21"
                                                 FontWeight="SemiBold"
+                                                Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
                                                 Text="{Binding Name}"
                                                 TextTrimming="CharacterEllipsis" />
 
                                             <TextBlock
                                                 Margin="0,4,0,0"
-                                                Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
                                                 FontSize="14"
+                                                Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
                                                 Text="{Binding Topics.Count,
                                                     StringFormat='Тем: {0}'}" />
 
@@ -384,12 +637,10 @@
                                         <Button
                                             Grid.Column="2"
                                             Height="42"
-                                            MinHeight="42"
                                             MinWidth="160"
                                             Padding="18,0"
-                                            VerticalAlignment="Center"
                                             Command="{Binding DataContext.AddTopicCommand,
-                                                RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                                Source={x:Reference Root}}"
                                             CommandParameter="{Binding}"
                                             Style="{StaticResource Mnemora.SecondaryButton}">
 
@@ -410,6 +661,120 @@
                                             </StackPanel>
 
                                         </Button>
+
+                                        <!-- Действия с разделом -->
+
+                                        <materialDesign:PopupBox
+                                            Grid.Column="2"
+                                            PlacementMode="BottomAndAlignRightEdges"
+                                            ToolTip="Действия с разделом">
+
+                                            <materialDesign:PopupBox.ToggleContent>
+
+                                                <materialDesign:PackIcon
+                                                    Width="22"
+                                                    Height="22"
+                                                    Kind="DotsVertical" />
+
+                                            </materialDesign:PopupBox.ToggleContent>
+
+                                            <!-- Обычный Content PopupBox -->
+
+                                            <Border
+                                                Width="220"
+                                                Padding="6"
+                                                Background="{DynamicResource Mnemora.Brush.Surface}"
+                                                CornerRadius="10">
+
+                                                <StackPanel>
+
+                                                    <Button
+                                                        Command="{Binding DataContext.EditSectionCommand,
+                    Source={x:Reference Root}}"
+                                                        CommandParameter="{Binding}"
+                                                        Style="{StaticResource SectionMenuButtonStyle}">
+
+                                                        <Grid>
+
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                            </Grid.ColumnDefinitions>
+
+                                                            <Border
+                                                                Width="32"
+                                                                Height="32"
+                                                                Background="#EEFFFC"
+                                                                CornerRadius="8">
+
+                                                                <materialDesign:PackIcon
+                                                                    Width="18"
+                                                                    Height="18"
+                                                                    HorizontalAlignment="Center"
+                                                                    VerticalAlignment="Center"
+                                                                    Foreground="{DynamicResource Mnemora.Brush.PrimaryDark}"
+                                                                    Kind="PencilOutline" />
+
+                                                            </Border>
+
+                                                            <TextBlock
+                                                                Grid.Column="1"
+                                                                Margin="12,0,0,0"
+                                                                VerticalAlignment="Center"
+                                                                FontSize="14"
+                                                                Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                                                Text="Редактировать" />
+
+                                                        </Grid>
+
+                                                    </Button>
+
+                                                    <Button
+                                                        Command="{Binding DataContext.DeleteSectionCommand,
+                    Source={x:Reference Root}}"
+                                                        CommandParameter="{Binding}"
+                                                        Style="{StaticResource SectionMenuButtonStyle}">
+
+                                                        <Grid>
+
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                            </Grid.ColumnDefinitions>
+
+                                                            <Border
+                                                                Width="32"
+                                                                Height="32"
+                                                                Background="#FFF1F1"
+                                                                CornerRadius="8">
+
+                                                                <materialDesign:PackIcon
+                                                                    Width="18"
+                                                                    Height="18"
+                                                                    HorizontalAlignment="Center"
+                                                                    VerticalAlignment="Center"
+                                                                    Foreground="#C62828"
+                                                                    Kind="DeleteOutline" />
+
+                                                            </Border>
+
+                                                            <TextBlock
+                                                                Grid.Column="1"
+                                                                Margin="12,0,0,0"
+                                                                VerticalAlignment="Center"
+                                                                FontSize="14"
+                                                                Foreground="#C62828"
+                                                                Text="Удалить" />
+
+                                                        </Grid>
+
+                                                    </Button>
+
+                                                </StackPanel>
+
+                                            </Border>
+
+                                        </materialDesign:PopupBox>
 
                                     </Grid>
 
@@ -434,6 +799,7 @@
                                                         Value="Collapsed" />
 
                                                     <Style.Triggers>
+
                                                         <DataTrigger
                                                             Binding="{Binding Topics.Count}"
                                                             Value="0">
@@ -443,6 +809,7 @@
                                                                 Value="Visible" />
 
                                                         </DataTrigger>
+
                                                     </Style.Triggers>
 
                                                 </Style>
@@ -454,15 +821,14 @@
                                                     Width="22"
                                                     Height="22"
                                                     VerticalAlignment="Center"
-                                                    Foreground="{Binding Color,
-                                                        Converter={StaticResource SectionColorConverter}}"
+                                                    Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
                                                     Kind="BookOpenPageVariantOutline" />
 
                                                 <TextBlock
                                                     Margin="12,0,0,0"
                                                     VerticalAlignment="Center"
-                                                    Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
                                                     FontSize="14"
+                                                    Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
                                                     Text="В этом разделе пока нет тем" />
 
                                             </StackPanel>
@@ -475,7 +841,7 @@
 
                                             <ItemsControl.ItemsPanel>
                                                 <ItemsPanelTemplate>
-                                                    <WrapPanel />
+                                                    <UniformGrid Columns="3" />
                                                 </ItemsPanelTemplate>
                                             </ItemsControl.ItemsPanel>
 
@@ -504,27 +870,25 @@
                                                                 Width="25"
                                                                 Height="25"
                                                                 VerticalAlignment="Top"
-                                                                Kind="BookmarkOutline"
-                                                                Foreground="{Binding DataContext.Color,
-                                                                    RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}},
-                                                                    Converter={StaticResource SectionColorConverter}}" />
+                                                                Foreground="{DynamicResource Mnemora.Brush.Secondary}"
+                                                                Kind="BookmarkOutline" />
 
                                                             <StackPanel
                                                                 Grid.Column="1"
                                                                 Margin="13,0,12,0">
 
                                                                 <TextBlock
-                                                                    Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
                                                                     FontSize="16"
                                                                     FontWeight="SemiBold"
+                                                                    Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
                                                                     Text="{Binding Name}"
                                                                     TextTrimming="CharacterEllipsis"
                                                                     TextWrapping="Wrap" />
 
                                                                 <TextBlock
                                                                     Margin="0,7,0,0"
-                                                                    Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
                                                                     FontSize="12"
+                                                                    Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
                                                                     Text="{Binding CreatedAt,
                                                                         StringFormat='Создана {0:dd.MM.yyyy}'}" />
 
@@ -535,10 +899,8 @@
                                                                 Width="19"
                                                                 Height="19"
                                                                 VerticalAlignment="Center"
-                                                                Kind="ArrowRight"
-                                                                Foreground="{Binding DataContext.Color,
-                                                                    RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}},
-                                                                    Converter={StaticResource SectionColorConverter}}" />
+                                                                Foreground="{DynamicResource Mnemora.Brush.Secondary}"
+                                                                Kind="ArrowRight" />
 
                                                         </Grid>
 
@@ -550,6 +912,227 @@
                                         </ItemsControl>
 
                                     </Grid>
+
+                                </Grid>
+
+                            </Border>
+
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+
+                </ItemsControl>
+
+            </ScrollViewer>
+
+            <!-- Режим плиток -->
+
+            <ScrollViewer
+                x:Name="TilesScrollViewer"
+                HorizontalContentAlignment="Stretch"
+                HorizontalScrollBarVisibility="Disabled"
+                VerticalScrollBarVisibility="Auto">
+
+                <ScrollViewer.Style>
+                    <Style TargetType="ScrollViewer">
+
+                        <Setter
+                            Property="Visibility"
+                            Value="Collapsed" />
+
+                        <Style.Triggers>
+
+                            <MultiDataTrigger>
+
+                                <MultiDataTrigger.Conditions>
+
+                                    <Condition
+                                        Binding="{Binding HasSections}"
+                                        Value="True" />
+
+                                    <Condition
+                                        Binding="{Binding IsLoading}"
+                                        Value="False" />
+
+                                    <Condition
+                                        Binding="{Binding HasError}"
+                                        Value="False" />
+
+                                    <Condition
+                                        Binding="{Binding IsTilesView}"
+                                        Value="True" />
+
+                                </MultiDataTrigger.Conditions>
+
+                                <Setter
+                                    Property="Visibility"
+                                    Value="Visible" />
+
+                            </MultiDataTrigger>
+
+                        </Style.Triggers>
+
+                    </Style>
+                </ScrollViewer.Style>
+
+                <ItemsControl
+                    Width="{Binding ViewportWidth,
+        ElementName=TilesScrollViewer}"
+                    HorizontalAlignment="Stretch"
+                    ItemsSource="{Binding Sections}">
+
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+
+                            <UniformGrid
+                                Columns="3"
+                                HorizontalAlignment="Stretch" />
+
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+
+                            <Border
+                                MinHeight="224"
+                                Margin="0,0,18,18"
+                                Padding="22"
+                                Background="{DynamicResource Mnemora.Brush.Surface}"
+                                BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                                BorderThickness="1"
+                                CornerRadius="16">
+
+                                <Grid>
+
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <Grid>
+
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <Border
+                                            Width="52"
+                                            Height="52"
+                                            Background="{Binding Color,
+                                                Converter={StaticResource SectionColorConverter}}"
+                                            CornerRadius="13">
+
+                                            <materialDesign:PackIcon
+                                                Width="29"
+                                                Height="29"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Foreground="White"
+                                                Kind="{Binding Icon,
+                                                    Converter={StaticResource SectionIconConverter}}" />
+
+                                        </Border>
+
+                                        <materialDesign:PopupBox
+                                            Grid.Column="2"
+                                            PlacementMode="BottomAndAlignRightEdges"
+                                            ToolTip="Действия с разделом">
+
+                                            <materialDesign:PopupBox.ToggleContent>
+
+                                                <materialDesign:PackIcon
+                                                    Width="22"
+                                                    Height="22"
+                                                    Kind="DotsVertical" />
+
+                                            </materialDesign:PopupBox.ToggleContent>
+
+                                            <StackPanel
+                                                Width="210"
+                                                Margin="4">
+
+                                                <Button
+                                                    Command="{Binding DataContext.EditSectionCommand,
+                                                        Source={x:Reference Root}}"
+                                                    CommandParameter="{Binding}"
+                                                    Content="Редактировать"
+                                                    Style="{StaticResource SectionMenuButtonStyle}" />
+
+                                                <Button
+                                                    Command="{Binding DataContext.DeleteSectionCommand,
+                                                        Source={x:Reference Root}}"
+                                                    CommandParameter="{Binding}"
+                                                    Content="Удалить"
+                                                    Foreground="#C62828"
+                                                    Style="{StaticResource SectionMenuButtonStyle}" />
+
+                                            </StackPanel>
+
+                                        </materialDesign:PopupBox>
+
+                                    </Grid>
+
+                                    <StackPanel
+                                        Grid.Row="1"
+                                        Margin="0,18,0,18">
+
+                                        <TextBlock
+                                            FontSize="21"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                            Text="{Binding Name}"
+                                            TextTrimming="CharacterEllipsis" />
+
+                                        <StackPanel
+                                            Margin="0,10,0,0"
+                                            Orientation="Horizontal">
+
+                                            <TextBlock
+                                                FontSize="14"
+                                                Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                Text="{Binding Topics.Count,
+                                                    StringFormat='Тем: {0}'}" />
+
+                                            <TextBlock
+                                                Margin="12,0"
+                                                Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                Text="•" />
+
+                                            <TextBlock
+                                                FontSize="14"
+                                                Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                Text="{Binding CreatedAt,
+                                                    StringFormat='Создан {0:dd.MM.yyyy}'}" />
+
+                                        </StackPanel>
+
+                                    </StackPanel>
+
+                                    <Button
+                                        Grid.Row="2"
+                                        Height="42"
+                                        Command="{Binding DataContext.AddTopicCommand,
+                                            Source={x:Reference Root}}"
+                                        CommandParameter="{Binding}"
+                                        Style="{StaticResource Mnemora.SecondaryButton}">
+
+                                        <StackPanel Orientation="Horizontal">
+
+                                            <materialDesign:PackIcon
+                                                Width="19"
+                                                Height="19"
+                                                Kind="Plus" />
+
+                                            <TextBlock
+                                                Margin="10,0,0,0"
+                                                Text="Добавить тему" />
+
+                                        </StackPanel>
+
+                                    </Button>
 
                                 </Grid>
 

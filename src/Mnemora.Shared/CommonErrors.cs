@@ -45,7 +45,7 @@ public static class CommonErrors
             propertyName);
 
     public static Error NotFound(string? code, string message, Guid? id = null)
-        => new(code ?? "record.not.found", message, ErrorType.NOTFOUND);
+        => new(code ?? "record.not.found", message, ErrorType.NOT_FOUND);
 
     public static Error Validation(string? code, string message, string? invalidField = null)
         => new(code ?? "value.is.invalid", message, ErrorType.VALIDATION, invalidField);

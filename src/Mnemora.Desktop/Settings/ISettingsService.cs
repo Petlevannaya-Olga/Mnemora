@@ -13,6 +13,10 @@ public interface ISettingsService
         string storagePath,
         CancellationToken cancellationToken = default);
 
+    Task SaveLibraryViewModeAsync(
+        LibraryViewMode viewMode,
+        CancellationToken cancellationToken = default);
+
     Task CompleteOnboardingAsync(
         bool isAiConfigured,
         CancellationToken cancellationToken = default);

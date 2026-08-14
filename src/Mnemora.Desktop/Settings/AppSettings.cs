@@ -9,4 +9,6 @@ public sealed class AppSettings
     public bool IsAiConfigured { get; set; }
 
     public bool IsOnboardingCompleted { get; set; }
+
+    public LibraryViewMode LibraryViewMode { get; set; } = LibraryViewMode.Table;
 }

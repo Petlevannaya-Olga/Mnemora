@@ -6,7 +6,6 @@ using Mnemora.Application.Library.Get;
 using Mnemora.Application.Queries;
 using Mnemora.Contracts;
 using Mnemora.Desktop.Dialogs;
-using Mnemora.Desktop.Formatting;
 using Mnemora.Desktop.Navigation;
 using Mnemora.Desktop.Storage;
 using Mnemora.Desktop.ViewModels.Common;
@@ -14,6 +13,7 @@ using Mnemora.Desktop.ViewModels.Library;
 using Mnemora.Desktop.ViewModels.Onboarding;
 using Mnemora.Desktop.ViewModels.Sections;
 using Mnemora.Desktop.ViewModels.Topics;
+using Mnemora.Shared;
 
 namespace Mnemora.Desktop.ViewModels.Home;
 

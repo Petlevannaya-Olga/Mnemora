@@ -1,10 +1,12 @@
 ﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 using Mnemora.Application.Library.Get;
 using Mnemora.Application.Queries;
 using Mnemora.Contracts;
 using Mnemora.Desktop.Dialogs;
+using Mnemora.Desktop.Settings;
 using Mnemora.Desktop.ViewModels.Common;
 using Mnemora.Desktop.ViewModels.Sections;
 using Mnemora.Desktop.ViewModels.Topics;
@@ -13,10 +15,15 @@ namespace Mnemora.Desktop.ViewModels.Library;
 
 public sealed partial class LibraryViewModel(
     IQueryDispatcher queryDispatcher,
-    IDialogService dialogService)
+    IDialogService dialogService,
+    ISettingsService settingsService,
+    ILogger<LibraryViewModel> logger)
     : ViewModelBase
 {
-    public ObservableCollection<LibrarySectionDto> Sections { get; } = [];
+    private bool _isViewModeLoaded;
+
+    public ObservableCollection<LibrarySectionDto>
+        Sections { get; } = [];
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsEmpty))]
@@ -27,13 +34,34 @@ public sealed partial class LibraryViewModel(
     [NotifyPropertyChangedFor(nameof(IsEmpty))]
     private string? _errorMessage;
 
-    public bool HasSections => Sections.Count > 0;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsTableView))]
+    [NotifyPropertyChangedFor(nameof(IsTilesView))]
+    private LibraryViewMode _viewMode =
+        LibraryViewMode.Table;
 
-    public bool HasError => !string.IsNullOrWhiteSpace(ErrorMessage);
+    public bool HasSections =>
+        Sections.Count > 0;
 
-    public bool IsEmpty => !IsLoading && !HasError && !HasSections;
+    public bool HasError =>
+        !string.IsNullOrWhiteSpace(
+            ErrorMessage);
 
-    public async Task LoadAsync(CancellationToken cancellationToken = default)
+    public bool IsEmpty =>
+        !IsLoading &&
+        !HasError &&
+        !HasSections;
+
+    public bool IsTableView =>
+        ViewMode ==
+        LibraryViewMode.Table;
+
+    public bool IsTilesView =>
+        ViewMode ==
+        LibraryViewMode.Tiles;
+
+    public async Task LoadAsync(
+        CancellationToken cancellationToken = default)
     {
         if (IsLoading)
         {
@@ -45,22 +73,31 @@ public sealed partial class LibraryViewModel(
 
         try
         {
-            var query = new GetLibraryQuery();
-
-            var result = await queryDispatcher.SendAsync<
-                GetLibraryQuery,
-                IReadOnlyList<LibrarySectionDto>>(
-                query,
+            await EnsureViewModeLoadedAsync(
                 cancellationToken);
 
-            if (cancellationToken.IsCancellationRequested)
+            var query =
+                new GetLibraryQuery();
+
+            var result =
+                await queryDispatcher.SendAsync<
+                    GetLibraryQuery,
+                    IReadOnlyList<LibrarySectionDto>>(
+                    query,
+                    cancellationToken);
+
+            if (cancellationToken
+                .IsCancellationRequested)
             {
                 return;
             }
 
             if (result.IsFailure)
             {
-                ErrorMessage = result.Error.FirstOrDefault()?.Message
+                ErrorMessage =
+                    result.Error
+                        .FirstOrDefault()
+                        ?.Message
                     ?? "Не удалось загрузить библиотеку";
 
                 return;
@@ -85,16 +122,18 @@ public sealed partial class LibraryViewModel(
     private async Task AddSectionAsync(
         CancellationToken cancellationToken)
     {
-        var sectionId = dialogService.Show<
-            CreateSectionDialogViewModel,
-            Guid?>();
+        var sectionId =
+            dialogService.Show<
+                CreateSectionDialogViewModel,
+                Guid?>();
 
         if (sectionId is null)
         {
             return;
         }
 
-        await LoadAsync(cancellationToken);
+        await LoadAsync(
+            cancellationToken);
     }
 
     [RelayCommand]
@@ -107,31 +146,185 @@ public sealed partial class LibraryViewModel(
             return;
         }
 
-        var topicId = dialogService.Show<
-            CreateTopicDialogViewModel,
-            Guid?>(
-            viewModel => viewModel.Initialize(
-                section.Id,
-                section.Name));
+        var topicId =
+            dialogService.Show<
+                CreateTopicDialogViewModel,
+                Guid?>(
+                viewModel =>
+                    viewModel.Initialize(
+                        section.Id,
+                        section.Name));
 
         if (topicId is null)
         {
             return;
         }
 
-        await LoadAsync(cancellationToken);
+        await LoadAsync(
+            cancellationToken);
+    }
+
+    [RelayCommand]
+    private async Task EditSectionAsync(
+        LibrarySectionDto? section,
+        CancellationToken cancellationToken)
+    {
+        if (section is null)
+        {
+            return;
+        }
+
+        var sectionId =
+            dialogService.Show<
+                EditSectionDialogViewModel,
+                Guid?>(
+                viewModel =>
+                    viewModel.Initialize(
+                        section));
+
+        if (sectionId is null)
+        {
+            return;
+        }
+
+        await LoadAsync(
+            cancellationToken);
+    }
+
+    [RelayCommand]
+    private async Task DeleteSectionAsync(
+        LibrarySectionDto? section,
+        CancellationToken cancellationToken)
+    {
+        if (section is null)
+        {
+            return;
+        }
+
+        bool wasDeleted =
+            dialogService.Show<
+                DeleteSectionDialogViewModel,
+                bool>(
+                viewModel =>
+                    viewModel.Initialize(
+                        section));
+
+        if (!wasDeleted)
+        {
+            return;
+        }
+
+        await LoadAsync(
+            cancellationToken);
+    }
+
+    [RelayCommand]
+    private Task ShowTableViewAsync(
+        CancellationToken cancellationToken)
+    {
+        return SetViewModeAsync(
+            LibraryViewMode.Table,
+            cancellationToken);
+    }
+
+    [RelayCommand]
+    private Task ShowTilesViewAsync(
+        CancellationToken cancellationToken)
+    {
+        return SetViewModeAsync(
+            LibraryViewMode.Tiles,
+            cancellationToken);
     }
 
     [RelayCommand]
     private Task ReloadAsync(
         CancellationToken cancellationToken)
     {
-        return LoadAsync(cancellationToken);
+        return LoadAsync(
+            cancellationToken);
+    }
+
+    private async Task EnsureViewModeLoadedAsync(
+        CancellationToken cancellationToken)
+    {
+        if (_isViewModeLoaded)
+        {
+            return;
+        }
+
+        try
+        {
+            var settings =
+                await settingsService.LoadAsync(
+                    cancellationToken);
+
+            ViewMode =
+                settings.LibraryViewMode;
+
+            _isViewModeLoaded =
+                true;
+        }
+        catch (OperationCanceledException)
+            when (cancellationToken
+                .IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(
+                exception,
+                "Не удалось загрузить режим " +
+                "просмотра библиотеки");
+
+            ViewMode =
+                LibraryViewMode.Table;
+
+            _isViewModeLoaded =
+                true;
+        }
+    }
+
+    private async Task SetViewModeAsync(
+        LibraryViewMode viewMode,
+        CancellationToken cancellationToken)
+    {
+        if (ViewMode == viewMode)
+        {
+            return;
+        }
+
+        ViewMode = viewMode;
+
+        try
+        {
+            await settingsService
+                .SaveLibraryViewModeAsync(
+                    viewMode,
+                    cancellationToken);
+        }
+        catch (OperationCanceledException)
+            when (cancellationToken
+                .IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(
+                exception,
+                "Не удалось сохранить режим " +
+                "просмотра библиотеки {ViewMode}",
+                viewMode);
+        }
     }
 
     private void NotifyCollectionStateChanged()
     {
-        OnPropertyChanged(nameof(HasSections));
-        OnPropertyChanged(nameof(IsEmpty));
+        OnPropertyChanged(
+            nameof(HasSections));
+
+        OnPropertyChanged(
+            nameof(IsEmpty));
     }
 }
