@@ -213,7 +213,7 @@
                 </StackPanel>
             </Border>
 
-            <!-- Список разделов -->
+            <!-- Разделы и темы -->
 
             <ScrollViewer VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled">
@@ -244,61 +244,188 @@
                 </ScrollViewer.Style>
 
                 <ItemsControl ItemsSource="{Binding Sections}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <WrapPanel />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Width="290"
-                                    Height="170"
-                                    Margin="0,0,18,18"
-                                    Padding="22"
+                            <Border Margin="0,0,0,18"
+                                    Padding="24"
                                     Background="{DynamicResource Mnemora.Brush.Surface}"
                                     BorderBrush="{DynamicResource Mnemora.Brush.Border}"
                                     BorderThickness="1"
-                                    CornerRadius="14">
+                                    CornerRadius="16">
 
                                 <Grid>
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="*" />
                                         <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
 
-                                    <materialDesign:PackIcon Width="38"
-                                                             Height="38"
-                                                             Foreground="{DynamicResource Mnemora.Brush.Primary}"
-                                                             Kind="FolderOutline" />
+                                    <!-- Заголовок раздела -->
 
-                                    <TextBlock Grid.Row="1"
-                                               Margin="0,18,0,0"
-                                               Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                                               FontSize="20"
-                                               FontWeight="SemiBold"
-                                               Text="{Binding Name}"
-                                               TextTrimming="CharacterEllipsis"
-                                               TextWrapping="Wrap" />
-
-                                    <Grid Grid.Row="2">
+                                    <Grid>
                                         <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
 
-                                        <TextBlock VerticalAlignment="Center"
-                                                   Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                                                   FontSize="13"
-                                                   Text="{Binding CreatedAt,
-                                                       StringFormat='Создан {0:dd.MM.yyyy}'}" />
+                                        <Border Width="48"
+                                                Height="48"
+                                                Background="{DynamicResource Mnemora.Brush.SurfaceMuted}"
+                                                CornerRadius="12">
 
-                                        <materialDesign:PackIcon Grid.Column="1"
-                                                                 Width="20"
-                                                                 Height="20"
-                                                                 Foreground="{DynamicResource Mnemora.Brush.Secondary}"
-                                                                 Kind="ArrowRight" />
+                                            <materialDesign:PackIcon Width="27"
+                                                                     Height="27"
+                                                                     HorizontalAlignment="Center"
+                                                                     VerticalAlignment="Center"
+                                                                     Foreground="{DynamicResource Mnemora.Brush.Primary}"
+                                                                     Kind="FolderOutline" />
+                                        </Border>
+
+                                        <StackPanel Grid.Column="1"
+                                                    Margin="16,0,20,0"
+                                                    VerticalAlignment="Center">
+
+                                            <TextBlock Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                                       FontSize="21"
+                                                       FontWeight="SemiBold"
+                                                       Text="{Binding Name}"
+                                                       TextTrimming="CharacterEllipsis" />
+
+                                            <TextBlock Margin="0,4,0,0"
+                                                       Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                       FontSize="14"
+                                                       Text="{Binding Topics.Count,
+                                                          StringFormat='Тем: {0}'}" />
+                                        </StackPanel>
+
+                                        <Button Grid.Column="2"
+                                                Height="42"
+                                                MinHeight="42"
+                                                MinWidth="160"
+                                                Padding="18,0"
+                                                VerticalAlignment="Center"
+                                                Command="{Binding DataContext.AddTopicCommand,
+                                                      RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                                CommandParameter="{Binding}"
+                                                Style="{StaticResource Mnemora.SecondaryButton}">
+
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Width="19"
+                                                                         Height="19"
+                                                                         VerticalAlignment="Center"
+                                                                         Kind="Plus" />
+
+                                                <TextBlock Margin="10,0,0,0"
+                                                           VerticalAlignment="Center"
+                                                           FontSize="14"
+                                                           Text="Добавить тему" />
+                                            </StackPanel>
+                                        </Button>
+                                    </Grid>
+
+                                    <!-- Темы -->
+
+                                    <Grid Grid.Row="1"
+                                          Margin="0,22,0,0">
+
+                                        <!-- Пустой раздел -->
+
+                                        <Border Padding="20"
+                                                Background="{DynamicResource Mnemora.Brush.SurfaceMuted}"
+                                                CornerRadius="10">
+
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Visibility"
+                                                            Value="Collapsed" />
+
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Topics.Count}"
+                                                                     Value="0">
+                                                            <Setter Property="Visibility"
+                                                                    Value="Visible" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Width="22"
+                                                                         Height="22"
+                                                                         VerticalAlignment="Center"
+                                                                         Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                                         Kind="BookOpenPageVariantOutline" />
+
+                                                <TextBlock Margin="12,0,0,0"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                           FontSize="14"
+                                                           Text="В этом разделе пока нет тем" />
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- Карточки тем -->
+
+                                        <ItemsControl ItemsSource="{Binding Topics}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <WrapPanel />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Width="250"
+                                                            Height="112"
+                                                            Margin="0,0,14,14"
+                                                            Padding="18"
+                                                            Background="{DynamicResource Mnemora.Brush.SurfaceMuted}"
+                                                            BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                                                            BorderThickness="1"
+                                                            CornerRadius="12">
+
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                            </Grid.ColumnDefinitions>
+
+                                                            <materialDesign:PackIcon Width="25"
+                                                                    Height="25"
+                                                                    VerticalAlignment="Top"
+                                                                    Foreground="{DynamicResource Mnemora.Brush.Secondary}"
+                                                                    Kind="BookmarkOutline" />
+
+                                                            <StackPanel Grid.Column="1"
+                                                                        Margin="13,0,12,0">
+
+                                                                <TextBlock
+                                                                    Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                                                    FontSize="16"
+                                                                    FontWeight="SemiBold"
+                                                                    Text="{Binding Name}"
+                                                                    TextTrimming="CharacterEllipsis"
+                                                                    TextWrapping="Wrap" />
+
+                                                                <TextBlock Margin="0,7,0,0"
+                                                                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                                           FontSize="12"
+                                                                           Text="{Binding CreatedAt,
+                                                                          StringFormat='Создана {0:dd.MM.yyyy}'}" />
+                                                            </StackPanel>
+
+                                                            <materialDesign:PackIcon Grid.Column="2"
+                                                                    Width="19"
+                                                                    Height="19"
+                                                                    VerticalAlignment="Center"
+                                                                    Foreground="{DynamicResource Mnemora.Brush.Secondary}"
+                                                                    Kind="ArrowRight" />
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
                                     </Grid>
                                 </Grid>
                             </Border>

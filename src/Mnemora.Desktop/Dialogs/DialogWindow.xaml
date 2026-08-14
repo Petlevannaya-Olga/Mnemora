@@ -1,0 +1,17 @@
+﻿<Window x:Class="Mnemora.Desktop.Dialogs.DialogWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Mnemora"
+        SizeToContent="WidthAndHeight"
+        MaxHeight="760"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        AllowsTransparency="True"
+        Background="Transparent"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True">
+
+    <ContentControl Content="{Binding}" />
+</Window>

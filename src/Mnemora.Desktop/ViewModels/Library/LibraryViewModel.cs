@@ -1,19 +1,21 @@
 ﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Mnemora.Application.Library.Get;
 using Mnemora.Application.Queries;
-using Mnemora.Application.Sections.GetAll;
 using Mnemora.Contracts;
 using Mnemora.Desktop.Dialogs;
+using Mnemora.Desktop.ViewModels.Sections;
+using Mnemora.Desktop.ViewModels.Topics;
 
 namespace Mnemora.Desktop.ViewModels.Library;
 
 public sealed partial class LibraryViewModel(
     IQueryDispatcher queryDispatcher,
-    ICreateSectionDialogService createSectionDialogService)
+    IDialogService dialogService)
     : ObservableObject
 {
-    public ObservableCollection<SectionListItemDto> Sections { get; } = [];
+    public ObservableCollection<LibrarySectionDto> Sections { get; } = [];
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsEmpty))]
@@ -42,11 +44,11 @@ public sealed partial class LibraryViewModel(
 
         try
         {
-            var query = new GetSectionsQuery();
+            var query = new GetLibraryQuery();
 
             var result = await queryDispatcher.SendAsync<
-                GetSectionsQuery,
-                IReadOnlyList<SectionListItemDto>>(
+                GetLibraryQuery,
+                IReadOnlyList<LibrarySectionDto>>(
                 query,
                 cancellationToken);
 
@@ -58,7 +60,7 @@ public sealed partial class LibraryViewModel(
             if (result.IsFailure)
             {
                 ErrorMessage = result.Error.FirstOrDefault()?.Message
-                    ?? "Не удалось загрузить разделы";
+                    ?? "Не удалось загрузить библиотеку";
 
                 return;
             }
@@ -79,22 +81,51 @@ public sealed partial class LibraryViewModel(
     }
 
     [RelayCommand]
-    private async Task AddSectionAsync()
+    private async Task AddSectionAsync(
+        CancellationToken cancellationToken)
     {
-        var sectionId = createSectionDialogService.ShowDialog();
+        var sectionId = dialogService.Show<
+            CreateSectionDialogViewModel,
+            Guid?>();
 
         if (sectionId is null)
         {
             return;
         }
 
-        await LoadAsync();
+        await LoadAsync(cancellationToken);
     }
 
     [RelayCommand]
-    private Task ReloadAsync()
+    private async Task AddTopicAsync(
+        LibrarySectionDto? section,
+        CancellationToken cancellationToken)
     {
-        return LoadAsync();
+        if (section is null)
+        {
+            return;
+        }
+
+        var topicId = dialogService.Show<
+            CreateTopicDialogViewModel,
+            Guid?>(
+            viewModel => viewModel.Initialize(
+                section.Id,
+                section.Name));
+
+        if (topicId is null)
+        {
+            return;
+        }
+
+        await LoadAsync(cancellationToken);
+    }
+
+    [RelayCommand]
+    private Task ReloadAsync(
+        CancellationToken cancellationToken)
+    {
+        return LoadAsync(cancellationToken);
     }
 
     private void NotifyCollectionStateChanged()

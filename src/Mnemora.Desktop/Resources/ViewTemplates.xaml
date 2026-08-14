@@ -8,7 +8,11 @@
     xmlns:shell="clr-namespace:Mnemora.Desktop.Views.Shell"
     xmlns:shellViewModels="clr-namespace:Mnemora.Desktop.ViewModels.Shell"
     xmlns:library="clr-namespace:Mnemora.Desktop.Views.Library"
-    xmlns:libraryViewModels="clr-namespace:Mnemora.Desktop.ViewModels.Library">
+    xmlns:libraryViewModels="clr-namespace:Mnemora.Desktop.ViewModels.Library"
+    xmlns:sectionViewModels="clr-namespace:Mnemora.Desktop.ViewModels.Sections"
+    xmlns:sections="clr-namespace:Mnemora.Desktop.Views.Sections"
+    xmlns:topicViewModels="clr-namespace:Mnemora.Desktop.ViewModels.Topics"
+    xmlns:topics="clr-namespace:Mnemora.Desktop.Views.Topics">
 
     <DataTemplate
         DataType="{x:Type onboardingViewModels:ProfileSetupViewModel}">
@@ -47,6 +51,14 @@
     
     <DataTemplate DataType="{x:Type libraryViewModels:LibraryViewModel}">
         <library:LibraryView />
+    </DataTemplate>
+    
+    <DataTemplate DataType="{x:Type sectionViewModels:CreateSectionDialogViewModel}">
+        <sections:CreateSectionDialogView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type topicViewModels:CreateTopicDialogViewModel}">
+        <topics:CreateTopicDialogView />
     </DataTemplate>
 
 </ResourceDictionary>

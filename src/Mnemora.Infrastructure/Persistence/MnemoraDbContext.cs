@@ -16,6 +16,8 @@ public sealed class MnemoraDbContext(DbContextOptions<MnemoraDbContext> options)
 
     public IQueryable<Section> SectionsRead => Set<Section>().AsNoTracking();
 
+    public IQueryable<Topic> TopicsRead => Set<Topic>().AsNoTracking();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(MnemoraDbContext).Assembly);

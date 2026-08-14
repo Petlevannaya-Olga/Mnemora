@@ -20,6 +20,7 @@ using Mnemora.Desktop.ViewModels.Library;
 using Mnemora.Desktop.ViewModels.Onboarding;
 using Mnemora.Desktop.ViewModels.Sections;
 using Mnemora.Desktop.ViewModels.Shell;
+using Mnemora.Desktop.ViewModels.Topics;
 using Mnemora.Infrastructure;
 using Mnemora.Infrastructure.Persistence;
 
@@ -137,10 +138,10 @@ public partial class App : System.Windows.Application
 
         services.AddSingleton<IAiConnectionService, DevelopmentAiConnectionService>();
 
-        services.AddSingleton<ICreateSectionDialogService, CreateSectionDialogService>();
-
+        services.AddSingleton<IDialogService, DialogService>();
+        
+        services.AddTransient<CreateTopicDialogViewModel>();
         services.AddTransient<LibraryViewModel>();
-        services.AddTransient<CreateSectionDialogViewModel>();
         services.AddTransient<CreateSectionDialogViewModel>();
         services.AddTransient<HomeViewModel>();
         services.AddSingleton<AppShellViewModel>();

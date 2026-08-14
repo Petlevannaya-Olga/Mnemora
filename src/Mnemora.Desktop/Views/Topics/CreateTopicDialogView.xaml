@@ -1,0 +1,226 @@
+﻿<UserControl x:Class="Mnemora.Desktop.Views.Topics.CreateTopicDialogView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             Width="560"
+             Height="430"
+             Background="Transparent"
+             UseLayoutRounding="True"
+             SnapsToDevicePixels="True">
+
+    <UserControl.InputBindings>
+        <KeyBinding Key="Escape"
+                    Command="{Binding CancelCommand}" />
+    </UserControl.InputBindings>
+
+    <Border Margin="18"
+            Padding="32"
+            Background="{DynamicResource Mnemora.Brush.Surface}"
+            BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+            BorderThickness="1"
+            CornerRadius="18">
+
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="24"
+                              Direction="270"
+                              Opacity="0.2"
+                              ShadowDepth="5"
+                              Color="#061735" />
+        </Border.Effect>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- Заголовок -->
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <Border Width="48"
+                        Height="48"
+                        Background="{DynamicResource Mnemora.Brush.SurfaceMuted}"
+                        CornerRadius="12">
+
+                    <materialDesign:PackIcon Width="27"
+                                             Height="27"
+                                             HorizontalAlignment="Center"
+                                             VerticalAlignment="Center"
+                                             Foreground="{DynamicResource Mnemora.Brush.Primary}"
+                                             Kind="FolderPlusOutline" />
+                </Border>
+
+                <StackPanel Grid.Column="1"
+                            Margin="16,0,16,0"
+                            VerticalAlignment="Center">
+
+                    <TextBlock Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                               FontSize="24"
+                               FontWeight="SemiBold"
+                               Text="Новая тема" />
+
+                    <TextBlock Margin="0,4,0,0"
+                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                               FontSize="14"
+                               Text="Добавьте тему в выбранный раздел" />
+                </StackPanel>
+
+                <Button Grid.Column="2"
+                        Width="40"
+                        Height="40"
+                        VerticalAlignment="Top"
+                        Command="{Binding CancelCommand}"
+                        Style="{StaticResource MaterialDesignToolButton}">
+
+                    <materialDesign:PackIcon Width="21"
+                                             Height="21"
+                                             Kind="Close" />
+                </Button>
+            </Grid>
+
+            <!-- Выбранный раздел -->
+
+            <Border Grid.Row="1"
+                    Margin="0,24,0,18"
+                    Padding="14,11"
+                    Background="{DynamicResource Mnemora.Brush.SurfaceMuted}"
+                    CornerRadius="10">
+
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Width="20"
+                                             Height="20"
+                                             VerticalAlignment="Center"
+                                             Foreground="{DynamicResource Mnemora.Brush.Secondary}"
+                                             Kind="FolderOutline" />
+
+                    <TextBlock Margin="10,0,0,0"
+                               VerticalAlignment="Center"
+                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                               FontSize="14"
+                               Text="Раздел:" />
+
+                    <TextBlock Margin="6,0,0,0"
+                               VerticalAlignment="Center"
+                               Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                               FontSize="14"
+                               FontWeight="SemiBold"
+                               Text="{Binding SectionName}"
+                               TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+            </Border>
+
+            <!-- Название -->
+
+            <TextBox Grid.Row="2"
+                     Height="54"
+                     MaxLength="150"
+                     VerticalContentAlignment="Center"
+                     FontSize="16"
+                     Text="{Binding Name,
+                                    UpdateSourceTrigger=PropertyChanged}"
+                     materialDesign:HintAssist.Hint="Название темы"
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}" />
+
+            <!-- Ошибка -->
+
+            <Border Grid.Row="3"
+                    Margin="0,12,0,0"
+                    Padding="12,9"
+                    VerticalAlignment="Top"
+                    Background="#FFF2F3"
+                    CornerRadius="8">
+
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Visibility"
+                                Value="Collapsed" />
+
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding HasError}"
+                                         Value="True">
+                                <Setter Property="Visibility"
+                                        Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Width="19"
+                                             Height="19"
+                                             VerticalAlignment="Top"
+                                             Foreground="#D84040"
+                                             Kind="AlertCircleOutline" />
+
+                    <TextBlock Margin="9,0,0,0"
+                               VerticalAlignment="Center"
+                               Foreground="#B52E38"
+                               FontSize="13"
+                               Text="{Binding ErrorMessage}"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <!-- Кнопки -->
+
+            <Grid Grid.Row="4"
+                  Margin="0,22,0,0">
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="1"
+                        MinWidth="130"
+                        Margin="0,0,12,0"
+                        Command="{Binding CancelCommand}"
+                        Content="Отмена"
+                        Style="{StaticResource Mnemora.SecondaryButton}" />
+
+                <Button Grid.Column="2"
+                        MinWidth="170"
+                        IsDefault="True"
+                        Command="{Binding CreateCommand}"
+                        Style="{StaticResource OnboardingPrimaryButtonStyle}">
+
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Width="20"
+                                                 Height="20"
+                                                 VerticalAlignment="Center"
+                                                 Kind="Plus" />
+
+                        <TextBlock Margin="12,0,0,0"
+                                   VerticalAlignment="Center">
+
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Text"
+                                            Value="Создать тему" />
+
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsCreating}"
+                                                     Value="True">
+                                            <Setter Property="Text"
+                                                    Value="Создание..." />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Grid>
+    </Border>
+</UserControl>

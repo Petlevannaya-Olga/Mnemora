@@ -1,22 +1,30 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using Mnemora.Application.Commands;
-using Mnemora.Application.Sections.Create;
+using Mnemora.Application.Topics.Create;
 using Mnemora.Desktop.Dialogs;
 using Mnemora.Desktop.ViewModels.Common;
 
-namespace Mnemora.Desktop.ViewModels.Sections;
+namespace Mnemora.Desktop.ViewModels.Topics;
 
-public sealed partial class CreateSectionDialogViewModel(
+public sealed partial class CreateTopicDialogViewModel(
     ICommandDispatcher commandDispatcher)
     : ViewModelBase,
       IDialogViewModel<Guid?>
 {
+    private Guid _sectionId;
+    private string _sectionName = string.Empty;
     private string _name = string.Empty;
     private string? _errorMessage;
     private bool _isCreating;
 
     public event EventHandler<DialogCloseRequestedEventArgs<Guid?>>?
         CloseRequested;
+
+    public string SectionName
+    {
+        get => _sectionName;
+        private set => SetProperty(ref _sectionName, value);
+    }
 
     public string Name
     {
@@ -67,6 +75,24 @@ public sealed partial class CreateSectionDialogViewModel(
 
     public bool IsBusy => IsCreating;
 
+    public void Initialize(Guid sectionId, string sectionName)
+    {
+        if (sectionId == Guid.Empty)
+        {
+            throw new ArgumentException(
+                "Идентификатор раздела не может быть пустым.",
+                nameof(sectionId));
+        }
+
+        ArgumentException.ThrowIfNullOrWhiteSpace(sectionName);
+
+        _sectionId = sectionId;
+        SectionName = sectionName;
+        Name = string.Empty;
+        ErrorMessage = null;
+        IsCreating = false;
+    }
+
     [RelayCommand(CanExecute = nameof(CanCreate))]
     private async Task CreateAsync(
         CancellationToken cancellationToken)
@@ -76,23 +102,25 @@ public sealed partial class CreateSectionDialogViewModel(
 
         try
         {
-            var command = new CreateSectionCommand(Name);
+            var command = new CreateTopicCommand(
+                _sectionId,
+                Name);
 
             var result = await commandDispatcher
-                .SendAsync<CreateSectionCommand, Guid>(
+                .SendAsync<CreateTopicCommand, Guid>(
                     command,
                     cancellationToken);
 
             if (cancellationToken.IsCancellationRequested)
             {
-                ErrorMessage = "Создание раздела было отменено";
+                ErrorMessage = "Создание темы было отменено";
                 return;
             }
 
             if (result.IsFailure)
             {
                 ErrorMessage = result.Error.FirstOrDefault()?.Message
-                    ?? "Не удалось создать раздел";
+                    ?? "Не удалось создать тему";
 
                 return;
             }
@@ -106,7 +134,7 @@ public sealed partial class CreateSectionDialogViewModel(
         catch (OperationCanceledException)
             when (cancellationToken.IsCancellationRequested)
         {
-            ErrorMessage = "Создание раздела было отменено";
+            ErrorMessage = "Создание темы было отменено";
         }
         finally
         {
@@ -116,7 +144,9 @@ public sealed partial class CreateSectionDialogViewModel(
 
     private bool CanCreate()
     {
-        return !IsCreating && !string.IsNullOrWhiteSpace(Name);
+        return _sectionId != Guid.Empty
+               && !IsCreating
+               && !string.IsNullOrWhiteSpace(Name);
     }
 
     [RelayCommand(CanExecute = nameof(CanCancel))]
