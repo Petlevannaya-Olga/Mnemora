@@ -9,11 +9,15 @@ namespace Mnemora.Application.Library.Get;
 
 public sealed class GetLibraryQueryHandler(
     IReadDbContext readDbContext)
-    : IQueryHandler<IReadOnlyList<LibrarySectionDto>, GetLibraryQuery>
+    : IQueryHandler<
+        IReadOnlyList<LibrarySectionDto>,
+        GetLibraryQuery>
 {
-    public async Task<Result<IReadOnlyList<LibrarySectionDto>, Errors>> Handle(
-        GetLibraryQuery query,
-        CancellationToken cancellationToken = default)
+    public async Task<
+        Result<IReadOnlyList<LibrarySectionDto>, Errors>>
+        Handle(
+            GetLibraryQuery query,
+            CancellationToken cancellationToken = default)
     {
         var sections = await readDbContext.SectionsRead
             .OrderBy(section => section.CreatedAt)
@@ -21,7 +25,9 @@ public sealed class GetLibraryQueryHandler(
 
         if (sections.Count == 0)
         {
-            return Result.Success<IReadOnlyList<LibrarySectionDto>, Errors>(
+            return Result.Success<
+                IReadOnlyList<LibrarySectionDto>,
+                Errors>(
                 Array.Empty<LibrarySectionDto>());
         }
 
@@ -30,28 +36,36 @@ public sealed class GetLibraryQueryHandler(
             .ToListAsync(cancellationToken);
 
         var topicsBySection = topics
-            .GroupBy(topic => topic.SectionId.Value)
+            .GroupBy(topic =>
+                topic.SectionId.Value)
             .ToDictionary(
-                group => group.Key, group => group
-                    .Select(topic => new LibraryTopicDto(
-                        topic.Id.Value,
-                        topic.Name.Value,
-                        topic.CreatedAt))
+                group => group.Key,
+                group => group
+                    .Select(topic =>
+                        new LibraryTopicDto(
+                            topic.Id.Value,
+                            topic.Name.Value,
+                            topic.Color.ToString(),
+                            topic.Icon.ToString(),
+                            topic.CreatedAt))
                     .ToArray());
 
         var result = sections
-            .Select(section => new LibrarySectionDto(
-                section.Id.Value,
-                section.Name.Value,
-                section.Color.ToString(),
-                section.Icon.ToString(),
-                section.CreatedAt,
-                topicsBySection.GetValueOrDefault(
+            .Select(section =>
+                new LibrarySectionDto(
                     section.Id.Value,
-                    [])))
+                    section.Name.Value,
+                    section.Color.ToString(),
+                    section.Icon.ToString(),
+                    section.CreatedAt,
+                    topicsBySection.GetValueOrDefault(
+                        section.Id.Value,
+                        [])))
             .ToArray();
 
-        return Result.Success<IReadOnlyList<LibrarySectionDto>, Errors>(
+        return Result.Success<
+            IReadOnlyList<LibrarySectionDto>,
+            Errors>(
             result);
     }
 }

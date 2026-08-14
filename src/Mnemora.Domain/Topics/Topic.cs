@@ -20,6 +20,16 @@ public sealed class Topic
     public TopicName Name { get; private set; } = null!;
 
     /// <summary>
+    /// Цвет темы
+    /// </summary>
+    public TopicColor Color { get; private set; }
+
+    /// <summary>
+    /// Иконка темы
+    /// </summary>
+    public TopicIcon Icon { get; private set; }
+
+    /// <summary>
     /// Дата создания
     /// </summary>
     public DateTime CreatedAt { get; private set; }
@@ -34,30 +44,59 @@ public sealed class Topic
     {
     }
 
-    private Topic(SectionId sectionId, TopicName name)
+    private Topic(
+        SectionId sectionId,
+        TopicName name,
+        TopicColor color,
+        TopicIcon icon)
     {
         var now = DateTime.UtcNow;
 
         Id = new TopicId(Guid.NewGuid());
         SectionId = sectionId;
         Name = name;
+        Color = color;
+        Icon = icon;
         CreatedAt = now;
         UpdatedAt = now;
     }
 
-    public static Topic Create(SectionId sectionId, TopicName name)
+    public static Topic Create(
+        SectionId sectionId,
+        TopicName name,
+        TopicColor color,
+        TopicIcon icon)
     {
-        return new Topic(sectionId, name);
+        return new Topic(
+            sectionId,
+            name,
+            color,
+            icon);
     }
 
-    public void UpdateName(TopicName name)
+    public void Update(
+        TopicName name,
+        TopicColor color,
+        TopicIcon icon)
     {
-        if (Name == name)
+        if (Name == name &&
+            Color == color &&
+            Icon == icon)
         {
             return;
         }
 
         Name = name;
+        Color = color;
+        Icon = icon;
         UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateName(TopicName name)
+    {
+        Update(
+            name,
+            Color,
+            Icon);
     }
 }

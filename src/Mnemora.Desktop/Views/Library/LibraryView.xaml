@@ -20,6 +20,12 @@
         <converters:SectionIconConverter
             x:Key="SectionIconConverter" />
 
+        <converters:TopicColorConverter
+            x:Key="TopicColorConverter" />
+
+        <converters:TopicIconConverter
+            x:Key="TopicIconConverter" />
+
         <Style
             x:Key="SectionMenuButtonStyle"
             TargetType="Button">
@@ -954,12 +960,24 @@
                                                                 <ColumnDefinition Width="Auto" />
                                                             </Grid.ColumnDefinitions>
 
-                                                            <materialDesign:PackIcon
-                                                                Width="25"
-                                                                Height="25"
+                                                            <Border
+                                                                Width="42"
+                                                                Height="42"
                                                                 VerticalAlignment="Top"
-                                                                Foreground="{DynamicResource Mnemora.Brush.Secondary}"
-                                                                Kind="BookmarkOutline" />
+                                                                Background="{Binding Color,
+                                                                    Converter={StaticResource TopicColorConverter}}"
+                                                                CornerRadius="10">
+
+                                                                <materialDesign:PackIcon
+                                                                    Width="23"
+                                                                    Height="23"
+                                                                    HorizontalAlignment="Center"
+                                                                    VerticalAlignment="Center"
+                                                                    Foreground="White"
+                                                                    Kind="{Binding Icon,
+                                                                        Converter={StaticResource TopicIconConverter}}" />
+
+                                                            </Border>
 
                                                             <StackPanel
                                                                 Grid.Column="1"
@@ -987,7 +1005,8 @@
                                                                 Width="19"
                                                                 Height="19"
                                                                 VerticalAlignment="Center"
-                                                                Foreground="{DynamicResource Mnemora.Brush.Secondary}"
+                                                                Foreground="{Binding Color,
+                                                                    Converter={StaticResource TopicColorConverter}}"
                                                                 Kind="ArrowRight" />
 
                                                         </Grid>

@@ -1,226 +1,533 @@
-﻿<UserControl x:Class="Mnemora.Desktop.Views.Topics.CreateTopicDialogView"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-             Width="560"
-             Height="430"
-             Background="Transparent"
-             UseLayoutRounding="True"
-             SnapsToDevicePixels="True">
+﻿<UserControl
+    x:Class="Mnemora.Desktop.Views.Topics.CreateTopicDialogView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    Width="700"
+    MaxHeight="760"
+    Background="Transparent"
+    SnapsToDevicePixels="True"
+    TextOptions.TextFormattingMode="Display"
+    TextOptions.TextRenderingMode="ClearType"
+    UseLayoutRounding="True">
 
     <UserControl.InputBindings>
-        <KeyBinding Key="Escape"
-                    Command="{Binding CancelCommand}" />
+
+        <KeyBinding
+            Key="Escape"
+            Command="{Binding CancelCommand}" />
+
     </UserControl.InputBindings>
 
-    <Border Margin="18"
-            Padding="32"
+    <Grid Margin="22">
+
+        <!-- Отдельный слой тени не размывает текст. -->
+
+        <Border
+            Margin="1"
+            Background="{DynamicResource Mnemora.Brush.Surface}"
+            CornerRadius="18">
+
+            <Border.Effect>
+
+                <DropShadowEffect
+                    BlurRadius="26"
+                    Color="#061735"
+                    Opacity="0.28"
+                    ShadowDepth="7" />
+
+            </Border.Effect>
+
+        </Border>
+
+        <Border
+            Padding="30,26,30,30"
             Background="{DynamicResource Mnemora.Brush.Surface}"
             BorderBrush="{DynamicResource Mnemora.Brush.Border}"
             BorderThickness="1"
             CornerRadius="18">
 
-        <Border.Effect>
-            <DropShadowEffect BlurRadius="24"
-                              Direction="270"
-                              Opacity="0.2"
-                              ShadowDepth="5"
-                              Color="#061735" />
-        </Border.Effect>
-
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
-
-            <!-- Заголовок -->
-
             <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
 
-                <Border Width="48"
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- Заголовок -->
+
+                <Grid Grid.Row="0">
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border
+                        Width="48"
                         Height="48"
-                        Background="{DynamicResource Mnemora.Brush.SurfaceMuted}"
+                        Background="#F2EEFF"
                         CornerRadius="12">
 
-                    <materialDesign:PackIcon Width="27"
-                                             Height="27"
-                                             HorizontalAlignment="Center"
-                                             VerticalAlignment="Center"
-                                             Foreground="{DynamicResource Mnemora.Brush.Primary}"
-                                             Kind="FolderPlusOutline" />
-                </Border>
+                        <materialDesign:PackIcon
+                            Width="27"
+                            Height="27"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource Mnemora.Brush.Secondary}"
+                            Kind="BookmarkOutline" />
 
-                <StackPanel Grid.Column="1"
-                            Margin="16,0,16,0"
-                            VerticalAlignment="Center">
+                    </Border>
 
-                    <TextBlock Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                               FontSize="24"
-                               FontWeight="SemiBold"
-                               Text="Новая тема" />
+                    <StackPanel
+                        Grid.Column="1"
+                        Margin="15,0"
+                        VerticalAlignment="Center">
 
-                    <TextBlock Margin="0,4,0,0"
-                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                               FontSize="14"
-                               Text="Добавьте тему в выбранный раздел" />
-                </StackPanel>
+                        <TextBlock
+                            FontSize="21"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                            Text="Новая тема" />
 
-                <Button Grid.Column="2"
+                        <TextBlock
+                            Margin="0,3,0,0"
+                            FontSize="13"
+                            Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                            Text="Добавьте тему и выберите её оформление" />
+
+                    </StackPanel>
+
+                    <Button
+                        Grid.Column="2"
                         Command="{Binding CancelCommand}"
                         Style="{StaticResource Mnemora.DialogCloseButton}">
 
-                    <materialDesign:PackIcon
-                        Kind="Close"
-                        Width="20"
-                        Height="20"
-                        Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                        <materialDesign:PackIcon
+                            Width="20"
+                            Height="20"
+                            Foreground="{Binding Foreground,
+                                RelativeSource={RelativeSource AncestorType=Button}}"
+                            Kind="Close" />
 
-                </Button>
-            </Grid>
+                    </Button>
 
-            <!-- Выбранный раздел -->
+                </Grid>
 
-            <Border Grid.Row="1"
-                    Margin="0,24,0,18"
-                    Padding="14,11"
-                    Background="{DynamicResource Mnemora.Brush.SurfaceMuted}"
-                    CornerRadius="10">
+                <!-- Поля -->
 
-                <StackPanel Orientation="Horizontal">
-                    <materialDesign:PackIcon Width="20"
-                                             Height="20"
-                                             VerticalAlignment="Center"
-                                             Foreground="{DynamicResource Mnemora.Brush.Secondary}"
-                                             Kind="FolderOutline" />
+                <ScrollViewer
+                    Grid.Row="1"
+                    Margin="0,22,0,0"
+                    MaxHeight="540"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Auto">
 
-                    <TextBlock Margin="10,0,0,0"
-                               VerticalAlignment="Center"
-                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                               FontSize="14"
-                               Text="Раздел:" />
+                    <StackPanel Margin="0,0,8,0">
 
-                    <TextBlock Margin="6,0,0,0"
-                               VerticalAlignment="Center"
-                               Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                               FontSize="14"
-                               FontWeight="SemiBold"
-                               Text="{Binding SectionName}"
-                               TextTrimming="CharacterEllipsis" />
-                </StackPanel>
-            </Border>
+                        <!-- Выбранный раздел -->
 
-            <!-- Название -->
+                        <Border
+                            Padding="14,11"
+                            Background="{DynamicResource Mnemora.Brush.SurfaceMuted}"
+                            CornerRadius="10">
 
-            <TextBox Grid.Row="2"
-                     Height="54"
-                     MaxLength="150"
-                     VerticalContentAlignment="Center"
-                     FontSize="16"
-                     Text="{Binding Name,
-                                    UpdateSourceTrigger=PropertyChanged}"
-                     materialDesign:HintAssist.Hint="Название темы"
-                     Style="{StaticResource MaterialDesignOutlinedTextBox}" />
+                            <Grid>
 
-            <!-- Ошибка -->
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
 
-            <Border Grid.Row="3"
-                    Margin="0,12,0,0"
-                    Padding="12,9"
-                    VerticalAlignment="Top"
-                    Background="#FFF2F3"
-                    CornerRadius="8">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Foreground="{DynamicResource Mnemora.Brush.PrimaryDark}"
+                                    Kind="FolderOutline" />
 
-                <Border.Style>
-                    <Style TargetType="Border">
-                        <Setter Property="Visibility"
-                                Value="Collapsed" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="14"
+                                    Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                    Text="Раздел:" />
 
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding HasError}"
-                                         Value="True">
-                                <Setter Property="Visibility"
-                                        Value="Visible" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Border.Style>
+                                <TextBlock
+                                    Grid.Column="2"
+                                    Margin="6,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="14"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                    Text="{Binding SectionName}"
+                                    TextTrimming="CharacterEllipsis" />
 
-                <StackPanel Orientation="Horizontal">
-                    <materialDesign:PackIcon Width="19"
-                                             Height="19"
-                                             VerticalAlignment="Top"
-                                             Foreground="#D84040"
-                                             Kind="AlertCircleOutline" />
+                            </Grid>
 
-                    <TextBlock Margin="9,0,0,0"
-                               VerticalAlignment="Center"
-                               Foreground="#B52E38"
-                               FontSize="13"
-                               Text="{Binding ErrorMessage}"
-                               TextWrapping="Wrap" />
-                </StackPanel>
-            </Border>
+                        </Border>
 
-            <!-- Кнопки -->
+                        <!-- Название -->
 
-            <Grid Grid.Row="4"
-                  Margin="0,22,0,0">
+                        <TextBox
+                            Height="54"
+                            Margin="0,18,0,0"
+                            MaxLength="150"
+                            VerticalContentAlignment="Center"
+                            FontSize="16"
+                            Text="{Binding Name,
+                                UpdateSourceTrigger=PropertyChanged}"
+                            Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                            materialDesign:HintAssist.Hint="Название темы"
+                            materialDesign:TextFieldAssist.HasClearButton="True" />
 
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+                        <!-- Цвет -->
 
-                <Button Grid.Column="1"
-                        MinWidth="130"
-                        Margin="0,0,12,0"
+                        <TextBlock
+                            Margin="0,21,0,10"
+                            FontSize="13"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                            Text="Цвет" />
+
+                        <ListBox
+                            ItemsSource="{Binding ColorOptions}"
+                            SelectedItem="{Binding SelectedColor}"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+
+                            <ListBox.ItemsPanel>
+
+                                <ItemsPanelTemplate>
+                                    <WrapPanel />
+                                </ItemsPanelTemplate>
+
+                            </ListBox.ItemsPanel>
+
+                            <ListBox.ItemContainerStyle>
+
+                                <Style TargetType="ListBoxItem">
+
+                                    <Setter
+                                        Property="Margin"
+                                        Value="0,0,10,0" />
+
+                                    <Setter
+                                        Property="Padding"
+                                        Value="0" />
+
+                                    <Setter
+                                        Property="Background"
+                                        Value="Transparent" />
+
+                                    <Setter
+                                        Property="FocusVisualStyle"
+                                        Value="{x:Null}" />
+
+                                    <Setter Property="Template">
+
+                                        <Setter.Value>
+
+                                            <ControlTemplate TargetType="ListBoxItem">
+
+                                                <Border
+                                                    x:Name="SelectionBorder"
+                                                    Width="38"
+                                                    Height="38"
+                                                    BorderBrush="Transparent"
+                                                    BorderThickness="2"
+                                                    CornerRadius="19"
+                                                    Cursor="Hand">
+
+                                                    <Grid>
+
+                                                        <Ellipse
+                                                            Margin="5"
+                                                            Fill="{Binding Brush}" />
+
+                                                        <materialDesign:PackIcon
+                                                            x:Name="SelectedMark"
+                                                            Width="17"
+                                                            Height="17"
+                                                            HorizontalAlignment="Center"
+                                                            VerticalAlignment="Center"
+                                                            Foreground="White"
+                                                            Kind="Check"
+                                                            Visibility="Collapsed" />
+
+                                                    </Grid>
+
+                                                </Border>
+
+                                                <ControlTemplate.Triggers>
+
+                                                    <Trigger
+                                                        Property="IsMouseOver"
+                                                        Value="True">
+
+                                                        <Setter
+                                                            TargetName="SelectionBorder"
+                                                            Property="Opacity"
+                                                            Value="0.82" />
+
+                                                    </Trigger>
+
+                                                    <Trigger
+                                                        Property="IsSelected"
+                                                        Value="True">
+
+                                                        <Setter
+                                                            TargetName="SelectionBorder"
+                                                            Property="BorderBrush"
+                                                            Value="{DynamicResource Mnemora.Brush.Secondary}" />
+
+                                                        <Setter
+                                                            TargetName="SelectedMark"
+                                                            Property="Visibility"
+                                                            Value="Visible" />
+
+                                                    </Trigger>
+
+                                                </ControlTemplate.Triggers>
+
+                                            </ControlTemplate>
+
+                                        </Setter.Value>
+
+                                    </Setter>
+
+                                </Style>
+
+                            </ListBox.ItemContainerStyle>
+
+                        </ListBox>
+
+                        <!-- Иконка -->
+
+                        <TextBlock
+                            Margin="0,20,0,10"
+                            FontSize="13"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                            Text="Иконка" />
+
+                        <Border
+                            Padding="14"
+                            Background="{DynamicResource Mnemora.Brush.SurfaceMuted}"
+                            BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                            BorderThickness="1"
+                            CornerRadius="11">
+
+                            <Grid>
+
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <Border
+                                    Width="58"
+                                    Height="58"
+                                    Background="{Binding SelectedColor.Brush}"
+                                    CornerRadius="13">
+
+                                    <materialDesign:PackIcon
+                                        Width="31"
+                                        Height="31"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Foreground="White"
+                                        Kind="{Binding SelectedIcon.Kind}" />
+
+                                </Border>
+
+                                <StackPanel
+                                    Grid.Column="1"
+                                    Margin="15,0"
+                                    VerticalAlignment="Center">
+
+                                    <TextBlock
+                                        FontSize="16"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                        Text="{Binding SelectedIcon.Name}" />
+
+                                    <TextBlock
+                                        Margin="0,3,0,0"
+                                        FontSize="13"
+                                        Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                        Text="{Binding SelectedIcon.Category}" />
+
+                                </StackPanel>
+
+                                <Button
+                                    Grid.Column="2"
+                                    Height="44"
+                                    MinWidth="180"
+                                    Padding="18,0"
+                                    Command="{Binding OpenIconPickerCommand}"
+                                    Style="{StaticResource Mnemora.SecondaryButton}">
+
+                                    <StackPanel Orientation="Horizontal">
+
+                                        <materialDesign:PackIcon
+                                            Width="20"
+                                            Height="20"
+                                            VerticalAlignment="Center"
+                                            Kind="ShapeOutline" />
+
+                                        <TextBlock
+                                            Margin="10,0,0,0"
+                                            VerticalAlignment="Center"
+                                            Text="Выбрать иконку" />
+
+                                    </StackPanel>
+
+                                </Button>
+
+                            </Grid>
+
+                        </Border>
+
+                        <!-- Ошибка -->
+
+                        <Border
+                            Margin="0,14,0,0"
+                            Padding="12,9"
+                            Background="#FFF2F3"
+                            CornerRadius="8">
+
+                            <Border.Style>
+
+                                <Style TargetType="Border">
+
+                                    <Setter
+                                        Property="Visibility"
+                                        Value="Collapsed" />
+
+                                    <Style.Triggers>
+
+                                        <DataTrigger
+                                            Binding="{Binding HasError}"
+                                            Value="True">
+
+                                            <Setter
+                                                Property="Visibility"
+                                                Value="Visible" />
+
+                                        </DataTrigger>
+
+                                    </Style.Triggers>
+
+                                </Style>
+
+                            </Border.Style>
+
+                            <DockPanel>
+
+                                <materialDesign:PackIcon
+                                    Width="19"
+                                    Height="19"
+                                    Margin="0,0,9,0"
+                                    VerticalAlignment="Top"
+                                    Foreground="#D84040"
+                                    Kind="AlertCircleOutline" />
+
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    FontSize="13"
+                                    Foreground="#B52E38"
+                                    Text="{Binding ErrorMessage}"
+                                    TextWrapping="Wrap" />
+
+                            </DockPanel>
+
+                        </Border>
+
+                    </StackPanel>
+
+                </ScrollViewer>
+
+                <!-- Кнопки -->
+
+                <Grid
+                    Grid.Row="2"
+                    Margin="0,24,0,0">
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="14" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Button
+                        Grid.Column="0"
                         Command="{Binding CancelCommand}"
                         Content="Отмена"
                         Style="{StaticResource Mnemora.SecondaryButton}" />
 
-                <Button Grid.Column="2"
-                        MinWidth="170"
-                        IsDefault="True"
+                    <Button
+                        Grid.Column="2"
                         Command="{Binding CreateCommand}"
+                        IsDefault="True"
                         Style="{StaticResource Mnemora.PrimaryButton}">
 
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Width="20"
-                                                 Height="20"
-                                                 VerticalAlignment="Center"
-                                                 Kind="Plus" />
+                        <StackPanel Orientation="Horizontal">
 
-                        <TextBlock Margin="12,0,0,0"
-                                   VerticalAlignment="Center">
+                            <materialDesign:PackIcon
+                                Width="20"
+                                Height="20"
+                                VerticalAlignment="Center"
+                                Kind="Plus" />
 
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Text"
+                            <TextBlock
+                                Margin="12,0,0,0"
+                                VerticalAlignment="Center">
+
+                                <TextBlock.Style>
+
+                                    <Style TargetType="TextBlock">
+
+                                        <Setter
+                                            Property="Text"
                                             Value="Создать тему" />
 
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsCreating}"
-                                                     Value="True">
-                                            <Setter Property="Text"
+                                        <Style.Triggers>
+
+                                            <DataTrigger
+                                                Binding="{Binding IsCreating}"
+                                                Value="True">
+
+                                                <Setter
+                                                    Property="Text"
                                                     Value="Создание..." />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                    </StackPanel>
-                </Button>
+
+                                            </DataTrigger>
+
+                                        </Style.Triggers>
+
+                                    </Style>
+
+                                </TextBlock.Style>
+
+                            </TextBlock>
+
+                        </StackPanel>
+
+                    </Button>
+
+                </Grid>
+
             </Grid>
-        </Grid>
-    </Border>
+
+        </Border>
+
+    </Grid>
+
 </UserControl>

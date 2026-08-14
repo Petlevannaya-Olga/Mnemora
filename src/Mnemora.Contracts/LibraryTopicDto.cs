@@ -3,4 +3,6 @@
 public sealed record LibraryTopicDto(
     Guid Id,
     string Name,
+    string Color,
+    string Icon,
     DateTime CreatedAt);

@@ -20,18 +20,21 @@ public sealed class CreateTopicCommandHandler(
         CreateTopicCommand command,
         CancellationToken cancellationToken)
     {
-        var nameResult = TopicName.Create(command.Name);
+        var nameResult = TopicName.Create(
+            command.Name);
 
         if (nameResult.IsFailure)
         {
             return nameResult.Error.ToErrors();
         }
 
-        var sectionId = new SectionId(command.SectionId);
+        var sectionId = new SectionId(
+            command.SectionId);
 
-        var sectionExistsResult = await sectionsRepository.ExistsAsync(
-            section => section.Id == sectionId,
-            cancellationToken);
+        var sectionExistsResult =
+            await sectionsRepository.ExistsAsync(
+                section => section.Id == sectionId,
+                cancellationToken);
 
         if (sectionExistsResult.IsFailure)
         {
@@ -46,10 +49,12 @@ public sealed class CreateTopicCommandHandler(
                 .ToErrors();
         }
 
-        var topicExistsResult = await topicsRepository.ExistsAsync(
-            topic => topic.SectionId == sectionId
-                     && topic.Name == nameResult.Value,
-            cancellationToken);
+        var topicExistsResult =
+            await topicsRepository.ExistsAsync(
+                topic =>
+                    topic.SectionId == sectionId &&
+                    topic.Name == nameResult.Value,
+                cancellationToken);
 
         if (topicExistsResult.IsFailure)
         {
@@ -66,17 +71,24 @@ public sealed class CreateTopicCommandHandler(
                 .ToErrors();
         }
 
-        var topic = Topic.Create(sectionId, nameResult.Value);
+        var topic = Topic.Create(
+            sectionId,
+            nameResult.Value,
+            command.Color,
+            command.Icon);
 
-        topicsRepository.Add(topic);
+        topicsRepository.Add(
+            topic);
 
-        var saveResult = await transactionManager.SaveChangesAsync(
-            cancellationToken);
+        var saveResult =
+            await transactionManager.SaveChangesAsync(
+                cancellationToken);
 
         if (saveResult.IsFailure)
         {
             logger.LogWarning(
-                "Не удалось создать тему в разделе {SectionId}. Код ошибки: {ErrorCode}",
+                "Не удалось создать тему в разделе {SectionId}. " +
+                "Код ошибки: {ErrorCode}",
                 command.SectionId,
                 saveResult.Error.Code);
 
@@ -84,10 +96,13 @@ public sealed class CreateTopicCommandHandler(
         }
 
         logger.LogInformation(
-            "Создана тема {TopicId} с названием {TopicName} в разделе {SectionId}",
+            "Создана тема {TopicId} с названием {TopicName} " +
+            "в разделе {SectionId}. Цвет: {TopicColor}, иконка: {TopicIcon}",
             topic.Id.Value,
             topic.Name.Value,
-            command.SectionId);
+            command.SectionId,
+            topic.Color,
+            topic.Icon);
 
         return topic.Id.Value;
     }

@@ -5,9 +5,11 @@ using Mnemora.Domain.Topics;
 
 namespace Mnemora.Infrastructure.Persistence.Configurations;
 
-public sealed class TopicConfiguration : IEntityTypeConfiguration<Topic>
+public sealed class TopicConfiguration
+    : IEntityTypeConfiguration<Topic>
 {
-    public void Configure(EntityTypeBuilder<Topic> builder)
+    public void Configure(
+        EntityTypeBuilder<Topic> builder)
     {
         builder.ToTable("topics");
 
@@ -36,6 +38,26 @@ public sealed class TopicConfiguration : IEntityTypeConfiguration<Topic>
             .IsRequired()
             .HasColumnName("name");
 
+        builder.Property(topic => topic.Color)
+            .HasConversion(
+                color => color.ToString(),
+                value => Enum.Parse<TopicColor>(
+                    value,
+                    ignoreCase: true))
+            .HasMaxLength(32)
+            .IsRequired()
+            .HasColumnName("color");
+
+        builder.Property(topic => topic.Icon)
+            .HasConversion(
+                icon => icon.ToString(),
+                value => Enum.Parse<TopicIcon>(
+                    value,
+                    ignoreCase: true))
+            .HasMaxLength(64)
+            .IsRequired()
+            .HasColumnName("icon");
+
         builder.Property(topic => topic.CreatedAt)
             .IsRequired()
             .HasColumnName("created_at");
@@ -50,7 +72,8 @@ public sealed class TopicConfiguration : IEntityTypeConfiguration<Topic>
                 topic.Name
             })
             .IsUnique()
-            .HasDatabaseName("ux_topics_section_id_name");
+            .HasDatabaseName(
+                "ux_topics_section_id_name");
 
         builder.HasOne<Section>()
             .WithMany()

@@ -3,11 +3,13 @@ using Mnemora.Application.Commands;
 using Mnemora.Application.Topics.Create;
 using Mnemora.Desktop.Dialogs;
 using Mnemora.Desktop.ViewModels.Common;
+using Mnemora.Domain.Topics;
 
 namespace Mnemora.Desktop.ViewModels.Topics;
 
 public sealed partial class CreateTopicDialogViewModel(
-    ICommandDispatcher commandDispatcher)
+    ICommandDispatcher commandDispatcher,
+    IDialogService dialogService)
     : ViewModelBase,
       IDialogViewModel<Guid?>
 {
@@ -17,13 +19,27 @@ public sealed partial class CreateTopicDialogViewModel(
     private string? _errorMessage;
     private bool _isCreating;
 
+    private TopicColorOption _selectedColor =
+        TopicAppearanceOptions.Colors[0];
+
+    private TopicIconOption _selectedIcon =
+        TopicAppearanceOptions.Icons[0];
+
     public event EventHandler<DialogCloseRequestedEventArgs<Guid?>>?
         CloseRequested;
+
+    public IReadOnlyList<TopicColorOption> ColorOptions =>
+        TopicAppearanceOptions.Colors;
+
+    public IReadOnlyList<TopicIconOption> IconOptions =>
+        TopicAppearanceOptions.Icons;
 
     public string SectionName
     {
         get => _sectionName;
-        private set => SetProperty(ref _sectionName, value);
+        private set => SetProperty(
+            ref _sectionName,
+            value);
     }
 
     public string Name
@@ -41,6 +57,30 @@ public sealed partial class CreateTopicDialogViewModel(
         }
     }
 
+    public TopicColorOption SelectedColor
+    {
+        get => _selectedColor;
+        set
+        {
+            if (SetProperty(ref _selectedColor, value))
+            {
+                ErrorMessage = null;
+            }
+        }
+    }
+
+    public TopicIconOption SelectedIcon
+    {
+        get => _selectedIcon;
+        set
+        {
+            if (SetProperty(ref _selectedIcon, value))
+            {
+                ErrorMessage = null;
+            }
+        }
+    }
+
     public string? ErrorMessage
     {
         get => _errorMessage;
@@ -55,7 +95,8 @@ public sealed partial class CreateTopicDialogViewModel(
         }
     }
 
-    public bool HasError => !string.IsNullOrWhiteSpace(ErrorMessage);
+    public bool HasError =>
+        !string.IsNullOrWhiteSpace(ErrorMessage);
 
     public bool IsCreating
     {
@@ -75,7 +116,9 @@ public sealed partial class CreateTopicDialogViewModel(
 
     public bool IsBusy => IsCreating;
 
-    public void Initialize(Guid sectionId, string sectionName)
+    public void Initialize(
+        Guid sectionId,
+        string sectionName)
     {
         if (sectionId == Guid.Empty)
         {
@@ -84,11 +127,19 @@ public sealed partial class CreateTopicDialogViewModel(
                 nameof(sectionId));
         }
 
-        ArgumentException.ThrowIfNullOrWhiteSpace(sectionName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(
+            sectionName);
 
         _sectionId = sectionId;
         SectionName = sectionName;
         Name = string.Empty;
+
+        SelectedColor =
+            TopicAppearanceOptions.Colors[0];
+
+        SelectedIcon =
+            TopicAppearanceOptions.Icons[0];
+
         ErrorMessage = null;
         IsCreating = false;
     }
@@ -104,7 +155,9 @@ public sealed partial class CreateTopicDialogViewModel(
         {
             var command = new CreateTopicCommand(
                 _sectionId,
-                Name);
+                Name,
+                SelectedColor.Value,
+                SelectedIcon.Value);
 
             var result = await commandDispatcher
                 .SendAsync<CreateTopicCommand, Guid>(
@@ -113,13 +166,16 @@ public sealed partial class CreateTopicDialogViewModel(
 
             if (cancellationToken.IsCancellationRequested)
             {
-                ErrorMessage = "Создание темы было отменено";
+                ErrorMessage =
+                    "Создание темы было отменено";
+
                 return;
             }
 
             if (result.IsFailure)
             {
-                ErrorMessage = result.Error.FirstOrDefault()?.Message
+                ErrorMessage =
+                    result.Error.FirstOrDefault()?.Message
                     ?? "Не удалось создать тему";
 
                 return;
@@ -134,7 +190,8 @@ public sealed partial class CreateTopicDialogViewModel(
         catch (OperationCanceledException)
             when (cancellationToken.IsCancellationRequested)
         {
-            ErrorMessage = "Создание темы было отменено";
+            ErrorMessage =
+                "Создание темы было отменено";
         }
         finally
         {
@@ -162,6 +219,27 @@ public sealed partial class CreateTopicDialogViewModel(
     private bool CanCancel()
     {
         return !IsCreating;
+    }
+
+    [RelayCommand]
+    private void OpenIconPicker()
+    {
+        var selectedIcon = dialogService.Show<
+            SelectTopicIconDialogViewModel,
+            TopicIcon?>(
+            viewModel => viewModel.Initialize(
+                SelectedIcon.Value));
+
+        if (selectedIcon is null)
+        {
+            return;
+        }
+
+        SelectedIcon =
+            IconOptions.FirstOrDefault(
+                option =>
+                    option.Value == selectedIcon.Value)
+            ?? IconOptions[0];
     }
 
     public void CancelPendingOperation()

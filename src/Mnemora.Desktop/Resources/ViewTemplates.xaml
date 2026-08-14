@@ -105,5 +105,10 @@
         DataType="{x:Type pageViewModels:SettingsViewModel}">
         <pages:PlaceholderPageView />
     </DataTemplate>
+    
+    <DataTemplate
+        DataType="{x:Type topicViewModels:SelectTopicIconDialogViewModel}">
+        <topics:SelectTopicIconDialogView />
+    </DataTemplate>
 
 </ResourceDictionary>
