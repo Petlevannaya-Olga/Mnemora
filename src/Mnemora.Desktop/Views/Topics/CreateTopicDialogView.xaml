@@ -75,15 +75,15 @@
                 </StackPanel>
 
                 <Button Grid.Column="2"
-                        Width="40"
-                        Height="40"
-                        VerticalAlignment="Top"
                         Command="{Binding CancelCommand}"
-                        Style="{StaticResource MaterialDesignToolButton}">
+                        Style="{StaticResource Mnemora.DialogCloseButton}">
 
-                    <materialDesign:PackIcon Width="21"
-                                             Height="21"
-                                             Kind="Close" />
+                    <materialDesign:PackIcon
+                        Kind="Close"
+                        Width="20"
+                        Height="20"
+                        Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+
                 </Button>
             </Grid>
 
@@ -192,7 +192,7 @@
                         MinWidth="170"
                         IsDefault="True"
                         Command="{Binding CreateCommand}"
-                        Style="{StaticResource OnboardingPrimaryButtonStyle}">
+                        Style="{StaticResource Mnemora.PrimaryButton}">
 
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Width="20"

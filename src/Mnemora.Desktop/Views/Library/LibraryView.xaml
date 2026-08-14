@@ -31,7 +31,7 @@
             <Button Grid.Column="1"
                     MinWidth="190"
                     Command="{Binding AddSectionCommand}"
-                    Style="{StaticResource OnboardingPrimaryButtonStyle}">
+                    Style="{StaticResource Mnemora.PrimaryButton}">
 
                 <StackPanel Orientation="Horizontal">
                     <materialDesign:PackIcon Width="21"
@@ -197,7 +197,7 @@
                             MinWidth="210"
                             HorizontalAlignment="Center"
                             Command="{Binding AddSectionCommand}"
-                            Style="{StaticResource OnboardingPrimaryButtonStyle}">
+                            Style="{StaticResource Mnemora.PrimaryButton}">
 
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Width="21"

@@ -1,27 +1,35 @@
 ﻿using System.ComponentModel;
 using System.IO;
 using CommunityToolkit.Mvvm.Input;
+using Mnemora.Desktop.Dialogs;
+using Mnemora.Desktop.Navigation;
 using Mnemora.Desktop.Storage;
 using Mnemora.Desktop.ViewModels.Common;
+using Mnemora.Desktop.ViewModels.Library;
 using Mnemora.Desktop.ViewModels.Onboarding;
+using Mnemora.Desktop.ViewModels.Sections;
 
 namespace Mnemora.Desktop.ViewModels.Home;
 
 public sealed partial class HomeViewModel
     : ViewModelBase
 {
-    private readonly IFolderLauncherService
-        _folderLauncherService;
+    private readonly IFolderLauncherService _folderLauncherService;
+    private readonly IDialogService _dialogService;
+    private readonly INavigationService _navigationService;
 
     private string? _storageErrorMessage;
 
     public HomeViewModel(
         OnboardingState onboardingState,
         TimeProvider timeProvider,
-        IFolderLauncherService folderLauncherService)
+        IFolderLauncherService folderLauncherService,
+        IDialogService dialogService,
+        INavigationService navigationService)
     {
-        _folderLauncherService =
-            folderLauncherService;
+        _folderLauncherService = folderLauncherService;
+        _dialogService = dialogService;
+        _navigationService = navigationService;
 
         string greeting =
             GetGreeting(
@@ -120,6 +128,21 @@ public sealed partial class HomeViewModel
         {
             StorageErrorMessage = "Не удалось открыть папку хранилища.";
         }
+    }
+    
+    [RelayCommand]
+    private void CreateFirstSection()
+    {
+        var sectionId = _dialogService.Show<
+            CreateSectionDialogViewModel,
+            Guid?>();
+
+        if (sectionId is null)
+        {
+            return;
+        }
+
+        _navigationService.NavigateTo<LibraryViewModel>();
     }
 
     private static string GetGreeting(

@@ -25,7 +25,10 @@ internal sealed class DialogService(
             DataContext = viewModel
         };
 
-        if (System.Windows.Application.Current?.MainWindow is { } owner)
+        var owner = System.Windows.Application.Current?.MainWindow;
+        var overlayHost = owner as IDialogOverlayHost;
+
+        if (owner is not null)
         {
             dialog.Owner = owner;
         }
@@ -39,6 +42,7 @@ internal sealed class DialogService(
         }
 
         viewModel.CloseRequested += OnCloseRequested;
+        overlayHost?.ShowDialogOverlay();
 
         try
         {
@@ -48,6 +52,7 @@ internal sealed class DialogService(
         finally
         {
             viewModel.CloseRequested -= OnCloseRequested;
+            overlayHost?.HideDialogOverlay();
         }
     }
 }

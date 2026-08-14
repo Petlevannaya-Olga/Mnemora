@@ -10,6 +10,15 @@
         Icon="pack://application:,,,/Assets/Images/Mnemora.ico"
         Style="{StaticResource MaterialDesignWindow}">
 
-    <ContentControl Content="{Binding CurrentViewModel}" />
+    <Grid>
+        <ContentControl Content="{Binding CurrentViewModel}" />
+
+        <Border x:Name="DialogOverlay"
+                Panel.ZIndex="100"
+                Background="#A0061735"
+                IsHitTestVisible="True"
+                Opacity="0"
+                Visibility="Collapsed" />
+    </Grid>
 
 </Window>

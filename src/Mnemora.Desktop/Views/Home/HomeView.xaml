@@ -360,6 +360,7 @@
                                 Grid.Row="5"
                                 Width="350"
                                 HorizontalAlignment="Center"
+                                Command="{Binding CreateFirstSectionCommand}"
                                 Style="{StaticResource Mnemora.PrimaryButton}">
 
                                 <StackPanel Orientation="Horizontal">

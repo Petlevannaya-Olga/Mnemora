@@ -26,118 +26,86 @@
             Value="Dp4" />
     </Style>
 
-    <!-- Основная кнопка -->
-
     <!-- Основная градиентная кнопка Mnemora -->
 
-    <Style
-        x:Key="Mnemora.PrimaryButton"
-        TargetType="Button">
+    <Style x:Key="Mnemora.PrimaryButton"
+           TargetType="{x:Type Button}">
 
-        <Setter
-            Property="Height"
-            Value="52" />
+        <Setter Property="Height"
+                Value="52" />
 
-        <Setter
-            Property="MinWidth"
-            Value="230" />
+        <Setter Property="MinWidth"
+                Value="160" />
 
-        <Setter
-            Property="Padding"
-            Value="26,0" />
+        <Setter Property="Padding"
+                Value="26,0" />
 
-        <Setter
-            Property="Background"
-            Value="{DynamicResource Mnemora.Brush.BrandGradient}" />
+        <Setter Property="Background"
+                Value="{StaticResource Mnemora.Brush.BrandGradient}" />
 
-        <Setter
-            Property="Foreground"
-            Value="White" />
+        <Setter Property="Foreground"
+                Value="White" />
 
-        <Setter
-            Property="FontSize"
-            Value="18" />
+        <Setter Property="FontSize"
+                Value="17" />
 
-        <Setter
-            Property="FontWeight"
-            Value="SemiBold" />
+        <Setter Property="FontWeight"
+                Value="SemiBold" />
 
-        <Setter
-            Property="BorderThickness"
-            Value="0" />
+        <Setter Property="BorderThickness"
+                Value="0" />
 
-        <Setter
-            Property="Cursor"
-            Value="Hand" />
+        <Setter Property="Cursor"
+                Value="Hand" />
 
-        <Setter
-            Property="FocusVisualStyle"
-            Value="{x:Null}" />
+        <Setter Property="FocusVisualStyle"
+                Value="{x:Null}" />
+
+        <Setter Property="HorizontalContentAlignment"
+                Value="Center" />
+
+        <Setter Property="VerticalContentAlignment"
+                Value="Center" />
 
         <Setter Property="Template">
             <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Button}">
+                    <Border x:Name="ButtonBorder"
+                            Padding="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="9"
+                            SnapsToDevicePixels="True">
 
-                <ControlTemplate TargetType="Button">
-
-                    <Border
-                        x:Name="ButtonBorder"
-                        Background="{TemplateBinding Background}"
-                        CornerRadius="9"
-                        SnapsToDevicePixels="True">
-
-                        <ContentPresenter
-                            Margin="{TemplateBinding Padding}"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center" />
-
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                          RecognizesAccessKey="True" />
                     </Border>
 
                     <ControlTemplate.Triggers>
-
-                        <Trigger
-                            Property="IsMouseOver"
-                            Value="True">
-
-                            <Setter
-                                TargetName="ButtonBorder"
-                                Property="Opacity"
-                                Value="0.9" />
-
+                        <Trigger Property="IsMouseOver"
+                                 Value="True">
+                            <Setter TargetName="ButtonBorder"
+                                    Property="Opacity"
+                                    Value="0.9" />
                         </Trigger>
 
-                        <Trigger
-                            Property="IsPressed"
-                            Value="True">
-
-                            <Setter
-                                TargetName="ButtonBorder"
-                                Property="Opacity"
-                                Value="0.76" />
-
+                        <Trigger Property="IsPressed"
+                                 Value="True">
+                            <Setter TargetName="ButtonBorder"
+                                    Property="Opacity"
+                                    Value="0.76" />
                         </Trigger>
 
-                        <Trigger
-                            Property="IsEnabled"
-                            Value="False">
-
-                            <Setter
-                                TargetName="ButtonBorder"
-                                Property="Opacity"
-                                Value="0.45" />
-
-                            <Setter
-                                Property="Cursor"
-                                Value="Arrow" />
-
+                        <Trigger Property="IsEnabled"
+                                 Value="False">
+                            <Setter TargetName="ButtonBorder"
+                                    Property="Opacity"
+                                    Value="0.45" />
                         </Trigger>
-
                     </ControlTemplate.Triggers>
-
                 </ControlTemplate>
-
             </Setter.Value>
         </Setter>
-
     </Style>
 
     <!-- Второстепенная кнопка -->
@@ -292,218 +260,266 @@
             Property="TextWrapping"
             Value="Wrap" />
     </Style>
-    
+
     <!-- Ползунок скролла -->
 
-<Style
-    x:Key="Mnemora.ScrollThumb"
-    TargetType="Thumb">
+    <Style
+        x:Key="Mnemora.ScrollThumb"
+        TargetType="Thumb">
 
-    <Setter
-        Property="Background"
-        Value="#C5C9DC" />
+        <Setter
+            Property="Background"
+            Value="#C5C9DC" />
 
-    <Setter Property="Template">
+        <Setter Property="Template">
 
-        <Setter.Value>
+            <Setter.Value>
 
-            <ControlTemplate TargetType="Thumb">
+                <ControlTemplate TargetType="Thumb">
 
-                <Border
-                    x:Name="ThumbBorder"
-                    Background="{TemplateBinding Background}"
-                    CornerRadius="3" />
+                    <Border
+                        x:Name="ThumbBorder"
+                        Background="{TemplateBinding Background}"
+                        CornerRadius="3" />
 
-                <ControlTemplate.Triggers>
+                    <ControlTemplate.Triggers>
 
-                    <Trigger
-                        Property="IsMouseOver"
-                        Value="True">
+                        <Trigger
+                            Property="IsMouseOver"
+                            Value="True">
 
-                        <Setter
-                            TargetName="ThumbBorder"
-                            Property="Background"
-                            Value="{StaticResource Mnemora.Brush.Primary}" />
+                            <Setter
+                                TargetName="ThumbBorder"
+                                Property="Background"
+                                Value="{StaticResource Mnemora.Brush.Primary}" />
 
-                    </Trigger>
+                        </Trigger>
 
-                    <Trigger
-                        Property="IsDragging"
-                        Value="True">
+                        <Trigger
+                            Property="IsDragging"
+                            Value="True">
 
-                        <Setter
-                            TargetName="ThumbBorder"
-                            Property="Background"
-                            Value="{StaticResource Mnemora.Brush.PrimaryDark}" />
+                            <Setter
+                                TargetName="ThumbBorder"
+                                Property="Background"
+                                Value="{StaticResource Mnemora.Brush.PrimaryDark}" />
 
-                    </Trigger>
+                        </Trigger>
 
-                </ControlTemplate.Triggers>
+                    </ControlTemplate.Triggers>
 
-            </ControlTemplate>
+                </ControlTemplate>
 
-        </Setter.Value>
+            </Setter.Value>
 
-    </Setter>
+        </Setter>
 
-</Style>
+    </Style>
 
-<!-- Вертикальный шаблон -->
+    <!-- Вертикальный шаблон -->
 
-<ControlTemplate
-    x:Key="Mnemora.VerticalScrollBarTemplate"
-    TargetType="ScrollBar">
+    <ControlTemplate
+        x:Key="Mnemora.VerticalScrollBarTemplate"
+        TargetType="ScrollBar">
 
-    <Grid
-        Width="8"
-        Background="Transparent">
+        <Grid
+            Width="8"
+            Background="Transparent">
 
-        <Track
-            x:Name="PART_Track"
-            Orientation="Vertical"
-            IsDirectionReversed="True">
+            <Track
+                x:Name="PART_Track"
+                Orientation="Vertical"
+                IsDirectionReversed="True">
 
-            <Track.DecreaseRepeatButton>
+                <Track.DecreaseRepeatButton>
 
-                <RepeatButton
-                    Command="{x:Static ScrollBar.PageUpCommand}"
-                    Background="Transparent"
-                    BorderThickness="0"
-                    Focusable="False"
-                    Opacity="0" />
+                    <RepeatButton
+                        Command="{x:Static ScrollBar.PageUpCommand}"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Focusable="False"
+                        Opacity="0" />
 
-            </Track.DecreaseRepeatButton>
+                </Track.DecreaseRepeatButton>
 
-            <Track.Thumb>
+                <Track.Thumb>
 
-                <Thumb
-                    MinHeight="32"
-                    Margin="2,0"
-                    Style="{StaticResource Mnemora.ScrollThumb}" />
+                    <Thumb
+                        MinHeight="32"
+                        Margin="2,0"
+                        Style="{StaticResource Mnemora.ScrollThumb}" />
 
-            </Track.Thumb>
+                </Track.Thumb>
 
-            <Track.IncreaseRepeatButton>
+                <Track.IncreaseRepeatButton>
 
-                <RepeatButton
-                    Command="{x:Static ScrollBar.PageDownCommand}"
-                    Background="Transparent"
-                    BorderThickness="0"
-                    Focusable="False"
-                    Opacity="0" />
+                    <RepeatButton
+                        Command="{x:Static ScrollBar.PageDownCommand}"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Focusable="False"
+                        Opacity="0" />
 
-            </Track.IncreaseRepeatButton>
+                </Track.IncreaseRepeatButton>
 
-        </Track>
+            </Track>
 
-    </Grid>
+        </Grid>
 
-</ControlTemplate>
+    </ControlTemplate>
 
-<!-- Горизонтальный шаблон -->
+    <!-- Горизонтальный шаблон -->
 
-<ControlTemplate
-    x:Key="Mnemora.HorizontalScrollBarTemplate"
-    TargetType="ScrollBar">
+    <ControlTemplate
+        x:Key="Mnemora.HorizontalScrollBarTemplate"
+        TargetType="ScrollBar">
 
-    <Grid
-        Height="8"
-        Background="Transparent">
+        <Grid
+            Height="8"
+            Background="Transparent">
 
-        <Track
-            x:Name="PART_Track"
-            Orientation="Horizontal"
-            IsDirectionReversed="False">
+            <Track
+                x:Name="PART_Track"
+                Orientation="Horizontal"
+                IsDirectionReversed="False">
 
-            <Track.DecreaseRepeatButton>
+                <Track.DecreaseRepeatButton>
 
-                <RepeatButton
-                    Command="{x:Static ScrollBar.PageLeftCommand}"
-                    Background="Transparent"
-                    BorderThickness="0"
-                    Focusable="False"
-                    Opacity="0" />
+                    <RepeatButton
+                        Command="{x:Static ScrollBar.PageLeftCommand}"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Focusable="False"
+                        Opacity="0" />
 
-            </Track.DecreaseRepeatButton>
+                </Track.DecreaseRepeatButton>
 
-            <Track.Thumb>
+                <Track.Thumb>
 
-                <Thumb
-                    MinWidth="32"
-                    Margin="0,2"
-                    Style="{StaticResource Mnemora.ScrollThumb}" />
+                    <Thumb
+                        MinWidth="32"
+                        Margin="0,2"
+                        Style="{StaticResource Mnemora.ScrollThumb}" />
 
-            </Track.Thumb>
+                </Track.Thumb>
 
-            <Track.IncreaseRepeatButton>
+                <Track.IncreaseRepeatButton>
 
-                <RepeatButton
-                    Command="{x:Static ScrollBar.PageRightCommand}"
-                    Background="Transparent"
-                    BorderThickness="0"
-                    Focusable="False"
-                    Opacity="0" />
+                    <RepeatButton
+                        Command="{x:Static ScrollBar.PageRightCommand}"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Focusable="False"
+                        Opacity="0" />
 
-            </Track.IncreaseRepeatButton>
+                </Track.IncreaseRepeatButton>
 
-        </Track>
+            </Track>
 
-    </Grid>
+        </Grid>
 
-</ControlTemplate>
+    </ControlTemplate>
 
-<!-- Глобальный стиль всех скроллов -->
+    <!-- Глобальный стиль всех скроллов -->
 
-<Style TargetType="{x:Type ScrollBar}">
+    <Style TargetType="{x:Type ScrollBar}">
 
-    <Setter
-        Property="Background"
-        Value="Transparent" />
+        <Setter
+            Property="Background"
+            Value="Transparent" />
 
-    <Setter
-        Property="SnapsToDevicePixels"
-        Value="True" />
+        <Setter
+            Property="SnapsToDevicePixels"
+            Value="True" />
 
-    <Style.Triggers>
+        <Style.Triggers>
 
-        <Trigger
-            Property="Orientation"
-            Value="Vertical">
+            <Trigger
+                Property="Orientation"
+                Value="Vertical">
 
-            <Setter
-                Property="Width"
-                Value="8" />
+                <Setter
+                    Property="Width"
+                    Value="8" />
 
-            <Setter
-                Property="Margin"
-                Value="2,4" />
+                <Setter
+                    Property="Margin"
+                    Value="2,4" />
 
-            <Setter
-                Property="Template"
-                Value="{StaticResource Mnemora.VerticalScrollBarTemplate}" />
+                <Setter
+                    Property="Template"
+                    Value="{StaticResource Mnemora.VerticalScrollBarTemplate}" />
 
-        </Trigger>
+            </Trigger>
 
-        <Trigger
-            Property="Orientation"
-            Value="Horizontal">
+            <Trigger
+                Property="Orientation"
+                Value="Horizontal">
 
-            <Setter
-                Property="Height"
-                Value="8" />
+                <Setter
+                    Property="Height"
+                    Value="8" />
 
-            <Setter
-                Property="Margin"
-                Value="4,2" />
+                <Setter
+                    Property="Margin"
+                    Value="4,2" />
 
-            <Setter
-                Property="Template"
-                Value="{StaticResource Mnemora.HorizontalScrollBarTemplate}" />
+                <Setter
+                    Property="Template"
+                    Value="{StaticResource Mnemora.HorizontalScrollBarTemplate}" />
 
-        </Trigger>
+            </Trigger>
 
-    </Style.Triggers>
+        </Style.Triggers>
 
-</Style>
+    </Style>
+    
+    <Style x:Key="Mnemora.DialogCloseButton"
+           TargetType="{x:Type Button}">
+        <Setter Property="Width" Value="36" />
+        <Setter Property="Height" Value="36" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground"
+                Value="{DynamicResource Mnemora.Brush.TextSecondary}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Button}">
+                    <Border x:Name="ButtonBorder"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="8">
+                        <ContentPresenter
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center" />
+                    </Border>
+
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="ButtonBorder"
+                                    Property="Background"
+                                    Value="#EEF0FA" />
+
+                            <Setter Property="Foreground"
+                                    Value="{DynamicResource Mnemora.Brush.TextPrimary}" />
+                        </Trigger>
+
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="ButtonBorder"
+                                    Property="Background"
+                                    Value="#E1E4F2" />
+                        </Trigger>
+
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.45" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 
 </ResourceDictionary>

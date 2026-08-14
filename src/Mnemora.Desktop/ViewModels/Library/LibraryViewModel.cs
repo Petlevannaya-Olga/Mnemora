@@ -5,6 +5,7 @@ using Mnemora.Application.Library.Get;
 using Mnemora.Application.Queries;
 using Mnemora.Contracts;
 using Mnemora.Desktop.Dialogs;
+using Mnemora.Desktop.ViewModels.Common;
 using Mnemora.Desktop.ViewModels.Sections;
 using Mnemora.Desktop.ViewModels.Topics;
 
@@ -13,7 +14,7 @@ namespace Mnemora.Desktop.ViewModels.Library;
 public sealed partial class LibraryViewModel(
     IQueryDispatcher queryDispatcher,
     IDialogService dialogService)
-    : ObservableObject
+    : ViewModelBase
 {
     public ObservableCollection<LibrarySectionDto> Sections { get; } = [];
 

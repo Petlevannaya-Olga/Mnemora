@@ -13,5 +13,7 @@
         UseLayoutRounding="True"
         SnapsToDevicePixels="True">
 
-    <ContentControl Content="{Binding}" />
+    <ContentControl Content="{Binding}"
+                    HorizontalContentAlignment="Stretch"
+                    VerticalContentAlignment="Stretch" />
 </Window>
