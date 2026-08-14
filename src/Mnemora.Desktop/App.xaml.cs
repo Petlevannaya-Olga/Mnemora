@@ -18,6 +18,7 @@ using Mnemora.Desktop.Storage;
 using Mnemora.Desktop.ViewModels.Home;
 using Mnemora.Desktop.ViewModels.Library;
 using Mnemora.Desktop.ViewModels.Onboarding;
+using Mnemora.Desktop.ViewModels.Pages;
 using Mnemora.Desktop.ViewModels.Sections;
 using Mnemora.Desktop.ViewModels.Shell;
 using Mnemora.Desktop.ViewModels.Topics;
@@ -140,6 +141,11 @@ public partial class App : System.Windows.Application
 
         services.AddSingleton<IDialogService, DialogService>();
 
+        services.AddTransient<PracticeViewModel>();
+        services.AddTransient<TrainingViewModel>();
+        services.AddTransient<PlanViewModel>();
+        services.AddTransient<ProgressViewModel>();
+        services.AddTransient<SettingsViewModel>();
         services.AddTransient<SelectSectionIconDialogViewModel>();
         services.AddTransient<CreateTopicDialogViewModel>();
         services.AddTransient<LibraryViewModel>();

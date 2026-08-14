@@ -12,7 +12,9 @@
     xmlns:sectionViewModels="clr-namespace:Mnemora.Desktop.ViewModels.Sections"
     xmlns:sections="clr-namespace:Mnemora.Desktop.Views.Sections"
     xmlns:topicViewModels="clr-namespace:Mnemora.Desktop.ViewModels.Topics"
-    xmlns:topics="clr-namespace:Mnemora.Desktop.Views.Topics">
+    xmlns:topics="clr-namespace:Mnemora.Desktop.Views.Topics"
+    xmlns:pageViewModels="clr-namespace:Mnemora.Desktop.ViewModels.Pages"
+    xmlns:pages="clr-namespace:Mnemora.Desktop.Views.Pages">
 
     <DataTemplate
         DataType="{x:Type onboardingViewModels:ProfileSetupViewModel}">
@@ -64,6 +66,26 @@
     <DataTemplate
         DataType="{x:Type sectionViewModels:SelectSectionIconDialogViewModel}">
         <sections:SelectSectionIconDialogView />
+    </DataTemplate>
+    
+    <DataTemplate DataType="{x:Type pageViewModels:PracticeViewModel}">
+        <pages:PlaceholderPageView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type pageViewModels:TrainingViewModel}">
+        <pages:PlaceholderPageView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type pageViewModels:PlanViewModel}">
+        <pages:PlaceholderPageView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type pageViewModels:ProgressViewModel}">
+        <pages:PlaceholderPageView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type pageViewModels:SettingsViewModel}">
+        <pages:PlaceholderPageView />
     </DataTemplate>
 
 </ResourceDictionary>

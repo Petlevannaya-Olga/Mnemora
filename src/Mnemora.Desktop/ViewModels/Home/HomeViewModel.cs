@@ -16,7 +16,7 @@ public sealed partial class HomeViewModel
 {
     private readonly IFolderLauncherService _folderLauncherService;
     private readonly IDialogService _dialogService;
-    private readonly INavigationService _navigationService;
+    private readonly IPageNavigationService _pageNavigationService;
 
     private string? _storageErrorMessage;
 
@@ -25,11 +25,11 @@ public sealed partial class HomeViewModel
         TimeProvider timeProvider,
         IFolderLauncherService folderLauncherService,
         IDialogService dialogService,
-        INavigationService navigationService)
+        IPageNavigationService pageNavigationService)
     {
         _folderLauncherService = folderLauncherService;
         _dialogService = dialogService;
-        _navigationService = navigationService;
+        _pageNavigationService = pageNavigationService;
 
         string greeting =
             GetGreeting(
@@ -142,7 +142,7 @@ public sealed partial class HomeViewModel
             return;
         }
 
-        _navigationService.NavigateTo<LibraryViewModel>();
+        _pageNavigationService.NavigateTo<LibraryViewModel>();
     }
 
     private static string GetGreeting(

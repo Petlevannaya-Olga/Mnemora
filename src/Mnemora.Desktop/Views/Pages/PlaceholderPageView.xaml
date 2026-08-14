@@ -1,0 +1,25 @@
+﻿<UserControl x:Class="Mnemora.Desktop.Views.Pages.PlaceholderPageView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid Background="{StaticResource Mnemora.Brush.SurfaceMuted}">
+
+        <StackPanel
+            Margin="32,28"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top">
+
+            <TextBlock
+                Text="{Binding Title}"
+                Style="{StaticResource Mnemora.Heading}" />
+
+            <TextBlock
+                Margin="0,8,0,0"
+                Text="Раздел находится в разработке"
+                Style="{StaticResource Mnemora.Description}" />
+
+        </StackPanel>
+
+    </Grid>
+
+</UserControl>

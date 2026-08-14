@@ -5,57 +5,26 @@
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
 
     <UserControl.Resources>
-        <!-- Обычный пункт меню -->
+        <Style x:Key="SidebarNavigationButtonStyle"
+               TargetType="ToggleButton">
 
-        <Style
-            x:Key="SidebarButtonStyle"
-            TargetType="Button">
-
-            <Setter
-                Property="Height"
-                Value="52" />
-
-            <Setter
-                Property="Margin"
-                Value="14,4" />
-
-            <Setter
-                Property="Padding"
-                Value="14,0" />
-
-            <Setter
-                Property="Foreground"
-                Value="White" />
-
-            <Setter
-                Property="Background"
-                Value="Transparent" />
-
-            <Setter
-                Property="BorderThickness"
-                Value="0" />
-
-            <Setter
-                Property="HorizontalContentAlignment"
-                Value="Stretch" />
-
-            <Setter
-                Property="Cursor"
-                Value="Hand" />
-
-            <Setter
-                Property="FocusVisualStyle"
-                Value="{x:Null}" />
+            <Setter Property="Height" Value="52" />
+            <Setter Property="Margin" Value="14,4" />
+            <Setter Property="Padding" Value="14,0" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
 
             <Setter Property="Template">
                 <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
 
-                    <ControlTemplate TargetType="Button">
-
-                        <Border
-                            x:Name="ButtonBorder"
-                            Background="{TemplateBinding Background}"
-                            CornerRadius="9">
+                        <Border x:Name="ButtonBorder"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="9">
 
                             <ContentPresenter
                                 Margin="{TemplateBinding Padding}"
@@ -66,51 +35,32 @@
 
                         <ControlTemplate.Triggers>
 
-                            <Trigger
-                                Property="IsMouseOver"
-                                Value="True">
-
-                                <Setter
-                                    TargetName="ButtonBorder"
-                                    Property="Background"
-                                    Value="#173B67" />
-
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonBorder"
+                                        Property="Background"
+                                        Value="#173B67" />
                             </Trigger>
 
-                            <Trigger
-                                Property="IsPressed"
-                                Value="True">
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="ButtonBorder"
+                                        Property="Background"
+                                        Value="#245A84" />
 
-                                <Setter
-                                    TargetName="ButtonBorder"
-                                    Property="Opacity"
-                                    Value="0.75" />
+                                <Setter Property="Foreground"
+                                        Value="{StaticResource Mnemora.Brush.Primary}" />
+                            </Trigger>
 
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="ButtonBorder"
+                                        Property="Opacity"
+                                        Value="0.75" />
                             </Trigger>
 
                         </ControlTemplate.Triggers>
 
                     </ControlTemplate>
-
                 </Setter.Value>
             </Setter>
-
-        </Style>
-
-        <!-- Выбранный пункт -->
-
-        <Style
-            x:Key="SelectedSidebarButtonStyle"
-            TargetType="Button"
-            BasedOn="{StaticResource SidebarButtonStyle}">
-
-            <Setter
-                Property="Background"
-                Value="#245A84" />
-
-            <Setter
-                Property="Foreground"
-                Value="{StaticResource Mnemora.Brush.Primary}" />
 
         </Style>
 
@@ -493,12 +443,12 @@
 
                 <StackPanel Grid.Row="1">
 
-                    <Button
+                    <ToggleButton
                         Command="{Binding NavigateHomeCommand}"
-                        Style="{StaticResource SelectedSidebarButtonStyle}">
+                        IsChecked="{Binding IsHomeSelected, Mode=OneWay}"
+                        Style="{StaticResource SidebarNavigationButtonStyle}">
 
                         <Grid>
-
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="26" />
                                 <ColumnDefinition Width="*" />
@@ -514,15 +464,16 @@
                                 Grid.Column="1"
                                 Text="Главная"
                                 Style="{StaticResource SidebarTextStyle}" />
-
                         </Grid>
 
-                    </Button>
+                    </ToggleButton>
 
-                    <Button Style="{StaticResource SidebarButtonStyle}">
+                    <ToggleButton
+                        Command="{Binding NavigateLibraryCommand}"
+                        IsChecked="{Binding IsLibrarySelected, Mode=OneWay}"
+                        Style="{StaticResource SidebarNavigationButtonStyle}">
 
                         <Grid>
-
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="26" />
                                 <ColumnDefinition Width="*" />
@@ -543,15 +494,16 @@
                                 Grid.Column="2"
                                 Kind="ChevronRight"
                                 Style="{StaticResource SidebarChevronStyle}" />
-
                         </Grid>
 
-                    </Button>
+                    </ToggleButton>
 
-                    <Button Style="{StaticResource SidebarButtonStyle}">
+                    <ToggleButton
+                        Command="{Binding NavigatePracticeCommand}"
+                        IsChecked="{Binding IsPracticeSelected, Mode=OneWay}"
+                        Style="{StaticResource SidebarNavigationButtonStyle}">
 
                         <Grid>
-
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="26" />
                                 <ColumnDefinition Width="*" />
@@ -566,15 +518,16 @@
                                 Grid.Column="1"
                                 Text="Практика"
                                 Style="{StaticResource SidebarTextStyle}" />
-
                         </Grid>
 
-                    </Button>
+                    </ToggleButton>
 
-                    <Button Style="{StaticResource SidebarButtonStyle}">
+                    <ToggleButton
+                        Command="{Binding NavigateTrainingCommand}"
+                        IsChecked="{Binding IsTrainingSelected, Mode=OneWay}"
+                        Style="{StaticResource SidebarNavigationButtonStyle}">
 
                         <Grid>
-
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="26" />
                                 <ColumnDefinition Width="*" />
@@ -589,15 +542,16 @@
                                 Grid.Column="1"
                                 Text="Тренировка"
                                 Style="{StaticResource SidebarTextStyle}" />
-
                         </Grid>
 
-                    </Button>
+                    </ToggleButton>
 
-                    <Button Style="{StaticResource SidebarButtonStyle}">
+                    <ToggleButton
+                        Command="{Binding NavigatePlanCommand}"
+                        IsChecked="{Binding IsPlanSelected, Mode=OneWay}"
+                        Style="{StaticResource SidebarNavigationButtonStyle}">
 
                         <Grid>
-
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="26" />
                                 <ColumnDefinition Width="*" />
@@ -612,15 +566,16 @@
                                 Grid.Column="1"
                                 Text="Мой план"
                                 Style="{StaticResource SidebarTextStyle}" />
-
                         </Grid>
 
-                    </Button>
+                    </ToggleButton>
 
-                    <Button Style="{StaticResource SidebarButtonStyle}">
+                    <ToggleButton
+                        Command="{Binding NavigateProgressCommand}"
+                        IsChecked="{Binding IsProgressSelected, Mode=OneWay}"
+                        Style="{StaticResource SidebarNavigationButtonStyle}">
 
                         <Grid>
-
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="26" />
                                 <ColumnDefinition Width="*" />
@@ -635,15 +590,16 @@
                                 Grid.Column="1"
                                 Text="Прогресс"
                                 Style="{StaticResource SidebarTextStyle}" />
-
                         </Grid>
 
-                    </Button>
+                    </ToggleButton>
 
-                    <Button Style="{StaticResource SidebarButtonStyle}">
+                    <ToggleButton
+                        Command="{Binding NavigateSettingsCommand}"
+                        IsChecked="{Binding IsSettingsSelected, Mode=OneWay}"
+                        Style="{StaticResource SidebarNavigationButtonStyle}">
 
                         <Grid>
-
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="26" />
                                 <ColumnDefinition Width="*" />
@@ -658,10 +614,9 @@
                                 Grid.Column="1"
                                 Text="Настройки"
                                 Style="{StaticResource SidebarTextStyle}" />
-
                         </Grid>
 
-                    </Button>
+                    </ToggleButton>
 
                 </StackPanel>
 
