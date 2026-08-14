@@ -22,7 +22,6 @@
 
         <Style
             x:Key="SectionMenuButtonStyle"
-            BasedOn="{StaticResource MaterialDesignFlatButton}"
             TargetType="Button">
 
             <Setter
@@ -46,8 +45,20 @@
                 Value="Transparent" />
 
             <Setter
+                Property="BorderThickness"
+                Value="0" />
+
+            <Setter
                 Property="Foreground"
                 Value="{DynamicResource Mnemora.Brush.TextPrimary}" />
+
+            <Setter
+                Property="Cursor"
+                Value="Hand" />
+
+            <Setter
+                Property="FocusVisualStyle"
+                Value="{x:Null}" />
 
             <Setter
                 Property="HorizontalContentAlignment"
@@ -57,8 +68,88 @@
                 Property="VerticalContentAlignment"
                 Value="Center" />
 
-        </Style>
+            <Setter Property="Template">
+                <Setter.Value>
 
+                    <ControlTemplate TargetType="Button">
+
+                        <Border
+                            x:Name="ItemBackground"
+                            Padding="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="9"
+                            SnapsToDevicePixels="True">
+
+                            <ContentPresenter
+                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                RecognizesAccessKey="True" />
+
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+
+                            <!-- Наведение -->
+
+                            <Trigger
+                                Property="IsMouseOver"
+                                Value="True">
+
+                                <Setter
+                                    TargetName="ItemBackground"
+                                    Property="Background"
+                                    Value="#F5F3FF" />
+
+                            </Trigger>
+
+                            <!-- Нажатие -->
+
+                            <Trigger
+                                Property="IsPressed"
+                                Value="True">
+
+                                <Setter
+                                    TargetName="ItemBackground"
+                                    Property="Background"
+                                    Value="#E8E2FF" />
+
+                            </Trigger>
+
+                            <!-- Фокус с клавиатуры -->
+
+                            <Trigger
+                                Property="IsKeyboardFocused"
+                                Value="True">
+
+                                <Setter
+                                    TargetName="ItemBackground"
+                                    Property="Background"
+                                    Value="#F5F3FF" />
+
+                            </Trigger>
+
+                            <!-- Недоступная команда -->
+
+                            <Trigger
+                                Property="IsEnabled"
+                                Value="False">
+
+                                <Setter
+                                    TargetName="ItemBackground"
+                                    Property="Opacity"
+                                    Value="0.45" />
+
+                            </Trigger>
+
+                        </ControlTemplate.Triggers>
+
+                    </ControlTemplate>
+
+                </Setter.Value>
+            </Setter>
+
+        </Style>
+        
     </UserControl.Resources>
 
     <Grid Background="{DynamicResource Mnemora.Brush.SurfaceMuted}">
@@ -1036,42 +1127,194 @@
 
                                         </Border>
 
-                                        <materialDesign:PopupBox
-                                            Grid.Column="2"
-                                            PlacementMode="BottomAndAlignRightEdges"
-                                            ToolTip="Действия с разделом">
+                                        <Grid Grid.Column="2">
 
-                                            <materialDesign:PopupBox.ToggleContent>
+                                            <!-- Кнопка открытия меню -->
+
+                                            <ToggleButton
+                                                x:Name="SectionMenuToggle"
+                                                Width="40"
+                                                Height="40"
+                                                MinWidth="0"
+                                                MinHeight="0"
+                                                Padding="0"
+                                                HorizontalContentAlignment="Center"
+                                                VerticalContentAlignment="Center"
+                                                Background="Transparent"
+                                                BorderThickness="0"
+                                                Cursor="Hand"
+                                                ToolTip="Действия с разделом">
+
+                                                <ToggleButton.Template>
+                                                    <ControlTemplate TargetType="ToggleButton">
+
+                                                        <Border
+                                                            x:Name="ToggleBackground"
+                                                            Background="{TemplateBinding Background}"
+                                                            CornerRadius="9">
+
+                                                            <ContentPresenter
+                                                                HorizontalAlignment="Center"
+                                                                VerticalAlignment="Center" />
+
+                                                        </Border>
+
+                                                        <ControlTemplate.Triggers>
+
+                                                            <Trigger
+                                                                Property="IsMouseOver"
+                                                                Value="True">
+
+                                                                <Setter
+                                                                    TargetName="ToggleBackground"
+                                                                    Property="Background"
+                                                                    Value="#F2F4F8" />
+
+                                                            </Trigger>
+
+                                                            <Trigger
+                                                                Property="IsChecked"
+                                                                Value="True">
+
+                                                                <Setter
+                                                                    TargetName="ToggleBackground"
+                                                                    Property="Background"
+                                                                    Value="#F1ECFF" />
+
+                                                            </Trigger>
+
+                                                        </ControlTemplate.Triggers>
+
+                                                    </ControlTemplate>
+                                                </ToggleButton.Template>
 
                                                 <materialDesign:PackIcon
                                                     Width="22"
                                                     Height="22"
+                                                    Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
                                                     Kind="DotsVertical" />
 
-                                            </materialDesign:PopupBox.ToggleContent>
+                                            </ToggleButton>
 
-                                            <StackPanel
-                                                Width="210"
-                                                Margin="4">
+                                            <!-- Выпадающее меню -->
 
-                                                <Button
-                                                    Command="{Binding DataContext.EditSectionCommand,
-                                                        Source={x:Reference Root}}"
-                                                    CommandParameter="{Binding}"
-                                                    Content="Редактировать"
-                                                    Style="{StaticResource SectionMenuButtonStyle}" />
+                                            <Popup
+                                                AllowsTransparency="True"
+                                                Closed="SectionMenuPopup_OnClosed"
+                                                DataContext="{Binding}"
+                                                HorizontalOffset="-180"
+                                                IsOpen="{Binding IsChecked,
+        ElementName=SectionMenuToggle,
+        Mode=TwoWay}"
+                                                Opened="SectionMenuPopup_OnOpened"
+                                                Placement="Bottom"
+                                                PlacementTarget="{Binding ElementName=SectionMenuToggle}"
+                                                PopupAnimation="Fade"
+                                                StaysOpen="False"
+                                                VerticalOffset="6">
 
-                                                <Button
-                                                    Command="{Binding DataContext.DeleteSectionCommand,
-                                                        Source={x:Reference Root}}"
-                                                    CommandParameter="{Binding}"
-                                                    Content="Удалить"
-                                                    Foreground="#C62828"
-                                                    Style="{StaticResource SectionMenuButtonStyle}" />
+                                                <materialDesign:Card
+                                                    Width="220"
+                                                    Padding="6"
+                                                    Background="{DynamicResource Mnemora.Brush.Surface}"
+                                                    UniformCornerRadius="12"
+                                                    materialDesign:ElevationAssist.Elevation="Dp8">
 
-                                            </StackPanel>
+                                                    <StackPanel>
 
-                                        </materialDesign:PopupBox>
+                                                        <!-- Редактирование -->
+
+                                                        <Button
+                                                            Command="{Binding DataContext.EditSectionCommand,
+                        Source={x:Reference Root}}"
+                                                            CommandParameter="{Binding}"
+                                                            Style="{StaticResource SectionMenuButtonStyle}">
+
+                                                            <Grid>
+
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                    <ColumnDefinition Width="*" />
+                                                                </Grid.ColumnDefinitions>
+
+                                                                <Border
+                                                                    Width="32"
+                                                                    Height="32"
+                                                                    Background="#EEFFFC"
+                                                                    CornerRadius="8">
+
+                                                                    <materialDesign:PackIcon
+                                                                        Width="18"
+                                                                        Height="18"
+                                                                        HorizontalAlignment="Center"
+                                                                        VerticalAlignment="Center"
+                                                                        Foreground="{DynamicResource Mnemora.Brush.PrimaryDark}"
+                                                                        Kind="PencilOutline" />
+
+                                                                </Border>
+
+                                                                <TextBlock
+                                                                    Grid.Column="1"
+                                                                    Margin="12,0,0,0"
+                                                                    VerticalAlignment="Center"
+                                                                    FontSize="14"
+                                                                    Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                                                    Text="Редактировать" />
+
+                                                            </Grid>
+
+                                                        </Button>
+
+                                                        <!-- Удаление -->
+
+                                                        <Button
+                                                            Command="{Binding DataContext.DeleteSectionCommand,
+                        Source={x:Reference Root}}"
+                                                            CommandParameter="{Binding}"
+                                                            Style="{StaticResource SectionMenuButtonStyle}">
+
+                                                            <Grid>
+
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                    <ColumnDefinition Width="*" />
+                                                                </Grid.ColumnDefinitions>
+
+                                                                <Border
+                                                                    Width="32"
+                                                                    Height="32"
+                                                                    Background="#FFF1F1"
+                                                                    CornerRadius="8">
+
+                                                                    <materialDesign:PackIcon
+                                                                        Width="18"
+                                                                        Height="18"
+                                                                        HorizontalAlignment="Center"
+                                                                        VerticalAlignment="Center"
+                                                                        Foreground="#C62828"
+                                                                        Kind="DeleteOutline" />
+
+                                                                </Border>
+
+                                                                <TextBlock
+                                                                    Grid.Column="1"
+                                                                    Margin="12,0,0,0"
+                                                                    VerticalAlignment="Center"
+                                                                    FontSize="14"
+                                                                    Foreground="#C62828"
+                                                                    Text="Удалить" />
+
+                                                            </Grid>
+
+                                                        </Button>
+
+                                                    </StackPanel>
+
+                                                </materialDesign:Card>
+
+                                            </Popup>
+
+                                        </Grid>
 
                                     </Grid>
 
@@ -1146,6 +1389,17 @@
             </ScrollViewer>
 
         </Grid>
+        
+        <!-- Затемнение под открытым меню -->
+
+        <Border
+            x:Name="SectionMenuOverlay"
+            Grid.Row="0" Grid.RowSpan="2"
+            Panel.ZIndex="1000"
+            Background="#52061735"
+            Cursor="Arrow"
+            MouseLeftButtonDown="SectionMenuOverlay_OnMouseLeftButtonDown"
+            Visibility="Collapsed" />
 
     </Grid>
 
