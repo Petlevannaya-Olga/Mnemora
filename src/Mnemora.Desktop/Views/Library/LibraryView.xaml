@@ -190,9 +190,6 @@
                 Width="110"
                 Padding="4"
                 VerticalAlignment="Center"
-                Background="{DynamicResource Mnemora.Brush.Surface}"
-                BorderBrush="{DynamicResource Mnemora.Brush.Border}"
-                BorderThickness="1"
                 CornerRadius="10">
 
                 <Grid>
