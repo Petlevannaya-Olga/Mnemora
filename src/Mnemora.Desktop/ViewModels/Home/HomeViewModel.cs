@@ -6,6 +6,7 @@ using Mnemora.Application.Library.Get;
 using Mnemora.Application.Queries;
 using Mnemora.Contracts;
 using Mnemora.Desktop.Dialogs;
+using Mnemora.Desktop.Formatting;
 using Mnemora.Desktop.Navigation;
 using Mnemora.Desktop.Storage;
 using Mnemora.Desktop.ViewModels.Common;
@@ -118,6 +119,13 @@ public sealed partial class HomeViewModel : ViewModelBase
 
     public LibrarySectionDto? FirstSection =>
         Sections.FirstOrDefault();
+
+    public string SectionsSummary =>
+        $"{SectionsCount} {DeclensionGenerator.Generate(
+            SectionsCount,
+            "раздел",
+            "раздела",
+            "разделов")}";
 
     public int ExperiencePoints => 0;
 
@@ -308,6 +316,7 @@ public sealed partial class HomeViewModel : ViewModelBase
         OnPropertyChanged(nameof(TopicsCount));
         OnPropertyChanged(nameof(FirstSection));
         OnPropertyChanged(nameof(SuggestedSection));
+        OnPropertyChanged(nameof(SectionsSummary));
     }
 
     private static string GetGreeting(int hour)
