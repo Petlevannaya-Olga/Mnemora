@@ -115,5 +115,10 @@
         DataType="{x:Type topicViewModels:EditTopicDialogViewModel}">
         <topics:EditTopicDialogView />
     </DataTemplate>
+    
+    <DataTemplate
+        DataType="{x:Type topicViewModels:DeleteTopicDialogViewModel}">
+        <topics:DeleteTopicDialogView />
+    </DataTemplate>
 
 </ResourceDictionary>

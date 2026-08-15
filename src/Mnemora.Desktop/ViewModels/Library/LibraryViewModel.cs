@@ -25,18 +25,13 @@ public sealed partial class LibraryViewModel(
     public ObservableCollection<LibrarySectionDto>
         Sections { get; } = [];
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsEmpty))]
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsEmpty))]
     private bool _isLoading;
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasError))]
-    [NotifyPropertyChangedFor(nameof(IsEmpty))]
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasError))] [NotifyPropertyChangedFor(nameof(IsEmpty))]
     private string? _errorMessage;
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsTableView))]
-    [NotifyPropertyChangedFor(nameof(IsTilesView))]
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsTableView))] [NotifyPropertyChangedFor(nameof(IsTilesView))]
     private LibraryViewMode _viewMode =
         LibraryViewMode.Table;
 
@@ -149,11 +144,10 @@ public sealed partial class LibraryViewModel(
         var topicId =
             dialogService.Show<
                 CreateTopicDialogViewModel,
-                Guid?>(
-                viewModel =>
-                    viewModel.Initialize(
-                        section.Id,
-                        section.Name));
+                Guid?>(viewModel =>
+                viewModel.Initialize(
+                    section.Id,
+                    section.Name));
 
         if (topicId is null)
         {
@@ -162,6 +156,58 @@ public sealed partial class LibraryViewModel(
 
         await LoadAsync(
             cancellationToken);
+    }
+
+    [RelayCommand]
+    private async Task EditTopicAsync(
+        LibraryTopicDto? topic,
+        CancellationToken cancellationToken)
+    {
+        if (topic is null)
+        {
+            return;
+        }
+
+        var topicId =
+            dialogService.Show<
+                EditTopicDialogViewModel,
+                Guid?>(viewModel =>
+                viewModel.Initialize(
+                    topic));
+
+        if (topicId is null)
+        {
+            return;
+        }
+
+        await LoadAsync(
+            cancellationToken);
+    }
+    
+    [RelayCommand]
+    private async Task DeleteTopicAsync(
+        LibraryTopicDto? topic,
+        CancellationToken cancellationToken)
+    {
+        if (topic is null)
+        {
+            return;
+        }
+
+        var wasDeleted =
+            dialogService.Show<
+                DeleteTopicDialogViewModel,
+                bool>(
+                viewModel =>
+                    viewModel.Initialize(
+                        topic));
+
+        if (!wasDeleted)
+        {
+            return;
+        }
+
+        await LoadAsync(cancellationToken);
     }
 
     [RelayCommand]
@@ -177,10 +223,9 @@ public sealed partial class LibraryViewModel(
         var sectionId =
             dialogService.Show<
                 EditSectionDialogViewModel,
-                Guid?>(
-                viewModel =>
-                    viewModel.Initialize(
-                        section));
+                Guid?>(viewModel =>
+                viewModel.Initialize(
+                    section));
 
         if (sectionId is null)
         {
@@ -204,10 +249,9 @@ public sealed partial class LibraryViewModel(
         bool wasDeleted =
             dialogService.Show<
                 DeleteSectionDialogViewModel,
-                bool>(
-                viewModel =>
-                    viewModel.Initialize(
-                        section));
+                bool>(viewModel =>
+                viewModel.Initialize(
+                    section));
 
         if (!wasDeleted)
         {
@@ -266,7 +310,7 @@ public sealed partial class LibraryViewModel(
         }
         catch (OperationCanceledException)
             when (cancellationToken
-                .IsCancellationRequested)
+                      .IsCancellationRequested)
         {
             throw;
         }
@@ -305,7 +349,7 @@ public sealed partial class LibraryViewModel(
         }
         catch (OperationCanceledException)
             when (cancellationToken
-                .IsCancellationRequested)
+                      .IsCancellationRequested)
         {
             throw;
         }

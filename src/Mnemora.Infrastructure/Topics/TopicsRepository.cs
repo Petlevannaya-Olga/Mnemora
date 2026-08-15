@@ -18,6 +18,13 @@ internal sealed class TopicsRepository(
     {
         dbContext.Topics.Add(topic);
     }
+    
+    public void Remove(Topic topic)
+    {
+        ArgumentNullException.ThrowIfNull(topic);
+
+        dbContext.Topics.Remove(topic);
+    }
 
     public async Task<Result<Topic?, Error>> GetByIdAsync(
         TopicId topicId,

@@ -141,6 +141,8 @@ public partial class App : System.Windows.Application
 
         services.AddSingleton<IDialogService, DialogService>();
 
+        services.AddTransient<DeleteTopicDialogViewModel>();
+        services.AddTransient<DeleteTopicDialogViewModel>();
         services.AddTransient<EditTopicDialogViewModel>();
         services.AddTransient<SelectSectionIconDialogViewModel>();
         services.AddTransient<SelectTopicIconDialogViewModel>();

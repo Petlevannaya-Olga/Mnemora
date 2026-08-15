@@ -1000,14 +1000,58 @@
 
                                                             </StackPanel>
 
-                                                            <materialDesign:PackIcon
+                                                            <StackPanel
                                                                 Grid.Column="2"
-                                                                Width="19"
-                                                                Height="19"
-                                                                VerticalAlignment="Center"
-                                                                Foreground="{Binding Color,
-                                                                    Converter={StaticResource TopicColorConverter}}"
-                                                                Kind="ArrowRight" />
+                                                                VerticalAlignment="Top">
+
+                                                                <!-- Редактирование -->
+
+                                                                <Button
+                                                                    Width="32"
+                                                                    Height="32"
+                                                                    MinWidth="0"
+                                                                    MinHeight="0"
+                                                                    Padding="0"
+                                                                    Background="Transparent"
+                                                                    BorderThickness="0"
+                                                                    Command="{Binding DataContext.EditTopicCommand, Source={x:Reference Root}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    Cursor="Hand"
+                                                                    ToolTip="Редактировать тему">
+
+                                                                    <materialDesign:PackIcon
+                                                                        Width="18"
+                                                                        Height="18"
+                                                                        Foreground="{Binding Color, Converter={StaticResource TopicColorConverter}}"
+                                                                        Kind="PencilOutline" />
+
+                                                                </Button>
+
+                                                                <!-- Удаление -->
+
+                                                                <Button
+                                                                    Width="32"
+                                                                    Height="32"
+                                                                    MinWidth="0"
+                                                                    MinHeight="0"
+                                                                    Margin="0,4,0,0"
+                                                                    Padding="0"
+                                                                    Background="Transparent"
+                                                                    BorderThickness="0"
+                                                                    Command="{Binding DataContext.DeleteTopicCommand, Source={x:Reference Root}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    Cursor="Hand"
+                                                                    ToolTip="Удалить тему">
+
+                                                                    <materialDesign:PackIcon
+                                                                        Width="18"
+                                                                        Height="18"
+                                                                        Foreground="#C62828"
+                                                                        Kind="DeleteOutline" />
+
+                                                                </Button>
+
+                                                            </StackPanel>
 
                                                         </Grid>
 

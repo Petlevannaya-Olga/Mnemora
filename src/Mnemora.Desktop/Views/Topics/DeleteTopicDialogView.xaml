@@ -1,0 +1,244 @@
+﻿<UserControl
+    x:Class="Mnemora.Desktop.Views.Topics.DeleteTopicDialogView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    Width="520"
+    Background="Transparent"
+    SnapsToDevicePixels="True"
+    TextOptions.TextFormattingMode="Display"
+    TextOptions.TextRenderingMode="ClearType"
+    UseLayoutRounding="True">
+
+    <UserControl.InputBindings>
+        <KeyBinding
+            Key="Escape"
+            Command="{Binding CancelCommand}" />
+    </UserControl.InputBindings>
+
+    <Grid Margin="22">
+
+        <!-- Отдельный слой тени -->
+
+        <Border
+            Margin="1"
+            Background="{StaticResource Mnemora.Brush.Surface}"
+            CornerRadius="18">
+
+            <Border.Effect>
+                <DropShadowEffect
+                    BlurRadius="26"
+                    Color="#061735"
+                    Opacity="0.28"
+                    ShadowDepth="7" />
+            </Border.Effect>
+
+        </Border>
+
+        <!-- Содержимое -->
+
+        <Border
+            Padding="30"
+            Background="{StaticResource Mnemora.Brush.Surface}"
+            BorderBrush="{StaticResource Mnemora.Brush.Border}"
+            BorderThickness="1"
+            CornerRadius="18">
+
+            <StackPanel>
+
+                <!-- Заголовок -->
+
+                <Grid>
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border
+                        Width="48"
+                        Height="48"
+                        Background="#FFF1F1"
+                        CornerRadius="12">
+
+                        <materialDesign:PackIcon
+                            Width="27"
+                            Height="27"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Foreground="#C62828"
+                            Kind="DeleteOutline" />
+
+                    </Border>
+
+                    <StackPanel
+                        Grid.Column="1"
+                        Margin="15,0"
+                        VerticalAlignment="Center">
+
+                        <TextBlock
+                            FontSize="21"
+                            FontWeight="SemiBold"
+                            Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
+                            Text="Удалить тему?" />
+
+                        <TextBlock
+                            Margin="0,3,0,0"
+                            FontSize="13"
+                            Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
+                            Text="{Binding TopicName}"
+                            TextTrimming="CharacterEllipsis" />
+
+                    </StackPanel>
+
+                    <Button
+                        Grid.Column="2"
+                        Command="{Binding CancelCommand}"
+                        Style="{StaticResource Mnemora.DialogCloseButton}">
+
+                        <materialDesign:PackIcon
+                            Width="20"
+                            Height="20"
+                            Foreground="{Binding Foreground,
+                                RelativeSource={RelativeSource AncestorType=Button}}"
+                            Kind="Close" />
+
+                    </Button>
+
+                </Grid>
+
+                <!-- Описание -->
+
+                <TextBlock
+                    Margin="0,24,0,0"
+                    FontSize="15"
+                    Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
+                    LineHeight="23"
+                    Text="Тема будет удалена без возможности восстановления."
+                    TextWrapping="Wrap" />
+
+                <!-- Ошибка команды -->
+
+                <Border
+                    Margin="0,18,0,0"
+                    Padding="12,9"
+                    Background="#FFF1F1"
+                    CornerRadius="8">
+
+                    <Border.Style>
+                        <Style TargetType="Border">
+
+                            <Setter
+                                Property="Visibility"
+                                Value="Collapsed" />
+
+                            <Style.Triggers>
+
+                                <DataTrigger
+                                    Binding="{Binding HasError}"
+                                    Value="True">
+
+                                    <Setter
+                                        Property="Visibility"
+                                        Value="Visible" />
+
+                                </DataTrigger>
+
+                            </Style.Triggers>
+
+                        </Style>
+                    </Border.Style>
+
+                    <Grid>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <materialDesign:PackIcon
+                            Width="19"
+                            Height="19"
+                            VerticalAlignment="Top"
+                            Foreground="#C62828"
+                            Kind="AlertCircleOutline" />
+
+                        <TextBlock
+                            Grid.Column="1"
+                            Margin="9,0,0,0"
+                            FontSize="13"
+                            Foreground="#A52222"
+                            Text="{Binding ErrorMessage}"
+                            TextWrapping="Wrap" />
+
+                    </Grid>
+
+                </Border>
+
+                <!-- Кнопки -->
+
+                <Grid Margin="0,26,0,0">
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="14" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Button
+                        Grid.Column="0"
+                        Command="{Binding CancelCommand}"
+                        Content="Отмена"
+                        Style="{StaticResource Mnemora.SecondaryButton}" />
+
+                    <Button
+                        Grid.Column="2"
+                        Command="{Binding DeleteCommand}"
+                        IsDefault="True">
+
+                        <Button.Style>
+                            <Style
+                                BasedOn="{StaticResource Mnemora.PrimaryButton}"
+                                TargetType="Button">
+
+                                <Setter
+                                    Property="Background"
+                                    Value="#C62828" />
+
+                                <Setter
+                                    Property="BorderBrush"
+                                    Value="#C62828" />
+
+                                <Setter
+                                    Property="Content"
+                                    Value="Удалить тему" />
+
+                                <Style.Triggers>
+
+                                    <DataTrigger
+                                        Binding="{Binding IsDeleting}"
+                                        Value="True">
+
+                                        <Setter
+                                            Property="Content"
+                                            Value="Удаляем..." />
+
+                                    </DataTrigger>
+
+                                </Style.Triggers>
+
+                            </Style>
+                        </Button.Style>
+
+                    </Button>
+
+                </Grid>
+
+            </StackPanel>
+
+        </Border>
+
+    </Grid>
+
+</UserControl>

@@ -9,6 +9,8 @@ public interface ITopicsRepository
 {
     void Add(Topic topic);
 
+    void Remove(Topic topic);
+
     Task<Result<Topic?, Error>> GetByIdAsync(
         TopicId topicId,
         CancellationToken cancellationToken);
