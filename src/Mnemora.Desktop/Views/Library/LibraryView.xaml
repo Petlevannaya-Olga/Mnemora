@@ -759,7 +759,7 @@
                                         <!-- Действия с разделом -->
 
                                         <materialDesign:PopupBox
-                                            Grid.Column="2"
+                                            Grid.Column="4"
                                             PlacementMode="BottomAndAlignRightEdges"
                                             ToolTip="Действия с разделом">
 
