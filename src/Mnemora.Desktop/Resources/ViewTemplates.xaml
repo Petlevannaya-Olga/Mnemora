@@ -110,5 +110,10 @@
         DataType="{x:Type topicViewModels:SelectTopicIconDialogViewModel}">
         <topics:SelectTopicIconDialogView />
     </DataTemplate>
+    
+    <DataTemplate
+        DataType="{x:Type topicViewModels:EditTopicDialogViewModel}">
+        <topics:EditTopicDialogView />
+    </DataTemplate>
 
 </ResourceDictionary>

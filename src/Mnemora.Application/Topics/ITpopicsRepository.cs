@@ -9,6 +9,10 @@ public interface ITopicsRepository
 {
     void Add(Topic topic);
 
+    Task<Result<Topic?, Error>> GetByIdAsync(
+        TopicId topicId,
+        CancellationToken cancellationToken);
+
     Task<Result<bool, Error>> ExistsAsync(
         Expression<Func<Topic, bool>> predicate,
         CancellationToken cancellationToken);
