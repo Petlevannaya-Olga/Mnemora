@@ -116,6 +116,63 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
 
     public DateTime? UpdatedAtLocal => Material?.UpdatedAt.ToLocalTime();
 
+    public string TopicColor => Topic?.Color ?? string.Empty;
+
+    public DateTime TopicCreatedAt => Topic?.CreatedAt ?? DateTime.MinValue;
+
+    public DateTime TopicCreatedAtLocal => Topic is null
+        ? DateTime.MinValue
+        : ToLocalTime(Topic.CreatedAt);
+
+    public int TopicMaterialsCount => Topic is null ? 0 : GetTopicMaterialsCount(Topic);
+
+    public int TopicArticlesCount => Topic is null
+        ? 0
+        : GetTopicMaterials(Topic).Count(material =>
+            string.Equals(material.Type, "Article", StringComparison.OrdinalIgnoreCase));
+
+    public int TopicQuestionsCount => Topic is null
+        ? 0
+        : GetTopicMaterials(Topic).Count(material =>
+            string.Equals(material.Type, "Question", StringComparison.OrdinalIgnoreCase));
+
+    public string TopicMaterialsSummaryText => TopicMaterialsCount == 0
+        ? "Материалов пока нет"
+        : FormatCount(TopicMaterialsCount, "материал", "материала", "материалов");
+
+    public DateTime TopicLastActivityAt
+    {
+        get
+        {
+            if (Topic is null)
+            {
+                return DateTime.MinValue;
+            }
+
+            DateTime lastActivityAt = Topic.CreatedAt;
+
+            foreach (LibraryMaterialDto material in GetTopicMaterials(Topic))
+            {
+                if (material.UpdatedAt > lastActivityAt)
+                {
+                    lastActivityAt = material.UpdatedAt;
+                }
+            }
+
+            return lastActivityAt;
+        }
+    }
+
+    public DateTime TopicLastActivityAtLocal => Topic is null
+        ? DateTime.MinValue
+        : ToLocalTime(TopicLastActivityAt);
+
+    public string TopicActivityText => Topic is null
+        ? string.Empty
+        : TopicLastActivityAt > TopicCreatedAt
+            ? $"Активность {TopicLastActivityAtLocal:dd.MM.yyyy}"
+            : $"Создана {TopicCreatedAtLocal:dd.MM.yyyy}";
+
     public bool HasItemCount => GetItemCount() > 0;
 
     public string ItemCountText

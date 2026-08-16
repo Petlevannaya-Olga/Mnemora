@@ -640,11 +640,13 @@
                     Margin="0,18,0,0"
                     FontSize="21"
                     FontWeight="SemiBold"
+                    HorizontalAlignment="Center"
                     Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
                     Text="Материалы не найдены" />
 
                 <TextBlock
                     Margin="0,8,0,0"
+                    HorizontalAlignment="Center"
                     Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
                     Text="Измените запрос или выбранный фильтр." />
             </StackPanel>

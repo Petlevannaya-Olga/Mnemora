@@ -98,6 +98,28 @@ public partial class LibraryManagementView : UserControl
         }
     }
 
+    private void SimpleTopicTableRow_OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not DataGridRow row ||
+            row.DataContext is not LibraryManagementOrderItemViewModel topic ||
+            DataContext is not LibraryManagementViewModel viewModel)
+        {
+            return;
+        }
+
+        if (e.OriginalSource is DependencyObject source &&
+            FindAncestor<Button>(source) is not null)
+        {
+            return;
+        }
+
+        if (viewModel.OpenSimpleTopicCommand.CanExecute(topic))
+        {
+            viewModel.OpenSimpleTopicCommand.Execute(topic);
+            e.Handled = true;
+        }
+    }
+
     private static T? FindAncestor<T>(DependencyObject? source)
         where T : DependencyObject
     {

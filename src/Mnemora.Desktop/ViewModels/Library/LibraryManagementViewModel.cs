@@ -25,6 +25,18 @@ public enum LibraryManagementSimplePage
     Materials,
 }
 
+public enum LibraryManagementTopicSort
+{
+    Custom,
+    RecentActivity,
+    Name,
+    Newest,
+}
+
+public sealed record LibraryManagementTopicSortOption(
+    string Name,
+    LibraryManagementTopicSort Sort);
+
 public sealed partial class LibraryManagementViewModel(
     IQueryDispatcher queryDispatcher,
     ICommandDispatcher commandDispatcher,
@@ -47,6 +59,7 @@ public sealed partial class LibraryManagementViewModel(
     private int _simpleSectionNextOffset;
     private int _simpleSectionLoadVersion;
     private int _simpleSectionSearchVersion;
+    private int _simpleTopicSearchVersion;
     private int? _simpleSectionLoadingVersion;
     private bool _isSimpleSectionsLoaded;
     private bool _isSimpleViewModeLoaded;
@@ -71,6 +84,12 @@ public sealed partial class LibraryManagementViewModel(
 
     public ObservableCollection<LibraryManagementSectionRowViewModel> SimpleCompactSectionRows { get; } = [];
 
+    public ObservableCollection<LibraryManagementOrderItemViewModel> SimpleTopics { get; } = [];
+
+    public ObservableCollection<LibraryManagementTopicRowViewModel> SimpleTopicRows { get; } = [];
+
+    public ObservableCollection<LibraryManagementTopicRowViewModel> SimpleCompactTopicRows { get; } = [];
+
     public IReadOnlyList<LibraryManagementSectionSortOption> SimpleSectionSortOptions { get; } =
     [
         new("Мой порядок", LibraryManagementSectionSort.Custom),
@@ -79,9 +98,19 @@ public sealed partial class LibraryManagementViewModel(
         new("Сначала новые", LibraryManagementSectionSort.Newest),
     ];
 
+    public IReadOnlyList<LibraryManagementTopicSortOption> SimpleTopicSortOptions { get; } =
+    [
+        new("Мой порядок", LibraryManagementTopicSort.Custom),
+        new("Последняя активность", LibraryManagementTopicSort.RecentActivity),
+        new("По названию", LibraryManagementTopicSort.Name),
+        new("Сначала новые", LibraryManagementTopicSort.Newest),
+    ];
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasError))]
     [NotifyPropertyChangedFor(nameof(IsEmpty))]
+    [NotifyPropertyChangedFor(nameof(IsSimpleTopicsEmpty))]
+    [NotifyPropertyChangedFor(nameof(HasNoSimpleTopicSearchResults))]
     private string? _errorMessage;
 
     [ObservableProperty]
@@ -91,6 +120,8 @@ public sealed partial class LibraryManagementViewModel(
     private bool _isLoading;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSimpleTopicsEmpty))]
+    [NotifyPropertyChangedFor(nameof(HasNoSimpleTopicSearchResults))]
     [NotifyCanExecuteChangedFor(nameof(SaveOrderCommand))]
     private bool _isContextLoading;
 
@@ -147,6 +178,13 @@ public sealed partial class LibraryManagementViewModel(
         new("Мой порядок", LibraryManagementSectionSort.Custom);
 
     [ObservableProperty]
+    private LibraryManagementTopicSortOption _selectedSimpleTopicSortOption =
+        new("Мой порядок", LibraryManagementTopicSort.Custom);
+
+    [ObservableProperty]
+    private string? _simpleTopicSearchText;
+
+    [ObservableProperty]
     private string? _searchText;
 
     [ObservableProperty]
@@ -198,6 +236,26 @@ public sealed partial class LibraryManagementViewModel(
 
     public string SimpleSectionsShownCountText =>
         $"Показано {SimpleSections.Count} из {SimpleSectionsTotalCount}";
+
+    public bool HasSimpleTopicSource => Topics.Count > 0;
+
+    public bool HasSimpleTopics => SimpleTopics.Count > 0;
+
+    public bool IsSimpleTopicsEmpty =>
+        !IsContextLoading &&
+        !HasError &&
+        !HasSimpleTopicSource &&
+        string.IsNullOrWhiteSpace(SimpleTopicSearchText);
+
+    public bool HasNoSimpleTopicSearchResults =>
+        !IsContextLoading &&
+        !HasError &&
+        HasSimpleTopicSource &&
+        !HasSimpleTopics &&
+        !string.IsNullOrWhiteSpace(SimpleTopicSearchText);
+
+    public string SimpleTopicsShownCountText =>
+        $"Показано {SimpleTopics.Count} из {Topics.Count}";
 
     public bool HasError => !string.IsNullOrWhiteSpace(ErrorMessage);
 
@@ -740,6 +798,17 @@ public sealed partial class LibraryManagementViewModel(
         }
     }
 
+    partial void OnSimpleTopicSearchTextChanged(string? value)
+    {
+        int searchVersion = Interlocked.Increment(ref _simpleTopicSearchVersion);
+        _ = ApplySimpleTopicFilterAfterDelayAsync(searchVersion);
+    }
+
+    partial void OnSelectedSimpleTopicSortOptionChanged(LibraryManagementTopicSortOption value)
+    {
+        ApplySimpleTopicFilterAndSort();
+    }
+
     partial void OnSelectedSectionChanged(LibraryManagementOrderItemViewModel? value)
     {
         OnPropertyChanged(nameof(SelectedPath));
@@ -1167,6 +1236,10 @@ public sealed partial class LibraryManagementViewModel(
     private async Task LoadTopicsAsync(Guid? selectedTopicId, CancellationToken cancellationToken)
     {
         Topics.Clear();
+        SimpleTopics.Clear();
+        SimpleTopicRows.Clear();
+        SimpleCompactTopicRows.Clear();
+        NotifySimpleTopicsStateChanged();
 
         _suppressSelectionReload = true;
         try
@@ -1224,6 +1297,8 @@ public sealed partial class LibraryManagementViewModel(
         {
             _suppressSelectionReload = false;
         }
+
+        ApplySimpleTopicFilterAndSort();
     }
 
     private async Task LoadMaterialsAsync(CancellationToken cancellationToken)
@@ -1463,6 +1538,83 @@ public sealed partial class LibraryManagementViewModel(
         return true;
     }
 
+    private async Task ApplySimpleTopicFilterAfterDelayAsync(int searchVersion)
+    {
+        try
+        {
+            await Task.Delay(SearchDelay, _viewCancellationToken);
+
+            if (searchVersion == Volatile.Read(ref _simpleTopicSearchVersion))
+            {
+                ApplySimpleTopicFilterAndSort();
+            }
+        }
+        catch (OperationCanceledException) when (_viewCancellationToken.IsCancellationRequested)
+        {
+            // ignore
+        }
+    }
+
+    private void ApplySimpleTopicFilterAndSort()
+    {
+        IEnumerable<LibraryManagementOrderItemViewModel> topics = Topics;
+
+        if (!string.IsNullOrWhiteSpace(SimpleTopicSearchText))
+        {
+            string search = SimpleTopicSearchText.Trim();
+            topics = topics.Where(topic =>
+                topic.Name.Contains(search, StringComparison.OrdinalIgnoreCase));
+        }
+
+        topics = SelectedSimpleTopicSortOption.Sort switch
+        {
+            LibraryManagementTopicSort.Custom => topics
+                .OrderBy(topic => topic.Position),
+
+            LibraryManagementTopicSort.RecentActivity => topics
+                .OrderByDescending(topic => topic.TopicLastActivityAt)
+                .ThenBy(topic => topic.Name, StringComparer.OrdinalIgnoreCase),
+
+            LibraryManagementTopicSort.Name => topics
+                .OrderBy(topic => topic.Name, StringComparer.OrdinalIgnoreCase),
+
+            LibraryManagementTopicSort.Newest => topics
+                .OrderByDescending(topic => topic.TopicCreatedAt)
+                .ThenBy(topic => topic.Name, StringComparer.OrdinalIgnoreCase),
+
+            _ => topics.OrderBy(topic => topic.Position),
+        };
+
+        SimpleTopics.Clear();
+        SimpleTopicRows.Clear();
+        SimpleCompactTopicRows.Clear();
+
+        foreach (LibraryManagementOrderItemViewModel topic in topics)
+        {
+            SimpleTopics.Add(topic);
+            AddSimpleTopicToRows(SimpleTopicRows, topic, 3);
+            AddSimpleTopicToRows(SimpleCompactTopicRows, topic, 4);
+        }
+
+        NotifySimpleTopicsStateChanged();
+    }
+
+    private static void AddSimpleTopicToRows(
+        ObservableCollection<LibraryManagementTopicRowViewModel> rows,
+        LibraryManagementOrderItemViewModel topic,
+        int capacity)
+    {
+        LibraryManagementTopicRowViewModel? row = rows.LastOrDefault();
+
+        if (row is null || row.IsFull)
+        {
+            row = new LibraryManagementTopicRowViewModel(capacity);
+            rows.Add(row);
+        }
+
+        row.Add(topic);
+    }
+
     private bool CanAddTopic(LibraryManagementOrderItemViewModel? item)
     {
         return !IsLoading && (item is not null || SelectedSection is not null);
@@ -1484,6 +1636,15 @@ public sealed partial class LibraryManagementViewModel(
         OnPropertyChanged(nameof(HasNoSimpleSectionSearchResults));
         OnPropertyChanged(nameof(SimpleSectionsShownCountText));
         LoadNextSimpleSectionPageCommand.NotifyCanExecuteChanged();
+    }
+
+    private void NotifySimpleTopicsStateChanged()
+    {
+        OnPropertyChanged(nameof(HasSimpleTopicSource));
+        OnPropertyChanged(nameof(HasSimpleTopics));
+        OnPropertyChanged(nameof(IsSimpleTopicsEmpty));
+        OnPropertyChanged(nameof(HasNoSimpleTopicSearchResults));
+        OnPropertyChanged(nameof(SimpleTopicsShownCountText));
     }
 
     private void NotifyCollectionStateChanged()

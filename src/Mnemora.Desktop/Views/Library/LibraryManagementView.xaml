@@ -381,7 +381,7 @@
         </Style>
 
         <Style x:Key="SimpleSectionCompactCardStyle" TargetType="Border">
-            <Setter Property="Height" Value="124" />
+            <Setter Property="Height" Value="108" />
             <Setter Property="Margin" Value="0,0,12,12" />
             <Setter Property="Padding" Value="14" />
             <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
@@ -699,10 +699,9 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="46" />
                                 <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
 
-                            <!-- Верхняя строка: только иконка раздела. Справа поверх неё стоят действия. -->
+                            <!-- Верхняя строка: иконка раздела. Действия остаются справа поверх карточки. -->
                             <Border Grid.Row="0"
                                     Width="46"
                                     Height="46"
@@ -718,51 +717,60 @@
                                                          Kind="{Binding Icon, Converter={StaticResource SectionIconConverter}}" />
                             </Border>
 
-                            <!-- Название получает всю ширину карточки и больше не конкурирует с действиями. -->
-                            <TextBlock Grid.Row="1"
-                                       Margin="0,0,0,0"
-                                       FontSize="15"
-                                       FontWeight="SemiBold"
-                                       Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                                       Text="{Binding Name}"
-                                       TextTrimming="CharacterEllipsis"
-                                       ToolTip="{Binding Name}" />
+                            <!-- Нижняя строка: название слева, компактные счётчики справа. -->
+                            <Grid Grid.Row="1" Margin="0,6,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
 
-                            <!-- Короткие счётчики тем и материалов. -->
-                            <StackPanel Grid.Row="2"
-                                        Margin="0,3,0,0"
-                                        Orientation="Horizontal">
-                                <StackPanel Margin="0,0,16,0"
-                                            VerticalAlignment="Center"
-                                            Orientation="Horizontal"
-                                            ToolTip="Количество тем">
-                                    <materialDesign:PackIcon Width="16"
-                                                             Height="16"
-                                                             VerticalAlignment="Center"
-                                                             Foreground="{DynamicResource Mnemora.Brush.Secondary}"
-                                                             Kind="BookOpenPageVariant" />
-                                    <TextBlock Margin="5,0,0,0"
-                                               VerticalAlignment="Center"
-                                               FontSize="12"
-                                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                                               Text="{Binding TopicsCount}" />
-                                </StackPanel>
+                                <TextBlock Grid.Column="0"
+                                           MinWidth="0"
+                                           Margin="0,0,12,0"
+                                           VerticalAlignment="Bottom"
+                                           FontSize="15"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                           Text="{Binding Name}"
+                                           TextTrimming="CharacterEllipsis"
+                                           ToolTip="{Binding Name}" />
 
-                                <StackPanel VerticalAlignment="Center"
-                                            Orientation="Horizontal"
-                                            ToolTip="Количество материалов">
-                                    <materialDesign:PackIcon Width="16"
-                                                             Height="16"
-                                                             VerticalAlignment="Center"
-                                                             Foreground="{DynamicResource Mnemora.Brush.Primary}"
-                                                             Kind="FileDocumentOutline" />
-                                    <TextBlock Margin="5,0,0,0"
-                                               VerticalAlignment="Center"
-                                               FontSize="12"
-                                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                                               Text="{Binding MaterialsCount}" />
+                                <StackPanel Grid.Column="1"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Bottom"
+                                            Orientation="Horizontal">
+                                    <StackPanel Margin="0,0,12,0"
+                                                VerticalAlignment="Center"
+                                                Orientation="Horizontal"
+                                                ToolTip="Количество тем">
+                                        <materialDesign:PackIcon Width="16"
+                                                                 Height="16"
+                                                                 VerticalAlignment="Center"
+                                                                 Foreground="{DynamicResource Mnemora.Brush.Secondary}"
+                                                                 Kind="BookOpenPageVariant" />
+                                        <TextBlock Margin="4,0,0,0"
+                                                   VerticalAlignment="Center"
+                                                   FontSize="12"
+                                                   Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                   Text="{Binding TopicsCount}" />
+                                    </StackPanel>
+
+                                    <StackPanel VerticalAlignment="Center"
+                                                Orientation="Horizontal"
+                                                ToolTip="Количество материалов">
+                                        <materialDesign:PackIcon Width="16"
+                                                                 Height="16"
+                                                                 VerticalAlignment="Center"
+                                                                 Foreground="{DynamicResource Mnemora.Brush.Primary}"
+                                                                 Kind="FileDocumentOutline" />
+                                        <TextBlock Margin="4,0,0,0"
+                                                   VerticalAlignment="Center"
+                                                   FontSize="12"
+                                                   Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                   Text="{Binding MaterialsCount}" />
+                                    </StackPanel>
                                 </StackPanel>
-                            </StackPanel>
+                            </Grid>
                         </Grid>
                     </Border>
                 </Button>
@@ -823,6 +831,237 @@
             </Grid>
         </DataTemplate>
 
+        <!-- Простой режим: карточки тем в стиле Обзора/Управления. -->
+        <Style x:Key="SimpleTopicCardStyle" TargetType="Border">
+            <Setter Property="MinHeight" Value="154" />
+            <Setter Property="Margin" Value="0,0,16,16" />
+            <Setter Property="Padding" Value="22" />
+            <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Border}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="16" />
+        </Style>
+
+        <DataTemplate x:Key="SimpleTopicCardTemplate">
+            <Grid>
+                <Button Command="{Binding DataContext.OpenSimpleTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                        CommandParameter="{Binding}"
+                        Style="{StaticResource SectionNavigationButtonStyle}"
+                        ToolTip="Открыть тему">
+                    <Border Style="{StaticResource SimpleTopicCardStyle}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="74" />
+                                </Grid.ColumnDefinitions>
+
+                                <Border Width="54"
+                                        Height="54"
+                                        Background="{Binding TopicColor, Converter={StaticResource TopicColorConverter}}"
+                                        CornerRadius="13">
+                                    <materialDesign:PackIcon Width="29"
+                                                             Height="29"
+                                                             HorizontalAlignment="Center"
+                                                             VerticalAlignment="Center"
+                                                             Foreground="White"
+                                                             Kind="{Binding IconKind}" />
+                                </Border>
+
+                                <TextBlock Grid.Column="1"
+                                           Margin="16,0,12,0"
+                                           VerticalAlignment="Center"
+                                           FontSize="18"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                           Text="{Binding Name}"
+                                           TextTrimming="CharacterEllipsis"
+                                           TextWrapping="Wrap" />
+                            </Grid>
+
+                            <Border Grid.Row="1"
+                                    Margin="0,20,0,0"
+                                    Padding="10,7"
+                                    HorizontalAlignment="Left"
+                                    Background="#F5F7FB"
+                                    CornerRadius="8">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Width="18"
+                                                             Height="18"
+                                                             VerticalAlignment="Center"
+                                                             Foreground="{DynamicResource Mnemora.Brush.Primary}"
+                                                             Kind="FileDocumentOutline" />
+                                    <TextBlock Margin="7,0,0,0"
+                                               VerticalAlignment="Center"
+                                               FontSize="13"
+                                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                               Text="{Binding TopicMaterialsSummaryText}" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Border>
+                </Button>
+
+                <StackPanel Panel.ZIndex="10"
+                            Margin="0,14,16,0"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Top"
+                            Orientation="Horizontal">
+                    <Button Command="{Binding DataContext.EditTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                            CommandParameter="{Binding}"
+                            Style="{StaticResource SmallIconButtonStyle}"
+                            ToolTip="Редактировать тему">
+                        <materialDesign:PackIcon Width="17" Height="17" Kind="PencilOutline" />
+                    </Button>
+                    <Button Command="{Binding DataContext.DeleteTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                            CommandParameter="{Binding}"
+                            Foreground="#C62828"
+                            Style="{StaticResource SmallIconButtonStyle}"
+                            ToolTip="Удалить тему">
+                        <materialDesign:PackIcon Width="17" Height="17" Kind="DeleteOutline" />
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="SimpleCompactTopicCardTemplate">
+            <Grid>
+                <Button Command="{Binding DataContext.OpenSimpleTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                        CommandParameter="{Binding}"
+                        Style="{StaticResource SectionNavigationButtonStyle}"
+                        ToolTip="Открыть тему">
+                    <Border Style="{StaticResource SimpleSectionCompactCardStyle}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="46" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Border Grid.Row="0"
+                                    Width="46"
+                                    Height="46"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Top"
+                                    Background="{Binding TopicColor, Converter={StaticResource TopicColorConverter}}"
+                                    CornerRadius="11">
+                                <materialDesign:PackIcon Width="25"
+                                                         Height="25"
+                                                         HorizontalAlignment="Center"
+                                                         VerticalAlignment="Center"
+                                                         Foreground="White"
+                                                         Kind="{Binding IconKind}" />
+                            </Border>
+
+                            <!-- Нижняя строка: название темы слева, количество материалов справа. -->
+                            <Grid Grid.Row="1" Margin="0,6,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0"
+                                           MinWidth="0"
+                                           Margin="0,0,12,0"
+                                           VerticalAlignment="Bottom"
+                                           FontSize="15"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                           Text="{Binding Name}"
+                                           TextTrimming="CharacterEllipsis"
+                                           ToolTip="{Binding Name}" />
+
+                                <StackPanel Grid.Column="1"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Bottom"
+                                            Orientation="Horizontal"
+                                            ToolTip="Количество материалов">
+                                    <materialDesign:PackIcon Width="16"
+                                                             Height="16"
+                                                             VerticalAlignment="Center"
+                                                             Foreground="{DynamicResource Mnemora.Brush.Primary}"
+                                                             Kind="FileDocumentOutline" />
+                                    <TextBlock Margin="4,0,0,0"
+                                               VerticalAlignment="Center"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                               Text="{Binding TopicMaterialsCount}" />
+                                </StackPanel>
+                            </Grid>
+                        </Grid>
+                    </Border>
+                </Button>
+
+                <StackPanel Panel.ZIndex="10"
+                            Margin="0,14,26,0"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Top"
+                            Orientation="Horizontal">
+                    <Button Width="27"
+                            Height="26"
+                            Command="{Binding DataContext.EditTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                            CommandParameter="{Binding}"
+                            Style="{StaticResource SmallIconButtonStyle}"
+                            ToolTip="Редактировать тему">
+                        <materialDesign:PackIcon Width="15" Height="15" Kind="PencilOutline" />
+                    </Button>
+                    <Button Width="27"
+                            Height="26"
+                            Command="{Binding DataContext.DeleteTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                            CommandParameter="{Binding}"
+                            Foreground="#C62828"
+                            Style="{StaticResource SmallIconButtonStyle}"
+                            ToolTip="Удалить тему">
+                        <materialDesign:PackIcon Width="15" Height="15" Kind="DeleteOutline" />
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+
+        <Style x:Key="SimpleTopicTableRowStyle" TargetType="DataGridRow">
+            <Setter Property="MinHeight" Value="72" />
+            <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <EventSetter Event="MouseLeftButtonUp" Handler="SimpleTopicTableRow_OnMouseLeftButtonUp" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridRow">
+                        <Grid>
+                            <Border x:Name="RowBackground"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                                    BorderThickness="0,0,0,1" />
+                            <Border x:Name="SelectionIndicator"
+                                    Width="4"
+                                    Margin="0,9,0,9"
+                                    HorizontalAlignment="Left"
+                                    Background="{DynamicResource Mnemora.Brush.Primary}"
+                                    CornerRadius="0,3,3,0"
+                                    Visibility="Collapsed" />
+                            <DataGridCellsPresenter />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="RowBackground" Property="Background" Value="#F4F8FC" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="RowBackground" Property="Background" Value="#E8F9F6" />
+                                <Setter TargetName="SelectionIndicator" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
     </UserControl.Resources>
 
     <Grid Background="{DynamicResource Mnemora.Brush.SurfaceMuted}">
@@ -833,8 +1072,23 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- Заголовок -->
+        <!-- Заголовок показываем только на корневом уровне и в расширенном режиме.
+             На вложенных уровнях контекст задают хлебные крошки и шапка выбранного элемента. -->
         <StackPanel Grid.Row="0" Margin="32,28,32,22">
+            <StackPanel.Style>
+                <Style TargetType="StackPanel">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsSimpleSectionsPage}" Value="True">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IsAdvancedMode}" Value="True">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </StackPanel.Style>
+
             <TextBlock Style="{StaticResource Mnemora.Heading}"
                        Text="Управление библиотекой" />
             <TextBlock Margin="0,6,0,0"
@@ -844,6 +1098,19 @@
 
         <!-- Общая панель поиска -->
         <Grid Grid.Row="1" Margin="32,0,32,24">
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsSimpleSectionsPage}" Value="True">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IsAdvancedMode}" Value="True">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="20" />
@@ -1181,7 +1448,7 @@
                                                 CommandParameter="{Binding}"
                                                 Style="{StaticResource SmallIconButtonStyle}"
                                                 ToolTip="Создать тему">
-                                                <materialDesign:PackIcon Width="17" Height="17" Kind="BookPlusOutline" />
+                                                <materialDesign:PackIcon Width="17" Height="17" Kind="Plus" />
                                             </Button>
                                             <Button
                                                 Command="{Binding DataContext.EditSimpleSectionCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
@@ -1327,189 +1594,505 @@
 
         <!-- ПРОСТОЙ РЕЖИМ: темы выбранного раздела -->
         <Grid Grid.Row="2"
-              Margin="32,0,32,18"
+              Margin="32,28,32,28"
               Visibility="{Binding IsSimpleTopicsPage, Converter={StaticResource BooleanToVisibilityConverter}}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <Grid Margin="0,0,0,16">
+            <!-- Back-link как в Обзоре: текущий раздел не дублируем в хлебных крошках. -->
+            <Button Grid.Row="0"
+                    Margin="0,0,0,20"
+                    Padding="0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    Command="{Binding BackSimpleCommand}"
+                    Foreground="{DynamicResource Mnemora.Brush.Secondary}"
+                    Style="{StaticResource TileOpenButtonStyle}">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Width="18"
+                                             Height="18"
+                                             VerticalAlignment="Center"
+                                             Kind="ChevronLeft" />
+                    <TextBlock Margin="4,0,0,0"
+                               VerticalAlignment="Center"
+                               FontSize="14"
+                               Text="Разделы" />
+                </StackPanel>
+            </Button>
+
+            <!-- Шапка выбранного раздела. -->
+            <Grid Grid.Row="1" Margin="0,0,0,24">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="16" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <Button Height="40"
-                        Command="{Binding BackSimpleCommand}"
-                        Style="{StaticResource Mnemora.SecondaryButton}">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Width="18" Height="18" Kind="ArrowLeft" />
-                        <TextBlock Margin="8,0,0,0" Text="Разделы" />
-                    </StackPanel>
-                </Button>
+                <Border Width="64"
+                        Height="64"
+                        Background="{Binding SelectedSection.Color, Converter={StaticResource SectionColorConverter}}"
+                        CornerRadius="15">
+                    <materialDesign:PackIcon Width="34"
+                                             Height="34"
+                                             HorizontalAlignment="Center"
+                                             VerticalAlignment="Center"
+                                             Foreground="White"
+                                             Kind="{Binding SelectedSection.IconKind}" />
+                </Border>
 
-                <StackPanel Grid.Column="2" VerticalAlignment="Center">
-                    <TextBlock FontSize="21"
+                <StackPanel Grid.Column="1"
+                            Margin="18,0,0,0"
+                            VerticalAlignment="Center">
+                    <TextBlock FontSize="26"
                                FontWeight="SemiBold"
                                Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                               Text="{Binding SelectedSection.Name}" />
-                    <TextBlock Margin="0,3,0,0"
-                               FontSize="13"
+                               Text="{Binding SelectedSection.Name}"
+                               TextTrimming="CharacterEllipsis" />
+                    <TextBlock Margin="0,5,0,0"
+                               FontSize="14"
                                Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
                                Text="Темы раздела" />
                 </StackPanel>
             </Grid>
 
-            <Grid Grid.Row="1">
-                <ScrollViewer HorizontalScrollBarVisibility="Disabled"
-                              VerticalScrollBarVisibility="Auto"
-                              Visibility="{Binding HasTopics, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <ItemsControl ItemsSource="{Binding Topics}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <UniformGrid Columns="3" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
+            <!-- Поиск, сортировка и режим отображения — как в Обзоре и на уровне разделов. -->
+            <Grid Grid.Row="2" Margin="0,0,0,24">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="20" />
+                    <ColumnDefinition Width="220" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
 
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border MinHeight="150"
-                                        Margin="0,0,18,18"
-                                        Padding="20"
-                                        Style="{StaticResource ManagementCardStyle}">
-                                    <Grid>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="*" />
-                                        </Grid.RowDefinitions>
+                <TextBox Height="52"
+                         VerticalContentAlignment="Center"
+                         Text="{Binding SimpleTopicSearchText, UpdateSourceTrigger=PropertyChanged}"
+                         materialDesign:HintAssist.Hint="Поиск по названию темы..."
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}" />
 
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="46" />
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
+                <ComboBox Grid.Column="2"
+                          Height="52"
+                          VerticalContentAlignment="Center"
+                          DisplayMemberPath="Name"
+                          ItemsSource="{Binding SimpleTopicSortOptions}"
+                          SelectedItem="{Binding SelectedSimpleTopicSortOption, Mode=TwoWay}"
+                          materialDesign:HintAssist.Hint="Сортировка"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}" />
 
-                                            <Border Width="44"
-                                                    Height="44"
-                                                    VerticalAlignment="Top"
-                                                    Background="{Binding Topic.Color, Converter={StaticResource TopicColorConverter}}"
-                                                    CornerRadius="11">
-                                                <materialDesign:PackIcon Width="24"
-                                                                         Height="24"
-                                                                         HorizontalAlignment="Center"
-                                                                         VerticalAlignment="Center"
-                                                                         Foreground="White"
-                                                                         Kind="{Binding IconKind}" />
-                                            </Border>
+                <StackPanel Grid.Column="3"
+                            Margin="4,0,0,0"
+                            Orientation="Horizontal">
+                    <ToggleButton Command="{Binding ShowSimpleTilesViewCommand}"
+                                  IsChecked="{Binding IsSimpleTilesView, Mode=OneWay}"
+                                  Style="{StaticResource LibraryViewModeButtonStyle}"
+                                  ToolTip="Большие плитки">
+                        <materialDesign:PackIcon Width="22" Height="22" Kind="ViewGridOutline" />
+                    </ToggleButton>
+                    <ToggleButton Command="{Binding ShowSimpleCompactTilesViewCommand}"
+                                  IsChecked="{Binding IsSimpleCompactTilesView, Mode=OneWay}"
+                                  Style="{StaticResource LibraryViewModeButtonStyle}"
+                                  ToolTip="Маленькие плитки">
+                        <materialDesign:PackIcon Width="22" Height="22" Kind="ViewGrid" />
+                    </ToggleButton>
+                    <ToggleButton Command="{Binding ShowSimpleTableViewCommand}"
+                                  IsChecked="{Binding IsSimpleTableView, Mode=OneWay}"
+                                  Style="{StaticResource LibraryViewModeButtonStyle}"
+                                  ToolTip="Таблица">
+                        <materialDesign:PackIcon Width="22" Height="22" Kind="FormatListBulleted" />
+                    </ToggleButton>
+                </StackPanel>
+            </Grid>
 
-                                            <Button Grid.Column="1"
-                                                    Margin="10,0,6,0"
-                                                    Padding="5,2"
-                                                    Command="{Binding DataContext.OpenSimpleTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
-                                                    CommandParameter="{Binding}"
-                                                    Style="{StaticResource TileOpenButtonStyle}">
-                                                <StackPanel>
-                                                    <TextBlock FontSize="17"
-                                                               FontWeight="SemiBold"
-                                                               Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                                                               Text="{Binding Name}"
-                                                               TextTrimming="CharacterEllipsis"
-                                                               TextWrapping="Wrap" />
-                                                    <TextBlock Margin="0,6,0,0"
-                                                               FontSize="12"
-                                                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                                                               Text="{Binding ItemCountText}"
-                                                               Visibility="{Binding HasItemCount, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                                                </StackPanel>
-                                            </Button>
+            <!-- Заголовок списка и создание темы. Для полностью пустого раздела кнопку оставляем только в empty-state. -->
+            <Grid Grid.Row="3" Margin="0,0,0,18">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
 
-                                            <StackPanel Grid.Column="2" Orientation="Horizontal">
-                                                <Button Command="{Binding DataContext.EditTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
-                                                        CommandParameter="{Binding}"
-                                                        Style="{StaticResource SmallIconButtonStyle}"
-                                                        ToolTip="Редактировать тему">
-                                                    <materialDesign:PackIcon Width="17" Height="17" Kind="PencilOutline" />
-                                                </Button>
-                                                <Button Command="{Binding DataContext.DeleteTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
-                                                        CommandParameter="{Binding}"
-                                                        Foreground="#C62828"
-                                                        Style="{StaticResource SmallIconButtonStyle}"
-                                                        ToolTip="Удалить тему">
-                                                    <materialDesign:PackIcon Width="17" Height="17" Kind="DeleteOutline" />
-                                                </Button>
-                                            </StackPanel>
-                                        </Grid>
+                <TextBlock VerticalAlignment="Center"
+                           FontSize="24"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                           Text="Темы" />
 
-                                        <TextBlock Grid.Row="1"
-                                                   Margin="56,16,0,0"
-                                                   VerticalAlignment="Bottom"
-                                                   FontSize="12"
-                                                   Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                                                   Text="{Binding Topic.CreatedAt, StringFormat='Создана {0:dd.MM.yyyy}'}" />
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
+                <Button Grid.Column="1"
+                        Height="40"
+                        Margin="16,0,0,0"
+                        VerticalAlignment="Center"
+                        Command="{Binding AddTopicCommand}"
+                        Style="{StaticResource Mnemora.PrimaryButton}"
+                        Visibility="{Binding HasSimpleTopicSource, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Width="18" Height="18" Kind="BookPlusOutline" />
+                        <TextBlock Margin="8,0,0,0" Text="Создать тему" />
+                    </StackPanel>
+                </Button>
+            </Grid>
 
-                <Border Width="500"
-                        Padding="38"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center">
-                    <Border.Style>
-                        <Style TargetType="Border" BasedOn="{StaticResource ManagementCardStyle}">
+            <Grid Grid.Row="4">
+                <!-- Большие плитки: виртуализируем строки по 3 карточки. -->
+                <ListBox ItemsSource="{Binding SimpleTopicRows}"
+                         ItemContainerStyle="{StaticResource SimpleSectionListBoxItemStyle}"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         ScrollViewer.CanContentScroll="True"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         VirtualizingPanel.IsVirtualizing="True"
+                         VirtualizingPanel.VirtualizationMode="Recycling">
+                    <ListBox.Style>
+                        <Style TargetType="ListBox">
                             <Setter Property="Visibility" Value="Collapsed" />
                             <Style.Triggers>
                                 <MultiDataTrigger>
                                     <MultiDataTrigger.Conditions>
-                                        <Condition Binding="{Binding HasSelectedSection}" Value="True" />
-                                        <Condition Binding="{Binding HasTopics}" Value="False" />
-                                        <Condition Binding="{Binding IsContextLoading}" Value="False" />
+                                        <Condition Binding="{Binding HasSimpleTopics}" Value="True" />
+                                        <Condition Binding="{Binding IsSimpleTilesView}" Value="True" />
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ListBox.Style>
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel />
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <ItemsControl ItemsSource="{Binding Topics}"
+                                          ItemTemplate="{StaticResource SimpleTopicCardTemplate}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="3" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                            </ItemsControl>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <!-- Компактные плитки: 4 карточки в строке, как на уровне разделов. -->
+                <ListBox ItemsSource="{Binding SimpleCompactTopicRows}"
+                         ItemContainerStyle="{StaticResource SimpleSectionListBoxItemStyle}"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         ScrollViewer.CanContentScroll="True"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         VirtualizingPanel.IsVirtualizing="True"
+                         VirtualizingPanel.VirtualizationMode="Recycling">
+                    <ListBox.Style>
+                        <Style TargetType="ListBox">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding HasSimpleTopics}" Value="True" />
+                                        <Condition Binding="{Binding IsSimpleCompactTilesView}" Value="True" />
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ListBox.Style>
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel />
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <ItemsControl ItemsSource="{Binding Topics}"
+                                          ItemTemplate="{StaticResource SimpleCompactTopicCardTemplate}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="4" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                            </ItemsControl>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <!-- Таблица в тех же стилях, что и таблица разделов/Обзор. -->
+                <Border Background="{DynamicResource Mnemora.Brush.Surface}"
+                        BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                        BorderThickness="1"
+                        ClipToBounds="True"
+                        CornerRadius="14">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding HasSimpleTopics}" Value="True" />
+                                        <Condition Binding="{Binding IsSimpleTableView}" Value="True" />
                                     </MultiDataTrigger.Conditions>
                                     <Setter Property="Visibility" Value="Visible" />
                                 </MultiDataTrigger>
                             </Style.Triggers>
                         </Style>
                     </Border.Style>
-                    <StackPanel>
-                        <materialDesign:PackIcon Width="44"
-                                                 Height="44"
-                                                 HorizontalAlignment="Center"
-                                                 Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                                                 Kind="BookOpenPageVariantOutline" />
-                        <TextBlock Margin="0,14,0,0"
-                                   HorizontalAlignment="Center"
-                                   FontSize="17"
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                                   Text="Тем пока нет" />
-                        <TextBlock Margin="0,6,0,0"
-                                   HorizontalAlignment="Center"
-                                   FontSize="13"
-                                   Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                                   Text="Создайте первую тему в этом разделе" />
-                        <Button Margin="0,18,0,0"
-                                Height="42"
-                                HorizontalAlignment="Center"
-                                Command="{Binding AddTopicCommand}"
-                                Style="{StaticResource Mnemora.PrimaryButton}">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Width="18" Height="18" Kind="Plus" />
-                                <TextBlock Margin="8,0,0,0" Text="Создать тему" />
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
+
+                    <DataGrid ItemsSource="{Binding SimpleTopics}"
+                              AutoGenerateColumns="False"
+                              Background="Transparent"
+                              BorderThickness="0"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False"
+                              CanUserReorderColumns="False"
+                              CanUserResizeRows="False"
+                              CanUserSortColumns="False"
+                              ColumnHeaderStyle="{StaticResource SimpleSectionTableColumnHeaderStyle}"
+                              EnableColumnVirtualization="True"
+                              EnableRowVirtualization="True"
+                              GridLinesVisibility="None"
+                              HeadersVisibility="Column"
+                              HorizontalScrollBarVisibility="Disabled"
+                              IsReadOnly="True"
+                              RowHeaderWidth="0"
+                              RowStyle="{StaticResource SimpleTopicTableRowStyle}"
+                              SelectionMode="Single"
+                              SelectionUnit="FullRow"
+                              VerticalScrollBarVisibility="Auto"
+                              VirtualizingPanel.IsVirtualizing="True"
+                              VirtualizingPanel.VirtualizationMode="Recycling">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Width="*" MinWidth="270" Header="Тема">
+                                <DataGridTemplateColumn.CellStyle>
+                                    <Style TargetType="DataGridCell" BasedOn="{StaticResource SimpleSectionTableCellStyle}">
+                                        <Setter Property="Padding" Value="16,8,14,8" />
+                                    </Style>
+                                </DataGridTemplateColumn.CellStyle>
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="44" />
+                                                <ColumnDefinition Width="12" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <Border Width="44"
+                                                    Height="44"
+                                                    VerticalAlignment="Center"
+                                                    Background="{Binding TopicColor, Converter={StaticResource TopicColorConverter}}"
+                                                    CornerRadius="11">
+                                                <materialDesign:PackIcon Width="23"
+                                                                         Height="23"
+                                                                         HorizontalAlignment="Center"
+                                                                         VerticalAlignment="Center"
+                                                                         Foreground="White"
+                                                                         Kind="{Binding IconKind}" />
+                                            </Border>
+
+                                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                                <TextBlock FontSize="14"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                                           Text="{Binding Name}"
+                                                           TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Margin="0,3,0,0"
+                                                           FontSize="12"
+                                                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                           Text="{Binding TopicMaterialsSummaryText}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Width="112" Header="Материалы">
+                                <DataGridTemplateColumn.CellStyle>
+                                    <Style TargetType="DataGridCell" BasedOn="{StaticResource SimpleSectionTableCellStyle}">
+                                        <Setter Property="HorizontalContentAlignment" Value="Center" />
+                                    </Style>
+                                </DataGridTemplateColumn.CellStyle>
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                            <materialDesign:PackIcon Style="{StaticResource SimpleSectionCountIconStyle}" Kind="FormatListBulleted" />
+                                            <TextBlock Style="{StaticResource SimpleSectionTableNumberStyle}" Text="{Binding TopicMaterialsCount}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Width="100" Header="Статьи">
+                                <DataGridTemplateColumn.CellStyle>
+                                    <Style TargetType="DataGridCell" BasedOn="{StaticResource SimpleSectionTableCellStyle}">
+                                        <Setter Property="HorizontalContentAlignment" Value="Center" />
+                                    </Style>
+                                </DataGridTemplateColumn.CellStyle>
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                            <materialDesign:PackIcon Style="{StaticResource SimpleSectionCountIconStyle}" Kind="FileDocumentOutline" />
+                                            <TextBlock Style="{StaticResource SimpleSectionTableNumberStyle}" Text="{Binding TopicArticlesCount}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Width="100" Header="Вопросы">
+                                <DataGridTemplateColumn.CellStyle>
+                                    <Style TargetType="DataGridCell" BasedOn="{StaticResource SimpleSectionTableCellStyle}">
+                                        <Setter Property="HorizontalContentAlignment" Value="Center" />
+                                    </Style>
+                                </DataGridTemplateColumn.CellStyle>
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                            <materialDesign:PackIcon Style="{StaticResource SimpleSectionCountIconStyle}" Kind="HelpCircleOutline" />
+                                            <TextBlock Style="{StaticResource SimpleSectionTableNumberStyle}" Text="{Binding TopicQuestionsCount}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTextColumn Width="118"
+                                                Binding="{Binding TopicCreatedAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
+                                                CellStyle="{StaticResource SimpleSectionTableDateCellStyle}"
+                                                Header="Создана" />
+
+                            <DataGridTextColumn Width="124"
+                                                Binding="{Binding TopicLastActivityAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
+                                                CellStyle="{StaticResource SimpleSectionTableDateCellStyle}"
+                                                Header="Активность" />
+
+                            <DataGridTemplateColumn Width="88" Header="">
+                                <DataGridTemplateColumn.CellStyle>
+                                    <Style TargetType="DataGridCell" BasedOn="{StaticResource SimpleSectionTableCellStyle}">
+                                        <Setter Property="Padding" Value="4,8,10,8" />
+                                        <Setter Property="HorizontalContentAlignment" Value="Right" />
+                                    </Style>
+                                </DataGridTemplateColumn.CellStyle>
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                                            <Button Command="{Binding DataContext.EditTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource SmallIconButtonStyle}"
+                                                    ToolTip="Редактировать тему">
+                                                <materialDesign:PackIcon Width="16" Height="16" Kind="PencilOutline" />
+                                            </Button>
+                                            <Button Command="{Binding DataContext.DeleteTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                                    CommandParameter="{Binding}"
+                                                    Foreground="#C62828"
+                                                    Style="{StaticResource SmallIconButtonStyle}"
+                                                    ToolTip="Удалить тему">
+                                                <materialDesign:PackIcon Width="16" Height="16" Kind="DeleteOutline" />
+                                            </Button>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
                 </Border>
+
+                <!-- Пустой раздел занимает всё свободное место, без дополнительной карточки. -->
+                <StackPanel HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsSimpleTopicsEmpty}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+
+                    <materialDesign:PackIcon Width="58"
+                                             Height="58"
+                                             HorizontalAlignment="Center"
+                                             Foreground="{DynamicResource Mnemora.Brush.Primary}"
+                                             Kind="BookOpenPageVariantOutline" />
+                    <TextBlock Margin="0,18,0,0"
+                               HorizontalAlignment="Center"
+                               FontSize="21"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                               Text="В разделе пока нет тем" />
+                    <TextBlock Margin="0,8,0,0"
+                               HorizontalAlignment="Center"
+                               FontSize="14"
+                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                               Text="Создайте первую тему в этом разделе" />
+                    <Button Height="42"
+                            Margin="0,20,0,0"
+                            HorizontalAlignment="Center"
+                            Command="{Binding AddTopicCommand}"
+                            Style="{StaticResource Mnemora.PrimaryButton}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Width="18" Height="18" Kind="BookPlusOutline" />
+                            <TextBlock Margin="8,0,0,0" Text="Создать первую тему" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <StackPanel HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Visibility="{Binding HasNoSimpleTopicSearchResults, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <materialDesign:PackIcon Width="48"
+                                             Height="48"
+                                             HorizontalAlignment="Center"
+                                             Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                             Kind="Magnify" />
+                    <TextBlock Margin="0,14,0,0"
+                               HorizontalAlignment="Center"
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                               Text="Темы не найдены" />
+                    <TextBlock Margin="0,7,0,0"
+                               HorizontalAlignment="Center"
+                               FontSize="13"
+                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                               Text="Попробуйте изменить поисковый запрос" />
+                </StackPanel>
+
+                <StackPanel HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Visibility="{Binding IsContextLoading, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <ProgressBar Width="120"
+                                 Height="4"
+                                 Foreground="{DynamicResource Mnemora.Brush.Primary}"
+                                 IsIndeterminate="True" />
+                    <TextBlock Margin="0,12,0,0"
+                               HorizontalAlignment="Center"
+                               FontSize="13"
+                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                               Text="Загружаем темы..." />
+                </StackPanel>
             </Grid>
+
+            <TextBlock Grid.Row="5"
+                       MinHeight="42"
+                       Margin="0,8,0,0"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Center"
+                       FontSize="13"
+                       Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                       Text="{Binding SimpleTopicsShownCountText}"
+                       Visibility="{Binding HasSimpleTopicSource, Converter={StaticResource BooleanToVisibilityConverter}}" />
         </Grid>
 
         <!-- ПРОСТОЙ РЕЖИМ: материалы выбранной темы -->
         <Grid Grid.Row="2"
-              Margin="32,0,32,18"
+              Margin="32,28,32,18"
               Visibility="{Binding IsSimpleMaterialsPage, Converter={StaticResource BooleanToVisibilityConverter}}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
