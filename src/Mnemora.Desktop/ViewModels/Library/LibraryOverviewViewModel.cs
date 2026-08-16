@@ -89,7 +89,7 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(IsTableView))]
     [NotifyPropertyChangedFor(nameof(IsTilesView))]
     [NotifyPropertyChangedFor(nameof(IsCompactTilesView))]
-    private LibraryViewMode _viewMode = LibraryViewMode.Tiles;
+    private LibraryOverviewViewMode _overviewViewMode = LibraryOverviewViewMode.Tiles;
 
     public bool HasSections => Sections.Count > 0;
 
@@ -109,11 +109,11 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
         !HasSections &&
         !string.IsNullOrWhiteSpace(SearchText);
 
-    public bool IsTableView => ViewMode == LibraryViewMode.Table;
+    public bool IsTableView => OverviewViewMode == LibraryOverviewViewMode.Table;
 
-    public bool IsTilesView => ViewMode == LibraryViewMode.Tiles;
+    public bool IsTilesView => OverviewViewMode == LibraryOverviewViewMode.Tiles;
 
-    public bool IsCompactTilesView => ViewMode == LibraryViewMode.CompactTiles;
+    public bool IsCompactTilesView => OverviewViewMode == LibraryOverviewViewMode.CompactTiles;
 
     public async Task LoadAsync(CancellationToken cancellationToken = default)
     {
@@ -157,19 +157,19 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
     [RelayCommand]
     private Task ShowTableViewAsync(CancellationToken cancellationToken)
     {
-        return SetViewModeAsync(LibraryViewMode.Table, cancellationToken);
+        return SetViewModeAsync(LibraryOverviewViewMode.Table, cancellationToken);
     }
 
     [RelayCommand]
     private Task ShowTilesViewAsync(CancellationToken cancellationToken)
     {
-        return SetViewModeAsync(LibraryViewMode.Tiles, cancellationToken);
+        return SetViewModeAsync(LibraryOverviewViewMode.Tiles, cancellationToken);
     }
-    
+
     [RelayCommand]
     private Task ShowCompactTilesViewAsync(CancellationToken cancellationToken)
     {
-        return SetViewModeAsync(LibraryViewMode.CompactTiles, cancellationToken);
+        return SetViewModeAsync(LibraryOverviewViewMode.CompactTiles, cancellationToken);
     }
 
     partial void OnSearchTextChanged(string? value)
@@ -402,7 +402,7 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
         {
             var settings = await _settingsService.LoadAsync(cancellationToken);
 
-            ViewMode = settings.LibraryViewMode;
+            OverviewViewMode = settings.LibraryOverviewViewMode;
             _isViewModeLoaded = true;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -413,25 +413,25 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
         {
             _logger.LogWarning(exception, "Не удалось загрузить режим просмотра разделов");
 
-            ViewMode = LibraryViewMode.Tiles;
+            OverviewViewMode = LibraryOverviewViewMode.Tiles;
             _isViewModeLoaded = true;
         }
     }
 
     private async Task SetViewModeAsync(
-        LibraryViewMode viewMode,
+        LibraryOverviewViewMode overviewViewMode,
         CancellationToken cancellationToken)
     {
-        if (ViewMode == viewMode)
+        if (OverviewViewMode == overviewViewMode)
         {
             return;
         }
 
-        ViewMode = viewMode;
+        OverviewViewMode = overviewViewMode;
 
         try
         {
-            await _settingsService.SaveLibraryViewModeAsync(viewMode, cancellationToken);
+            await _settingsService.SaveLibraryOverviewViewModeAsync(overviewViewMode, cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -442,7 +442,7 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
             _logger.LogWarning(
                 exception,
                 "Не удалось сохранить режим просмотра разделов {ViewMode}",
-                viewMode);
+                overviewViewMode);
         }
     }
 

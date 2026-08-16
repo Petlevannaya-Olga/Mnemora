@@ -1,7 +1,11 @@
-﻿namespace Mnemora.Desktop.Settings;
+﻿using System.Text.Json.Serialization;
+
+namespace Mnemora.Desktop.Settings;
 
 public sealed class AppSettings
 {
+    private LibraryOverviewViewMode _libraryOverviewViewMode = LibraryOverviewViewMode.Tiles;
+
     public string? UserName { get; set; }
 
     public string? StoragePath { get; set; }
@@ -10,5 +14,32 @@ public sealed class AppSettings
 
     public bool IsOnboardingCompleted { get; set; }
 
-    public LibraryViewMode LibraryViewMode { get; set; } = LibraryViewMode.Table;
+    public LibraryOverviewViewMode LibraryOverviewViewMode
+    {
+        get => _libraryOverviewViewMode;
+        set
+        {
+            _libraryOverviewViewMode = value;
+            HasExplicitLibraryOverviewViewMode = true;
+        }
+    }
+
+    public LibraryManagementViewMode LibraryManagementViewMode { get; set; } = LibraryManagementViewMode.Table;
+
+    [JsonPropertyName("libraryViewMode")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public LibraryOverviewViewMode? LegacyLibraryViewMode { get; set; }
+
+    [JsonIgnore]
+    internal bool HasExplicitLibraryOverviewViewMode { get; private set; }
+
+    internal void ApplyLegacySettings()
+    {
+        if (!HasExplicitLibraryOverviewViewMode && LegacyLibraryViewMode is { } legacyViewMode)
+        {
+            _libraryOverviewViewMode = legacyViewMode;
+        }
+
+        LegacyLibraryViewMode = null;
+    }
 }

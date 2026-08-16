@@ -1,6 +1,6 @@
 ﻿namespace Mnemora.Desktop.Settings;
 
-public enum LibraryViewMode
+public enum LibraryOverviewViewMode
 {
     Table,
     Tiles,

@@ -107,16 +107,25 @@ public sealed class JsonSettingsService :
             cancellationToken);
     }
 
-    public Task SaveLibraryViewModeAsync(
-        LibraryViewMode viewMode,
+    public Task SaveLibraryOverviewViewModeAsync(
+        LibraryOverviewViewMode viewMode,
         CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
 
         return UpdateAsync(
-            settings =>
-                settings.LibraryViewMode =
-                    viewMode,
+            settings => settings.LibraryOverviewViewMode = viewMode,
+            cancellationToken);
+    }
+    
+    public Task SaveLibraryManagementViewModeAsync(
+        LibraryManagementViewMode viewMode,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+
+        return UpdateAsync(
+            settings => settings.LibraryManagementViewMode = viewMode,
             cancellationToken);
     }
 
@@ -184,12 +193,14 @@ public sealed class JsonSettingsService :
             bufferSize: 4096,
             options: FileOptions.Asynchronous);
 
-        return await JsonSerializer
-                   .DeserializeAsync<AppSettings>(
-                       stream,
-                       _jsonOptions,
-                       cancellationToken)
-               ?? new AppSettings();
+        var settings = await JsonSerializer.DeserializeAsync<AppSettings>(
+            stream,
+            _jsonOptions,
+            cancellationToken) ?? new AppSettings();
+
+        settings.ApplyLegacySettings();
+
+        return settings;
     }
 
     private async Task SaveInternalAsync(
