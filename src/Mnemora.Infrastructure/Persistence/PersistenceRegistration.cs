@@ -6,17 +6,26 @@ namespace Mnemora.Infrastructure.Persistence;
 
 public static class PersistenceRegistration
 {
-    public static IServiceCollection AddPersistence(this IServiceCollection services)
+    public static IServiceCollection AddPersistence(
+        this IServiceCollection services)
     {
         services.AddSingleton<SqliteUnicodeCollationInterceptor>();
 
-        services.AddDbContextFactory<MnemoraDbContext>((serviceProvider, optionsBuilder) =>
-        {
-            var connectionString = GetRequiredConnectionString(serviceProvider);
+        services.AddDbContextFactory<MnemoraDbContext>(
+            (serviceProvider, optionsBuilder) =>
+            {
+                string connectionString =
+                    GetRequiredConnectionString(
+                        serviceProvider);
 
-            optionsBuilder.UseSqlite(connectionString);
-            optionsBuilder.AddInterceptors(serviceProvider.GetRequiredService<SqliteUnicodeCollationInterceptor>());
-        });
+                optionsBuilder.UseSqlite(
+                    connectionString);
+
+                optionsBuilder.AddInterceptors(
+                    serviceProvider.GetRequiredService<
+                        SqliteUnicodeCollationInterceptor>());
+            },
+            ServiceLifetime.Transient);
 
         return services;
     }

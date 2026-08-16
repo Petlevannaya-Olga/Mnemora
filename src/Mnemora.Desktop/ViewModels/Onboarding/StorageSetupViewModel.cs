@@ -15,6 +15,9 @@ public sealed partial class StorageSetupViewModel(
     OnboardingState onboardingState)
     : ViewModelBase
 {
+    private const string StorageMarkerFileName = ".mnemora";
+    private const int CurrentStorageFormatVersion = 1;
+
     private string? _storagePath =
         onboardingState.StoragePath;
 
@@ -141,8 +144,7 @@ public sealed partial class StorageSetupViewModel(
                     .Any();
 
             bool isMnemoraStorage =
-                File.Exists(
-                    Path.Combine(path, ".mnemora"));
+                HasValidStorageMarker(path);
 
             if (!isEmpty && !isMnemoraStorage)
             {
@@ -154,25 +156,70 @@ public sealed partial class StorageSetupViewModel(
         catch (Exception exception)
             when (exception is IOException
                       or UnauthorizedAccessException
+                      or JsonException
                       or NotSupportedException)
         {
             return false;
         }
     }
-
-    private static async Task EnsureStorageMarkerAsync(
+    
+    private static bool HasValidStorageMarker(
         string storagePath)
     {
-        string markerPath =
-            Path.Combine(storagePath, ".mnemora");
+        string markerPath = Path.Combine(
+            storagePath,
+            StorageMarkerFileName);
+
+        if (!File.Exists(markerPath))
+        {
+            return false;
+        }
+
+        using FileStream stream = File.OpenRead(markerPath);
+        using JsonDocument document = JsonDocument.Parse(stream);
+
+        JsonElement root = document.RootElement;
+
+        if (root.ValueKind != JsonValueKind.Object)
+        {
+            return false;
+        }
+
+        if (!root.TryGetProperty(
+                "formatVersion",
+                out JsonElement versionElement))
+        {
+            return false;
+        }
+
+        return versionElement.ValueKind ==
+               JsonValueKind.Number
+               &&
+               versionElement.TryGetInt32(
+                   out int formatVersion)
+               &&
+               formatVersion ==
+               CurrentStorageFormatVersion;
+    }
+
+    private static async Task EnsureStorageMarkerAsync(string storagePath)
+    {
+        string markerPath = Path.Combine(
+            storagePath,
+            StorageMarkerFileName);
 
         if (File.Exists(markerPath))
         {
+            if (!HasValidStorageMarker(storagePath))
+            {
+                throw new InvalidDataException(
+                    "Файл маркера Mnemora повреждён или имеет неподдерживаемый формат.");
+            }
+
             return;
         }
 
-        const string markerContent =
-            "{\"formatVersion\":1}";
+        const string markerContent = "{\"formatVersion\":1}";
 
         await File.WriteAllTextAsync(
             markerPath,
