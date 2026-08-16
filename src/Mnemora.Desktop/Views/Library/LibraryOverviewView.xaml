@@ -388,7 +388,7 @@
                                                 Background="#E6E8F1"
                                                 BorderThickness="0"
                                                 Foreground="{StaticResource Mnemora.Brush.BrandGradient}"
-                                                Value="{Binding ProgressPercentage}"
+                                                Value="{Binding ProgressPercentage, Mode=OneWay}"
                                                 d:Value="67" />
                                         </StackPanel>
 

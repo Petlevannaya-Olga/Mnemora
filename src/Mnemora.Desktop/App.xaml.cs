@@ -198,6 +198,7 @@ public partial class App : System.Windows.Application
 
         services.AddSingleton<IDialogService, DialogService>();
 
+        services.AddTransient<AllMaterialsViewModel>();
         services.AddTransient<LibraryOverviewViewModel>();
         services.AddTransient<LibraryManagementViewModel>();
         services.AddTransient<DeleteTopicDialogViewModel>();

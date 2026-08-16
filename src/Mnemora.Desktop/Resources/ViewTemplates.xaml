@@ -125,5 +125,8 @@
         <library:LibraryManagementView />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type libraryViewModels:AllMaterialsViewModel}">
+        <library:AllMaterialsView />
+    </DataTemplate>
 
 </ResourceDictionary>
