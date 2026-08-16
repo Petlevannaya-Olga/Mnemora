@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Mnemora.Application;
 using Mnemora.Application.Commands;
 using Mnemora.Application.Database;
+using Mnemora.Application.Materials.Content;
 using Mnemora.Application.Queries;
 using Mnemora.Application.Storage;
 using Mnemora.Desktop.Ai;
@@ -44,7 +45,10 @@ public partial class App : System.Windows.Application
         await LoadSettingsAsync(_serviceProvider);
 
         var onboardingState = _serviceProvider.GetRequiredService<OnboardingState>();
-        var storageIsConfigured = onboardingState.IsOnboardingCompleted && !string.IsNullOrWhiteSpace(onboardingState.StoragePath);
+
+        bool storageIsConfigured =
+            onboardingState.IsOnboardingCompleted &&
+            !string.IsNullOrWhiteSpace(onboardingState.StoragePath);
 
         if (storageIsConfigured)
         {
@@ -62,6 +66,8 @@ public partial class App : System.Windows.Application
                 Shutdown();
                 return;
             }
+
+            await CheckMaterialContentConsistencyAsync(_serviceProvider);
         }
 
         var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
@@ -96,12 +102,21 @@ public partial class App : System.Windows.Application
         {
             var settings = await settingsService.LoadAsync();
 
-            onboardingState.UserName = string.IsNullOrWhiteSpace(settings.UserName) ? null : settings.UserName.Trim();
-            onboardingState.StoragePath = string.IsNullOrWhiteSpace(settings.StoragePath) ? null : settings.StoragePath.Trim();
+            onboardingState.UserName =
+                string.IsNullOrWhiteSpace(settings.UserName)
+                    ? null
+                    : settings.UserName.Trim();
+
+            onboardingState.StoragePath =
+                string.IsNullOrWhiteSpace(settings.StoragePath)
+                    ? null
+                    : settings.StoragePath.Trim();
+
             onboardingState.IsAiConfigured = settings.IsAiConfigured;
             onboardingState.IsOnboardingCompleted = settings.IsOnboardingCompleted;
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException)
+        catch (Exception exception)
+            when (exception is IOException or UnauthorizedAccessException or JsonException)
         {
             onboardingState.UserName = null;
             onboardingState.StoragePath = null;
@@ -109,6 +124,48 @@ public partial class App : System.Windows.Application
             onboardingState.IsOnboardingCompleted = false;
             onboardingState.PendingApiKey = null;
         }
+    }
+
+    private static async Task CheckMaterialContentConsistencyAsync(IServiceProvider serviceProvider)
+    {
+        await using var scope = serviceProvider.CreateAsyncScope();
+
+        var consistencyService =
+            scope.ServiceProvider.GetRequiredService<IMaterialContentConsistencyService>();
+
+        var result = await consistencyService.CheckAndRepairAsync(CancellationToken.None);
+
+        if (result.IsFailure)
+        {
+            MessageBox.Show(
+                result.Error.Message,
+                "Mnemora",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+
+            return;
+        }
+
+        var report = result.Value;
+
+        if (report.QuarantinedDirectoryCount == 0 &&
+            report.MissingContentCount == 0 &&
+            report.InvalidDirectoryCount == 0)
+        {
+            return;
+        }
+
+        MessageBox.Show(
+            $"""
+             Проверка хранилища завершена.
+
+             Перемещено в папку восстановления: {report.QuarantinedDirectoryCount}
+             Материалов с отсутствующими файлами: {report.MissingContentCount}
+             Неизвестных папок оставлено без изменений: {report.InvalidDirectoryCount}
+             """,
+            "Mnemora",
+            MessageBoxButton.OK,
+            MessageBoxImage.Warning);
     }
 
     private static void ConfigureServices(IServiceCollection services)
@@ -122,14 +179,13 @@ public partial class App : System.Windows.Application
         services.AddSingleton<OnboardingState>();
         services.AddSingleton<ISettingsService, JsonSettingsService>();
         services.AddSingleton<IStoragePathProvider, StoragePathProvider>();
+        services.AddSingleton(TimeProvider.System);
 
         services.AddInfrastructure();
         services.AddApplication();
 
         services.AddSingleton<ICommandDispatcher, CommandDispatcher>();
         services.AddSingleton<IQueryDispatcher, QueryDispatcher>();
-
-        services.AddSingleton(TimeProvider.System);
 
         services.AddSingleton<INavigationService, NavigationService>();
         services.AddSingleton<IPageNavigationService, PageNavigationService>();

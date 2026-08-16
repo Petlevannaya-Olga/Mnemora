@@ -203,32 +203,6 @@ public abstract class Material
         return UnitResult.Success<Error>();
     }
 
-    protected UnitResult<Error> ChangeTopic(TopicId? topicId)
-    {
-        if (topicId is null)
-        {
-            return CommonErrors.IsRequired(nameof(topicId));
-        }
-
-        if (TopicId == topicId)
-        {
-            return UnitResult.Success<Error>();
-        }
-
-        TopicId = topicId;
-        Touch();
-
-        return UnitResult.Success<Error>();
-    }
-
-    protected UnitResult<Error> StartNewLearningRevision()
-    {
-        LearningRevision++;
-        Touch();
-
-        return UnitResult.Success<Error>();
-    }
-
     protected static UnitResult<Error> ValidateCommonData(
         TopicId? topicId,
         MaterialTitle? title,

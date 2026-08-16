@@ -5,9 +5,11 @@ using Mnemora.Domain.Topics;
 
 namespace Mnemora.Infrastructure.Persistence.Configurations;
 
-public sealed class MaterialConfiguration : IEntityTypeConfiguration<Material>
+public sealed class MaterialConfiguration
+    : IEntityTypeConfiguration<Material>
 {
-    public void Configure(EntityTypeBuilder<Material> builder)
+    public void Configure(
+        EntityTypeBuilder<Material> builder)
     {
         builder.ToTable("materials");
 
@@ -60,6 +62,22 @@ public sealed class MaterialConfiguration : IEntityTypeConfiguration<Material>
             .HasColumnName("updated_at")
             .IsRequired();
 
+        ConfigureDiscriminator(builder);
+        ConfigureExperienceRewards(builder);
+        ConfigureTags(builder);
+
+        builder.HasOne<Topic>()
+            .WithMany()
+            .HasForeignKey(material => material.TopicId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(material => material.TopicId)
+            .HasDatabaseName("ix_materials_topic_id");
+    }
+
+    private static void ConfigureDiscriminator(
+        EntityTypeBuilder<Material> builder)
+    {
         builder.Ignore(material => material.Type);
 
         builder.HasDiscriminator<MaterialType>("type")
@@ -70,49 +88,63 @@ public sealed class MaterialConfiguration : IEntityTypeConfiguration<Material>
             .HasConversion<int>()
             .HasColumnName("type")
             .IsRequired();
+    }
 
-        builder.OwnsOne(material => material.ExperienceRewards, rewardsBuilder =>
-        {
-            rewardsBuilder.Property(rewards => rewards.StudyPoints)
-                .HasColumnName("study_points")
-                .IsRequired();
+    private static void ConfigureExperienceRewards(
+        EntityTypeBuilder<Material> builder)
+    {
+        builder.OwnsOne(
+            material => material.ExperienceRewards,
+            rewardsBuilder =>
+            {
+                rewardsBuilder
+                    .Property(rewards => rewards.StudyPoints)
+                    .HasColumnName("study_points")
+                    .IsRequired();
 
-            rewardsBuilder.Property(rewards => rewards.ReviewPoints)
-                .HasColumnName("review_points")
-                .IsRequired();
-        });
+                rewardsBuilder
+                    .Property(rewards => rewards.ReviewPoints)
+                    .HasColumnName("review_points")
+                    .IsRequired();
+            });
 
-        builder.Navigation(material => material.ExperienceRewards).IsRequired();
+        builder.Navigation(
+                material => material.ExperienceRewards)
+            .IsRequired();
+    }
 
-        builder.OwnsMany(material => material.Tags, tagsBuilder =>
-        {
-            tagsBuilder.ToTable("material_tags");
+    private static void ConfigureTags(
+        EntityTypeBuilder<Material> builder)
+    {
+        builder.OwnsMany(
+            material => material.Tags,
+            tagsBuilder =>
+            {
+                tagsBuilder.ToTable("material_tags");
 
-            tagsBuilder.WithOwner().HasForeignKey("material_id");
+                tagsBuilder
+                    .WithOwner()
+                    .HasForeignKey("material_id");
 
-            tagsBuilder.Property<Guid>("Id")
-                .HasColumnName("id")
-                .ValueGeneratedOnAdd();
+                tagsBuilder.Property(tag => tag.Value)
+                    .HasColumnName("value")
+                    .HasMaxLength(MaterialTag.MaxLength)
+                    .UseCollation(
+                        SqliteCollations.UnicodeNoCase)
+                    .IsRequired();
 
-            tagsBuilder.HasKey("Id");
+                tagsBuilder.HasKey(
+                    "material_id",
+                    nameof(MaterialTag.Value));
 
-            tagsBuilder.Property(tag => tag.Value)
-                .HasColumnName("value")
-                .HasMaxLength(MaterialTag.MaxLength)
-                .IsRequired();
-
-            tagsBuilder.HasIndex("material_id", nameof(MaterialTag.Value)).IsUnique();
-        });
+                tagsBuilder.HasIndex(tag => tag.Value)
+                    .HasDatabaseName(
+                        "ix_material_tags_value");
+            });
 
         builder.Navigation(material => material.Tags)
             .HasField("_tags")
-            .UsePropertyAccessMode(PropertyAccessMode.Field);
-
-        builder.HasOne<Topic>()
-            .WithMany()
-            .HasForeignKey(material => material.TopicId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasIndex(material => material.TopicId);
+            .UsePropertyAccessMode(
+                PropertyAccessMode.Field);
     }
 }

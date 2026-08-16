@@ -4,9 +4,11 @@ using Mnemora.Domain.Materials;
 
 namespace Mnemora.Infrastructure.Persistence.Configurations;
 
-public sealed class QuestionConfiguration : IEntityTypeConfiguration<Question>
+public sealed class QuestionConfiguration
+    : IEntityTypeConfiguration<Question>
 {
-    public void Configure(EntityTypeBuilder<Question> builder)
+    public void Configure(
+        EntityTypeBuilder<Question> builder)
     {
         builder.Property(question => question.ArticleId)
             .HasConversion(
@@ -20,6 +22,8 @@ public sealed class QuestionConfiguration : IEntityTypeConfiguration<Question>
             .HasForeignKey(question => question.ArticleId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasIndex(question => question.ArticleId);
+        builder.HasIndex(question => question.ArticleId)
+            .HasDatabaseName(
+                "ix_materials_article_id");
     }
 }
