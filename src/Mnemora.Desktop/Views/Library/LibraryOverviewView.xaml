@@ -617,21 +617,11 @@
                                                             Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
                                                             Text="{Binding ActivityText}" />
 
-                                                        <Grid Margin="0,10,0,0">
-                                                            <TextBlock
-                                                                VerticalAlignment="Center"
-                                                                FontSize="13"
-                                                                Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                                                                Text="{Binding MaterialTypesText}" />
-
-                                                            <materialDesign:PackIcon
-                                                                Width="22"
-                                                                Height="22"
-                                                                HorizontalAlignment="Right"
-                                                                VerticalAlignment="Center"
-                                                                Foreground="{DynamicResource Mnemora.Brush.Secondary}"
-                                                                Kind="ChevronRight" />
-                                                        </Grid>
+                                                        <TextBlock
+                                                            Margin="0,10,0,0"
+                                                            FontSize="13"
+                                                            Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                            Text="{Binding MaterialTypesText}" />
                                                     </StackPanel>
                                                 </Grid>
                                             </Border>
