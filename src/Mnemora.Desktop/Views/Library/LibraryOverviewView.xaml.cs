@@ -1,28 +1,23 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Windows;
 using System.Windows.Controls;
-using Mnemora.Desktop.ViewModels.Home;
+using Mnemora.Desktop.ViewModels.Library;
 
-namespace Mnemora.Desktop.Views.Home;
+namespace Mnemora.Desktop.Views.Library;
 
 [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "CancellationTokenSource is disposed when the WPF view is unloaded.")]
-public partial class HomeView : UserControl
+public partial class LibraryOverviewView : UserControl
 {
     private CancellationTokenSource? _loadCancellationTokenSource;
 
-    public HomeView()
+    public LibraryOverviewView()
     {
         InitializeComponent();
     }
 
-    private async void HomeView_OnLoaded(object sender, RoutedEventArgs e)
+    private async void LibraryOverviewView_OnLoaded(object sender, RoutedEventArgs e)
     {
         CancelLoading();
-
-        if (DataContext is not HomeViewModel viewModel)
-        {
-            return;
-        }
 
         var cancellationTokenSource = new CancellationTokenSource();
         var cancellationToken = cancellationTokenSource.Token;
@@ -31,7 +26,10 @@ public partial class HomeView : UserControl
 
         try
         {
-            await viewModel.LoadAsync(cancellationToken);
+            if (DataContext is LibraryOverviewViewModel viewModel)
+            {
+                await viewModel.LoadAsync(cancellationToken);
+            }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -39,7 +37,7 @@ public partial class HomeView : UserControl
         }
     }
 
-    private void HomeView_OnUnloaded(object sender, RoutedEventArgs e)
+    private void LibraryOverviewView_OnUnloaded(object sender, RoutedEventArgs e)
     {
         CancelLoading();
     }

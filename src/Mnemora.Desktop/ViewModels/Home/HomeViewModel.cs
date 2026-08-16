@@ -302,7 +302,7 @@ public sealed partial class HomeViewModel : ViewModelBase
     [RelayCommand]
     private void OpenLibrary()
     {
-        _pageNavigationService.NavigateTo<LibraryViewModel>();
+        _pageNavigationService.NavigateTo<LibraryManagementViewModel>();
     }
 
     private void NotifyLibraryStateChanged()

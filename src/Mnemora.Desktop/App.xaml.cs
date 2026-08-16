@@ -198,6 +198,8 @@ public partial class App : System.Windows.Application
 
         services.AddSingleton<IDialogService, DialogService>();
 
+        services.AddTransient<LibraryOverviewViewModel>();
+        services.AddTransient<LibraryManagementViewModel>();
         services.AddTransient<DeleteTopicDialogViewModel>();
         services.AddTransient<EditTopicDialogViewModel>();
         services.AddTransient<SelectSectionIconDialogViewModel>();
@@ -210,7 +212,7 @@ public partial class App : System.Windows.Application
         services.AddTransient<PlanViewModel>();
         services.AddTransient<ProgressViewModel>();
         services.AddTransient<SettingsViewModel>();
-        services.AddTransient<LibraryViewModel>();
+        services.AddTransient<LibraryManagementViewModel>();
         services.AddTransient<CreateSectionDialogViewModel>();
         services.AddTransient<HomeViewModel>();
 

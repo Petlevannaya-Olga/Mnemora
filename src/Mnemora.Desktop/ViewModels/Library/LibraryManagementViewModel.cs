@@ -13,14 +13,16 @@ using Mnemora.Desktop.ViewModels.Topics;
 
 namespace Mnemora.Desktop.ViewModels.Library;
 
-public sealed partial class LibraryViewModel(
+public sealed partial class LibraryManagementViewModel(
     IQueryDispatcher queryDispatcher,
     IDialogService dialogService,
     ISettingsService settingsService,
-    ILogger<LibraryViewModel> logger)
+    ILogger<LibraryManagementViewModel> logger)
     : ViewModelBase
 {
     private bool _isViewModeLoaded;
+    private Task? _loadTask;
+    private bool _reloadRequested;
 
     public ObservableCollection<LibrarySectionDto>
         Sections { get; } = [];
@@ -55,57 +57,30 @@ public sealed partial class LibraryViewModel(
         ViewMode ==
         LibraryViewMode.Tiles;
 
-    public async Task LoadAsync(
-        CancellationToken cancellationToken = default)
+    public Task LoadAsync(CancellationToken cancellationToken = default)
     {
-        if (IsLoading)
+        if (_loadTask is { IsCompleted: false })
         {
-            return;
+            _reloadRequested = true;
+            return _loadTask;
         }
 
+        _loadTask = LoadUntilCurrentAsync(cancellationToken);
+        return _loadTask;
+    }
+
+    private async Task LoadUntilCurrentAsync(CancellationToken cancellationToken)
+    {
         IsLoading = true;
-        ErrorMessage = null;
 
         try
         {
-            await EnsureViewModeLoadedAsync(
-                cancellationToken);
-
-            var query =
-                new GetLibraryQuery();
-
-            var result =
-                await queryDispatcher.SendAsync<
-                    GetLibraryQuery,
-                    IReadOnlyList<LibrarySectionDto>>(
-                    query,
-                    cancellationToken);
-
-            if (cancellationToken
-                .IsCancellationRequested)
+            do
             {
-                return;
+                _reloadRequested = false;
+                await LoadCoreAsync(cancellationToken);
             }
-
-            if (result.IsFailure)
-            {
-                ErrorMessage =
-                    result.Error
-                        .FirstOrDefault()
-                        ?.Message
-                    ?? "Не удалось загрузить библиотеку";
-
-                return;
-            }
-
-            Sections.Clear();
-
-            foreach (var section in result.Value)
-            {
-                Sections.Add(section);
-            }
-
-            NotifyCollectionStateChanged();
+            while (_reloadRequested && !cancellationToken.IsCancellationRequested);
         }
         finally
         {
@@ -113,22 +88,48 @@ public sealed partial class LibraryViewModel(
         }
     }
 
-    [RelayCommand]
-    private async Task AddSectionAsync(
-        CancellationToken cancellationToken)
+    private async Task LoadCoreAsync(CancellationToken cancellationToken)
     {
-        var sectionId =
-            dialogService.Show<
-                CreateSectionDialogViewModel,
-                Guid?>();
+        ErrorMessage = null;
+
+        await EnsureViewModeLoadedAsync(cancellationToken);
+
+        var result = await queryDispatcher.SendAsync<GetLibraryQuery, IReadOnlyList<LibrarySectionDto>>(
+            new GetLibraryQuery(),
+            cancellationToken);
+
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
+
+        if (result.IsFailure)
+        {
+            ErrorMessage = result.Error.FirstOrDefault()?.Message ?? "Не удалось загрузить библиотеку";
+            return;
+        }
+
+        Sections.Clear();
+
+        foreach (var section in result.Value)
+        {
+            Sections.Add(section);
+        }
+
+        NotifyCollectionStateChanged();
+    }
+
+    [RelayCommand]
+    private async Task AddSectionAsync(CancellationToken cancellationToken)
+    {
+        var sectionId = dialogService.Show<CreateSectionDialogViewModel, Guid?>();
 
         if (sectionId is null)
         {
             return;
         }
 
-        await LoadAsync(
-            cancellationToken);
+        await LoadAsync(cancellationToken);
     }
 
     [RelayCommand]

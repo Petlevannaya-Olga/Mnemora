@@ -52,11 +52,6 @@
     </DataTemplate>
 
     <DataTemplate
-        DataType="{x:Type libraryViewModels:LibraryViewModel}">
-        <library:LibraryView />
-    </DataTemplate>
-
-    <DataTemplate
         DataType="{x:Type sectionViewModels:CreateSectionDialogViewModel}">
         <sections:CreateSectionDialogView />
     </DataTemplate>
@@ -120,5 +115,15 @@
         DataType="{x:Type topicViewModels:DeleteTopicDialogViewModel}">
         <topics:DeleteTopicDialogView />
     </DataTemplate>
+    
+    <DataTemplate DataType="{x:Type libraryViewModels:LibraryOverviewViewModel}">
+        <library:LibraryOverviewView />
+    </DataTemplate>
+    
+    <DataTemplate
+        DataType="{x:Type libraryViewModels:LibraryManagementViewModel}">
+        <library:LibraryManagementView />
+    </DataTemplate>
+
 
 </ResourceDictionary>

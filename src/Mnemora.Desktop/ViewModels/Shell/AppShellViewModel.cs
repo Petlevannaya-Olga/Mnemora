@@ -51,7 +51,7 @@ public sealed partial class AppShellViewModel : ViewModelBase
         CurrentPageViewModel is HomeViewModel;
 
     public bool IsLibrarySelected =>
-        CurrentPageViewModel is LibraryViewModel;
+        CurrentPageViewModel is LibraryOverviewViewModel or LibraryManagementViewModel;
 
     public bool IsPracticeSelected =>
         CurrentPageViewModel is PracticeViewModel;
@@ -83,7 +83,7 @@ public sealed partial class AppShellViewModel : ViewModelBase
     [RelayCommand]
     private void NavigateLibrary()
     {
-        NavigateTo<LibraryViewModel>();
+        NavigateTo<LibraryManagementViewModel>();
     }
 
     [RelayCommand]
