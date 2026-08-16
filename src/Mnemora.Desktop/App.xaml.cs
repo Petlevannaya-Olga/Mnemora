@@ -13,6 +13,7 @@ using Mnemora.Desktop.Ai;
 using Mnemora.Desktop.Commands;
 using Mnemora.Desktop.Dialogs;
 using Mnemora.Desktop.Navigation;
+using Mnemora.Desktop.Notifications;
 using Mnemora.Desktop.Queries;
 using Mnemora.Desktop.Security;
 using Mnemora.Desktop.Settings;
@@ -197,6 +198,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IAiConnectionService, DevelopmentAiConnectionService>();
 
         services.AddSingleton<IDialogService, DialogService>();
+        services.AddSingleton<INotificationService, NotificationService>();
 
         services.AddTransient<AllMaterialsViewModel>();
         services.AddTransient<LibraryOverviewViewModel>();
@@ -213,7 +215,6 @@ public partial class App : System.Windows.Application
         services.AddTransient<PlanViewModel>();
         services.AddTransient<ProgressViewModel>();
         services.AddTransient<SettingsViewModel>();
-        services.AddTransient<LibraryManagementViewModel>();
         services.AddTransient<CreateSectionDialogViewModel>();
         services.AddTransient<HomeViewModel>();
 

@@ -14,9 +14,15 @@
     <Color x:Key="Mnemora.Color.TextPrimary">#111B52</Color>
     <Color x:Key="Mnemora.Color.TextSecondary">#62698A</Color>
     <Color x:Key="Mnemora.Color.Border">#E1E4F2</Color>
+    <Color x:Key="Mnemora.Color.Error">#D94A4A</Color>
+    <Color x:Key="Mnemora.Color.Warning">#C98200</Color>
 
     <!-- Кисти -->
 
+    <SolidColorBrush x:Key="Mnemora.Brush.Error" Color="{StaticResource Mnemora.Color.Error}" />
+    
+    <SolidColorBrush x:Key="Mnemora.Brush.Warning" Color="{StaticResource Mnemora.Color.Warning}" />
+    
     <SolidColorBrush
         x:Key="Mnemora.Brush.Navy"
         Color="{StaticResource Mnemora.Color.Navy}" />

@@ -2,7 +2,8 @@
     x:Class="Mnemora.Desktop.Views.Shell.AppShellView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:notifications="clr-namespace:Mnemora.Desktop.Notifications">
 
     <UserControl.Resources>
         <Style x:Key="SidebarNavigationButtonStyle"
@@ -225,6 +226,78 @@
             </Setter>
         </Style>
 
+        <Style x:Key="NotificationAccentStyle" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.PrimaryDark}" />
+
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Kind}" Value="{x:Static notifications:NotificationKind.Error}">
+                    <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Error}" />
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding Kind}" Value="{x:Static notifications:NotificationKind.Warning}">
+                    <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Warning}" />
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding Kind}" Value="{x:Static notifications:NotificationKind.Information}">
+                    <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Secondary}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="NotificationIconStyle" TargetType="{x:Type materialDesign:PackIcon}">
+            <Setter Property="Kind" Value="CheckCircleOutline" />
+            <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.PrimaryDark}" />
+
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Kind}" Value="{x:Static notifications:NotificationKind.Error}">
+                    <Setter Property="Kind" Value="AlertCircleOutline" />
+                    <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.Error}" />
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding Kind}" Value="{x:Static notifications:NotificationKind.Warning}">
+                    <Setter Property="Kind" Value="AlertOutline" />
+                    <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.Warning}" />
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding Kind}" Value="{x:Static notifications:NotificationKind.Information}">
+                    <Setter Property="Kind" Value="InformationOutline" />
+                    <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.Secondary}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="NotificationCloseButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="30" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.TextSecondary}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonBorder" Background="{TemplateBinding Background}" CornerRadius="7">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="Background"
+                                        Value="{DynamicResource Mnemora.Brush.SurfaceMuted}" />
+                                <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.TextPrimary}" />
+                            </Trigger>
+
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="Opacity" Value="0.65" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
 
     <Grid Background="{StaticResource Mnemora.Brush.SurfaceMuted}">
@@ -811,6 +884,80 @@
             Grid.Column="1"
             Content="{Binding CurrentPageViewModel}" />
 
+        <ItemsControl
+            Grid.ColumnSpan="2"
+            Panel.ZIndex="100"
+            Margin="0,24,24,0"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Top"
+            ItemsSource="{Binding Notifications}">
+
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Border
+                        Width="360"
+                        MinHeight="66"
+                        Margin="0,0,0,10"
+                        Background="{DynamicResource Mnemora.Brush.Surface}"
+                        BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                        BorderThickness="1"
+                        CornerRadius="12">
+
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="16" Color="#061735" Opacity="0.18" ShadowDepth="3" />
+                        </Border.Effect>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="4" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <Border
+                                Margin="0,8"
+                                CornerRadius="2"
+                                Style="{StaticResource NotificationAccentStyle}" />
+
+                            <materialDesign:PackIcon
+                                Grid.Column="1"
+                                Width="25"
+                                Height="25"
+                                Margin="15,0,0,0"
+                                VerticalAlignment="Center"
+                                Style="{StaticResource NotificationIconStyle}" />
+
+                            <TextBlock
+                                Grid.Column="2"
+                                Margin="13,14"
+                                VerticalAlignment="Center"
+                                FontSize="14"
+                                Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                Text="{Binding Text}"
+                                TextWrapping="Wrap" />
+
+                            <Button
+                                Grid.Column="3"
+                                Margin="4,0,10,0"
+                                VerticalAlignment="Center"
+                                Command="{Binding DataContext.DismissNotificationCommand, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"
+                                CommandParameter="{Binding Id}"
+                                Style="{StaticResource NotificationCloseButtonStyle}"
+                                ToolTip="Закрыть">
+                                <materialDesign:PackIcon Width="18" Height="18" Kind="Close" />
+                            </Button>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
     </Grid>
 
 </UserControl>

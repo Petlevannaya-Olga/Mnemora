@@ -6,6 +6,7 @@ using Mnemora.Application.Library.Get;
 using Mnemora.Application.Queries;
 using Mnemora.Contracts;
 using Mnemora.Desktop.Dialogs;
+using Mnemora.Desktop.Notifications;
 using Mnemora.Desktop.Settings;
 using Mnemora.Desktop.ViewModels.Common;
 using Mnemora.Desktop.ViewModels.Sections;
@@ -17,6 +18,7 @@ public sealed partial class LibraryManagementViewModel(
     IQueryDispatcher queryDispatcher,
     IDialogService dialogService,
     ISettingsService settingsService,
+    INotificationService notificationService,
     ILogger<LibraryManagementViewModel> logger)
     : ViewModelBase
 {
@@ -79,8 +81,7 @@ public sealed partial class LibraryManagementViewModel(
             {
                 _reloadRequested = false;
                 await LoadCoreAsync(cancellationToken);
-            }
-            while (_reloadRequested && !cancellationToken.IsCancellationRequested);
+            } while (_reloadRequested && !cancellationToken.IsCancellationRequested);
         }
         finally
         {
@@ -129,13 +130,12 @@ public sealed partial class LibraryManagementViewModel(
             return;
         }
 
+        notificationService.ShowSuccess("Раздел создан");
         await LoadAsync(cancellationToken);
     }
 
     [RelayCommand]
-    private async Task AddTopicAsync(
-        LibrarySectionDto? section,
-        CancellationToken cancellationToken)
+    private async Task AddTopicAsync(LibrarySectionDto? section, CancellationToken cancellationToken)
     {
         if (section is null)
         {
@@ -143,78 +143,59 @@ public sealed partial class LibraryManagementViewModel(
         }
 
         var topicId =
-            dialogService.Show<
-                CreateTopicDialogViewModel,
-                Guid?>(viewModel =>
-                viewModel.Initialize(
-                    section.Id,
-                    section.Name));
+            dialogService.Show<CreateTopicDialogViewModel, Guid?>(viewModel =>
+                viewModel.Initialize(section.Id, section.Name));
 
         if (topicId is null)
         {
             return;
         }
 
-        await LoadAsync(
-            cancellationToken);
+        notificationService.ShowSuccess("Тема создана");
+        await LoadAsync(cancellationToken);
     }
 
     [RelayCommand]
-    private async Task EditTopicAsync(
-        LibraryTopicDto? topic,
-        CancellationToken cancellationToken)
+    private async Task EditTopicAsync(LibraryTopicDto? topic, CancellationToken cancellationToken)
     {
         if (topic is null)
         {
             return;
         }
 
-        var topicId =
-            dialogService.Show<
-                EditTopicDialogViewModel,
-                Guid?>(viewModel =>
-                viewModel.Initialize(
-                    topic));
+        var topicId = dialogService.Show<EditTopicDialogViewModel, Guid?>(viewModel => viewModel.Initialize(topic));
 
         if (topicId is null)
         {
             return;
         }
 
-        await LoadAsync(
-            cancellationToken);
+        notificationService.ShowSuccess("Изменения темы сохранены");
+        await LoadAsync(cancellationToken);
     }
-    
+
     [RelayCommand]
-    private async Task DeleteTopicAsync(
-        LibraryTopicDto? topic,
-        CancellationToken cancellationToken)
+    private async Task DeleteTopicAsync(LibraryTopicDto? topic, CancellationToken cancellationToken)
     {
         if (topic is null)
         {
             return;
         }
 
-        var wasDeleted =
-            dialogService.Show<
-                DeleteTopicDialogViewModel,
-                bool>(
-                viewModel =>
-                    viewModel.Initialize(
-                        topic));
+        bool wasDeleted =
+            dialogService.Show<DeleteTopicDialogViewModel, bool>(viewModel => viewModel.Initialize(topic));
 
         if (!wasDeleted)
         {
             return;
         }
 
+        notificationService.ShowSuccess($"Тема «{topic.Name}» удалена");
         await LoadAsync(cancellationToken);
     }
 
     [RelayCommand]
-    private async Task EditSectionAsync(
-        LibrarySectionDto? section,
-        CancellationToken cancellationToken)
+    private async Task EditSectionAsync(LibrarySectionDto? section, CancellationToken cancellationToken)
     {
         if (section is null)
         {
@@ -222,25 +203,19 @@ public sealed partial class LibraryManagementViewModel(
         }
 
         var sectionId =
-            dialogService.Show<
-                EditSectionDialogViewModel,
-                Guid?>(viewModel =>
-                viewModel.Initialize(
-                    section));
+            dialogService.Show<EditSectionDialogViewModel, Guid?>(viewModel => viewModel.Initialize(section));
 
         if (sectionId is null)
         {
             return;
         }
 
-        await LoadAsync(
-            cancellationToken);
+        notificationService.ShowSuccess("Изменения раздела сохранены");
+        await LoadAsync(cancellationToken);
     }
 
     [RelayCommand]
-    private async Task DeleteSectionAsync(
-        LibrarySectionDto? section,
-        CancellationToken cancellationToken)
+    private async Task DeleteSectionAsync(LibrarySectionDto? section, CancellationToken cancellationToken)
     {
         if (section is null)
         {
@@ -248,19 +223,15 @@ public sealed partial class LibraryManagementViewModel(
         }
 
         bool wasDeleted =
-            dialogService.Show<
-                DeleteSectionDialogViewModel,
-                bool>(viewModel =>
-                viewModel.Initialize(
-                    section));
+            dialogService.Show<DeleteSectionDialogViewModel, bool>(viewModel => viewModel.Initialize(section));
 
         if (!wasDeleted)
         {
             return;
         }
 
-        await LoadAsync(
-            cancellationToken);
+        notificationService.ShowSuccess($"Раздел «{section.Name}» удалён");
+        await LoadAsync(cancellationToken);
     }
 
     [RelayCommand]
