@@ -16,6 +16,10 @@ public interface ISettingsService
         LibraryManagementViewMode viewMode,
         CancellationToken cancellationToken = default);
 
+    Task SaveLibraryTopicsViewModeAsync(
+        LibraryTopicsViewMode viewMode,
+        CancellationToken cancellationToken = default);
+
     Task CompleteOnboardingAsync(
         bool isAiConfigured,
         CancellationToken cancellationToken = default);

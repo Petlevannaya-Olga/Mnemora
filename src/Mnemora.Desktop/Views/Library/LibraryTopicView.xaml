@@ -613,12 +613,14 @@
                     Margin="0,18,0,0"
                     FontSize="22"
                     FontWeight="SemiBold"
+                    HorizontalAlignment="Center"
                     Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
                     Text="В теме пока нет материалов" />
 
                 <TextBlock
                     Margin="0,8,0,0"
                     Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                    HorizontalAlignment="Center"
                     Text="Создать материал можно в управлении библиотекой." />
             </StackPanel>
 

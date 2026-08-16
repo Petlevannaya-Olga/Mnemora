@@ -129,6 +129,17 @@ public sealed class JsonSettingsService :
             cancellationToken);
     }
 
+    public Task SaveLibraryTopicsViewModeAsync(
+        LibraryTopicsViewMode viewMode,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+
+        return UpdateAsync(
+            settings => settings.LibraryTopicsViewMode = viewMode,
+            cancellationToken);
+    }
+
     public Task CompleteOnboardingAsync(
         bool isAiConfigured,
         CancellationToken cancellationToken = default)

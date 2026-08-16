@@ -26,6 +26,8 @@ public sealed class AppSettings
 
     public LibraryManagementViewMode LibraryManagementViewMode { get; set; } = LibraryManagementViewMode.Table;
 
+    public LibraryTopicsViewMode LibraryTopicsViewMode { get; set; } = LibraryTopicsViewMode.Tiles;
+
     [JsonPropertyName("libraryViewMode")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public LibraryOverviewViewMode? LegacyLibraryViewMode { get; set; }

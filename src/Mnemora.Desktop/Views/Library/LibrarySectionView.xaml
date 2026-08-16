@@ -49,6 +49,16 @@
             <Setter Property="CornerRadius" Value="16" />
         </Style>
 
+        <Style x:Key="TopicCompactCardStyle" TargetType="Border">
+            <Setter Property="Height" Value="82" />
+            <Setter Property="Margin" Value="0,0,12,12" />
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Border}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="14" />
+        </Style>
+
         <Style x:Key="TopicRowItemStyle" TargetType="ListBoxItem">
             <Setter Property="Padding" Value="0" />
             <Setter Property="Margin" Value="0" />
@@ -93,6 +103,166 @@
                     <Setter Property="Opacity" Value="0.72" />
                 </Trigger>
             </Style.Triggers>
+        </Style>
+
+        <Style x:Key="LibraryViewModeButtonStyle" TargetType="ToggleButton">
+            <Setter Property="Width" Value="48" />
+            <Setter Property="Height" Value="48" />
+            <Setter Property="Margin" Value="8,0,0,0" />
+            <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Border}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.TextSecondary}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border
+                            x:Name="ButtonBorder"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="9">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource Mnemora.Brush.SurfaceMuted}" />
+                            </Trigger>
+
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Primary}" />
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="#E6FBF8" />
+                                <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.PrimaryDark}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="TopicTableTextStyle" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.TextSecondary}" />
+        </Style>
+
+        <Style x:Key="TopicTableColumnHeaderStyle" TargetType="DataGridColumnHeader">
+            <Setter Property="Height" Value="48" />
+            <Setter Property="Padding" Value="16,0" />
+            <Setter Property="Background" Value="#F6F8FC" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Border}" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.TextSecondary}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridColumnHeader">
+                        <Border
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter
+                                Margin="{TemplateBinding Padding}"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                RecognizesAccessKey="True" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="TopicTableRowStyle" TargetType="DataGridRow">
+            <Setter Property="MinHeight" Value="72" />
+            <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <EventSetter Event="MouseLeftButtonUp" Handler="TopicTableRow_OnMouseLeftButtonUp" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridRow">
+                        <Grid>
+                            <Border
+                                x:Name="RowBackground"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                                BorderThickness="0,0,0,1" />
+
+                            <Border
+                                x:Name="SelectionIndicator"
+                                Width="4"
+                                Margin="0,9,0,9"
+                                HorizontalAlignment="Left"
+                                Background="{DynamicResource Mnemora.Brush.Primary}"
+                                CornerRadius="0,3,3,0"
+                                Visibility="Collapsed" />
+
+                            <DataGridCellsPresenter />
+                        </Grid>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="RowBackground" Property="Background" Value="#F4F8FC" />
+                            </Trigger>
+
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="RowBackground" Property="Background" Value="#E8F9F6" />
+                                <Setter TargetName="SelectionIndicator" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="TopicTableCellStyle" TargetType="DataGridCell">
+            <Setter Property="Padding" Value="16,9" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridCell">
+                        <Border
+                            Padding="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter
+                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="Transparent" />
+                    <Setter Property="BorderThickness" Value="0" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style
+            x:Key="TopicTableDateCellStyle"
+            BasedOn="{StaticResource TopicTableCellStyle}"
+            TargetType="DataGridCell">
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+        </Style>
+
+        <Style x:Key="TopicCountIconStyle" TargetType="materialDesign:PackIcon">
+            <Setter Property="Width" Value="17" />
+            <Setter Property="Height" Value="17" />
+            <Setter Property="Margin" Value="0,0,7,0" />
+            <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.TextSecondary}" />
         </Style>
     </UserControl.Resources>
 
@@ -158,6 +328,7 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="20" />
                 <ColumnDefinition Width="220" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
             <TextBox
@@ -176,6 +347,32 @@
                 SelectedItem="{Binding SelectedSortOption}"
                 materialDesign:HintAssist.Hint="Сортировка"
                 Style="{StaticResource MaterialDesignOutlinedComboBox}" />
+
+            <StackPanel Grid.Column="3" Orientation="Horizontal">
+                <ToggleButton
+                    Command="{Binding ShowTilesViewCommand}"
+                    IsChecked="{Binding IsTilesView, Mode=OneWay}"
+                    Style="{StaticResource LibraryViewModeButtonStyle}"
+                    ToolTip="Плитки">
+                    <materialDesign:PackIcon Width="24" Height="24" Kind="ViewGridOutline" />
+                </ToggleButton>
+
+                <ToggleButton
+                    Command="{Binding ShowCompactTilesViewCommand}"
+                    IsChecked="{Binding IsCompactTilesView, Mode=OneWay}"
+                    Style="{StaticResource LibraryViewModeButtonStyle}"
+                    ToolTip="Компактные плитки">
+                    <materialDesign:PackIcon Width="24" Height="24" Kind="ViewModule" />
+                </ToggleButton>
+
+                <ToggleButton
+                    Command="{Binding ShowTableViewCommand}"
+                    IsChecked="{Binding IsTableView, Mode=OneWay}"
+                    Style="{StaticResource LibraryViewModeButtonStyle}"
+                    ToolTip="Таблица">
+                    <materialDesign:PackIcon Width="24" Height="24" Kind="FormatListBulleted" />
+                </ToggleButton>
+            </StackPanel>
         </Grid>
 
         <Grid Grid.Row="2" Margin="32,0,32,28">
@@ -281,11 +478,13 @@
                     Margin="0,18,0,0"
                     FontSize="22"
                     FontWeight="SemiBold"
+                    HorizontalAlignment="Center"
                     Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
                     Text="В разделе пока нет тем" />
 
                 <TextBlock
                     Margin="0,8,0,0"
+                    HorizontalAlignment="Center"
                     Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
                     Text="Создать тему можно в управлении библиотекой." />
             </StackPanel>
@@ -354,7 +553,8 @@
                     ScrollViewer.ScrollChanged="TopicsScroll_OnScrollChanged"
                     ScrollViewer.VerticalScrollBarVisibility="Auto"
                     VirtualizingPanel.IsVirtualizing="True"
-                    VirtualizingPanel.VirtualizationMode="Recycling">
+                    VirtualizingPanel.VirtualizationMode="Recycling"
+                    Visibility="{Binding IsTilesView, Converter={StaticResource BooleanToVisibilityConverter}}">
 
                     <ListBox.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -434,21 +634,11 @@
                                                             Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
                                                             Text="{Binding ActivityText}" />
 
-                                                        <Grid Margin="0,9,0,0">
-                                                            <TextBlock
-                                                                VerticalAlignment="Center"
-                                                                FontSize="13"
-                                                                Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                                                                Text="{Binding MaterialTypesText}" />
-
-                                                            <materialDesign:PackIcon
-                                                                Width="21"
-                                                                Height="21"
-                                                                HorizontalAlignment="Right"
-                                                                VerticalAlignment="Center"
-                                                                Foreground="{DynamicResource Mnemora.Brush.Secondary}"
-                                                                Kind="ChevronRight" />
-                                                        </Grid>
+                                                        <TextBlock
+                                                            Margin="0,9,0,0"
+                                                            FontSize="13"
+                                                            Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                            Text="{Binding MaterialTypesText}" />
                                                     </StackPanel>
                                                 </Grid>
                                             </Border>
@@ -459,6 +649,236 @@
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
+
+                <ListBox
+                    ItemsSource="{Binding CompactTopicRows}"
+                    ItemContainerStyle="{StaticResource TopicRowItemStyle}"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    ScrollViewer.CanContentScroll="True"
+                    ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                    ScrollViewer.ScrollChanged="TopicsScroll_OnScrollChanged"
+                    ScrollViewer.VerticalScrollBarVisibility="Auto"
+                    VirtualizingPanel.IsVirtualizing="True"
+                    VirtualizingPanel.VirtualizationMode="Recycling"
+                    Visibility="{Binding IsCompactTilesView, Converter={StaticResource BooleanToVisibilityConverter}}">
+
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel />
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <ItemsControl ItemsSource="{Binding Topics}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="5" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button
+                                            Command="{Binding DataContext.OpenTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                            CommandParameter="{Binding}"
+                                            Style="{StaticResource TopicNavigationButtonStyle}"
+                                            ToolTip="Открыть тему">
+
+                                            <Border Style="{StaticResource TopicCompactCardStyle}" ToolTip="{Binding Name}">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <Border
+                                                        Width="46"
+                                                        Height="46"
+                                                        Background="{Binding Color, Converter={StaticResource TopicColorConverter}}"
+                                                        CornerRadius="11">
+                                                        <materialDesign:PackIcon
+                                                            Width="25"
+                                                            Height="25"
+                                                            HorizontalAlignment="Center"
+                                                            VerticalAlignment="Center"
+                                                            Foreground="White"
+                                                            Kind="{Binding Icon, Converter={StaticResource TopicIconConverter}}" />
+                                                    </Border>
+
+                                                    <TextBlock
+                                                        Grid.Column="1"
+                                                        Margin="13,0,0,0"
+                                                        VerticalAlignment="Center"
+                                                        FontSize="15"
+                                                        FontWeight="SemiBold"
+                                                        Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                                        Text="{Binding Name}"
+                                                        TextTrimming="CharacterEllipsis" />
+                                                </Grid>
+                                            </Border>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <Border
+                    Background="{DynamicResource Mnemora.Brush.Surface}"
+                    BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                    BorderThickness="1"
+                    ClipToBounds="True"
+                    CornerRadius="14"
+                    Visibility="{Binding IsTableView, Converter={StaticResource BooleanToVisibilityConverter}}">
+
+                    <DataGrid
+                        x:Name="TopicsTable"
+                        ItemsSource="{Binding Topics}"
+                        AutoGenerateColumns="False"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        CellStyle="{StaticResource TopicTableCellStyle}"
+                        CanUserAddRows="False"
+                        CanUserDeleteRows="False"
+                        CanUserReorderColumns="False"
+                        CanUserResizeRows="False"
+                        CanUserSortColumns="False"
+                        ColumnHeaderStyle="{StaticResource TopicTableColumnHeaderStyle}"
+                        EnableColumnVirtualization="True"
+                        EnableRowVirtualization="True"
+                        GridLinesVisibility="None"
+                        HeadersVisibility="Column"
+                        IsReadOnly="True"
+                        RowHeaderWidth="0"
+                        RowStyle="{StaticResource TopicTableRowStyle}"
+                        ScrollViewer.CanContentScroll="True"
+                        ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                        ScrollViewer.ScrollChanged="TopicsScroll_OnScrollChanged"
+                        ScrollViewer.VerticalScrollBarVisibility="Auto"
+                        SelectionMode="Single"
+                        SelectionUnit="FullRow"
+                        SizeChanged="TopicsTable_OnSizeChanged"
+                        VirtualizingPanel.IsVirtualizing="True"
+                        VirtualizingPanel.VirtualizationMode="Recycling">
+
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn
+                                Header="Тема"
+                                MinWidth="260"
+                                Width="*"
+                                HeaderStyle="{StaticResource TopicTableColumnHeaderStyle}">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="10,0,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <Border
+                                                Width="42"
+                                                Height="42"
+                                                Background="{Binding Color, Converter={StaticResource TopicColorConverter}}"
+                                                CornerRadius="11">
+                                                <materialDesign:PackIcon
+                                                    Width="23"
+                                                    Height="23"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Foreground="White"
+                                                    Kind="{Binding Icon, Converter={StaticResource TopicIconConverter}}" />
+                                            </Border>
+
+                                            <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
+                                                <TextBlock
+                                                    FontSize="14"
+                                                    FontWeight="SemiBold"
+                                                    Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                                    Text="{Binding Name}"
+                                                    TextTrimming="CharacterEllipsis" />
+
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    FontSize="12"
+                                                    Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                    Text="{Binding MaterialsText}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn
+                                Header="Материалы"
+                                Width="115"
+                                HeaderStyle="{StaticResource TopicTableColumnHeaderStyle}">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center" Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="FormatListBulleted" Style="{StaticResource TopicCountIconStyle}" />
+                                            <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="{Binding MaterialsCount}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn
+                                Header="Статьи"
+                                Width="95"
+                                HeaderStyle="{StaticResource TopicTableColumnHeaderStyle}">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center" Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="FileDocumentOutline" Style="{StaticResource TopicCountIconStyle}" />
+                                            <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="{Binding ArticlesCount}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn
+                                Header="Вопросы"
+                                Width="100"
+                                HeaderStyle="{StaticResource TopicTableColumnHeaderStyle}">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center" Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="HelpCircleOutline" Style="{StaticResource TopicCountIconStyle}" />
+                                            <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="{Binding QuestionsCount}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTextColumn
+                                Header="Создана"
+                                Width="105"
+                                Binding="{Binding CreatedAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
+                                CellStyle="{StaticResource TopicTableDateCellStyle}"
+                                HeaderStyle="{StaticResource TopicTableColumnHeaderStyle}"
+                                ElementStyle="{StaticResource TopicTableTextStyle}" />
+
+                            <DataGridTextColumn
+                                Header="Изменена"
+                                Width="105"
+                                Binding="{Binding UpdatedAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
+                                CellStyle="{StaticResource TopicTableDateCellStyle}"
+                                HeaderStyle="{StaticResource TopicTableColumnHeaderStyle}"
+                                ElementStyle="{StaticResource TopicTableTextStyle}" />
+
+                            <DataGridTextColumn
+                                Header="Активность"
+                                Width="115"
+                                Binding="{Binding LastActivityAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
+                                CellStyle="{StaticResource TopicTableDateCellStyle}"
+                                HeaderStyle="{StaticResource TopicTableColumnHeaderStyle}"
+                                ElementStyle="{StaticResource TopicTableTextStyle}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Border>
 
                 <Grid Grid.Row="1" MinHeight="52">
                     <StackPanel

@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
 using Mnemora.Desktop.ViewModels.Library;
 
 namespace Mnemora.Desktop.Views.Library;
@@ -74,6 +76,38 @@ public partial class LibrarySectionView : UserControl
         {
             viewModel.LoadNextPageCommand.Execute(null);
         }
+    }
+
+    private void TopicTableRow_OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not DataGridRow { DataContext: not null } row ||
+            DataContext is not LibrarySectionViewModel viewModel)
+        {
+            return;
+        }
+
+        if (!viewModel.OpenTopicCommand.CanExecute(row.DataContext))
+        {
+            return;
+        }
+
+        viewModel.OpenTopicCommand.Execute(row.DataContext);
+        e.Handled = true;
+    }
+
+    private void TopicsTable_OnSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (sender is not DataGrid dataGrid ||
+            e.NewSize.Width <= 0 ||
+            e.NewSize.Height <= 0)
+        {
+            return;
+        }
+
+        dataGrid.Clip = new RectangleGeometry(
+            new Rect(0, 0, e.NewSize.Width, e.NewSize.Height),
+            13,
+            13);
     }
 
     private void CancelLoading()

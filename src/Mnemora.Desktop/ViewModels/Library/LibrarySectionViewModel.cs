@@ -6,6 +6,7 @@ using Mnemora.Application.Library.GetTopicsPage;
 using Mnemora.Application.Queries;
 using Mnemora.Contracts;
 using Mnemora.Desktop.Navigation;
+using Mnemora.Desktop.Settings;
 using Mnemora.Desktop.ViewModels.Common;
 
 namespace Mnemora.Desktop.ViewModels.Library;
@@ -13,11 +14,13 @@ namespace Mnemora.Desktop.ViewModels.Library;
 public sealed partial class LibrarySectionViewModel(
     IQueryDispatcher queryDispatcher,
     IPageNavigationService pageNavigationService,
+    ISettingsService settingsService,
     ILogger<LibrarySectionViewModel> logger)
     : ViewModelBase
 {
     private const int PageSize = 30;
     private const int TopicsPerRow = 3;
+    private const int CompactTopicsPerRow = 5;
     private static readonly TimeSpan SearchDelay = TimeSpan.FromMilliseconds(350);
 
     private CancellationToken _viewCancellationToken;
@@ -27,10 +30,13 @@ public sealed partial class LibrarySectionViewModel(
     private int _searchVersion;
     private int? _loadingVersion;
     private bool _isLoaded;
+    private bool _isViewModeLoaded;
 
     public ObservableCollection<LibraryTopicCardViewModel> Topics { get; } = [];
 
     public ObservableCollection<LibraryTopicRowViewModel> TopicRows { get; } = [];
+
+    public ObservableCollection<LibraryTopicRowViewModel> CompactTopicRows { get; } = [];
 
     public IReadOnlyList<LibraryTopicSortOption> SortOptions { get; } =
     [
@@ -76,6 +82,12 @@ public sealed partial class LibrarySectionViewModel(
         "Последняя активность",
         LibraryTopicSort.RecentActivity);
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsTableView))]
+    [NotifyPropertyChangedFor(nameof(IsTilesView))]
+    [NotifyPropertyChangedFor(nameof(IsCompactTilesView))]
+    private LibraryTopicsViewMode _viewMode = LibraryTopicsViewMode.Tiles;
+
     public string SectionTitle => Section?.Name ?? "Раздел";
 
     public bool HasTopics => Topics.Count > 0;
@@ -83,6 +95,12 @@ public sealed partial class LibrarySectionViewModel(
     public bool HasError => !string.IsNullOrWhiteSpace(ErrorMessage);
 
     public bool HasNextPageError => !string.IsNullOrWhiteSpace(NextPageErrorMessage);
+
+    public bool IsTableView => ViewMode == LibraryTopicsViewMode.Table;
+
+    public bool IsTilesView => ViewMode == LibraryTopicsViewMode.Tiles;
+
+    public bool IsCompactTilesView => ViewMode == LibraryTopicsViewMode.CompactTiles;
 
     public bool IsEmpty =>
         !IsLoading &&
@@ -123,6 +141,7 @@ public sealed partial class LibrarySectionViewModel(
 
         LoadNextPageCommand.NotifyCanExecuteChanged();
 
+        await EnsureViewModeLoadedAsync(cancellationToken);
         await ReloadCoreAsync(cancellationToken);
     }
 
@@ -158,6 +177,24 @@ public sealed partial class LibrarySectionViewModel(
             cancellationToken);
 
         await LoadPageAsync(_loadVersion, linkedCancellationTokenSource.Token);
+    }
+
+    [RelayCommand]
+    private Task ShowTableViewAsync(CancellationToken cancellationToken)
+    {
+        return SetViewModeAsync(LibraryTopicsViewMode.Table, cancellationToken);
+    }
+
+    [RelayCommand]
+    private Task ShowTilesViewAsync(CancellationToken cancellationToken)
+    {
+        return SetViewModeAsync(LibraryTopicsViewMode.Tiles, cancellationToken);
+    }
+
+    [RelayCommand]
+    private Task ShowCompactTilesViewAsync(CancellationToken cancellationToken)
+    {
+        return SetViewModeAsync(LibraryTopicsViewMode.CompactTiles, cancellationToken);
     }
     
     [RelayCommand]
@@ -221,6 +258,7 @@ public sealed partial class LibrarySectionViewModel(
 
         Topics.Clear();
         TopicRows.Clear();
+        CompactTopicRows.Clear();
 
         NotifyCollectionStateChanged();
 
@@ -348,12 +386,21 @@ public sealed partial class LibrarySectionViewModel(
 
     private void AddToTopicRows(LibraryTopicCardViewModel topic)
     {
-        var row = TopicRows.LastOrDefault();
+        AddToRows(TopicRows, topic, TopicsPerRow);
+        AddToRows(CompactTopicRows, topic, CompactTopicsPerRow);
+    }
+
+    private static void AddToRows(
+        ObservableCollection<LibraryTopicRowViewModel> rows,
+        LibraryTopicCardViewModel topic,
+        int capacity)
+    {
+        var row = rows.LastOrDefault();
 
         if (row is null || row.IsFull)
         {
-            row = new LibraryTopicRowViewModel(TopicsPerRow);
-            TopicRows.Add(row);
+            row = new LibraryTopicRowViewModel(capacity);
+            rows.Add(row);
         }
 
         row.Add(topic);
@@ -385,6 +432,58 @@ public sealed partial class LibrarySectionViewModel(
         catch (OperationCanceledException) when (_viewCancellationToken.IsCancellationRequested)
         {
             // ignore
+        }
+    }
+
+    private async Task EnsureViewModeLoadedAsync(CancellationToken cancellationToken)
+    {
+        if (_isViewModeLoaded)
+        {
+            return;
+        }
+
+        try
+        {
+            var settings = await settingsService.LoadAsync(cancellationToken);
+
+            ViewMode = settings.LibraryTopicsViewMode;
+            _isViewModeLoaded = true;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Не удалось загрузить режим просмотра тем");
+
+            ViewMode = LibraryTopicsViewMode.Tiles;
+            _isViewModeLoaded = true;
+        }
+    }
+
+    private async Task SetViewModeAsync(
+        LibraryTopicsViewMode viewMode,
+        CancellationToken cancellationToken)
+    {
+        if (ViewMode == viewMode)
+        {
+            return;
+        }
+
+        ViewMode = viewMode;
+
+        try
+        {
+            await settingsService.SaveLibraryTopicsViewModeAsync(viewMode, cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Не удалось сохранить режим просмотра тем {ViewMode}", viewMode);
         }
     }
 
