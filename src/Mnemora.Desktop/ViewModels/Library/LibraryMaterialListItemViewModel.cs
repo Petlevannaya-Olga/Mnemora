@@ -61,6 +61,21 @@ public sealed class LibraryMaterialListItemViewModel
 
     public string PointsText =>
         $"{StudyPoints} за изучение • {ReviewPoints} за повторение";
+    
+    public bool IsEasy => string.Equals(
+        Source.Difficulty,
+        "Easy",
+        StringComparison.OrdinalIgnoreCase);
+
+    public bool IsMedium => string.Equals(
+        Source.Difficulty,
+        "Medium",
+        StringComparison.OrdinalIgnoreCase);
+
+    public bool IsHard => string.Equals(
+        Source.Difficulty,
+        "Hard",
+        StringComparison.OrdinalIgnoreCase);
 
     private static DateTime ToLocalTime(DateTime value)
     {

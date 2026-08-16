@@ -129,6 +129,7 @@
 
         <Style x:Key="SectionTableTextStyle" TargetType="TextBlock">
             <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
             <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.TextSecondary}" />
         </Style>
 
@@ -139,29 +140,120 @@
             <Setter Property="HorizontalAlignment" Value="Center" />
         </Style>
 
-        <Style TargetType="DataGridColumnHeader">
-            <Setter Property="Height" Value="46" />
-            <Setter Property="Padding" Value="14,0" />
-            <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.SurfaceMuted}" />
+        <Style x:Key="SectionTableColumnHeaderStyle" TargetType="DataGridColumnHeader">
+            <Setter Property="Height" Value="48" />
+            <Setter Property="Padding" Value="16,0" />
+            <Setter Property="Background" Value="#F6F8FC" />
             <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Border}" />
             <Setter Property="BorderThickness" Value="0,0,0,1" />
-            <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.TextPrimary}" />
+            <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.TextSecondary}" />
+            <Setter Property="FontSize" Value="12" />
             <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridColumnHeader">
+                        <Border
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter
+                                Margin="{TemplateBinding Padding}"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                RecognizesAccessKey="True" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SectionTableRowStyle" TargetType="DataGridRow">
+            <Setter Property="MinHeight" Value="72" />
+            <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <EventSetter Event="MouseLeftButtonUp" Handler="SectionTableRow_OnMouseLeftButtonUp" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridRow">
+                        <Grid>
+                            <Border
+                                x:Name="RowBackground"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                                BorderThickness="0,0,0,1" />
+
+                            <Border
+                                x:Name="SelectionIndicator"
+                                Width="4"
+                                Margin="0,9,0,9"
+                                HorizontalAlignment="Left"
+                                Background="{DynamicResource Mnemora.Brush.Primary}"
+                                CornerRadius="0,3,3,0"
+                                Visibility="Collapsed" />
+
+                            <DataGridCellsPresenter />
+                        </Grid>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="RowBackground" Property="Background" Value="#F4F8FC" />
+                            </Trigger>
+
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="RowBackground" Property="Background" Value="#E8F9F6" />
+                                <Setter TargetName="SelectionIndicator" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SectionTableCellStyle" TargetType="DataGridCell">
+            <Setter Property="Padding" Value="16,9" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridCell">
+                        <Border
+                            Padding="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter
+                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="Transparent" />
+                    <Setter Property="BorderThickness" Value="0" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style
+            x:Key="SectionTableDateCellStyle"
+            BasedOn="{StaticResource SectionTableCellStyle}"
+            TargetType="DataGridCell">
             <Setter Property="HorizontalContentAlignment" Value="Left" />
         </Style>
 
-        <Style TargetType="DataGridRow">
-            <Setter Property="MinHeight" Value="64" />
-            <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Border}" />
-            <Setter Property="BorderThickness" Value="0,0,0,1" />
-        </Style>
-
-        <Style TargetType="DataGridCell">
-            <Setter Property="Padding" Value="14,8" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
-            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Style x:Key="SectionCountIconStyle" TargetType="materialDesign:PackIcon">
+            <Setter Property="Width" Value="17" />
+            <Setter Property="Height" Value="17" />
+            <Setter Property="Margin" Value="0,0,7,0" />
+            <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.TextSecondary}" />
         </Style>
     </UserControl.Resources>
 
@@ -635,131 +727,176 @@
 
                 <!-- Таблица -->
 
-                <DataGrid
+                <Border
                     Grid.Row="1"
-                    ItemsSource="{Binding Sections}"
-                    AutoGenerateColumns="False"
                     Background="{DynamicResource Mnemora.Brush.Surface}"
                     BorderBrush="{DynamicResource Mnemora.Brush.Border}"
                     BorderThickness="1"
-                    CanUserAddRows="False"
-                    CanUserDeleteRows="False"
-                    CanUserReorderColumns="False"
-                    CanUserResizeRows="False"
-                    CanUserSortColumns="False"
-                    EnableColumnVirtualization="True"
-                    EnableRowVirtualization="True"
-                    GridLinesVisibility="None"
-                    HeadersVisibility="Column"
-                    IsReadOnly="True"
-                    RowHeaderWidth="0"
-                    ScrollViewer.CanContentScroll="True"
-                    ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                    ScrollViewer.ScrollChanged="SectionsScroll_OnScrollChanged"
-                    ScrollViewer.VerticalScrollBarVisibility="Auto"
-                    SelectionMode="Single"
-                    SelectionUnit="FullRow"
-                    VirtualizingPanel.IsVirtualizing="True"
-                    VirtualizingPanel.VirtualizationMode="Recycling"
+                    ClipToBounds="True"
+                    CornerRadius="14"
                     Visibility="{Binding IsTableView, Converter={StaticResource BooleanToVisibilityConverter}}">
 
-                    <DataGrid.Columns>
-                        <DataGridTemplateColumn Header="Раздел" MinWidth="240" Width="*">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
-                                        <Border
-                                            Width="38"
-                                            Height="38"
-                                            Background="{Binding Color, Converter={StaticResource SectionColorConverter}}"
-                                            CornerRadius="9">
-                                            <materialDesign:PackIcon
-                                                Width="21"
-                                                Height="21"
-                                                HorizontalAlignment="Center"
-                                                VerticalAlignment="Center"
-                                                Foreground="White"
-                                                Kind="{Binding Icon, Converter={StaticResource SectionIconConverter}}" />
-                                        </Border>
+                    <DataGrid
+                        x:Name="SectionsTable"
+                        ItemsSource="{Binding Sections}"
+                        AutoGenerateColumns="False"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        CellStyle="{StaticResource SectionTableCellStyle}"
+                        CanUserAddRows="False"
+                        CanUserDeleteRows="False"
+                        CanUserReorderColumns="False"
+                        CanUserResizeRows="False"
+                        CanUserSortColumns="False"
+                        ColumnHeaderStyle="{StaticResource SectionTableColumnHeaderStyle}"
+                        EnableColumnVirtualization="True"
+                        EnableRowVirtualization="True"
+                        GridLinesVisibility="None"
+                        HeadersVisibility="Column"
+                        IsReadOnly="True"
+                        RowHeaderWidth="0"
+                        RowStyle="{StaticResource SectionTableRowStyle}"
+                        ScrollViewer.CanContentScroll="True"
+                        ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                        ScrollViewer.ScrollChanged="SectionsScroll_OnScrollChanged"
+                        ScrollViewer.VerticalScrollBarVisibility="Auto"
+                        SelectionMode="Single"
+                        SelectionUnit="FullRow"
+                        SizeChanged="SectionsTable_OnSizeChanged"
+                        VirtualizingPanel.IsVirtualizing="True"
+                        VirtualizingPanel.VirtualizationMode="Recycling">
 
-                                        <TextBlock
-                                            Margin="12,0,0,0"
-                                            VerticalAlignment="Center"
-                                            FontWeight="SemiBold"
-                                            Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                                            Text="{Binding Name}"
-                                            TextTrimming="CharacterEllipsis" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn
+                                Header="Раздел"
+                                MinWidth="260"
+                                Width="*"
+                                HeaderStyle="{StaticResource SectionTableColumnHeaderStyle}">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="10,0,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
 
-                        <DataGridTextColumn
-                            Header="Темы"
-                            Width="75"
-                            Binding="{Binding TopicsCount}"
-                            ElementStyle="{StaticResource SectionTableNumberStyle}" />
+                                            <Border
+                                                Width="42"
+                                                Height="42"
+                                                Background="{Binding Color, Converter={StaticResource SectionColorConverter}}"
+                                                CornerRadius="11">
+                                                <materialDesign:PackIcon
+                                                    Width="23"
+                                                    Height="23"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Foreground="White"
+                                                    Kind="{Binding Icon, Converter={StaticResource SectionIconConverter}}" />
+                                            </Border>
 
-                        <DataGridTextColumn
-                            Header="Материалы"
-                            Width="100"
-                            Binding="{Binding MaterialsCount}"
-                            ElementStyle="{StaticResource SectionTableNumberStyle}" />
+                                            <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
+                                                <TextBlock
+                                                    FontSize="14"
+                                                    FontWeight="SemiBold"
+                                                    Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                                    Text="{Binding Name}"
+                                                    TextTrimming="CharacterEllipsis" />
 
-                        <DataGridTextColumn
-                            Header="Статьи"
-                            Width="80"
-                            Binding="{Binding ArticlesCount}"
-                            ElementStyle="{StaticResource SectionTableNumberStyle}" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    FontSize="12"
+                                                    Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                    Text="{Binding StructureText}"
+                                                    TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
 
-                        <DataGridTextColumn
-                            Header="Вопросы"
-                            Width="85"
-                            Binding="{Binding QuestionsCount}"
-                            ElementStyle="{StaticResource SectionTableNumberStyle}" />
+                            <DataGridTemplateColumn
+                                Header="Темы"
+                                Width="90"
+                                HeaderStyle="{StaticResource SectionTableColumnHeaderStyle}">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center" Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="ViewGridOutline" Style="{StaticResource SectionCountIconStyle}" />
+                                            <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="{Binding TopicsCount}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
 
-                        <DataGridTextColumn
-                            Header="Создан"
-                            Width="105"
-                            Binding="{Binding CreatedAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
-                            ElementStyle="{StaticResource SectionTableTextStyle}" />
+                            <DataGridTemplateColumn
+                                Header="Материалы"
+                                Width="115"
+                                HeaderStyle="{StaticResource SectionTableColumnHeaderStyle}">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center" Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="FormatListBulleted" Style="{StaticResource SectionCountIconStyle}" />
+                                            <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="{Binding MaterialsCount}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
 
-                        <DataGridTextColumn
-                            Header="Изменён"
-                            Width="105"
-                            Binding="{Binding UpdatedAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
-                            ElementStyle="{StaticResource SectionTableTextStyle}" />
+                            <DataGridTemplateColumn
+                                Header="Статьи"
+                                Width="95"
+                                HeaderStyle="{StaticResource SectionTableColumnHeaderStyle}">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center" Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="FileDocumentOutline" Style="{StaticResource SectionCountIconStyle}" />
+                                            <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="{Binding ArticlesCount}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
 
-                        <DataGridTextColumn
-                            Header="Активность"
-                            Width="115"
-                            Binding="{Binding LastActivityAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
-                            ElementStyle="{StaticResource SectionTableTextStyle}" />
+                            <DataGridTemplateColumn
+                                Header="Вопросы"
+                                Width="100"
+                                HeaderStyle="{StaticResource SectionTableColumnHeaderStyle}">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center" Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="HelpCircleOutline" Style="{StaticResource SectionCountIconStyle}" />
+                                            <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="{Binding QuestionsCount}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
 
-                        <DataGridTemplateColumn Width="54" CanUserResize="False">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Button
-                                        Width="34"
-                                        Height="34"
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        Command="{Binding DataContext.OpenSectionCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
-                                        CommandParameter="{Binding}"
-                                        Style="{StaticResource SectionNavigationButtonStyle}"
-                                        ToolTip="Открыть раздел">
+                            <DataGridTextColumn
+                                Header="Создан"
+                                Width="105"
+                                Binding="{Binding CreatedAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
+                                CellStyle="{StaticResource SectionTableDateCellStyle}"
+                                HeaderStyle="{StaticResource SectionTableColumnHeaderStyle}"
+                                ElementStyle="{StaticResource SectionTableTextStyle}" />
 
-                                        <materialDesign:PackIcon
-                                            Width="21"
-                                            Height="21"
-                                            Foreground="{DynamicResource Mnemora.Brush.Secondary}"
-                                            Kind="ChevronRight" />
-                                    </Button>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                    </DataGrid.Columns>
-                </DataGrid>
+                            <DataGridTextColumn
+                                Header="Изменён"
+                                Width="105"
+                                Binding="{Binding UpdatedAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
+                                CellStyle="{StaticResource SectionTableDateCellStyle}"
+                                HeaderStyle="{StaticResource SectionTableColumnHeaderStyle}"
+                                ElementStyle="{StaticResource SectionTableTextStyle}" />
+
+                            <DataGridTextColumn
+                                Header="Активность"
+                                Width="115"
+                                Binding="{Binding LastActivityAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
+                                CellStyle="{StaticResource SectionTableDateCellStyle}"
+                                HeaderStyle="{StaticResource SectionTableColumnHeaderStyle}"
+                                ElementStyle="{StaticResource SectionTableTextStyle}" />
+
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Border>
 
                 <!-- Догрузка -->
 

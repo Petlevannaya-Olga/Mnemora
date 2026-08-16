@@ -1,11 +1,14 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
 using Mnemora.Desktop.ViewModels.Library;
 
 namespace Mnemora.Desktop.Views.Library;
 
-[SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "CancellationTokenSource is disposed when the WPF view is unloaded.")]
+[SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable",
+    Justification = "CancellationTokenSource is disposed when the WPF view is unloaded.")]
 public partial class LibraryOverviewView : UserControl
 {
     private CancellationTokenSource? _loadCancellationTokenSource;
@@ -76,5 +79,37 @@ public partial class LibraryOverviewView : UserControl
 
         cancellationTokenSource.Cancel();
         cancellationTokenSource.Dispose();
+    }
+
+    private void SectionTableRow_OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not DataGridRow { DataContext: not null } row ||
+            DataContext is not LibraryOverviewViewModel viewModel)
+        {
+            return;
+        }
+
+        if (!viewModel.OpenSectionCommand.CanExecute(row.DataContext))
+        {
+            return;
+        }
+
+        viewModel.OpenSectionCommand.Execute(row.DataContext);
+        e.Handled = true;
+    }
+    
+    private void SectionsTable_OnSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (sender is not DataGrid dataGrid ||
+            e.NewSize.Width <= 0 ||
+            e.NewSize.Height <= 0)
+        {
+            return;
+        }
+
+        dataGrid.Clip = new RectangleGeometry(
+            new Rect(0, 0, e.NewSize.Width, e.NewSize.Height),
+            13,
+            13);
     }
 }
