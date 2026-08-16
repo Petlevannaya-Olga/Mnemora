@@ -1,0 +1,8 @@
+﻿namespace Mnemora.Domain.Materials;
+
+public enum MaterialDifficulty
+{
+    Easy = 1,
+    Medium = 2,
+    Hard = 3
+}

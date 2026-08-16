@@ -26,7 +26,7 @@ public sealed class Section
     {
         var now = DateTime.UtcNow;
 
-        Id = new SectionId(Guid.NewGuid());
+        Id = SectionId.New();
         Name = name;
         Color = color;
         Icon = icon;

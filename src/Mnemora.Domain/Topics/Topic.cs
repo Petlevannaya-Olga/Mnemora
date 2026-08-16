@@ -52,7 +52,7 @@ public sealed class Topic
     {
         var now = DateTime.UtcNow;
 
-        Id = new TopicId(Guid.NewGuid());
+        Id = TopicId.New();
         SectionId = sectionId;
         Name = name;
         Color = color;

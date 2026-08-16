@@ -2,11 +2,11 @@
 using System.Security.Cryptography;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.Input;
+using Mnemora.Application.Database;
 using Mnemora.Desktop.Navigation;
 using Mnemora.Desktop.Security;
 using Mnemora.Desktop.Settings;
 using Mnemora.Desktop.ViewModels.Common;
-using Mnemora.Desktop.ViewModels.Home;
 using Mnemora.Desktop.ViewModels.Shell;
 
 namespace Mnemora.Desktop.ViewModels.Onboarding;
@@ -15,11 +15,10 @@ public sealed partial class CompletionSetupViewModel(
     INavigationService navigationService,
     OnboardingState onboardingState,
     IApiKeyStore apiKeyStore,
-    ISettingsService settingsService)
-    : ViewModelBase
+    ISettingsService settingsService,
+    IDatabaseInitializer databaseInitializer) : ViewModelBase
 {
     private bool _isCompleting;
-
     private string? _completionErrorMessage;
 
     public bool IsCompleting
@@ -27,11 +26,9 @@ public sealed partial class CompletionSetupViewModel(
         get => _isCompleting;
         private set
         {
-            if (!SetProperty(ref _isCompleting, value))
-            {
-                return;
-            }
+            if (!SetProperty(ref _isCompleting, value)) return;
 
+            BackCommand.NotifyCanExecuteChanged();
             OpenMnemoraCommand.NotifyCanExecuteChanged();
         }
     }
@@ -41,106 +38,74 @@ public sealed partial class CompletionSetupViewModel(
         get => _completionErrorMessage;
         private set
         {
-            if (!SetProperty(
-                    ref _completionErrorMessage,
-                    value))
-            {
-                return;
-            }
+            if (!SetProperty(ref _completionErrorMessage, value)) return;
 
-            OnPropertyChanged(
-                nameof(HasCompletionError));
+            OnPropertyChanged(nameof(HasCompletionError));
         }
     }
 
-    public bool HasCompletionError =>
-        !string.IsNullOrWhiteSpace(
-            CompletionErrorMessage);
+    public bool HasCompletionError => !string.IsNullOrWhiteSpace(CompletionErrorMessage);
 
-    private bool CanOpenMnemora()
-    {
-        return !IsCompleting;
-    }
-
-    public string UserName =>
-        onboardingState.UserName?.Trim()
-        ?? string.Empty;
+    public string UserName => onboardingState.UserName?.Trim() ?? string.Empty;
 
     public string StorageStatus => "Папка для материалов выбрана";
 
-    public bool IsAiConfigured =>
-        onboardingState.IsAiConfigured;
+    public bool IsAiConfigured => onboardingState.IsAiConfigured;
 
-    public bool IsAiSkipped =>
-        !IsAiConfigured;
+    public bool IsAiSkipped => !IsAiConfigured;
 
-    public string AiStatus =>
-        IsAiConfigured
-            ? "Подключение установлено"
-            : "Не подключён — можно настроить позже";
+    public string AiStatus => IsAiConfigured ? "Подключение установлено" : "Не подключён — можно настроить позже";
 
-    [RelayCommand]
+    private bool CanInteract() => !IsCompleting;
+
+    [RelayCommand(CanExecute = nameof(CanInteract))]
     private void Back()
     {
         navigationService.NavigateTo<AiSetupViewModel>();
     }
 
-    [RelayCommand(
-        CanExecute = nameof(CanOpenMnemora))]
-    private async Task OpenMnemoraAsync(
-        CancellationToken cancellationToken)
+    [RelayCommand(CanExecute = nameof(CanInteract))]
+    private async Task OpenMnemoraAsync(CancellationToken cancellationToken)
     {
         IsCompleting = true;
         CompletionErrorMessage = null;
 
         try
         {
-            if (onboardingState.IsAiConfigured)
+            if (onboardingState.IsAiConfigured && string.IsNullOrWhiteSpace(onboardingState.PendingApiKey))
             {
-                if (string.IsNullOrWhiteSpace(
-                        onboardingState.PendingApiKey))
-                {
-                    CompletionErrorMessage =
-                        "Не найден проверенный API-ключ. Вернитесь на предыдущий шаг и проверьте подключение.";
-
-                    return;
-                }
-
-                apiKeyStore.Save(
-                    onboardingState.PendingApiKey.Trim());
+                CompletionErrorMessage = "Не найден проверенный API-ключ. Вернитесь на предыдущий шаг и проверьте подключение.";
+                return;
             }
 
-            await settingsService
-                .CompleteOnboardingAsync(
-                    onboardingState.IsAiConfigured,
-                    cancellationToken);
+            var databaseResult = await databaseInitializer.InitializeAsync(cancellationToken);
 
-            onboardingState.IsOnboardingCompleted =
-                true;
+            if (databaseResult.IsFailure)
+            {
+                if (!cancellationToken.IsCancellationRequested) CompletionErrorMessage = databaseResult.Error.Message;
 
-            onboardingState.PendingApiKey = null;
+                return;
+            }
 
-            onboardingState.IsOnboardingCompleted =
-                true;
+            if (onboardingState.IsAiConfigured)
+            {
+                apiKeyStore.Save(onboardingState.PendingApiKey!.Trim());
+            }
 
+            await settingsService.CompleteOnboardingAsync(onboardingState.IsAiConfigured, cancellationToken);
+
+            onboardingState.IsOnboardingCompleted = true;
             onboardingState.PendingApiKey = null;
 
             navigationService.NavigateTo<AppShellViewModel>();
         }
-        catch (OperationCanceledException)
-            when (cancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            // Отмена закрытия или завершения не считается ошибкой.
+            // ignore
         }
-        catch (Exception exception)
-            when (exception is IOException
-                      or UnauthorizedAccessException
-                      or CryptographicException
-                      or PlatformNotSupportedException
-                      or JsonException)
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or CryptographicException or NotSupportedException or JsonException)
         {
-            CompletionErrorMessage =
-                "Не удалось завершить настройку. Проверьте доступ к файлам и попробуйте ещё раз.";
+            CompletionErrorMessage = "Не удалось завершить настройку. Проверьте доступ к файлам и попробуйте ещё раз.";
         }
         finally
         {

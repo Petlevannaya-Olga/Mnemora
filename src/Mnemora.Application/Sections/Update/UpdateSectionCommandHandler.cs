@@ -17,8 +17,7 @@ public sealed class UpdateSectionCommandHandler(
         UpdateSectionCommand command,
         CancellationToken cancellationToken)
     {
-        var sectionId = new SectionId(
-            command.SectionId);
+        var sectionId =  SectionId.Create(command.SectionId).Value;
 
         var sectionResult =
             await sectionsRepository.GetByIdAsync(

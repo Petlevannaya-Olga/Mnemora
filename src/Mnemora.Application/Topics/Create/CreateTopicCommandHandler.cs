@@ -28,8 +28,7 @@ public sealed class CreateTopicCommandHandler(
             return nameResult.Error.ToErrors();
         }
 
-        var sectionId = new SectionId(
-            command.SectionId);
+        var sectionId =  SectionId.Create(command.SectionId).Value;
 
         var sectionExistsResult =
             await sectionsRepository.ExistsAsync(

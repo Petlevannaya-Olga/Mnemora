@@ -14,11 +14,10 @@ public sealed class SectionConfiguration
 
         builder.HasKey(section => section.Id);
 
-        builder.Property(section =>
-                section.Id)
+        builder.Property(section => section.Id)
             .HasConversion(
                 id => id.Value,
-                value => new SectionId(value))
+                value => SectionId.Create(value).Value)
             .HasColumnName("id")
             .ValueGeneratedNever();
 

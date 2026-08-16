@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Mnemora.Application.Database;
 using Mnemora.Application.Sections;
 using Mnemora.Application.Topics;
@@ -15,8 +14,9 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services)
     {
-        string connectionString = DatabasePathProvider.CreateConnectionString();
-        services.AddDbContextFactory<MnemoraDbContext>(options => options.UseSqlite(connectionString));
+        services.AddPersistence();
+        
+        services.AddSingleton<IDatabaseInitializer, DatabaseInitializer>();
 
         services.AddScoped<IReadDbContext>(provider => provider.GetRequiredService<MnemoraDbContext>());
 

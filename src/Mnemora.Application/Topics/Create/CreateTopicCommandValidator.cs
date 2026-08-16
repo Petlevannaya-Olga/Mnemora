@@ -1,6 +1,6 @@
 ﻿using FluentValidation;
+using Mnemora.Domain.Sections;
 using Mnemora.Domain.Topics;
-using Mnemora.Shared;
 using Mnemora.Shared.Extensions;
 
 namespace Mnemora.Application.Topics.Create;
@@ -10,9 +10,7 @@ public sealed class CreateTopicCommandValidator : AbstractValidator<CreateTopicC
     public CreateTopicCommandValidator()
     {
         RuleFor(command => command.SectionId)
-            .NotEmpty()
-            .WithError(
-                CommonErrors.IsRequired(nameof(CreateTopicCommand.SectionId)));
+            .MustBeValueObject(SectionId.Create);
 
         RuleFor(command => command.Name)
             .MustBeValueObject(TopicName.Create);

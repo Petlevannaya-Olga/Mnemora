@@ -10,8 +10,7 @@ public sealed class UpdateSectionCommandValidator
     public UpdateSectionCommandValidator()
     {
         RuleFor(command => command.SectionId)
-            .NotEmpty()
-            .WithMessage("Идентификатор раздела не указан");
+           .MustBeValueObject(SectionId.Create);
 
         RuleFor(command => command.Name)
             .MustBeValueObject(SectionName.Create);

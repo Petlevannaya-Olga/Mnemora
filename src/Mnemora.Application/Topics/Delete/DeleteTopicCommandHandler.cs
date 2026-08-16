@@ -17,8 +17,7 @@ public sealed class DeleteTopicCommandHandler(
         DeleteTopicCommand command,
         CancellationToken cancellationToken)
     {
-        var topicId = new TopicId(
-            command.TopicId);
+        var topicId = TopicId.Create(command.TopicId).Value;
 
         var topicResult =
             await topicsRepository.GetByIdAsync(

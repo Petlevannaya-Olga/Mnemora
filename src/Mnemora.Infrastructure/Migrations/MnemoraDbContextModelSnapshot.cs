@@ -17,6 +17,59 @@ namespace Mnemora.Infrastructure.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.11");
 
+            modelBuilder.Entity("Mnemora.Domain.Materials.Material", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("Difficulty")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("difficulty");
+
+                    b.Property<string>("Icon")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("icon");
+
+                    b.Property<int>("LearningRevision")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("learning_revision");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("title");
+
+                    b.Property<Guid>("TopicId")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("topic_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int>("type")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TopicId");
+
+                    b.ToTable("materials", (string)null);
+
+                    b.HasDiscriminator<int>("type");
+
+                    b.UseTphMappingStrategy();
+                });
+
             modelBuilder.Entity("Mnemora.Domain.Sections.Section", b =>
                 {
                     b.Property<Guid>("Id")
@@ -105,6 +158,88 @@ namespace Mnemora.Infrastructure.Migrations
                     b.ToTable("topics", (string)null);
                 });
 
+            modelBuilder.Entity("Mnemora.Domain.Materials.Article", b =>
+                {
+                    b.HasBaseType("Mnemora.Domain.Materials.Material");
+
+                    b.HasDiscriminator().HasValue(1);
+                });
+
+            modelBuilder.Entity("Mnemora.Domain.Materials.Question", b =>
+                {
+                    b.HasBaseType("Mnemora.Domain.Materials.Material");
+
+                    b.Property<Guid?>("ArticleId")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("article_id");
+
+                    b.HasIndex("ArticleId");
+
+                    b.HasDiscriminator().HasValue(2);
+                });
+
+            modelBuilder.Entity("Mnemora.Domain.Materials.Material", b =>
+                {
+                    b.HasOne("Mnemora.Domain.Topics.Topic", null)
+                        .WithMany()
+                        .HasForeignKey("TopicId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.OwnsOne("Mnemora.Domain.Materials.MaterialExperienceRewards", "ExperienceRewards", b1 =>
+                        {
+                            b1.Property<Guid>("MaterialId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<int>("ReviewPoints")
+                                .HasColumnType("INTEGER")
+                                .HasColumnName("review_points");
+
+                            b1.Property<int>("StudyPoints")
+                                .HasColumnType("INTEGER")
+                                .HasColumnName("study_points");
+
+                            b1.HasKey("MaterialId");
+
+                            b1.ToTable("materials");
+
+                            b1.WithOwner()
+                                .HasForeignKey("MaterialId");
+                        });
+
+                    b.OwnsMany("Mnemora.Domain.Materials.MaterialTag", "Tags", b1 =>
+                        {
+                            b1.Property<Guid>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("TEXT")
+                                .HasColumnName("id");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(50)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("value");
+
+                            b1.Property<Guid>("material_id")
+                                .HasColumnType("TEXT");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("material_id", "Value")
+                                .IsUnique();
+
+                            b1.ToTable("material_tags", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("material_id");
+                        });
+
+                    b.Navigation("ExperienceRewards")
+                        .IsRequired();
+
+                    b.Navigation("Tags");
+                });
+
             modelBuilder.Entity("Mnemora.Domain.Topics.Topic", b =>
                 {
                     b.HasOne("Mnemora.Domain.Sections.Section", null)
@@ -112,6 +247,14 @@ namespace Mnemora.Infrastructure.Migrations
                         .HasForeignKey("SectionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Mnemora.Domain.Materials.Question", b =>
+                {
+                    b.HasOne("Mnemora.Domain.Materials.Article", null)
+                        .WithMany()
+                        .HasForeignKey("ArticleId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 #pragma warning restore 612, 618
         }

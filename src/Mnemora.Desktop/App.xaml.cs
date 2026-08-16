@@ -1,12 +1,13 @@
 ﻿using System.IO;
 using System.Text.Json;
 using System.Windows;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mnemora.Application;
 using Mnemora.Application.Commands;
+using Mnemora.Application.Database;
 using Mnemora.Application.Queries;
+using Mnemora.Application.Storage;
 using Mnemora.Desktop.Ai;
 using Mnemora.Desktop.Commands;
 using Mnemora.Desktop.Dialogs;
@@ -23,7 +24,6 @@ using Mnemora.Desktop.ViewModels.Sections;
 using Mnemora.Desktop.ViewModels.Shell;
 using Mnemora.Desktop.ViewModels.Topics;
 using Mnemora.Infrastructure;
-using Mnemora.Infrastructure.Persistence;
 
 namespace Mnemora.Desktop;
 
@@ -42,21 +42,38 @@ public partial class App : System.Windows.Application
         _serviceProvider = services.BuildServiceProvider();
 
         await LoadSettingsAsync(_serviceProvider);
-        await InitializeDatabaseAsync(_serviceProvider);
 
-        // Получаем окно после загрузки настроек,
-        // чтобы ViewModel создавались с заполненным OnboardingState.
-        var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
-
-        var navigationService = _serviceProvider.GetRequiredService<INavigationService>();
         var onboardingState = _serviceProvider.GetRequiredService<OnboardingState>();
+        var storageIsConfigured = onboardingState.IsOnboardingCompleted && !string.IsNullOrWhiteSpace(onboardingState.StoragePath);
 
-        if (onboardingState.IsOnboardingCompleted)
+        if (storageIsConfigured)
+        {
+            var databaseInitializer = _serviceProvider.GetRequiredService<IDatabaseInitializer>();
+            var databaseResult = await databaseInitializer.InitializeAsync();
+
+            if (databaseResult.IsFailure)
+            {
+                MessageBox.Show(
+                    databaseResult.Error.Message,
+                    "Mnemora",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+
+                Shutdown();
+                return;
+            }
+        }
+
+        var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
+        var navigationService = _serviceProvider.GetRequiredService<INavigationService>();
+
+        if (storageIsConfigured)
         {
             navigationService.NavigateTo<AppShellViewModel>();
         }
         else
         {
+            onboardingState.IsOnboardingCompleted = false;
             navigationService.NavigateTo<WelcomeViewModel>();
         }
 
@@ -64,34 +81,27 @@ public partial class App : System.Windows.Application
         mainWindow.Show();
     }
 
-    private static async Task LoadSettingsAsync(
-        IServiceProvider serviceProvider)
+    protected override void OnExit(ExitEventArgs e)
     {
-        ISettingsService settingsService = serviceProvider.GetRequiredService<ISettingsService>();
-        OnboardingState onboardingState = serviceProvider.GetRequiredService<OnboardingState>();
+        _serviceProvider?.Dispose();
+        base.OnExit(e);
+    }
+
+    private static async Task LoadSettingsAsync(IServiceProvider serviceProvider)
+    {
+        var settingsService = serviceProvider.GetRequiredService<ISettingsService>();
+        var onboardingState = serviceProvider.GetRequiredService<OnboardingState>();
 
         try
         {
-            AppSettings settings = await settingsService.LoadAsync();
+            var settings = await settingsService.LoadAsync();
 
-            onboardingState.UserName =
-                string.IsNullOrWhiteSpace(settings.UserName)
-                    ? null
-                    : settings.UserName.Trim();
-
-            onboardingState.StoragePath =
-                string.IsNullOrWhiteSpace(settings.StoragePath)
-                    ? null
-                    : settings.StoragePath.Trim();
-
+            onboardingState.UserName = string.IsNullOrWhiteSpace(settings.UserName) ? null : settings.UserName.Trim();
+            onboardingState.StoragePath = string.IsNullOrWhiteSpace(settings.StoragePath) ? null : settings.StoragePath.Trim();
             onboardingState.IsAiConfigured = settings.IsAiConfigured;
-
             onboardingState.IsOnboardingCompleted = settings.IsOnboardingCompleted;
         }
-        catch (Exception exception)
-            when (exception is IOException
-                      or UnauthorizedAccessException
-                      or JsonException)
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException)
         {
             onboardingState.UserName = null;
             onboardingState.StoragePath = null;
@@ -99,14 +109,6 @@ public partial class App : System.Windows.Application
             onboardingState.IsOnboardingCompleted = false;
             onboardingState.PendingApiKey = null;
         }
-    }
-
-    private static async Task InitializeDatabaseAsync(
-        IServiceProvider serviceProvider)
-    {
-        var dbContextFactory = serviceProvider.GetRequiredService<IDbContextFactory<MnemoraDbContext>>();
-        await using MnemoraDbContext dbContext = await dbContextFactory.CreateDbContextAsync();
-        await dbContext.Database.MigrateAsync();
     }
 
     private static void ConfigureServices(IServiceCollection services)
@@ -117,6 +119,10 @@ public partial class App : System.Windows.Application
             builder.SetMinimumLevel(LogLevel.Information);
         });
 
+        services.AddSingleton<OnboardingState>();
+        services.AddSingleton<ISettingsService, JsonSettingsService>();
+        services.AddSingleton<IStoragePathProvider, StoragePathProvider>();
+
         services.AddInfrastructure();
         services.AddApplication();
 
@@ -125,10 +131,6 @@ public partial class App : System.Windows.Application
 
         services.AddSingleton(TimeProvider.System);
 
-        services.AddSingleton<OnboardingState>();
-
-        services.AddSingleton<ISettingsService, JsonSettingsService>();
-
         services.AddSingleton<INavigationService, NavigationService>();
         services.AddSingleton<IPageNavigationService, PageNavigationService>();
 
@@ -136,12 +138,10 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IFolderLauncherService, FolderLauncherService>();
 
         services.AddSingleton<IApiKeyStore, DpapiApiKeyStore>();
-
         services.AddSingleton<IAiConnectionService, DevelopmentAiConnectionService>();
 
         services.AddSingleton<IDialogService, DialogService>();
 
-        services.AddTransient<DeleteTopicDialogViewModel>();
         services.AddTransient<DeleteTopicDialogViewModel>();
         services.AddTransient<EditTopicDialogViewModel>();
         services.AddTransient<SelectSectionIconDialogViewModel>();
@@ -154,11 +154,10 @@ public partial class App : System.Windows.Application
         services.AddTransient<PlanViewModel>();
         services.AddTransient<ProgressViewModel>();
         services.AddTransient<SettingsViewModel>();
-        services.AddTransient<SelectSectionIconDialogViewModel>();
-        services.AddTransient<CreateTopicDialogViewModel>();
         services.AddTransient<LibraryViewModel>();
         services.AddTransient<CreateSectionDialogViewModel>();
         services.AddTransient<HomeViewModel>();
+
         services.AddSingleton<AppShellViewModel>();
 
         services.AddTransient<WelcomeViewModel>();

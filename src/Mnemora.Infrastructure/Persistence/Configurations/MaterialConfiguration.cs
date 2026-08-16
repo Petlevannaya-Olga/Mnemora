@@ -1,0 +1,118 @@
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Mnemora.Domain.Materials;
+using Mnemora.Domain.Topics;
+
+namespace Mnemora.Infrastructure.Persistence.Configurations;
+
+public sealed class MaterialConfiguration : IEntityTypeConfiguration<Material>
+{
+    public void Configure(EntityTypeBuilder<Material> builder)
+    {
+        builder.ToTable("materials");
+
+        builder.HasKey(material => material.Id);
+
+        builder.Property(material => material.Id)
+            .HasConversion(
+                id => id.Value,
+                value => MaterialId.Create(value).Value)
+            .HasColumnName("id")
+            .ValueGeneratedNever();
+
+        builder.Property(material => material.TopicId)
+            .HasConversion(
+                id => id.Value,
+                value => TopicId.Create(value).Value)
+            .HasColumnName("topic_id")
+            .IsRequired();
+
+        builder.Property(material => material.Title)
+            .HasConversion(
+                title => title.Value,
+                value => MaterialTitle.Create(value).Value)
+            .HasColumnName("title")
+            .HasMaxLength(MaterialTitle.MaxLength)
+            .IsRequired();
+
+        builder.Property(material => material.Difficulty)
+            .HasConversion<int>()
+            .HasColumnName("difficulty")
+            .IsRequired();
+
+        builder.Property(material => material.Icon)
+            .HasConversion(
+                icon => icon.Key,
+                value => MaterialIcon.Create(value).Value)
+            .HasColumnName("icon")
+            .HasMaxLength(MaterialIcon.MaxKeyLength)
+            .IsRequired();
+
+        builder.Property(material => material.LearningRevision)
+            .HasColumnName("learning_revision")
+            .IsRequired();
+
+        builder.Property(material => material.CreatedAt)
+            .HasColumnName("created_at")
+            .IsRequired();
+
+        builder.Property(material => material.UpdatedAt)
+            .HasColumnName("updated_at")
+            .IsRequired();
+
+        builder.Ignore(material => material.Type);
+
+        builder.HasDiscriminator<MaterialType>("type")
+            .HasValue<Article>(MaterialType.Article)
+            .HasValue<Question>(MaterialType.Question);
+
+        builder.Property<MaterialType>("type")
+            .HasConversion<int>()
+            .HasColumnName("type")
+            .IsRequired();
+
+        builder.OwnsOne(material => material.ExperienceRewards, rewardsBuilder =>
+        {
+            rewardsBuilder.Property(rewards => rewards.StudyPoints)
+                .HasColumnName("study_points")
+                .IsRequired();
+
+            rewardsBuilder.Property(rewards => rewards.ReviewPoints)
+                .HasColumnName("review_points")
+                .IsRequired();
+        });
+
+        builder.Navigation(material => material.ExperienceRewards).IsRequired();
+
+        builder.OwnsMany(material => material.Tags, tagsBuilder =>
+        {
+            tagsBuilder.ToTable("material_tags");
+
+            tagsBuilder.WithOwner().HasForeignKey("material_id");
+
+            tagsBuilder.Property<Guid>("Id")
+                .HasColumnName("id")
+                .ValueGeneratedOnAdd();
+
+            tagsBuilder.HasKey("Id");
+
+            tagsBuilder.Property(tag => tag.Value)
+                .HasColumnName("value")
+                .HasMaxLength(MaterialTag.MaxLength)
+                .IsRequired();
+
+            tagsBuilder.HasIndex("material_id", nameof(MaterialTag.Value)).IsUnique();
+        });
+
+        builder.Navigation(material => material.Tags)
+            .HasField("_tags")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.HasOne<Topic>()
+            .WithMany()
+            .HasForeignKey(material => material.TopicId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(material => material.TopicId);
+    }
+}

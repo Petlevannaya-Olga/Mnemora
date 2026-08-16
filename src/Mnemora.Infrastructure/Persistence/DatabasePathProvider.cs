@@ -1,48 +1,104 @@
-﻿using Microsoft.Data.Sqlite;
+﻿using CSharpFunctionalExtensions;
+using Microsoft.Data.Sqlite;
+using Mnemora.Shared;
+using System.Security;
 
 namespace Mnemora.Infrastructure.Persistence;
 
 public static class DatabasePathProvider
 {
-    private const string APPLICATION_DIRECTORY = "Mnemora";
+    private const string SystemDirectoryName = ".mnemora-data";
+    private const string DatabaseFileName = "mnemora.db";
 
-    private const string DATA_DIRECTORY = "Data";
-
-    private const string DATABASE_FILE_NAME = "mnemora.db";
-
-    public static string GetDatabasePath()
+    public static Result<string, Error> GetDatabasePath(string? storagePath)
     {
-        string localApplicationDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        var normalizedStoragePathResult = NormalizeStoragePath(storagePath);
 
-        if (string.IsNullOrWhiteSpace(localApplicationDataPath))
-        {
-            throw new InvalidOperationException("Не удалось определить папку локальных данных приложения.");
-        }
+        if (normalizedStoragePathResult.IsFailure) return normalizedStoragePathResult.Error;
 
-        return Path.Combine(
-            localApplicationDataPath,
-            APPLICATION_DIRECTORY,
-            DATA_DIRECTORY,
-            DATABASE_FILE_NAME);
+        return Path.Combine(normalizedStoragePathResult.Value, SystemDirectoryName, DatabaseFileName);
     }
 
-    public static string CreateConnectionString()
+    public static Result<string, Error> CreateConnectionString(string? storagePath)
     {
-        string databasePath = GetDatabasePath();
+        var databasePathResult = GetDatabasePath(storagePath);
 
-        string? databaseDirectory = Path.GetDirectoryName(databasePath);
+        if (databasePathResult.IsFailure) return databasePathResult.Error;
 
-        if (string.IsNullOrWhiteSpace(databaseDirectory))
-        {
-            throw new InvalidOperationException("Не удалось определить папку базы данных.");
-        }
+        var directoryResult = EnsureDatabaseDirectoryExists(databasePathResult.Value);
 
-        Directory.CreateDirectory(databaseDirectory);
+        if (directoryResult.IsFailure) return directoryResult.Error;
 
         return new SqliteConnectionStringBuilder
         {
-            DataSource = databasePath,
+            DataSource = databasePathResult.Value,
             Mode = SqliteOpenMode.ReadWriteCreate,
+            ForeignKeys = true
         }.ToString();
+    }
+
+    private static Result<string, Error> NormalizeStoragePath(string? storagePath)
+    {
+        if (storagePath is null) return CommonErrors.IsRequired(nameof(storagePath));
+
+        var trimmedStoragePath = storagePath.Trim();
+
+        if (trimmedStoragePath.Length == 0) return CommonErrors.IsEmpty(nameof(storagePath));
+
+        if (!Path.IsPathFullyQualified(trimmedStoragePath))
+        {
+            return CommonErrors.Validation(
+                "storage.path.must.be.absolute",
+                "Путь к хранилищу должен быть абсолютным.",
+                nameof(storagePath));
+        }
+
+        string normalizedStoragePath;
+
+        try
+        {
+            normalizedStoragePath = Path.GetFullPath(trimmedStoragePath);
+        }
+        catch (Exception exception) when (exception is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            return CommonErrors.Validation(
+                "storage.path.is.invalid",
+                "Указан недопустимый путь к хранилищу.",
+                nameof(storagePath));
+        }
+
+        if (File.Exists(normalizedStoragePath))
+        {
+            return CommonErrors.Validation(
+                "storage.path.points.to.file",
+                "Путь к хранилищу указывает на файл.",
+                nameof(storagePath));
+        }
+
+        return normalizedStoragePath;
+    }
+
+    private static UnitResult<Error> EnsureDatabaseDirectoryExists(string databasePath)
+    {
+        var databaseDirectory = Path.GetDirectoryName(databasePath);
+
+        if (string.IsNullOrWhiteSpace(databaseDirectory))
+        {
+            return CommonErrors.Failure(
+                "database.directory.path.not.found",
+                "Не удалось определить папку базы данных.");
+        }
+
+        try
+        {
+            Directory.CreateDirectory(databaseDirectory);
+            return UnitResult.Success<Error>();
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or SecurityException or NotSupportedException)
+        {
+            return CommonErrors.Failure(
+                "database.directory.create.failed",
+                "Не удалось создать системную папку базы данных.");
+        }
     }
 }

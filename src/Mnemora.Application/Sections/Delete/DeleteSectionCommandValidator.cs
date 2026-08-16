@@ -1,4 +1,6 @@
 ﻿using FluentValidation;
+using Mnemora.Domain.Sections;
+using Mnemora.Shared.Extensions;
 
 namespace Mnemora.Application.Sections.Delete;
 
@@ -8,7 +10,6 @@ public sealed class DeleteSectionCommandValidator
     public DeleteSectionCommandValidator()
     {
         RuleFor(command => command.SectionId)
-            .NotEmpty()
-            .WithMessage("Идентификатор раздела не указан");
+            .MustBeValueObject(SectionId.Create);
     }
 }

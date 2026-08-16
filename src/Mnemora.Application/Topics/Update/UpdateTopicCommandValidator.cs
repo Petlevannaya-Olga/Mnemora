@@ -2,10 +2,10 @@
 using Mnemora.Domain.Topics;
 using Mnemora.Shared.Extensions;
 
-namespace Mnemora.Application.Topics.Delete;
+namespace Mnemora.Application.Topics.Update;
 
 public sealed class DeleteTopicCommandValidator
-    : AbstractValidator<DeleteTopicCommand>
+    : AbstractValidator<UpdateTopicCommand>
 {
     public DeleteTopicCommandValidator()
     {

@@ -18,14 +18,14 @@ public sealed class TopicConfiguration
         builder.Property(topic => topic.Id)
             .HasConversion(
                 id => id.Value,
-                value => new TopicId(value))
+                value => TopicId.Create(value).Value)
             .ValueGeneratedNever()
             .HasColumnName("id");
 
         builder.Property(topic => topic.SectionId)
             .HasConversion(
                 id => id.Value,
-                value => new SectionId(value))
+                value => SectionId.Create(value).Value)
             .IsRequired()
             .HasColumnName("section_id");
 
@@ -66,11 +66,7 @@ public sealed class TopicConfiguration
             .IsRequired()
             .HasColumnName("updated_at");
 
-        builder.HasIndex(topic => new
-            {
-                topic.SectionId,
-                topic.Name
-            })
+        builder.HasIndex(topic => new { topic.SectionId, topic.Name })
             .IsUnique()
             .HasDatabaseName(
                 "ux_topics_section_id_name");
