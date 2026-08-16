@@ -1,6 +1,6 @@
 ﻿namespace Mnemora.Contracts;
 
-public sealed record LibrarySectionDto(
+public sealed record LibrarySectionOverviewDto(
     Guid Id,
     string Name,
     string Color,
@@ -8,4 +8,7 @@ public sealed record LibrarySectionDto(
     DateTime CreatedAt,
     DateTime UpdatedAt,
     DateTime LastActivityAt,
-    IReadOnlyList<LibraryTopicDto> Topics);
+    int TopicsCount,
+    int MaterialsCount,
+    int ArticlesCount,
+    int QuestionsCount);

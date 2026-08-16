@@ -42,6 +42,28 @@ public partial class LibraryOverviewView : UserControl
         CancelLoading();
     }
 
+    private void SectionsScroll_OnScrollChanged(object sender, ScrollChangedEventArgs e)
+    {
+        if (e.ExtentHeight <= 0 || e.ViewportHeight <= 0)
+        {
+            return;
+        }
+
+        double remainingDistance = e.ExtentHeight - e.VerticalOffset - e.ViewportHeight;
+        double loadingThreshold = Math.Max(2, e.ViewportHeight * 0.5);
+
+        if (remainingDistance > loadingThreshold)
+        {
+            return;
+        }
+
+        if (DataContext is LibraryOverviewViewModel viewModel &&
+            viewModel.LoadNextPageCommand.CanExecute(null))
+        {
+            viewModel.LoadNextPageCommand.Execute(null);
+        }
+    }
+
     private void CancelLoading()
     {
         var cancellationTokenSource = _loadCancellationTokenSource;

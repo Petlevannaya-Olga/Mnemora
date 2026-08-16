@@ -23,6 +23,15 @@ public sealed class MnemoraDbContext(DbContextOptions<MnemoraDbContext> options)
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        var unicodeContainsMethod = typeof(MnemoraDbFunctions).GetMethod(
+            nameof(MnemoraDbFunctions.UnicodeContains),
+            [typeof(string), typeof(string)])!;
+
+        modelBuilder
+            .HasDbFunction(unicodeContainsMethod)
+            .HasName(SqliteFunctions.UnicodeContains);
+
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(MnemoraDbContext).Assembly);
     }
 }

@@ -1,33 +1,22 @@
 ﻿using Mnemora.Contracts;
-using Mnemora.Domain.Materials;
 
 namespace Mnemora.Desktop.ViewModels.Library;
 
 public sealed class LibrarySectionCardViewModel
 {
     public LibrarySectionCardViewModel(
-        LibrarySectionDto section,
+        LibrarySectionOverviewDto section,
         int? studiedMaterialsCount = null,
-        int plannedMaterialsCount = 0,
-        int? sortOrder = null)
+        int plannedMaterialsCount = 0)
     {
         ArgumentNullException.ThrowIfNull(section);
 
         Source = section;
         StudiedMaterialsCount = studiedMaterialsCount;
         PlannedMaterialsCount = plannedMaterialsCount;
-        SortOrder = sortOrder;
-
-        var materials = section.Topics
-            .SelectMany(topic => topic.Materials)
-            .ToArray();
-
-        MaterialsCount = materials.Length;
-        ArticlesCount = materials.Count(material => IsType(material, MaterialType.Article));
-        QuestionsCount = materials.Count(material => IsType(material, MaterialType.Question));
     }
 
-    public LibrarySectionDto Source { get; }
+    public LibrarySectionOverviewDto Source { get; }
 
     public Guid Id => Source.Id;
 
@@ -39,19 +28,27 @@ public sealed class LibrarySectionCardViewModel
 
     public DateTime CreatedAt => Source.CreatedAt;
 
-    public int TopicsCount => Source.Topics.Count;
+    public DateTime UpdatedAt => Source.UpdatedAt;
 
-    public int MaterialsCount { get; }
+    public DateTime LastActivityAt => Source.LastActivityAt;
 
-    public int ArticlesCount { get; }
+    public DateTime CreatedAtLocal => ToLocalTime(CreatedAt);
 
-    public int QuestionsCount { get; }
+    public DateTime UpdatedAtLocal => ToLocalTime(UpdatedAt);
+
+    public DateTime LastActivityAtLocal => ToLocalTime(LastActivityAt);
+
+    public int TopicsCount => Source.TopicsCount;
+
+    public int MaterialsCount => Source.MaterialsCount;
+
+    public int ArticlesCount => Source.ArticlesCount;
+
+    public int QuestionsCount => Source.QuestionsCount;
 
     public int? StudiedMaterialsCount { get; }
 
     public int PlannedMaterialsCount { get; }
-
-    public int? SortOrder { get; }
 
     public bool HasProgress => StudiedMaterialsCount.HasValue && MaterialsCount > 0;
 
@@ -77,9 +74,18 @@ public sealed class LibrarySectionCardViewModel
         $"{FormatCount(ArticlesCount, "статья", "статьи", "статей")} • " +
         FormatCount(QuestionsCount, "вопрос", "вопроса", "вопросов");
 
-    private static bool IsType(LibraryMaterialDto material, MaterialType type)
+    public string ActivityText =>
+        LastActivityAt > CreatedAt
+            ? $"Активность {LastActivityAtLocal:dd.MM.yyyy}"
+            : $"Создано {CreatedAtLocal:dd.MM.yyyy}";
+
+    private static DateTime ToLocalTime(DateTime value)
     {
-        return string.Equals(material.Type, type.ToString(), StringComparison.OrdinalIgnoreCase);
+        var utcValue = value.Kind == DateTimeKind.Utc
+            ? value
+            : DateTime.SpecifyKind(value, DateTimeKind.Utc);
+
+        return utcValue.ToLocalTime();
     }
 
     private static string FormatCount(int count, string one, string few, string many)
@@ -95,7 +101,7 @@ public sealed class LibrarySectionCardViewModel
         {
             1 => $"{count} {one}",
             2 or 3 or 4 => $"{count} {few}",
-            _ => $"{count} {many}",
+            _ => $"{count} {many}"
         };
     }
 }

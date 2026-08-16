@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Mnemora.Application.Database;
 using Mnemora.Contracts;
 using Mnemora.Domain.Materials;
+using Mnemora.Domain.Sections;
 using Mnemora.Shared;
 using Mnemora.Shared.Abstractions;
 
@@ -38,6 +39,23 @@ public sealed class GetLibraryQueryHandler(
                 .OrderBy(material => material.CreatedAt)
                 .ToListAsync(cancellationToken);
 
+            var sectionIdByTopicId = topics.ToDictionary(
+                topic => topic.Id.Value,
+                topic => topic.SectionId.Value);
+
+            var lastTopicActivityBySection = topics
+                .GroupBy(topic => topic.SectionId.Value)
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.Max(topic => topic.UpdatedAt));
+
+            var lastMaterialActivityBySection = materials
+                .Where(material => sectionIdByTopicId.ContainsKey(material.TopicId.Value))
+                .GroupBy(material => sectionIdByTopicId[material.TopicId.Value])
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.Max(material => material.UpdatedAt));
+
             var materialsByTopic = materials
                 .GroupBy(material => material.TopicId.Value)
                 .ToDictionary(
@@ -67,6 +85,11 @@ public sealed class GetLibraryQueryHandler(
                     section.Color.ToString(),
                     section.Icon.ToString(),
                     section.CreatedAt,
+                    section.UpdatedAt,
+                    GetLastActivityAt(
+                        section,
+                        lastTopicActivityBySection,
+                        lastMaterialActivityBySection),
                     topicsBySection.GetValueOrDefault(section.Id.Value, [])))
                 .ToArray();
 
@@ -87,6 +110,28 @@ public sealed class GetLibraryQueryHandler(
                 "library.get.failed",
                 "Не удалось загрузить библиотеку").ToErrors();
         }
+    }
+
+    private static DateTime GetLastActivityAt(
+        Section section,
+        IReadOnlyDictionary<Guid, DateTime> lastTopicActivityBySection,
+        IReadOnlyDictionary<Guid, DateTime> lastMaterialActivityBySection)
+    {
+        var lastActivityAt = section.UpdatedAt;
+
+        if (lastTopicActivityBySection.TryGetValue(section.Id.Value, out var lastTopicActivityAt) &&
+            lastTopicActivityAt > lastActivityAt)
+        {
+            lastActivityAt = lastTopicActivityAt;
+        }
+
+        if (lastMaterialActivityBySection.TryGetValue(section.Id.Value, out var lastMaterialActivityAt) &&
+            lastMaterialActivityAt > lastActivityAt)
+        {
+            lastActivityAt = lastMaterialActivityAt;
+        }
+
+        return lastActivityAt;
     }
 
     private static LibraryMaterialDto MapMaterial(Material material)

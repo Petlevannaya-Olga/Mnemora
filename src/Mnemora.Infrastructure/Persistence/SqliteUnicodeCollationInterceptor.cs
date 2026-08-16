@@ -4,14 +4,11 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace Mnemora.Infrastructure.Persistence;
 
-internal sealed class SqliteUnicodeCollationInterceptor
-    : DbConnectionInterceptor
+internal sealed class SqliteUnicodeCollationInterceptor : DbConnectionInterceptor
 {
-    public override void ConnectionOpened(
-        DbConnection connection,
-        ConnectionEndEventData eventData)
+    public override void ConnectionOpened(DbConnection connection, ConnectionEndEventData eventData)
     {
-        RegisterCollation(connection);
+        RegisterDatabaseFeatures(connection);
     }
 
     public override Task ConnectionOpenedAsync(
@@ -19,11 +16,11 @@ internal sealed class SqliteUnicodeCollationInterceptor
         ConnectionEndEventData eventData,
         CancellationToken cancellationToken = default)
     {
-        RegisterCollation(connection);
+        RegisterDatabaseFeatures(connection);
         return Task.CompletedTask;
     }
 
-    private static void RegisterCollation(DbConnection connection)
+    private static void RegisterDatabaseFeatures(DbConnection connection)
     {
         if (connection is not SqliteConnection sqliteConnection)
         {
@@ -33,5 +30,20 @@ internal sealed class SqliteUnicodeCollationInterceptor
         sqliteConnection.CreateCollation(
             SqliteCollations.UnicodeNoCase,
             StringComparer.OrdinalIgnoreCase.Compare);
+
+        sqliteConnection.CreateFunction<string?, string?, bool>(
+            SqliteFunctions.UnicodeContains,
+            UnicodeContains,
+            isDeterministic: true);
+    }
+
+    private static bool UnicodeContains(string? source, string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return true;
+        }
+
+        return source?.Contains(value, StringComparison.OrdinalIgnoreCase) == true;
     }
 }
