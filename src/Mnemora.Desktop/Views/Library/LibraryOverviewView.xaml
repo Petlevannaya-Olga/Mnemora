@@ -69,11 +69,13 @@
 
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource Mnemora.Brush.SurfaceMuted}" />
+                                <Setter TargetName="ButtonBorder" Property="Background"
+                                        Value="{DynamicResource Mnemora.Brush.SurfaceMuted}" />
                             </Trigger>
 
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Primary}" />
+                                <Setter TargetName="ButtonBorder" Property="BorderBrush"
+                                        Value="{DynamicResource Mnemora.Brush.Primary}" />
                                 <Setter TargetName="ButtonBorder" Property="Background" Value="#E6FBF8" />
                                 <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.PrimaryDark}" />
                             </Trigger>
@@ -115,6 +117,16 @@
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        </Style>
+
+        <Style x:Key="SectionCompactCardStyle" TargetType="Border">
+            <Setter Property="Height" Value="82" />
+            <Setter Property="Margin" Value="0,0,12,12" />
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Border}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="14" />
         </Style>
     </UserControl.Resources>
 
@@ -165,6 +177,14 @@
                 </ToggleButton>
 
                 <ToggleButton
+                    Command="{Binding ShowCompactTilesViewCommand}"
+                    IsChecked="{Binding IsCompactTilesView, Mode=OneWay}"
+                    Style="{StaticResource LibraryViewModeButtonStyle}"
+                    ToolTip="Компактные плитки">
+                    <materialDesign:PackIcon Width="24" Height="24" Kind="ViewModule" />
+                </ToggleButton>
+
+                <ToggleButton
                     Command="{Binding ShowTableViewCommand}"
                     IsChecked="{Binding IsTableView, Mode=OneWay}"
                     Style="{StaticResource LibraryViewModeButtonStyle}"
@@ -187,7 +207,8 @@
                     </Style>
                 </StackPanel.Style>
 
-                <ProgressBar Width="220" Height="4" Foreground="{DynamicResource Mnemora.Brush.Primary}" IsIndeterminate="True" />
+                <ProgressBar Width="220" Height="4" Foreground="{DynamicResource Mnemora.Brush.Primary}"
+                             IsIndeterminate="True" />
                 <TextBlock
                     Margin="0,18,0,0"
                     HorizontalAlignment="Center"
@@ -509,6 +530,77 @@
                     </ListBox.ItemTemplate>
                 </ListBox>
 
+                <ListBox
+                    Grid.Row="1"
+                    ItemsSource="{Binding CompactSectionRows}"
+                    ItemContainerStyle="{StaticResource SectionListBoxItemStyle}"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    ScrollViewer.CanContentScroll="True"
+                    ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                    ScrollViewer.ScrollChanged="SectionsScroll_OnScrollChanged"
+                    ScrollViewer.VerticalScrollBarVisibility="Auto"
+                    VirtualizingPanel.IsVirtualizing="True"
+                    VirtualizingPanel.VirtualizationMode="Recycling"
+                    Visibility="{Binding IsCompactTilesView, Converter={StaticResource BooleanToVisibilityConverter}}">
+
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel />
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <ItemsControl ItemsSource="{Binding Sections}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="5" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource SectionCompactCardStyle}"
+                                                ToolTip="{Binding Name}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <Border
+                                                    Width="46"
+                                                    Height="46"
+                                                    Background="{Binding Color, Converter={StaticResource SectionColorConverter}}"
+                                                    CornerRadius="11">
+                                                    <materialDesign:PackIcon
+                                                        Width="25"
+                                                        Height="25"
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="White"
+                                                        Kind="{Binding Icon, Converter={StaticResource SectionIconConverter}}" />
+                                                </Border>
+
+                                                <TextBlock
+                                                    Grid.Column="1"
+                                                    Margin="13,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    FontSize="15"
+                                                    FontWeight="SemiBold"
+                                                    Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                                    Text="{Binding Name}"
+                                                    TextTrimming="CharacterEllipsis" />
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
                 <DataGrid
                     Grid.Row="1"
                     ItemsSource="{Binding Sections}"
@@ -568,13 +660,23 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTextColumn Header="Темы" Width="75" Binding="{Binding TopicsCount}" ElementStyle="{StaticResource SectionTableNumberStyle}" />
-                        <DataGridTextColumn Header="Материалы" Width="100" Binding="{Binding MaterialsCount}" ElementStyle="{StaticResource SectionTableNumberStyle}" />
-                        <DataGridTextColumn Header="Статьи" Width="80" Binding="{Binding ArticlesCount}" ElementStyle="{StaticResource SectionTableNumberStyle}" />
-                        <DataGridTextColumn Header="Вопросы" Width="85" Binding="{Binding QuestionsCount}" ElementStyle="{StaticResource SectionTableNumberStyle}" />
-                        <DataGridTextColumn Header="Создан" Width="105" Binding="{Binding CreatedAtLocal, StringFormat={}{0:dd.MM.yyyy}}" ElementStyle="{StaticResource SectionTableTextStyle}" />
-                        <DataGridTextColumn Header="Изменён" Width="105" Binding="{Binding UpdatedAtLocal, StringFormat={}{0:dd.MM.yyyy}}" ElementStyle="{StaticResource SectionTableTextStyle}" />
-                        <DataGridTextColumn Header="Активность" Width="115" Binding="{Binding LastActivityAtLocal, StringFormat={}{0:dd.MM.yyyy}}" ElementStyle="{StaticResource SectionTableTextStyle}" />
+                        <DataGridTextColumn Header="Темы" Width="75" Binding="{Binding TopicsCount}"
+                                            ElementStyle="{StaticResource SectionTableNumberStyle}" />
+                        <DataGridTextColumn Header="Материалы" Width="100" Binding="{Binding MaterialsCount}"
+                                            ElementStyle="{StaticResource SectionTableNumberStyle}" />
+                        <DataGridTextColumn Header="Статьи" Width="80" Binding="{Binding ArticlesCount}"
+                                            ElementStyle="{StaticResource SectionTableNumberStyle}" />
+                        <DataGridTextColumn Header="Вопросы" Width="85" Binding="{Binding QuestionsCount}"
+                                            ElementStyle="{StaticResource SectionTableNumberStyle}" />
+                        <DataGridTextColumn Header="Создан" Width="105"
+                                            Binding="{Binding CreatedAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
+                                            ElementStyle="{StaticResource SectionTableTextStyle}" />
+                        <DataGridTextColumn Header="Изменён" Width="105"
+                                            Binding="{Binding UpdatedAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
+                                            ElementStyle="{StaticResource SectionTableTextStyle}" />
+                        <DataGridTextColumn Header="Активность" Width="115"
+                                            Binding="{Binding LastActivityAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
+                                            ElementStyle="{StaticResource SectionTableTextStyle}" />
                     </DataGrid.Columns>
                 </DataGrid>
 
@@ -584,7 +686,8 @@
                         VerticalAlignment="Center"
                         Orientation="Horizontal"
                         Visibility="{Binding IsLoadingNextPage, Converter={StaticResource BooleanToVisibilityConverter}}">
-                        <ProgressBar Width="120" Height="4" Foreground="{DynamicResource Mnemora.Brush.Primary}" IsIndeterminate="True" />
+                        <ProgressBar Width="120" Height="4" Foreground="{DynamicResource Mnemora.Brush.Primary}"
+                                     IsIndeterminate="True" />
                         <TextBlock
                             Margin="14,0,0,0"
                             VerticalAlignment="Center"

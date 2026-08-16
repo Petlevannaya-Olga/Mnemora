@@ -4,4 +4,5 @@ public enum LibraryViewMode
 {
     Table,
     Tiles,
+    CompactTiles
 }

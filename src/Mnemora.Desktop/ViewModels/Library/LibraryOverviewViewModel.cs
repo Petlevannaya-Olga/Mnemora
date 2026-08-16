@@ -27,6 +27,8 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
     private bool _isLoaded;
     private bool _isViewModeLoaded;
 
+    public ObservableCollection<LibrarySectionRowViewModel> CompactSectionRows { get; } = [];
+
     public LibraryOverviewViewModel(
         IQueryDispatcher queryDispatcher,
         ISettingsService settingsService,
@@ -83,7 +85,10 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
 
     [ObservableProperty] private LibrarySectionSortOption _selectedSortOption;
 
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsTableView))] [NotifyPropertyChangedFor(nameof(IsTilesView))]
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsTableView))]
+    [NotifyPropertyChangedFor(nameof(IsTilesView))]
+    [NotifyPropertyChangedFor(nameof(IsCompactTilesView))]
     private LibraryViewMode _viewMode = LibraryViewMode.Tiles;
 
     public bool HasSections => Sections.Count > 0;
@@ -107,6 +112,8 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
     public bool IsTableView => ViewMode == LibraryViewMode.Table;
 
     public bool IsTilesView => ViewMode == LibraryViewMode.Tiles;
+
+    public bool IsCompactTilesView => ViewMode == LibraryViewMode.CompactTiles;
 
     public async Task LoadAsync(CancellationToken cancellationToken = default)
     {
@@ -158,6 +165,12 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
     {
         return SetViewModeAsync(LibraryViewMode.Tiles, cancellationToken);
     }
+    
+    [RelayCommand]
+    private Task ShowCompactTilesViewAsync(CancellationToken cancellationToken)
+    {
+        return SetViewModeAsync(LibraryViewMode.CompactTiles, cancellationToken);
+    }
 
     partial void OnSearchTextChanged(string? value)
     {
@@ -207,6 +220,7 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
 
         Sections.Clear();
         SectionRows.Clear();
+        CompactSectionRows.Clear();
 
         NotifyCollectionStateChanged();
 
@@ -328,12 +342,21 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
 
     private void AddToSectionRows(LibrarySectionCardViewModel section)
     {
-        var row = SectionRows.LastOrDefault();
+        AddToRows(SectionRows, section, 3);
+        AddToRows(CompactSectionRows, section, 5);
+    }
+
+    private static void AddToRows(
+        ObservableCollection<LibrarySectionRowViewModel> rows,
+        LibrarySectionCardViewModel section,
+        int capacity)
+    {
+        var row = rows.LastOrDefault();
 
         if (row is null || row.IsFull)
         {
-            row = new LibrarySectionRowViewModel();
-            SectionRows.Add(row);
+            row = new LibrarySectionRowViewModel(capacity);
+            rows.Add(row);
         }
 
         row.Add(section);
