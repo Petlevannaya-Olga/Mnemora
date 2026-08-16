@@ -5,4 +5,7 @@ public sealed record LibraryTopicDto(
     string Name,
     string Color,
     string Icon,
-    DateTime CreatedAt);
+    DateTime CreatedAt)
+{
+    public IReadOnlyList<LibraryMaterialDto> Materials { get; init; } = [];
+}

@@ -16,7 +16,13 @@ public interface IMaterialContentStore
         QuestionContent content,
         CancellationToken cancellationToken);
 
-    UnitResult<Error> Delete(
+    Task<Result<ArticleContent, Error>> ReadArticleAsync(
         MaterialId materialId,
-        MaterialType materialType);
+        CancellationToken cancellationToken);
+
+    Task<Result<QuestionContent, Error>> ReadQuestionAsync(
+        MaterialId materialId,
+        CancellationToken cancellationToken);
+
+    UnitResult<Error> Delete(MaterialId materialId, MaterialType materialType);
 }
