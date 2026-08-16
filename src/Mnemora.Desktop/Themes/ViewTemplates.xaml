@@ -125,10 +125,6 @@
         <library:LibraryManagementView />
     </DataTemplate>
 
-    <DataTemplate DataType="{x:Type libraryViewModels:LibraryOrderViewModel}">
-        <library:LibraryOrderView />
-    </DataTemplate>
-
     <DataTemplate DataType="{x:Type libraryViewModels:AllMaterialsViewModel}">
         <library:AllMaterialsView />
     </DataTemplate>

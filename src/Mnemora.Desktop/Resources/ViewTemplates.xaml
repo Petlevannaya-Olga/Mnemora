@@ -137,7 +137,4 @@
         <library:LibraryTopicView />
     </DataTemplate>
     
-    <DataTemplate DataType="{x:Type libraryViewModels:LibraryOrderViewModel}">
-        <library:LibraryOrderView />
-    </DataTemplate>
 </ResourceDictionary>

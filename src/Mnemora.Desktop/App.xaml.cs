@@ -205,7 +205,6 @@ public partial class App : System.Windows.Application
         services.AddTransient<AllMaterialsViewModel>();
         services.AddTransient<LibraryOverviewViewModel>();
         services.AddTransient<LibraryManagementViewModel>();
-        services.AddTransient<LibraryOrderViewModel>();
         services.AddTransient<DeleteTopicDialogViewModel>();
         services.AddTransient<EditTopicDialogViewModel>();
         services.AddTransient<SelectSectionIconDialogViewModel>();

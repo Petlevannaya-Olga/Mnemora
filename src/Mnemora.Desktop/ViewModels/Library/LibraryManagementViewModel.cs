@@ -943,7 +943,7 @@ public sealed partial class LibraryManagementViewModel(
     private void AddSimpleSectionToRows(LibraryManagementSectionViewModel section)
     {
         AddSimpleSectionToRows(SimpleSectionRows, section, 3);
-        AddSimpleSectionToRows(SimpleCompactSectionRows, section, 5);
+        AddSimpleSectionToRows(SimpleCompactSectionRows, section, 4);
     }
 
     private static void AddSimpleSectionToRows(
