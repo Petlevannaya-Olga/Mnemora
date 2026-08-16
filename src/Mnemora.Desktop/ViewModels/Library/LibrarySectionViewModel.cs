@@ -2,61 +2,45 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
-using Mnemora.Application.Library.GetSectionsPage;
+using Mnemora.Application.Library.GetTopicsPage;
 using Mnemora.Application.Queries;
 using Mnemora.Contracts;
 using Mnemora.Desktop.Navigation;
-using Mnemora.Desktop.Settings;
 using Mnemora.Desktop.ViewModels.Common;
 
 namespace Mnemora.Desktop.ViewModels.Library;
 
-public sealed partial class LibraryOverviewViewModel : ViewModelBase
+public sealed partial class LibrarySectionViewModel(
+    IQueryDispatcher queryDispatcher,
+    IPageNavigationService pageNavigationService,
+    ILogger<LibrarySectionViewModel> logger)
+    : ViewModelBase
 {
     private const int PageSize = 30;
+    private const int TopicsPerRow = 3;
     private static readonly TimeSpan SearchDelay = TimeSpan.FromMilliseconds(350);
 
-    private readonly IQueryDispatcher _queryDispatcher;
-    private readonly ISettingsService _settingsService;
-    private readonly IPageNavigationService _pageNavigationService;
-    private readonly ILogger<LibraryOverviewViewModel> _logger;
-
     private CancellationToken _viewCancellationToken;
+    private Guid _sectionId;
     private int _nextOffset;
     private int _loadVersion;
     private int _searchVersion;
     private int? _loadingVersion;
     private bool _isLoaded;
-    private bool _isViewModeLoaded;
 
-    public ObservableCollection<LibrarySectionRowViewModel> CompactSectionRows { get; } = [];
+    public ObservableCollection<LibraryTopicCardViewModel> Topics { get; } = [];
 
-    public LibraryOverviewViewModel(
-        IQueryDispatcher queryDispatcher,
-        IPageNavigationService pageNavigationService,
-        ISettingsService settingsService,
-        ILogger<LibraryOverviewViewModel> logger)
-    {
-        _queryDispatcher = queryDispatcher;
-        _pageNavigationService = pageNavigationService;
-        _settingsService = settingsService;
-        _logger = logger;
+    public ObservableCollection<LibraryTopicRowViewModel> TopicRows { get; } = [];
 
-        SortOptions =
-        [
-            new("Последняя активность", LibrarySectionSort.RecentActivity),
-            new("По названию", LibrarySectionSort.Name),
-            new("Сначала новые", LibrarySectionSort.Newest)
-        ];
+    public IReadOnlyList<LibraryTopicSortOption> SortOptions { get; } =
+    [
+        new("Последняя активность", LibraryTopicSort.RecentActivity),
+        new("По названию", LibraryTopicSort.Name),
+        new("Сначала новые", LibraryTopicSort.Newest)
+    ];
 
-        _selectedSortOption = SortOptions[0];
-    }
-
-    public ObservableCollection<LibrarySectionCardViewModel> Sections { get; } = [];
-
-    public ObservableCollection<LibrarySectionRowViewModel> SectionRows { get; } = [];
-
-    public IReadOnlyList<LibrarySectionSortOption> SortOptions { get; }
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(SectionTitle))]
+    private LibrarySectionHeaderDto? _section;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsEmpty))]
@@ -64,10 +48,10 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
     [NotifyCanExecuteChangedFor(nameof(LoadNextPageCommand))]
     private bool _isLoading;
 
-    [ObservableProperty] [NotifyCanExecuteChangedFor(nameof(LoadNextPageCommand))]
+    [ObservableProperty, NotifyCanExecuteChangedFor(nameof(LoadNextPageCommand))]
     private bool _isLoadingNextPage;
 
-    [ObservableProperty] [NotifyCanExecuteChangedFor(nameof(LoadNextPageCommand))]
+    [ObservableProperty, NotifyCanExecuteChangedFor(nameof(LoadNextPageCommand))]
     private bool _hasMore = true;
 
     [ObservableProperty]
@@ -87,15 +71,14 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(HasNoSearchResults))]
     private string? _searchText;
 
-    [ObservableProperty] private LibrarySectionSortOption _selectedSortOption;
-
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsTableView))]
-    [NotifyPropertyChangedFor(nameof(IsTilesView))]
-    [NotifyPropertyChangedFor(nameof(IsCompactTilesView))]
-    private LibraryOverviewViewMode _overviewViewMode = LibraryOverviewViewMode.Tiles;
+    private LibraryTopicSortOption _selectedSortOption = new(
+        "Последняя активность",
+        LibraryTopicSort.RecentActivity);
 
-    public bool HasSections => Sections.Count > 0;
+    public string SectionTitle => Section?.Name ?? "Раздел";
+
+    public bool HasTopics => Topics.Count > 0;
 
     public bool HasError => !string.IsNullOrWhiteSpace(ErrorMessage);
 
@@ -104,30 +87,49 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
     public bool IsEmpty =>
         !IsLoading &&
         !HasError &&
-        !HasSections &&
+        !HasTopics &&
         string.IsNullOrWhiteSpace(SearchText);
 
     public bool HasNoSearchResults =>
         !IsLoading &&
         !HasError &&
-        !HasSections &&
+        !HasTopics &&
         !string.IsNullOrWhiteSpace(SearchText);
 
-    public bool IsTableView => OverviewViewMode == LibraryOverviewViewMode.Table;
+    public void Initialize(Guid sectionId)
+    {
+        if (sectionId == Guid.Empty)
+        {
+            throw new ArgumentException("Идентификатор раздела не может быть пустым.", nameof(sectionId));
+        }
 
-    public bool IsTilesView => OverviewViewMode == LibraryOverviewViewMode.Tiles;
+        if (_isLoaded)
+        {
+            throw new InvalidOperationException("Нельзя изменить раздел после начала загрузки.");
+        }
 
-    public bool IsCompactTilesView => OverviewViewMode == LibraryOverviewViewMode.CompactTiles;
+        _sectionId = sectionId;
+    }
 
     public async Task LoadAsync(CancellationToken cancellationToken = default)
     {
+        if (_sectionId == Guid.Empty)
+        {
+            throw new InvalidOperationException("Раздел не был инициализирован.");
+        }
+
         _viewCancellationToken = cancellationToken;
         _isLoaded = true;
 
         LoadNextPageCommand.NotifyCanExecuteChanged();
 
-        await EnsureViewModeLoadedAsync(cancellationToken);
         await ReloadCoreAsync(cancellationToken);
+    }
+
+    [RelayCommand]
+    private void NavigateBack()
+    {
+        pageNavigationService.NavigateTo<LibraryOverviewViewModel>();
     }
 
     [RelayCommand]
@@ -157,35 +159,17 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
 
         await LoadPageAsync(_loadVersion, linkedCancellationTokenSource.Token);
     }
-
-    [RelayCommand]
-    private Task ShowTableViewAsync(CancellationToken cancellationToken)
-    {
-        return SetViewModeAsync(LibraryOverviewViewMode.Table, cancellationToken);
-    }
-
-    [RelayCommand]
-    private Task ShowTilesViewAsync(CancellationToken cancellationToken)
-    {
-        return SetViewModeAsync(LibraryOverviewViewMode.Tiles, cancellationToken);
-    }
-
-    [RelayCommand]
-    private Task ShowCompactTilesViewAsync(CancellationToken cancellationToken)
-    {
-        return SetViewModeAsync(LibraryOverviewViewMode.CompactTiles, cancellationToken);
-    }
     
     [RelayCommand]
-    private void OpenSection(LibrarySectionCardViewModel? section)
+    private void OpenTopic(LibraryTopicCardViewModel? topic)
     {
-        if (section is null)
+        if (topic is null)
         {
             return;
         }
 
-        _pageNavigationService.NavigateTo<LibrarySectionViewModel>(
-            viewModel => viewModel.Initialize(section.Id));
+        pageNavigationService.NavigateTo<LibraryTopicViewModel>(
+            viewModel => viewModel.Initialize(topic.Id));
     }
 
     partial void OnSearchTextChanged(string? value)
@@ -198,7 +182,7 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
         }
     }
 
-    partial void OnSelectedSortOptionChanged(LibrarySectionSortOption value)
+    partial void OnSelectedSortOptionChanged(LibraryTopicSortOption value)
     {
         if (_isLoaded)
         {
@@ -209,6 +193,7 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
     private bool CanLoadNextPage()
     {
         return _isLoaded &&
+               _sectionId != Guid.Empty &&
                HasMore &&
                !IsLoading &&
                !IsLoadingNextPage &&
@@ -234,9 +219,8 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
         ErrorMessage = null;
         NextPageErrorMessage = null;
 
-        Sections.Clear();
-        SectionRows.Clear();
-        CompactSectionRows.Clear();
+        Topics.Clear();
+        TopicRows.Clear();
 
         NotifyCollectionStateChanged();
 
@@ -270,15 +254,16 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
 
         try
         {
-            var query = new GetLibrarySectionsPageQuery(
+            var query = new GetLibraryTopicsPageQuery(
+                _sectionId,
                 SearchText,
                 SelectedSortOption.Sort,
                 _nextOffset,
                 PageSize);
 
-            var result = await _queryDispatcher.SendAsync<
-                GetLibrarySectionsPageQuery,
-                LibrarySectionsPageDto>(
+            var result = await queryDispatcher.SendAsync<
+                GetLibraryTopicsPageQuery,
+                LibraryTopicsPageDto>(
                 query,
                 cancellationToken);
 
@@ -289,8 +274,8 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
 
             if (result.IsFailure)
             {
-                var message = result.Error.FirstOrDefault()?.Message
-                              ?? "Не удалось загрузить разделы";
+                string message = result.Error.FirstOrDefault()?.Message
+                                 ?? "Не удалось загрузить темы раздела";
 
                 if (isInitialPage)
                 {
@@ -304,12 +289,14 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
                 return;
             }
 
-            foreach (var section in result.Value.Items)
-            {
-                var sectionViewModel = new LibrarySectionCardViewModel(section);
+            Section = result.Value.Section;
 
-                Sections.Add(sectionViewModel);
-                AddToSectionRows(sectionViewModel);
+            foreach (var topic in result.Value.Items)
+            {
+                var topicViewModel = new LibraryTopicCardViewModel(topic);
+
+                Topics.Add(topicViewModel);
+                AddToTopicRows(topicViewModel);
             }
 
             _nextOffset = result.Value.NextOffset;
@@ -323,7 +310,10 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "Не удалось загрузить страницу разделов");
+            logger.LogError(
+                exception,
+                "Не удалось загрузить страницу тем раздела {SectionId}",
+                _sectionId);
 
             if (loadVersion != _loadVersion)
             {
@@ -332,11 +322,11 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
 
             if (isInitialPage)
             {
-                ErrorMessage = "Не удалось загрузить разделы";
+                ErrorMessage = "Не удалось загрузить темы раздела";
             }
             else
             {
-                NextPageErrorMessage = "Не удалось загрузить следующую порцию разделов";
+                NextPageErrorMessage = "Не удалось загрузить следующую порцию тем";
             }
         }
         finally
@@ -356,26 +346,17 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
         }
     }
 
-    private void AddToSectionRows(LibrarySectionCardViewModel section)
+    private void AddToTopicRows(LibraryTopicCardViewModel topic)
     {
-        AddToRows(SectionRows, section, 3);
-        AddToRows(CompactSectionRows, section, 5);
-    }
-
-    private static void AddToRows(
-        ObservableCollection<LibrarySectionRowViewModel> rows,
-        LibrarySectionCardViewModel section,
-        int capacity)
-    {
-        var row = rows.LastOrDefault();
+        var row = TopicRows.LastOrDefault();
 
         if (row is null || row.IsFull)
         {
-            row = new LibrarySectionRowViewModel(capacity);
-            rows.Add(row);
+            row = new LibraryTopicRowViewModel(TopicsPerRow);
+            TopicRows.Add(row);
         }
 
-        row.Add(section);
+        row.Add(topic);
     }
 
     private async Task ReloadAfterSearchDelayAsync(int searchVersion)
@@ -407,69 +388,14 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
         }
     }
 
-    private async Task EnsureViewModeLoadedAsync(CancellationToken cancellationToken)
-    {
-        if (_isViewModeLoaded)
-        {
-            return;
-        }
-
-        try
-        {
-            var settings = await _settingsService.LoadAsync(cancellationToken);
-
-            OverviewViewMode = settings.LibraryOverviewViewMode;
-            _isViewModeLoaded = true;
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (Exception exception)
-        {
-            _logger.LogWarning(exception, "Не удалось загрузить режим просмотра разделов");
-
-            OverviewViewMode = LibraryOverviewViewMode.Tiles;
-            _isViewModeLoaded = true;
-        }
-    }
-
-    private async Task SetViewModeAsync(
-        LibraryOverviewViewMode overviewViewMode,
-        CancellationToken cancellationToken)
-    {
-        if (OverviewViewMode == overviewViewMode)
-        {
-            return;
-        }
-
-        OverviewViewMode = overviewViewMode;
-
-        try
-        {
-            await _settingsService.SaveLibraryOverviewViewModeAsync(overviewViewMode, cancellationToken);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (Exception exception)
-        {
-            _logger.LogWarning(
-                exception,
-                "Не удалось сохранить режим просмотра разделов {ViewMode}",
-                overviewViewMode);
-        }
-    }
-
     private void NotifyCollectionStateChanged()
     {
-        OnPropertyChanged(nameof(HasSections));
+        OnPropertyChanged(nameof(HasTopics));
         OnPropertyChanged(nameof(IsEmpty));
         OnPropertyChanged(nameof(HasNoSearchResults));
     }
 }
 
-public sealed record LibrarySectionSortOption(
+public sealed record LibraryTopicSortOption(
     string Name,
-    LibrarySectionSort Sort);
+    LibraryTopicSort Sort);

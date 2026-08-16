@@ -129,4 +129,11 @@
         <library:AllMaterialsView />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type libraryViewModels:LibrarySectionViewModel}">
+        <library:LibrarySectionView />
+    </DataTemplate>
+    
+    <DataTemplate DataType="{x:Type libraryViewModels:LibraryTopicViewModel}">
+        <library:LibraryTopicView />
+    </DataTemplate>
 </ResourceDictionary>

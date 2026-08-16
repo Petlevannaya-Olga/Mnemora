@@ -200,6 +200,9 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IDialogService, DialogService>();
         services.AddSingleton<INotificationService, NotificationService>();
 
+        services.AddTransient<LibraryTopicViewModel>();
+        services.AddTransient<LibraryOverviewViewModel>();
+        services.AddTransient<LibrarySectionViewModel>();
         services.AddTransient<AllMaterialsViewModel>();
         services.AddTransient<LibraryOverviewViewModel>();
         services.AddTransient<LibraryManagementViewModel>();

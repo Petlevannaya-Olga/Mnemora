@@ -79,9 +79,17 @@ public sealed partial class AppShellViewModel : ViewModelBase
     public bool IsHomeSelected => CurrentPageViewModel is HomeViewModel;
 
     public bool IsLibrarySelected =>
-        CurrentPageViewModel is LibraryOverviewViewModel or AllMaterialsViewModel or LibraryManagementViewModel;
+        CurrentPageViewModel is LibraryOverviewViewModel
+            or LibrarySectionViewModel
+            or LibraryTopicViewModel
+            or AllMaterialsViewModel
+            or LibraryManagementViewModel;
 
-    public bool IsLibraryOverviewSelected => CurrentPageViewModel is LibraryOverviewViewModel;
+    public bool IsLibraryOverviewSelected =>
+        CurrentPageViewModel is LibraryOverviewViewModel
+            or LibrarySectionViewModel
+            or LibraryTopicViewModel;
+    
     public bool IsAllMaterialsSelected => CurrentPageViewModel is AllMaterialsViewModel;
     public bool IsLibraryManagementSelected => CurrentPageViewModel is LibraryManagementViewModel;
     public bool IsPracticeSelected => CurrentPageViewModel is PracticeViewModel;

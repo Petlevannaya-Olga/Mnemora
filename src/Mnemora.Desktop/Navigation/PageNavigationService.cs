@@ -3,28 +3,26 @@ using Mnemora.Desktop.ViewModels.Common;
 
 namespace Mnemora.Desktop.Navigation;
 
-public sealed class PageNavigationService(
-    IServiceProvider serviceProvider)
-    : IPageNavigationService
+public sealed class PageNavigationService(IServiceProvider serviceProvider) : IPageNavigationService
 {
-    public ViewModelBase? CurrentPageViewModel
+    public ViewModelBase? CurrentPageViewModel { get; private set; }
+
+    public event EventHandler? CurrentPageViewModelChanged;
+
+    public void NavigateTo<TViewModel>() where TViewModel : ViewModelBase
     {
-        get;
-        private set;
+        NavigateTo<TViewModel>(_ => { });
     }
 
-    public event EventHandler?
-        CurrentPageViewModelChanged;
-
-    public void NavigateTo<TViewModel>()
-        where TViewModel : ViewModelBase
+    public void NavigateTo<TViewModel>(Action<TViewModel> initialize) where TViewModel : ViewModelBase
     {
-        CurrentPageViewModel =
-            serviceProvider
-                .GetRequiredService<TViewModel>();
+        ArgumentNullException.ThrowIfNull(initialize);
 
-        CurrentPageViewModelChanged?.Invoke(
-            this,
-            EventArgs.Empty);
+        var viewModel = serviceProvider.GetRequiredService<TViewModel>();
+
+        initialize(viewModel);
+
+        CurrentPageViewModel = viewModel;
+        CurrentPageViewModelChanged?.Invoke(this, EventArgs.Empty);
     }
 }

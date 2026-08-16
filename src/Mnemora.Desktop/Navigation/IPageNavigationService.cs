@@ -8,6 +8,7 @@ public interface IPageNavigationService
 
     event EventHandler? CurrentPageViewModelChanged;
 
-    void NavigateTo<TViewModel>()
-        where TViewModel : ViewModelBase;
+    void NavigateTo<TViewModel>() where TViewModel : ViewModelBase;
+
+    void NavigateTo<TViewModel>(Action<TViewModel> initialize) where TViewModel : ViewModelBase;
 }

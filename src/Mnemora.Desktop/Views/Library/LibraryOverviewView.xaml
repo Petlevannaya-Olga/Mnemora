@@ -29,6 +29,16 @@
             <Setter Property="CornerRadius" Value="16" />
         </Style>
 
+        <Style x:Key="SectionCompactCardStyle" TargetType="Border">
+            <Setter Property="Height" Value="82" />
+            <Setter Property="Margin" Value="0,0,12,12" />
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Border}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="14" />
+        </Style>
+
         <Style x:Key="SectionListBoxItemStyle" TargetType="ListBoxItem">
             <Setter Property="Padding" Value="0" />
             <Setter Property="Margin" Value="0" />
@@ -43,6 +53,34 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+        </Style>
+
+        <Style x:Key="SectionNavigationButtonStyle" TargetType="Button">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="IsTabStop" Value="False" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <ContentPresenter
+                            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Opacity" Value="0.9" />
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Opacity" Value="0.72" />
+                </Trigger>
+            </Style.Triggers>
         </Style>
 
         <Style x:Key="LibraryViewModeButtonStyle" TargetType="ToggleButton">
@@ -69,13 +107,17 @@
 
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="ButtonBorder" Property="Background"
-                                        Value="{DynamicResource Mnemora.Brush.SurfaceMuted}" />
+                                <Setter
+                                    TargetName="ButtonBorder"
+                                    Property="Background"
+                                    Value="{DynamicResource Mnemora.Brush.SurfaceMuted}" />
                             </Trigger>
 
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="ButtonBorder" Property="BorderBrush"
-                                        Value="{DynamicResource Mnemora.Brush.Primary}" />
+                                <Setter
+                                    TargetName="ButtonBorder"
+                                    Property="BorderBrush"
+                                    Value="{DynamicResource Mnemora.Brush.Primary}" />
                                 <Setter TargetName="ButtonBorder" Property="Background" Value="#E6FBF8" />
                                 <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.PrimaryDark}" />
                             </Trigger>
@@ -90,7 +132,10 @@
             <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.TextSecondary}" />
         </Style>
 
-        <Style x:Key="SectionTableNumberStyle" BasedOn="{StaticResource SectionTableTextStyle}" TargetType="TextBlock">
+        <Style
+            x:Key="SectionTableNumberStyle"
+            BasedOn="{StaticResource SectionTableTextStyle}"
+            TargetType="TextBlock">
             <Setter Property="HorizontalAlignment" Value="Center" />
         </Style>
 
@@ -118,16 +163,6 @@
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         </Style>
-
-        <Style x:Key="SectionCompactCardStyle" TargetType="Border">
-            <Setter Property="Height" Value="82" />
-            <Setter Property="Margin" Value="0,0,12,12" />
-            <Setter Property="Padding" Value="16" />
-            <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Border}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="14" />
-        </Style>
     </UserControl.Resources>
 
     <Grid Background="{DynamicResource Mnemora.Brush.SurfaceMuted}">
@@ -139,7 +174,10 @@
 
         <StackPanel Margin="32,28,32,22">
             <TextBlock Style="{StaticResource Mnemora.Heading}" Text="Библиотека" />
-            <TextBlock Margin="0,6,0,0" Style="{StaticResource Mnemora.Description}" Text="Разделы базы знаний" />
+            <TextBlock
+                Margin="0,6,0,0"
+                Style="{StaticResource Mnemora.Description}"
+                Text="Разделы базы знаний" />
         </StackPanel>
 
         <Grid Grid.Row="1" Margin="32,0,32,24">
@@ -207,8 +245,12 @@
                     </Style>
                 </StackPanel.Style>
 
-                <ProgressBar Width="220" Height="4" Foreground="{DynamicResource Mnemora.Brush.Primary}"
-                             IsIndeterminate="True" />
+                <ProgressBar
+                    Width="220"
+                    Height="4"
+                    Foreground="{DynamicResource Mnemora.Brush.Primary}"
+                    IsIndeterminate="True" />
+
                 <TextBlock
                     Margin="0,18,0,0"
                     HorizontalAlignment="Center"
@@ -225,22 +267,8 @@
                 Background="{DynamicResource Mnemora.Brush.Surface}"
                 BorderBrush="{DynamicResource Mnemora.Brush.Border}"
                 BorderThickness="1"
-                CornerRadius="16">
-
-                <Border.Style>
-                    <Style TargetType="Border">
-                        <Setter Property="Visibility" Value="Collapsed" />
-                        <Style.Triggers>
-                            <MultiDataTrigger>
-                                <MultiDataTrigger.Conditions>
-                                    <Condition Binding="{Binding HasError}" Value="True" />
-                                    <Condition Binding="{Binding IsLoading}" Value="False" />
-                                </MultiDataTrigger.Conditions>
-                                <Setter Property="Visibility" Value="Visible" />
-                            </MultiDataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Border.Style>
+                CornerRadius="16"
+                Visibility="{Binding HasError, Converter={StaticResource BooleanToVisibilityConverter}}">
 
                 <StackPanel>
                     <materialDesign:PackIcon
@@ -280,18 +308,8 @@
                 Background="{DynamicResource Mnemora.Brush.Surface}"
                 BorderBrush="{DynamicResource Mnemora.Brush.Border}"
                 BorderThickness="1"
-                CornerRadius="16">
-
-                <Border.Style>
-                    <Style TargetType="Border">
-                        <Setter Property="Visibility" Value="Collapsed" />
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsEmpty}" Value="True">
-                                <Setter Property="Visibility" Value="Visible" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Border.Style>
+                CornerRadius="16"
+                Visibility="{Binding IsEmpty, Converter={StaticResource BooleanToVisibilityConverter}}">
 
                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                     <materialDesign:PackIcon
@@ -317,17 +335,10 @@
                 </StackPanel>
             </Border>
 
-            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                <StackPanel.Style>
-                    <Style TargetType="StackPanel">
-                        <Setter Property="Visibility" Value="Collapsed" />
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding HasNoSearchResults}" Value="True">
-                                <Setter Property="Visibility" Value="Visible" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </StackPanel.Style>
+            <StackPanel
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Visibility="{Binding HasNoSearchResults, Converter={StaticResource BooleanToVisibilityConverter}}">
 
                 <materialDesign:PackIcon
                     Width="56"
@@ -379,6 +390,8 @@
                     Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
                     Text="Разделы" />
 
+                <!-- Подробные плитки -->
+
                 <ListBox
                     Grid.Row="1"
                     ItemsSource="{Binding SectionRows}"
@@ -410,125 +423,135 @@
 
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Style="{StaticResource SectionOverviewCardStyle}">
-                                            <Grid>
-                                                <Grid.RowDefinitions>
-                                                    <RowDefinition Height="Auto" />
-                                                    <RowDefinition Height="Auto" />
-                                                    <RowDefinition Height="Auto" />
-                                                    <RowDefinition Height="*" />
-                                                    <RowDefinition Height="Auto" />
-                                                </Grid.RowDefinitions>
+                                        <Button
+                                            Command="{Binding DataContext.OpenSectionCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                            CommandParameter="{Binding}"
+                                            Style="{StaticResource SectionNavigationButtonStyle}"
+                                            ToolTip="Открыть раздел">
 
+                                            <Border Style="{StaticResource SectionOverviewCardStyle}">
                                                 <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="Auto" />
-                                                        <ColumnDefinition Width="*" />
-                                                        <ColumnDefinition Width="Auto" />
-                                                    </Grid.ColumnDefinitions>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="*" />
+                                                        <RowDefinition Height="Auto" />
+                                                    </Grid.RowDefinitions>
 
-                                                    <Border
-                                                        Width="54"
-                                                        Height="54"
-                                                        Background="{Binding Color, Converter={StaticResource SectionColorConverter}}"
-                                                        CornerRadius="13">
-                                                        <materialDesign:PackIcon
-                                                            Width="29"
-                                                            Height="29"
-                                                            HorizontalAlignment="Center"
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto" />
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                        </Grid.ColumnDefinitions>
+
+                                                        <Border
+                                                            Width="54"
+                                                            Height="54"
+                                                            Background="{Binding Color, Converter={StaticResource SectionColorConverter}}"
+                                                            CornerRadius="13">
+                                                            <materialDesign:PackIcon
+                                                                Width="29"
+                                                                Height="29"
+                                                                HorizontalAlignment="Center"
+                                                                VerticalAlignment="Center"
+                                                                Foreground="White"
+                                                                Kind="{Binding Icon, Converter={StaticResource SectionIconConverter}}" />
+                                                        </Border>
+
+                                                        <TextBlock
+                                                            Grid.Column="1"
+                                                            Margin="16,0,12,0"
                                                             VerticalAlignment="Center"
-                                                            Foreground="White"
-                                                            Kind="{Binding Icon, Converter={StaticResource SectionIconConverter}}" />
-                                                    </Border>
+                                                            FontSize="18"
+                                                            FontWeight="SemiBold"
+                                                            Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                                            Text="{Binding Name}"
+                                                            TextTrimming="CharacterEllipsis"
+                                                            TextWrapping="Wrap" />
+
+                                                        <Border
+                                                            Grid.Column="2"
+                                                            Padding="10,5"
+                                                            VerticalAlignment="Top"
+                                                            Background="#E6FBF8"
+                                                            CornerRadius="7"
+                                                            Visibility="{Binding HasPlannedMaterials, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                            d:Visibility="Visible">
+
+                                                            <TextBlock
+                                                                FontSize="12"
+                                                                FontWeight="SemiBold"
+                                                                Foreground="{DynamicResource Mnemora.Brush.PrimaryDark}"
+                                                                Text="{Binding PlannedText}"
+                                                                d:Text="3 в плане" />
+                                                        </Border>
+                                                    </Grid>
 
                                                     <TextBlock
-                                                        Grid.Column="1"
-                                                        Margin="16,0,12,0"
-                                                        VerticalAlignment="Center"
-                                                        FontSize="18"
-                                                        FontWeight="SemiBold"
-                                                        Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                                                        Text="{Binding Name}"
-                                                        TextTrimming="CharacterEllipsis"
-                                                        TextWrapping="Wrap" />
+                                                        Grid.Row="1"
+                                                        Margin="0,16,0,0"
+                                                        FontSize="14"
+                                                        Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                        Text="{Binding StructureText}" />
 
-                                                    <Border
-                                                        Grid.Column="2"
-                                                        Padding="10,5"
-                                                        VerticalAlignment="Top"
-                                                        Background="#E6FBF8"
-                                                        CornerRadius="7"
-                                                        Visibility="{Binding HasPlannedMaterials, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                    <StackPanel
+                                                        Grid.Row="2"
+                                                        Margin="0,15,0,0"
+                                                        Visibility="{Binding HasProgress, Converter={StaticResource BooleanToVisibilityConverter}}"
                                                         d:Visibility="Visible">
+
+                                                        <TextBlock
+                                                            FontSize="13"
+                                                            Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                                            Text="{Binding ProgressText}"
+                                                            d:Text="12 из 18 изучено" />
+
+                                                        <ProgressBar
+                                                            Height="5"
+                                                            Margin="0,9,0,0"
+                                                            Maximum="100"
+                                                            Background="#E6E8F1"
+                                                            BorderThickness="0"
+                                                            Foreground="{StaticResource Mnemora.Brush.BrandGradient}"
+                                                            Value="{Binding ProgressPercentage, Mode=OneWay}"
+                                                            d:Value="67" />
+                                                    </StackPanel>
+
+                                                    <StackPanel Grid.Row="4" Margin="0,18,0,0">
                                                         <TextBlock
                                                             FontSize="12"
-                                                            FontWeight="SemiBold"
-                                                            Foreground="{DynamicResource Mnemora.Brush.PrimaryDark}"
-                                                            Text="{Binding PlannedText}"
-                                                            d:Text="3 в плане" />
-                                                    </Border>
-                                                </Grid>
-
-                                                <TextBlock
-                                                    Grid.Row="1"
-                                                    Margin="0,16,0,0"
-                                                    FontSize="14"
-                                                    Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                                                    Text="{Binding StructureText}" />
-
-                                                <StackPanel
-                                                    Grid.Row="2"
-                                                    Margin="0,15,0,0"
-                                                    Visibility="{Binding HasProgress, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                                    d:Visibility="Visible">
-
-                                                    <TextBlock
-                                                        FontSize="13"
-                                                        Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                                                        Text="{Binding ProgressText}"
-                                                        d:Text="12 из 18 изучено" />
-
-                                                    <ProgressBar
-                                                        Height="5"
-                                                        Margin="0,9,0,0"
-                                                        Maximum="100"
-                                                        Background="#E6E8F1"
-                                                        BorderThickness="0"
-                                                        Foreground="{StaticResource Mnemora.Brush.BrandGradient}"
-                                                        Value="{Binding ProgressPercentage, Mode=OneWay}"
-                                                        d:Value="67" />
-                                                </StackPanel>
-
-                                                <StackPanel Grid.Row="4" Margin="0,18,0,0">
-                                                    <TextBlock
-                                                        FontSize="12"
-                                                        Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                                                        Text="{Binding ActivityText}" />
-
-                                                    <Grid Margin="0,10,0,0">
-                                                        <TextBlock
-                                                            VerticalAlignment="Center"
-                                                            FontSize="13"
                                                             Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                                                            Text="{Binding MaterialTypesText}" />
+                                                            Text="{Binding ActivityText}" />
 
-                                                        <materialDesign:PackIcon
-                                                            Width="22"
-                                                            Height="22"
-                                                            HorizontalAlignment="Right"
-                                                            VerticalAlignment="Center"
-                                                            Foreground="{DynamicResource Mnemora.Brush.Secondary}"
-                                                            Kind="ChevronRight" />
-                                                    </Grid>
-                                                </StackPanel>
-                                            </Grid>
-                                        </Border>
+                                                        <Grid Margin="0,10,0,0">
+                                                            <TextBlock
+                                                                VerticalAlignment="Center"
+                                                                FontSize="13"
+                                                                Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                                Text="{Binding MaterialTypesText}" />
+
+                                                            <materialDesign:PackIcon
+                                                                Width="22"
+                                                                Height="22"
+                                                                HorizontalAlignment="Right"
+                                                                VerticalAlignment="Center"
+                                                                Foreground="{DynamicResource Mnemora.Brush.Secondary}"
+                                                                Kind="ChevronRight" />
+                                                        </Grid>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </Button>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
+
+                <!-- Компактные плитки -->
 
                 <ListBox
                     Grid.Row="1"
@@ -561,45 +584,56 @@
 
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Style="{StaticResource SectionCompactCardStyle}"
+                                        <Button
+                                            Command="{Binding DataContext.OpenSectionCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                            CommandParameter="{Binding}"
+                                            Style="{StaticResource SectionNavigationButtonStyle}"
+                                            ToolTip="Открыть раздел">
+
+                                            <Border
+                                                Style="{StaticResource SectionCompactCardStyle}"
                                                 ToolTip="{Binding Name}">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="*" />
-                                                </Grid.ColumnDefinitions>
 
-                                                <Border
-                                                    Width="46"
-                                                    Height="46"
-                                                    Background="{Binding Color, Converter={StaticResource SectionColorConverter}}"
-                                                    CornerRadius="11">
-                                                    <materialDesign:PackIcon
-                                                        Width="25"
-                                                        Height="25"
-                                                        HorizontalAlignment="Center"
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <Border
+                                                        Width="46"
+                                                        Height="46"
+                                                        Background="{Binding Color, Converter={StaticResource SectionColorConverter}}"
+                                                        CornerRadius="11">
+                                                        <materialDesign:PackIcon
+                                                            Width="25"
+                                                            Height="25"
+                                                            HorizontalAlignment="Center"
+                                                            VerticalAlignment="Center"
+                                                            Foreground="White"
+                                                            Kind="{Binding Icon, Converter={StaticResource SectionIconConverter}}" />
+                                                    </Border>
+
+                                                    <TextBlock
+                                                        Grid.Column="1"
+                                                        Margin="13,0,0,0"
                                                         VerticalAlignment="Center"
-                                                        Foreground="White"
-                                                        Kind="{Binding Icon, Converter={StaticResource SectionIconConverter}}" />
-                                                </Border>
-
-                                                <TextBlock
-                                                    Grid.Column="1"
-                                                    Margin="13,0,0,0"
-                                                    VerticalAlignment="Center"
-                                                    FontSize="15"
-                                                    FontWeight="SemiBold"
-                                                    Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                                                    Text="{Binding Name}"
-                                                    TextTrimming="CharacterEllipsis" />
-                                            </Grid>
-                                        </Border>
+                                                        FontSize="15"
+                                                        FontWeight="SemiBold"
+                                                        Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                                        Text="{Binding Name}"
+                                                        TextTrimming="CharacterEllipsis" />
+                                                </Grid>
+                                            </Border>
+                                        </Button>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
+
+                <!-- Таблица -->
 
                 <DataGrid
                     Grid.Row="1"
@@ -660,25 +694,74 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTextColumn Header="Темы" Width="75" Binding="{Binding TopicsCount}"
-                                            ElementStyle="{StaticResource SectionTableNumberStyle}" />
-                        <DataGridTextColumn Header="Материалы" Width="100" Binding="{Binding MaterialsCount}"
-                                            ElementStyle="{StaticResource SectionTableNumberStyle}" />
-                        <DataGridTextColumn Header="Статьи" Width="80" Binding="{Binding ArticlesCount}"
-                                            ElementStyle="{StaticResource SectionTableNumberStyle}" />
-                        <DataGridTextColumn Header="Вопросы" Width="85" Binding="{Binding QuestionsCount}"
-                                            ElementStyle="{StaticResource SectionTableNumberStyle}" />
-                        <DataGridTextColumn Header="Создан" Width="105"
-                                            Binding="{Binding CreatedAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
-                                            ElementStyle="{StaticResource SectionTableTextStyle}" />
-                        <DataGridTextColumn Header="Изменён" Width="105"
-                                            Binding="{Binding UpdatedAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
-                                            ElementStyle="{StaticResource SectionTableTextStyle}" />
-                        <DataGridTextColumn Header="Активность" Width="115"
-                                            Binding="{Binding LastActivityAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
-                                            ElementStyle="{StaticResource SectionTableTextStyle}" />
+                        <DataGridTextColumn
+                            Header="Темы"
+                            Width="75"
+                            Binding="{Binding TopicsCount}"
+                            ElementStyle="{StaticResource SectionTableNumberStyle}" />
+
+                        <DataGridTextColumn
+                            Header="Материалы"
+                            Width="100"
+                            Binding="{Binding MaterialsCount}"
+                            ElementStyle="{StaticResource SectionTableNumberStyle}" />
+
+                        <DataGridTextColumn
+                            Header="Статьи"
+                            Width="80"
+                            Binding="{Binding ArticlesCount}"
+                            ElementStyle="{StaticResource SectionTableNumberStyle}" />
+
+                        <DataGridTextColumn
+                            Header="Вопросы"
+                            Width="85"
+                            Binding="{Binding QuestionsCount}"
+                            ElementStyle="{StaticResource SectionTableNumberStyle}" />
+
+                        <DataGridTextColumn
+                            Header="Создан"
+                            Width="105"
+                            Binding="{Binding CreatedAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
+                            ElementStyle="{StaticResource SectionTableTextStyle}" />
+
+                        <DataGridTextColumn
+                            Header="Изменён"
+                            Width="105"
+                            Binding="{Binding UpdatedAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
+                            ElementStyle="{StaticResource SectionTableTextStyle}" />
+
+                        <DataGridTextColumn
+                            Header="Активность"
+                            Width="115"
+                            Binding="{Binding LastActivityAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
+                            ElementStyle="{StaticResource SectionTableTextStyle}" />
+
+                        <DataGridTemplateColumn Width="54" CanUserResize="False">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button
+                                        Width="34"
+                                        Height="34"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Command="{Binding DataContext.OpenSectionCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                        CommandParameter="{Binding}"
+                                        Style="{StaticResource SectionNavigationButtonStyle}"
+                                        ToolTip="Открыть раздел">
+
+                                        <materialDesign:PackIcon
+                                            Width="21"
+                                            Height="21"
+                                            Foreground="{DynamicResource Mnemora.Brush.Secondary}"
+                                            Kind="ChevronRight" />
+                                    </Button>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
                     </DataGrid.Columns>
                 </DataGrid>
+
+                <!-- Догрузка -->
 
                 <Grid Grid.Row="2" MinHeight="52">
                     <StackPanel
@@ -686,8 +769,13 @@
                         VerticalAlignment="Center"
                         Orientation="Horizontal"
                         Visibility="{Binding IsLoadingNextPage, Converter={StaticResource BooleanToVisibilityConverter}}">
-                        <ProgressBar Width="120" Height="4" Foreground="{DynamicResource Mnemora.Brush.Primary}"
-                                     IsIndeterminate="True" />
+
+                        <ProgressBar
+                            Width="120"
+                            Height="4"
+                            Foreground="{DynamicResource Mnemora.Brush.Primary}"
+                            IsIndeterminate="True" />
+
                         <TextBlock
                             Margin="14,0,0,0"
                             VerticalAlignment="Center"
@@ -700,6 +788,7 @@
                         VerticalAlignment="Center"
                         Orientation="Horizontal"
                         Visibility="{Binding HasNextPageError, Converter={StaticResource BooleanToVisibilityConverter}}">
+
                         <TextBlock
                             Margin="0,0,16,0"
                             VerticalAlignment="Center"
