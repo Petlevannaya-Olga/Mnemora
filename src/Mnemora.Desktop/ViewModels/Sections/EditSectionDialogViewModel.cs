@@ -2,6 +2,7 @@
 using Mnemora.Application.Commands;
 using Mnemora.Application.Sections.Update;
 using Mnemora.Contracts;
+using Mnemora.Contracts.Library;
 using Mnemora.Desktop.Dialogs;
 using Mnemora.Desktop.ViewModels.Common;
 using Mnemora.Domain.Sections;

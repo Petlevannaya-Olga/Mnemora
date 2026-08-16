@@ -24,8 +24,8 @@ public sealed class AppSettings
         }
     }
 
-    public LibraryManagementViewMode LibraryManagementViewMode { get; set; } = LibraryManagementViewMode.Table;
-
+    public LibraryManagementViewMode LibraryManagementViewMode { get; set; } = LibraryManagementViewMode.Tiles;
+    
     public LibraryTopicsViewMode LibraryTopicsViewMode { get; set; } = LibraryTopicsViewMode.Tiles;
 
     [JsonPropertyName("libraryViewMode")]

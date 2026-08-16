@@ -62,6 +62,11 @@ public sealed class MaterialConfiguration
             .HasColumnName("updated_at")
             .IsRequired();
 
+        builder.Property(material => material.DisplayOrder)
+            .HasColumnName("display_order")
+            .HasDefaultValue(Material.DefaultDisplayOrder)
+            .IsRequired();
+
         ConfigureDiscriminator(builder);
         ConfigureExperienceRewards(builder);
         ConfigureTags(builder);
@@ -73,6 +78,9 @@ public sealed class MaterialConfiguration
 
         builder.HasIndex(material => material.TopicId)
             .HasDatabaseName("ix_materials_topic_id");
+
+        builder.HasIndex(material => new { material.TopicId, material.DisplayOrder })
+            .HasDatabaseName("ix_materials_topic_id_display_order");
     }
 
     private static void ConfigureDiscriminator(

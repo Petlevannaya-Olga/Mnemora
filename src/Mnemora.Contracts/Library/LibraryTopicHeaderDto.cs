@@ -1,4 +1,4 @@
-﻿namespace Mnemora.Contracts;
+﻿namespace Mnemora.Contracts.Library;
 
 public sealed record LibraryTopicHeaderDto(
     Guid Id,

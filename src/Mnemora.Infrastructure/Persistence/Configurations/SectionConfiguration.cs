@@ -50,9 +50,17 @@ public sealed class SectionConfiguration
             .HasColumnName("updated_at")
             .IsRequired();
 
+        builder.Property(section => section.DisplayOrder)
+            .HasColumnName("display_order")
+            .HasDefaultValue(Section.DefaultDisplayOrder)
+            .IsRequired();
+
         builder.HasIndex(section => section.Name)
             .IsUnique()
             .HasDatabaseName(
                 "ux_sections_name");
+
+        builder.HasIndex(section => section.DisplayOrder)
+            .HasDatabaseName("ix_sections_display_order");
     }
 }

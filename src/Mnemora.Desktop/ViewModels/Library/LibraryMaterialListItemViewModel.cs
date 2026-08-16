@@ -1,4 +1,5 @@
 ﻿using Mnemora.Contracts;
+using Mnemora.Contracts.Library;
 
 namespace Mnemora.Desktop.ViewModels.Library;
 

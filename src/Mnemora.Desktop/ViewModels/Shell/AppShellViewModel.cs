@@ -1,7 +1,5 @@
-﻿using System.Collections.ObjectModel;
-using CommunityToolkit.Mvvm.Input;
+﻿using CommunityToolkit.Mvvm.Input;
 using Mnemora.Desktop.Navigation;
-using Mnemora.Desktop.Notifications;
 using Mnemora.Desktop.ViewModels.Common;
 using Mnemora.Desktop.ViewModels.Home;
 using Mnemora.Desktop.ViewModels.Library;
@@ -12,18 +10,13 @@ namespace Mnemora.Desktop.ViewModels.Shell;
 public sealed partial class AppShellViewModel : ViewModelBase
 {
     private readonly IPageNavigationService _pageNavigationService;
-    private readonly INotificationService _notificationService;
     private ViewModelBase? _currentPageViewModel;
     private bool _isSidebarExpanded = true;
     private bool _isLibraryMenuExpanded;
 
-    public AppShellViewModel(
-        IPageNavigationService pageNavigationService,
-        INotificationService notificationService)
+    public AppShellViewModel(IPageNavigationService pageNavigationService)
     {
         _pageNavigationService = pageNavigationService;
-        _notificationService = notificationService;
-
         _currentPageViewModel = pageNavigationService.CurrentPageViewModel;
         _isLibraryMenuExpanded = IsLibrarySelected;
         _pageNavigationService.CurrentPageViewModelChanged += OnCurrentPageViewModelChanged;
@@ -34,8 +27,6 @@ public sealed partial class AppShellViewModel : ViewModelBase
         }
     }
 
-    public ReadOnlyObservableCollection<NotificationMessage> Notifications => _notificationService.Notifications;
-    
     public ViewModelBase? CurrentPageViewModel
     {
         get => _currentPageViewModel;
@@ -77,33 +68,16 @@ public sealed partial class AppShellViewModel : ViewModelBase
 
     public bool IsLibrarySubmenuVisible => IsSidebarExpanded && IsLibraryMenuExpanded;
     public bool IsHomeSelected => CurrentPageViewModel is HomeViewModel;
-
-    public bool IsLibrarySelected =>
-        CurrentPageViewModel is LibraryOverviewViewModel
-            or LibrarySectionViewModel
-            or LibraryTopicViewModel
-            or AllMaterialsViewModel
-            or LibraryManagementViewModel;
-
-    public bool IsLibraryOverviewSelected =>
-        CurrentPageViewModel is LibraryOverviewViewModel
-            or LibrarySectionViewModel
-            or LibraryTopicViewModel;
-    
+    public bool IsLibrarySelected => CurrentPageViewModel is LibraryOverviewViewModel or AllMaterialsViewModel or LibraryManagementViewModel or LibraryOrderViewModel;
+    public bool IsLibraryOverviewSelected => CurrentPageViewModel is LibraryOverviewViewModel;
     public bool IsAllMaterialsSelected => CurrentPageViewModel is AllMaterialsViewModel;
-    public bool IsLibraryManagementSelected => CurrentPageViewModel is LibraryManagementViewModel;
+    public bool IsLibraryManagementSelected => CurrentPageViewModel is LibraryManagementViewModel or LibraryOrderViewModel;
     public bool IsPracticeSelected => CurrentPageViewModel is PracticeViewModel;
     public bool IsTrainingSelected => CurrentPageViewModel is TrainingViewModel;
     public bool IsPlanSelected => CurrentPageViewModel is PlanViewModel;
     public bool IsProgressSelected => CurrentPageViewModel is ProgressViewModel;
     public bool IsSettingsSelected => CurrentPageViewModel is SettingsViewModel;
 
-    [RelayCommand]
-    private void DismissNotification(Guid notificationId)
-    {
-        _notificationService.Dismiss(notificationId);
-    }
-    
     [RelayCommand]
     private void ToggleSidebar()
     {

@@ -4,6 +4,8 @@ namespace Mnemora.Domain.Topics;
 
 public sealed class Topic
 {
+    public const int DefaultDisplayOrder = int.MaxValue;
+
     /// <summary>
     /// Идентификатор темы
     /// </summary>
@@ -38,6 +40,11 @@ public sealed class Topic
     /// Дата последнего изменения
     /// </summary>
     public DateTime UpdatedAt { get; private set; }
+
+    /// <summary>
+    /// Позиция темы внутри раздела.
+    /// </summary>
+    public int DisplayOrder { get; private set; } = DefaultDisplayOrder;
 
     // EF Core
     private Topic()
@@ -98,5 +105,11 @@ public sealed class Topic
             name,
             Color,
             Icon);
+    }
+
+    public void ChangeDisplayOrder(int displayOrder)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(displayOrder);
+        DisplayOrder = displayOrder;
     }
 }

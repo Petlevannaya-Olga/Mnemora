@@ -188,6 +188,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<ICommandDispatcher, CommandDispatcher>();
         services.AddSingleton<IQueryDispatcher, QueryDispatcher>();
 
+        services.AddSingleton<INotificationService, NotificationService>();
         services.AddSingleton<INavigationService, NavigationService>();
         services.AddSingleton<IPageNavigationService, PageNavigationService>();
 
@@ -198,14 +199,13 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IAiConnectionService, DevelopmentAiConnectionService>();
 
         services.AddSingleton<IDialogService, DialogService>();
-        services.AddSingleton<INotificationService, NotificationService>();
 
         services.AddTransient<LibraryTopicViewModel>();
-        services.AddTransient<LibraryOverviewViewModel>();
         services.AddTransient<LibrarySectionViewModel>();
         services.AddTransient<AllMaterialsViewModel>();
         services.AddTransient<LibraryOverviewViewModel>();
         services.AddTransient<LibraryManagementViewModel>();
+        services.AddTransient<LibraryOrderViewModel>();
         services.AddTransient<DeleteTopicDialogViewModel>();
         services.AddTransient<EditTopicDialogViewModel>();
         services.AddTransient<SelectSectionIconDialogViewModel>();

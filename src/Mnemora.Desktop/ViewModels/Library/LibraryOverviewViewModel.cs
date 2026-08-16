@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Mnemora.Application.Library.GetSectionsPage;
 using Mnemora.Application.Queries;
 using Mnemora.Contracts;
+using Mnemora.Contracts.Library;
 using Mnemora.Desktop.Navigation;
 using Mnemora.Desktop.Settings;
 using Mnemora.Desktop.ViewModels.Common;

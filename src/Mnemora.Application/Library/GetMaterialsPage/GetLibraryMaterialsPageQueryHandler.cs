@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Mnemora.Application.Database;
 using Mnemora.Contracts;
+using Mnemora.Contracts.Library;
 using Mnemora.Domain.Materials;
 using Mnemora.Domain.Topics;
 using Mnemora.Shared;

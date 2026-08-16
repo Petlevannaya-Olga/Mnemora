@@ -7,6 +7,7 @@ namespace Mnemora.Domain.Materials;
 public abstract class Material
 {
     public const int MaxTags = 10;
+    public const int DefaultDisplayOrder = int.MaxValue;
 
     private readonly List<MaterialTag> _tags = [];
 
@@ -30,7 +31,15 @@ public abstract class Material
 
     public DateTime UpdatedAt { get; private set; }
 
+    public int DisplayOrder { get; private set; } = DefaultDisplayOrder;
+
     public abstract MaterialType Type { get; }
+
+    public void ChangeDisplayOrder(int displayOrder)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(displayOrder);
+        DisplayOrder = displayOrder;
+    }
 
     // EF Core
     protected Material()
@@ -198,6 +207,32 @@ public abstract class Material
 
         _tags.Clear();
         _tags.AddRange(preparedTags);
+        Touch();
+
+        return UnitResult.Success<Error>();
+    }
+
+    protected UnitResult<Error> ChangeTopic(TopicId? topicId)
+    {
+        if (topicId is null)
+        {
+            return CommonErrors.IsRequired(nameof(topicId));
+        }
+
+        if (TopicId == topicId)
+        {
+            return UnitResult.Success<Error>();
+        }
+
+        TopicId = topicId;
+        Touch();
+
+        return UnitResult.Success<Error>();
+    }
+
+    protected UnitResult<Error> StartNewLearningRevision()
+    {
+        LearningRevision++;
         Touch();
 
         return UnitResult.Success<Error>();

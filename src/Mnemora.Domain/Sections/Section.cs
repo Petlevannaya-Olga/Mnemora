@@ -2,6 +2,8 @@
 
 public sealed class Section
 {
+    public const int DefaultDisplayOrder = int.MaxValue;
+
     public SectionId Id { get; private set; } = null!;
 
     public SectionName Name { get; private set; } = null!;
@@ -13,6 +15,8 @@ public sealed class Section
     public DateTime CreatedAt { get; private set; }
 
     public DateTime UpdatedAt { get; private set; }
+
+    public int DisplayOrder { get; private set; } = DefaultDisplayOrder;
 
     // EF Core
     private Section()
@@ -69,5 +73,11 @@ public sealed class Section
             name,
             Color,
             Icon);
+    }
+
+    public void ChangeDisplayOrder(int displayOrder)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(displayOrder);
+        DisplayOrder = displayOrder;
     }
 }

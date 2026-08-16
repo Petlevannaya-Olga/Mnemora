@@ -66,10 +66,18 @@ public sealed class TopicConfiguration
             .IsRequired()
             .HasColumnName("updated_at");
 
+        builder.Property(topic => topic.DisplayOrder)
+            .HasColumnName("display_order")
+            .HasDefaultValue(Topic.DefaultDisplayOrder)
+            .IsRequired();
+
         builder.HasIndex(topic => new { topic.SectionId, topic.Name })
             .IsUnique()
             .HasDatabaseName(
                 "ux_topics_section_id_name");
+
+        builder.HasIndex(topic => new { topic.SectionId, topic.DisplayOrder })
+            .HasDatabaseName("ix_topics_section_id_display_order");
 
         builder.HasOne<Section>()
             .WithMany()

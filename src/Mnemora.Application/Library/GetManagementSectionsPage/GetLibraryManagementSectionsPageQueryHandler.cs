@@ -1,4 +1,4 @@
-﻿using CSharpFunctionalExtensions;
+using CSharpFunctionalExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Mnemora.Application.Database;
@@ -6,25 +6,24 @@ using Mnemora.Contracts;
 using Mnemora.Contracts.Library;
 using Mnemora.Domain.Materials;
 using Mnemora.Domain.Sections;
-using Mnemora.Domain.Topics;
 using Mnemora.Shared;
 using Mnemora.Shared.Abstractions;
 
-namespace Mnemora.Application.Library.GetSectionsPage;
+namespace Mnemora.Application.Library.GetManagementSectionsPage;
 
-public sealed class GetLibrarySectionsPageQueryHandler(
+public sealed class GetLibraryManagementSectionsPageQueryHandler(
     IReadDbContext readDbContext,
-    ILogger<GetLibrarySectionsPageQueryHandler> logger)
-    : IQueryHandler<LibrarySectionsPageDto, GetLibrarySectionsPageQuery>
+    ILogger<GetLibraryManagementSectionsPageQueryHandler> logger)
+    : IQueryHandler<LibraryManagementSectionsPageDto, GetLibraryManagementSectionsPageQuery>
 {
-    public async Task<Result<LibrarySectionsPageDto, Errors>> Handle(
-        GetLibrarySectionsPageQuery request,
+    public async Task<Result<LibraryManagementSectionsPageDto, Errors>> Handle(
+        GetLibraryManagementSectionsPageQuery request,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            var sectionsQuery = readDbContext.SectionsRead;
-            var search = request.Search?.Trim();
+            IQueryable<Section> sectionsQuery = readDbContext.SectionsRead;
+            string? search = request.Search?.Trim();
 
             if (!string.IsNullOrEmpty(search))
             {
@@ -34,18 +33,20 @@ public sealed class GetLibrarySectionsPageQueryHandler(
                         search));
             }
 
+            int totalCount = await sectionsQuery.CountAsync(cancellationToken);
+
             var sectionActivities = readDbContext.SectionsRead
                 .Select(section => new
                 {
                     SectionId = section.Id,
-                    ActivityAt = section.UpdatedAt
+                    ActivityAt = section.UpdatedAt,
                 });
 
             var topicActivities = readDbContext.TopicsRead
                 .Select(topic => new
                 {
                     SectionId = topic.SectionId,
-                    ActivityAt = topic.UpdatedAt
+                    ActivityAt = topic.UpdatedAt,
                 });
 
             var materialActivities =
@@ -54,7 +55,7 @@ public sealed class GetLibrarySectionsPageQueryHandler(
                 select new
                 {
                     SectionId = topic.SectionId,
-                    ActivityAt = material.UpdatedAt
+                    ActivityAt = material.UpdatedAt,
                 };
 
             var lastActivities = sectionActivities
@@ -64,7 +65,7 @@ public sealed class GetLibrarySectionsPageQueryHandler(
                 .Select(group => new
                 {
                     SectionId = group.Key,
-                    LastActivityAt = group.Max(activity => activity.ActivityAt)
+                    LastActivityAt = group.Max(activity => activity.ActivityAt),
                 });
 
             var sectionRows =
@@ -73,26 +74,32 @@ public sealed class GetLibrarySectionsPageQueryHandler(
                 select new
                 {
                     Section = section,
-                    activity.LastActivityAt
+                    activity.LastActivityAt,
                 };
 
             var orderedRows = request.Sort switch
             {
-                LibrarySectionSort.Name => sectionRows
+                LibraryManagementSectionSort.Custom => sectionRows
+                    .OrderBy(row => row.Section.DisplayOrder)
+                    .ThenBy(row => row.Section.CreatedAt)
+                    .ThenBy(row => row.Section.Id),
+
+                LibraryManagementSectionSort.Name => sectionRows
                     .OrderBy(row => row.Section.Name)
                     .ThenBy(row => row.Section.Id),
 
-                LibrarySectionSort.Newest => sectionRows
+                LibraryManagementSectionSort.Newest => sectionRows
                     .OrderByDescending(row => row.Section.CreatedAt)
                     .ThenBy(row => row.Section.Id),
 
-                LibrarySectionSort.RecentActivity => sectionRows
+                LibraryManagementSectionSort.RecentActivity => sectionRows
                     .OrderByDescending(row => row.LastActivityAt)
                     .ThenBy(row => row.Section.Id),
 
                 _ => sectionRows
-                    .OrderBy(row => row.Section.Name)
-                    .ThenBy(row => row.Section.Id)
+                    .OrderBy(row => row.Section.DisplayOrder)
+                    .ThenBy(row => row.Section.CreatedAt)
+                    .ThenBy(row => row.Section.Id),
             };
 
             var loadedRows = await orderedRows
@@ -100,7 +107,7 @@ public sealed class GetLibrarySectionsPageQueryHandler(
                 .Take(request.PageSize + 1)
                 .ToListAsync(cancellationToken);
 
-            var hasMore = loadedRows.Count > request.PageSize;
+            bool hasMore = loadedRows.Count > request.PageSize;
             var pageRows = loadedRows.Take(request.PageSize).ToArray();
             var sectionIds = pageRows.Select(row => row.Section.Id).ToArray();
 
@@ -147,9 +154,9 @@ public sealed class GetLibrarySectionsPageQueryHandler(
             var items = pageRows
                 .Select(row =>
                 {
-                    var topicsCount = topicsCountBySection.GetValueOrDefault(row.Section.Id);
-                    var articlesCount = articlesCountBySection.GetValueOrDefault(row.Section.Id);
-                    var questionsCount = questionsCountBySection.GetValueOrDefault(row.Section.Id);
+                    int topicsCount = topicsCountBySection.GetValueOrDefault(row.Section.Id);
+                    int articlesCount = articlesCountBySection.GetValueOrDefault(row.Section.Id);
+                    int questionsCount = questionsCountBySection.GetValueOrDefault(row.Section.Id);
 
                     return new LibrarySectionOverviewDto(
                         row.Section.Id.Value,
@@ -166,26 +173,25 @@ public sealed class GetLibrarySectionsPageQueryHandler(
                 })
                 .ToArray();
 
-            var result = new LibrarySectionsPageDto(
+            var result = new LibraryManagementSectionsPageDto(
                 items,
                 request.Offset + items.Length,
-                hasMore);
+                hasMore,
+                totalCount);
 
-            return Result.Success<LibrarySectionsPageDto, Errors>(result);
+            return Result.Success<LibraryManagementSectionsPageDto, Errors>(result);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            logger.LogInformation("Получение страницы разделов было отменено");
-
+            logger.LogInformation("Получение страницы разделов управления было отменено");
             return CommonErrors.OperationCancelled(
-                "library.sections.page.cancelled").ToErrors();
+                "library.management.sections.page.cancelled").ToErrors();
         }
         catch (Exception exception)
         {
-            logger.LogError(exception, "Не удалось получить страницу разделов");
-
+            logger.LogError(exception, "Не удалось получить страницу разделов управления");
             return CommonErrors.Db(
-                "library.sections.page.failed",
+                "library.management.sections.page.failed",
                 "Не удалось загрузить разделы").ToErrors();
         }
     }

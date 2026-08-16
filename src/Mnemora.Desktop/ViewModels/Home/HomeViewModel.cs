@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 using Mnemora.Application.Library.Get;
 using Mnemora.Application.Queries;
 using Mnemora.Contracts;
+using Mnemora.Contracts.Library;
 using Mnemora.Desktop.Dialogs;
 using Mnemora.Desktop.Navigation;
 using Mnemora.Desktop.Storage;

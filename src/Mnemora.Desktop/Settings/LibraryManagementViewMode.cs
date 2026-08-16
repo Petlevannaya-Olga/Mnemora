@@ -3,5 +3,6 @@
 public enum LibraryManagementViewMode
 {
     Table,
-    Tiles
+    Tiles,
+    CompactTiles
 }

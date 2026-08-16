@@ -125,19 +125,12 @@
         <library:LibraryManagementView />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type libraryViewModels:LibraryOrderViewModel}">
+        <library:LibraryOrderView />
+    </DataTemplate>
+
     <DataTemplate DataType="{x:Type libraryViewModels:AllMaterialsViewModel}">
         <library:AllMaterialsView />
     </DataTemplate>
 
-    <DataTemplate DataType="{x:Type libraryViewModels:LibrarySectionViewModel}">
-        <library:LibrarySectionView />
-    </DataTemplate>
-    
-    <DataTemplate DataType="{x:Type libraryViewModels:LibraryTopicViewModel}">
-        <library:LibraryTopicView />
-    </DataTemplate>
-    
-    <DataTemplate DataType="{x:Type libraryViewModels:LibraryOrderViewModel}">
-        <library:LibraryOrderView />
-    </DataTemplate>
 </ResourceDictionary>
