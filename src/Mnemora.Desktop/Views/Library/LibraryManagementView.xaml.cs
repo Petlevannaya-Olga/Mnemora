@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using Mnemora.Application.Library.Order;
+using Mnemora.Desktop.Dialogs;
 using Mnemora.Desktop.ViewModels.Library;
 
 namespace Mnemora.Desktop.Views.Library;
@@ -190,7 +191,23 @@ public partial class LibraryManagementView : UserControl
                 dialog.Owner = owner;
             }
 
-            if (dialog.ShowDialog() != true)
+            var overlayHost =
+                System.Windows.Application.Current.MainWindow as IDialogOverlayHost;
+
+            bool? dialogResult;
+
+            overlayHost?.ShowDialogOverlay();
+
+            try
+            {
+                dialogResult = dialog.ShowDialog();
+            }
+            finally
+            {
+                overlayHost?.HideDialogOverlay();
+            }
+
+            if (dialogResult != true)
             {
                 return;
             }

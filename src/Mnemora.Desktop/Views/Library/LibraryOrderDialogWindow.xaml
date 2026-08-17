@@ -5,7 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     Width="900"
-    Height="660"
+    Height="690"
     AllowsTransparency="True"
     Background="Transparent"
     ResizeMode="NoResize"
@@ -17,46 +17,108 @@
     TextOptions.TextRenderingMode="ClearType"
     UseLayoutRounding="True">
 
-
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
 
-        <Style x:Key="OrderGridColumnHeaderStyle"
-               TargetType="DataGridColumnHeader">
-            <Setter Property="Height" Value="44" />
-            <Setter Property="Padding" Value="14,0" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="FontWeight" Value="SemiBold" />
+        <!-- Те же базовые стили строк и ячеек, что используются в таблицах управления. -->
+        <Style x:Key="OrderGridTextStyle" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
             <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.TextSecondary}" />
-            <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.SurfaceMuted}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Border}" />
-            <Setter Property="BorderThickness" Value="0,0,0,1" />
         </Style>
 
-        <Style x:Key="OrderGridCellStyle"
-               TargetType="DataGridCell">
-            <Setter Property="Padding" Value="14,0" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Style
+            x:Key="OrderGridNumberStyle"
+            BasedOn="{StaticResource OrderGridTextStyle}"
+            TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Center" />
+        </Style>
+
+        <Style x:Key="OrderGridRowStyle" TargetType="DataGridRow">
+            <Setter Property="MinHeight" Value="72" />
+            <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridRow">
+                        <Grid>
+                            <Border
+                                x:Name="RowBackground"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                                BorderThickness="0,0,0,1" />
+
+                            <Border
+                                x:Name="SelectionIndicator"
+                                Width="4"
+                                Margin="0,9,0,9"
+                                HorizontalAlignment="Left"
+                                Background="{DynamicResource Mnemora.Brush.Primary}"
+                                CornerRadius="0,3,3,0"
+                                Visibility="Collapsed" />
+
+                            <DataGridCellsPresenter />
+                        </Grid>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="RowBackground" Property="Background" Value="#F4F8FC" />
+                            </Trigger>
+
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="RowBackground" Property="Background" Value="#E8F9F6" />
+                                <Setter TargetName="SelectionIndicator" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
-        <Style x:Key="OrderGridRowStyle"
-               TargetType="DataGridRow">
-            <Setter Property="Height" Value="58" />
-            <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Border}" />
-            <Setter Property="BorderThickness" Value="0,0,0,1" />
+        <Style x:Key="OrderGridCellStyle" TargetType="DataGridCell">
+            <Setter Property="Padding" Value="16,9" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridCell">
+                        <Border
+                            Padding="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter
+                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
             <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#F8F7FF" />
-                </Trigger>
                 <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Background" Value="#F2EEFF" />
+                    <Setter Property="Background" Value="Transparent" />
+                    <Setter Property="BorderThickness" Value="0" />
                 </Trigger>
             </Style.Triggers>
+        </Style>
+
+        <Style
+            x:Key="OrderGridHandleCellStyle"
+            BasedOn="{StaticResource OrderGridCellStyle}"
+            TargetType="DataGridCell">
+            <Setter Property="Padding" Value="10,9,4,9" />
+        </Style>
+
+        <Style
+            x:Key="OrderGridPositionCellStyle"
+            BasedOn="{StaticResource OrderGridCellStyle}"
+            TargetType="DataGridCell">
+            <Setter Property="Padding" Value="8,9,16,9" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
         </Style>
     </Window.Resources>
 
@@ -82,9 +144,11 @@
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="22" />
+                    <RowDefinition Height="20" />
                     <RowDefinition Height="*" />
-                    <RowDefinition Height="22" />
+                    <RowDefinition Height="16" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="18" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
@@ -117,11 +181,14 @@
                             FontWeight="SemiBold"
                             Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
                             Text="{Binding DialogTitle}" />
-                        <StackPanel Margin="0,4,0,0" Orientation="Horizontal">
+
+                        <StackPanel Margin="0,4,0,0"
+                                    Orientation="Horizontal">
                             <TextBlock
                                 FontSize="13"
                                 Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                                Text="Перетащите строки в нужном порядке" />
+                                Text="Перетащите строки — линия покажет точное место вставки" />
+
                             <TextBlock
                                 Margin="10,0,0,0"
                                 FontSize="13"
@@ -142,7 +209,7 @@
                     </Button>
                 </Grid>
 
-                <!-- Таблица -->
+                <!-- Таблица порядка -->
                 <Border Grid.Row="2"
                         Background="{DynamicResource Mnemora.Brush.Surface}"
                         BorderBrush="{DynamicResource Mnemora.Brush.Border}"
@@ -163,11 +230,11 @@
                             CanUserResizeRows="False"
                             CanUserSortColumns="False"
                             CellStyle="{StaticResource OrderGridCellStyle}"
-                            ColumnHeaderStyle="{StaticResource OrderGridColumnHeaderStyle}"
                             EnableColumnVirtualization="True"
                             EnableRowVirtualization="True"
                             GridLinesVisibility="None"
-                            HeadersVisibility="Column"
+                            HeadersVisibility="None"
+                            ColumnHeaderHeight="0"
                             IsReadOnly="True"
                             PreviewMouseLeftButtonDown="OrderGrid_OnPreviewMouseLeftButtonDown"
                             PreviewMouseMove="OrderGrid_OnPreviewMouseMove"
@@ -185,7 +252,9 @@
                             VirtualizingPanel.VirtualizationMode="Recycling">
 
                             <DataGrid.Columns>
-                                <DataGridTemplateColumn Width="48">
+                                <DataGridTemplateColumn
+                                    Width="48"
+                                    CellStyle="{StaticResource OrderGridHandleCellStyle}">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Border
@@ -194,67 +263,119 @@
                                                 Background="Transparent"
                                                 ToolTip="Перетащить">
                                                 <materialDesign:PackIcon
-                                                    Width="19"
-                                                    Height="19"
+                                                    Width="20"
+                                                    Height="20"
                                                     HorizontalAlignment="Center"
                                                     VerticalAlignment="Center"
-                                                    Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                    Foreground="{DynamicResource Mnemora.Brush.Secondary}"
                                                     Kind="DragVertical" />
                                             </Border>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTextColumn
-                                    Width="64"
-                                    Header="№"
-                                    Binding="{Binding Position}" />
-
-                                <DataGridTemplateColumn
-                                    Width="*"
-                                    MinWidth="300"
-                                    Header="Название">
+                                <DataGridTemplateColumn Width="*" MinWidth="420">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <StackPanel Orientation="Horizontal"
-                                                        VerticalAlignment="Center">
+                                            <Grid VerticalAlignment="Center">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="42" />
+                                                    <ColumnDefinition Width="14" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+
                                                 <Border
-                                                    Width="34"
-                                                    Height="34"
-                                                    Margin="0,0,12,0"
-                                                    Background="#EEF4FF"
+                                                    Width="40"
+                                                    Height="40"
+                                                    HorizontalAlignment="Left"
+                                                    VerticalAlignment="Center"
+                                                    Background="#F2EEFF"
+                                                    BorderBrush="#E5DEFF"
+                                                    BorderThickness="1"
                                                     CornerRadius="9">
                                                     <materialDesign:PackIcon
-                                                        Width="19"
-                                                        Height="19"
+                                                        Width="22"
+                                                        Height="22"
                                                         HorizontalAlignment="Center"
                                                         VerticalAlignment="Center"
                                                         Foreground="{DynamicResource Mnemora.Brush.Secondary}"
                                                         Kind="{Binding IconKind}" />
                                                 </Border>
+
                                                 <TextBlock
+                                                    Grid.Column="2"
                                                     VerticalAlignment="Center"
-                                                    FontSize="13"
+                                                    FontSize="14"
                                                     FontWeight="SemiBold"
                                                     Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
                                                     Text="{Binding Name}"
                                                     TextTrimming="CharacterEllipsis" />
-                                            </StackPanel>
+                                            </Grid>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTextColumn
-                                    Width="220"
-                                    Header="Детали"
-                                    Binding="{Binding DetailsText}" />
+                                <!-- Номер позиции остаётся справа, но без отдельной шапки. -->
+                                <DataGridTemplateColumn
+                                    Width="72"
+                                    CellStyle="{StaticResource OrderGridPositionCellStyle}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock
+                                                Style="{StaticResource OrderGridNumberStyle}"
+                                                FontSize="13"
+                                                FontWeight="SemiBold"
+                                                Text="{Binding Position}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
                             </DataGrid.Columns>
                         </DataGrid>
                     </AdornerDecorator>
                 </Border>
 
+                <!-- Зачем нужен пользовательский порядок -->
+                <Border Grid.Row="4"
+                        Padding="14,11"
+                        Background="#FAF9FF"
+                        BorderBrush="#E5DEFF"
+                        BorderThickness="1"
+                        CornerRadius="10">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <materialDesign:PackIcon
+                            Width="19"
+                            Height="19"
+                            Margin="0,2,10,0"
+                            Foreground="{DynamicResource Mnemora.Brush.Secondary}"
+                            Kind="InformationOutline" />
+
+                        <StackPanel Grid.Column="1">
+                            <TextBlock
+                                FontSize="12"
+                                Foreground="{DynamicResource Mnemora.Brush.TextPrimary}">
+                                <Run
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource Mnemora.Brush.Secondary}"
+                                    Text="Мой порядок" />
+                                <Run Text=" — ваш персональный порядок отображения разделов, тем и материалов." />
+                            </TextBlock>
+
+                            <TextBlock
+                                Margin="0,4,0,0"
+                                FontSize="11"
+                                Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                Text="Этот порядок будет использоваться в библиотеке и в фильтре «Мой порядок»." />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
                 <!-- Кнопки -->
-                <Grid Grid.Row="4">
+                <Grid Grid.Row="6">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
@@ -263,10 +384,12 @@
                     </Grid.ColumnDefinitions>
 
                     <TextBlock
+                        x:Name="UnsavedChangesText"
                         VerticalAlignment="Center"
                         FontSize="12"
                         Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                        Text="Фиолетовая линия показывает точное место вставки" />
+                        Text="Есть несохранённые изменения"
+                        Visibility="Collapsed" />
 
                     <Button
                         Grid.Column="1"
@@ -277,10 +400,13 @@
                         Style="{StaticResource Mnemora.SecondaryButton}" />
 
                     <Button
+                        x:Name="SaveButton"
                         Grid.Column="3"
                         MinWidth="174"
                         Height="42"
                         Click="Save_OnClick"
+                        IsEnabled="False"
+                        IsDefault="True"
                         Style="{StaticResource Mnemora.PrimaryButton}">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon

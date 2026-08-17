@@ -18,6 +18,7 @@ public partial class LibraryOrderDialogWindow : Window
     private LibraryOrderDialogItem? _draggedItem;
     private DataGridRow? _draggedRow;
     private int _insertionIndex = -1;
+    private readonly Guid[] _originalOrder;
 
     private AdornerLayer? _adornerLayer;
     private DragPreviewAdorner? _dragPreviewAdorner;
@@ -51,12 +52,13 @@ public partial class LibraryOrderDialogWindow : Window
             _ => string.Empty,
         };
 
+        _originalOrder = sourceItems.Select(item => item.Id).ToArray();
+
         Items = new ObservableCollection<LibraryOrderDialogItem>(
             sourceItems.Select((item, index) =>
                 new LibraryOrderDialogItem(
                     item.Id,
                     item.Name,
-                    ResolveDetailsText(target, item),
                     item.IconKind,
                     index + 1)));
 
@@ -85,19 +87,6 @@ public partial class LibraryOrderDialogWindow : Window
         base.OnPreviewKeyDown(e);
     }
 
-    private static string ResolveDetailsText(
-        LibraryOrderTarget target,
-        LibraryManagementOrderItemViewModel item)
-    {
-        return target switch
-        {
-            LibraryOrderTarget.Sections => item.StructureText,
-            LibraryOrderTarget.Topics => item.TopicMaterialsSummaryText,
-            LibraryOrderTarget.Materials => item.MaterialTypeText,
-            _ => item.Details,
-        };
-    }
-
     private void Cancel_OnClick(object sender, RoutedEventArgs e)
     {
         DialogResult = false;
@@ -105,6 +94,11 @@ public partial class LibraryOrderDialogWindow : Window
 
     private void Save_OnClick(object sender, RoutedEventArgs e)
     {
+        if (!HasOrderChanges())
+        {
+            return;
+        }
+
         DialogResult = true;
     }
 
@@ -251,10 +245,10 @@ public partial class LibraryOrderDialogWindow : Window
                 new Point(0, insertAfter ? targetRow.ActualHeight : 0),
                 OrderGrid).Y;
         }
-        else if (position.Y <= OrderGrid.ColumnHeaderHeight)
+        else if (position.Y <= 0)
         {
             insertionIndex = 0;
-            lineY = OrderGrid.ColumnHeaderHeight;
+            lineY = 0;
         }
         else
         {
@@ -265,7 +259,7 @@ public partial class LibraryOrderDialogWindow : Window
             insertionIndex = Items.Count;
 
             lineY = lastRealizedRow is null
-                ? OrderGrid.ColumnHeaderHeight
+                ? 0
                 : lastRealizedRow.TranslatePoint(
                     new Point(0, lastRealizedRow.ActualHeight),
                     OrderGrid).Y;
@@ -317,6 +311,7 @@ public partial class LibraryOrderDialogWindow : Window
 
         Items.Move(sourceIndex, targetIndex);
         RenumberItems();
+        UpdateChangeState();
     }
 
     private void RenumberItems()
@@ -325,6 +320,20 @@ public partial class LibraryOrderDialogWindow : Window
         {
             Items[index].Position = index + 1;
         }
+    }
+
+    private bool HasOrderChanges()
+    {
+        return !_originalOrder.SequenceEqual(Items.Select(item => item.Id));
+    }
+
+    private void UpdateChangeState()
+    {
+        bool hasChanges = HasOrderChanges();
+        SaveButton.IsEnabled = hasChanges;
+        UnsavedChangesText.Visibility = hasChanges
+            ? Visibility.Visible
+            : Visibility.Collapsed;
     }
 
     private static FrameworkElement? FindDragHandle(DependencyObject source)
@@ -581,13 +590,11 @@ public sealed class LibraryOrderDialogItem : INotifyPropertyChanged
     public LibraryOrderDialogItem(
         Guid id,
         string name,
-        string detailsText,
         PackIconKind iconKind,
         int position)
     {
         Id = id;
         Name = name;
-        DetailsText = detailsText;
         IconKind = iconKind;
         _position = position;
     }
@@ -596,7 +603,6 @@ public sealed class LibraryOrderDialogItem : INotifyPropertyChanged
 
     public string Name { get; }
 
-    public string DetailsText { get; }
 
     public PackIconKind IconKind { get; }
 
