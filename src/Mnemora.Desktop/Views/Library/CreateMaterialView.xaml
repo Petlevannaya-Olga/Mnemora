@@ -25,6 +25,45 @@
             </Style.Triggers>
         </Style>
 
+
+        <!-- Сброс выбранного Markdown-файла. -->
+        <Style x:Key="CreateMaterial.ClearFileButton" TargetType="Button">
+            <Setter Property="Width" Value="30" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.TextSecondary}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ClearFileBackground"
+                                Width="30"
+                                Height="30"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="15">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ClearFileBackground"
+                                        Property="Background"
+                                        Value="#F1EDFF" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="ClearFileBackground"
+                                        Property="Background"
+                                        Value="#E9E3FF" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- Компактная кнопка выбора иконки для узкой колонки второго шага. -->
         <Style x:Key="CreateMaterial.IconPickerButton" TargetType="Button">
             <Setter Property="Width" Value="36" />
@@ -856,11 +895,19 @@
                             <ColumnDefinition Width="32*" />
                         </Grid.ColumnDefinitions>
 
-                        <Grid Grid.Column="0"
+                        <Grid x:Name="ArticleDropZone"
+                              Grid.Column="0"
+                              Tag="Article"
                               AllowDrop="True"
                               Background="Transparent"
-                              Cursor="Hand">
-                            <Rectangle Margin="1"
+                              Cursor="Hand"
+                              DragEnter="MarkdownDropZone_OnDragEnter"
+                              DragOver="MarkdownDropZone_OnDragOver"
+                              DragLeave="MarkdownDropZone_OnDragLeave"
+                              Drop="MarkdownDropZone_OnDrop"
+                              MouseLeftButtonUp="MarkdownDropZone_OnMouseLeftButtonUp">
+                            <Rectangle x:Name="ArticleDropBorder"
+                                       Margin="1"
                                        RadiusX="16"
                                        RadiusY="16"
                                        Fill="{DynamicResource Mnemora.Brush.SurfaceMuted}"
@@ -868,7 +915,9 @@
                                        StrokeThickness="1.2"
                                        StrokeDashArray="5,4"
                                        SnapsToDevicePixels="True" />
-                            <StackPanel HorizontalAlignment="Center"
+
+                            <StackPanel x:Name="ArticleEmptyState"
+                                        HorizontalAlignment="Center"
                                         VerticalAlignment="Center">
                                 <Border Width="56"
                                         Height="56"
@@ -902,6 +951,91 @@
                                            Opacity="0.58"
                                            Text="Только .md · один файл" />
                             </StackPanel>
+
+                            <Grid x:Name="ArticleSelectedState"
+                                  Margin="28,18,48,18"
+                                  HorizontalAlignment="Stretch"
+                                  VerticalAlignment="Center"
+                                  Visibility="Collapsed">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="14" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="16" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <Border Grid.Column="0"
+                                        Width="50"
+                                        Height="50"
+                                        VerticalAlignment="Center"
+                                        Background="{DynamicResource Mnemora.Brush.Surface}"
+                                        BorderBrush="{DynamicResource Mnemora.Brush.Secondary}"
+                                        BorderThickness="1"
+                                        CornerRadius="14">
+                                    <materialDesign:PackIcon Width="26"
+                                                             Height="26"
+                                                             HorizontalAlignment="Center"
+                                                             VerticalAlignment="Center"
+                                                             Foreground="{DynamicResource Mnemora.Brush.Secondary}"
+                                                             Kind="FileDocumentOutline" />
+                                </Border>
+
+                                <StackPanel Grid.Column="2"
+                                            VerticalAlignment="Center">
+                                    <TextBlock x:Name="ArticleSelectedFileName"
+                                               FontSize="15"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Margin="0,4,0,0"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                               Text="Нажми на карточку, чтобы выбрать другой файл" />
+                                </StackPanel>
+
+                                <Button Grid.Column="4"
+                                        Height="34"
+                                        Padding="12,0"
+                                        VerticalAlignment="Center"
+                                        Tag="Article"
+                                        Click="OpenSelectedMarkdown_OnClick"
+                                        Style="{StaticResource Mnemora.SecondaryButton}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Width="16"
+                                                                 Height="16"
+                                                                 VerticalAlignment="Center"
+                                                                 Kind="OpenInNew" />
+                                        <TextBlock Margin="6,0,0,0"
+                                                   VerticalAlignment="Center"
+                                                   Text="Открыть в редакторе" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+
+                            <Button x:Name="ArticleClearFileButton"
+                                    Margin="0,10,10,0"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Top"
+                                    Tag="Article"
+                                    Click="ClearSelectedMarkdown_OnClick"
+                                    Panel.ZIndex="20"
+                                    Style="{StaticResource CreateMaterial.ClearFileButton}"
+                                    ToolTip="Сбросить выбранный файл"
+                                    Visibility="Collapsed">
+                                <materialDesign:PackIcon Width="17"
+                                                         Height="17"
+                                                         Kind="Close" />
+                            </Button>
+
+                            <TextBlock x:Name="ArticleFileError"
+                                       Margin="18,0,18,8"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Bottom"
+                                       FontSize="11"
+                                       Foreground="#D14343"
+                                       TextAlignment="Center"
+                                       Visibility="Collapsed" />
                         </Grid>
 
                         <Button Grid.Column="2"
@@ -956,11 +1090,19 @@
                                 <ColumnDefinition Width="32*" />
                             </Grid.ColumnDefinitions>
 
-                            <Grid Grid.Column="0"
+                            <Grid x:Name="QuestionDropZone"
+                                  Grid.Column="0"
+                                  Tag="Question"
                                   AllowDrop="True"
                                   Background="Transparent"
-                                  Cursor="Hand">
-                                <Rectangle Margin="1"
+                                  Cursor="Hand"
+                                  DragEnter="MarkdownDropZone_OnDragEnter"
+                                  DragOver="MarkdownDropZone_OnDragOver"
+                                  DragLeave="MarkdownDropZone_OnDragLeave"
+                                  Drop="MarkdownDropZone_OnDrop"
+                                  MouseLeftButtonUp="MarkdownDropZone_OnMouseLeftButtonUp">
+                                <Rectangle x:Name="QuestionDropBorder"
+                                           Margin="1"
                                            RadiusX="16"
                                            RadiusY="16"
                                            Fill="{DynamicResource Mnemora.Brush.SurfaceMuted}"
@@ -977,7 +1119,9 @@
                                            FontSize="12"
                                            Foreground="{DynamicResource Mnemora.Brush.Secondary}"
                                            Text="Вопрос" />
-                                <StackPanel HorizontalAlignment="Center"
+
+                                <StackPanel x:Name="QuestionEmptyState"
+                                            HorizontalAlignment="Center"
                                             VerticalAlignment="Center">
                                     <Border Width="44"
                                             Height="44"
@@ -1005,6 +1149,91 @@
                                                Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
                                                Text="или нажми, чтобы выбрать" />
                                 </StackPanel>
+
+                                <Grid x:Name="QuestionSelectedState"
+                                  Margin="28,18,48,18"
+                                  HorizontalAlignment="Stretch"
+                                  VerticalAlignment="Center"
+                                  Visibility="Collapsed">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="14" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="16" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <Border Grid.Column="0"
+                                        Width="46"
+                                        Height="46"
+                                        VerticalAlignment="Center"
+                                        Background="{DynamicResource Mnemora.Brush.Surface}"
+                                        BorderBrush="{DynamicResource Mnemora.Brush.Secondary}"
+                                        BorderThickness="1"
+                                        CornerRadius="14">
+                                    <materialDesign:PackIcon Width="23"
+                                                             Height="23"
+                                                             HorizontalAlignment="Center"
+                                                             VerticalAlignment="Center"
+                                                             Foreground="{DynamicResource Mnemora.Brush.Secondary}"
+                                                             Kind="FileDocumentOutline" />
+                                </Border>
+
+                                <StackPanel Grid.Column="2"
+                                            VerticalAlignment="Center">
+                                    <TextBlock x:Name="QuestionSelectedFileName"
+                                               FontSize="15"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Margin="0,4,0,0"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                               Text="Нажми на карточку, чтобы выбрать другой файл" />
+                                </StackPanel>
+
+                                <Button Grid.Column="4"
+                                        Height="34"
+                                        Padding="12,0"
+                                        VerticalAlignment="Center"
+                                        Tag="Question"
+                                        Click="OpenSelectedMarkdown_OnClick"
+                                        Style="{StaticResource Mnemora.SecondaryButton}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Width="16"
+                                                                 Height="16"
+                                                                 VerticalAlignment="Center"
+                                                                 Kind="OpenInNew" />
+                                        <TextBlock Margin="6,0,0,0"
+                                                   VerticalAlignment="Center"
+                                                   Text="Открыть в редакторе" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+
+                            <Button x:Name="QuestionClearFileButton"
+                                    Margin="0,10,10,0"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Top"
+                                    Tag="Question"
+                                    Click="ClearSelectedMarkdown_OnClick"
+                                    Panel.ZIndex="20"
+                                    Style="{StaticResource CreateMaterial.ClearFileButton}"
+                                    ToolTip="Сбросить выбранный файл"
+                                    Visibility="Collapsed">
+                                <materialDesign:PackIcon Width="17"
+                                                         Height="17"
+                                                         Kind="Close" />
+                            </Button>
+
+                            <TextBlock x:Name="QuestionFileError"
+                                           Margin="18,0,18,8"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Bottom"
+                                           FontSize="11"
+                                           Foreground="#D14343"
+                                           TextAlignment="Center"
+                                           Visibility="Collapsed" />
                             </Grid>
 
                             <Button Grid.Column="2"
@@ -1046,11 +1275,19 @@
                                 <ColumnDefinition Width="32*" />
                             </Grid.ColumnDefinitions>
 
-                            <Grid Grid.Column="0"
+                            <Grid x:Name="AnswerDropZone"
+                                  Grid.Column="0"
+                                  Tag="Answer"
                                   AllowDrop="True"
                                   Background="Transparent"
-                                  Cursor="Hand">
-                                <Rectangle Margin="1"
+                                  Cursor="Hand"
+                                  DragEnter="MarkdownDropZone_OnDragEnter"
+                                  DragOver="MarkdownDropZone_OnDragOver"
+                                  DragLeave="MarkdownDropZone_OnDragLeave"
+                                  Drop="MarkdownDropZone_OnDrop"
+                                  MouseLeftButtonUp="MarkdownDropZone_OnMouseLeftButtonUp">
+                                <Rectangle x:Name="AnswerDropBorder"
+                                           Margin="1"
                                            RadiusX="16"
                                            RadiusY="16"
                                            Fill="{DynamicResource Mnemora.Brush.SurfaceMuted}"
@@ -1067,7 +1304,9 @@
                                            FontSize="12"
                                            Foreground="{DynamicResource Mnemora.Brush.Primary}"
                                            Text="Эталонный ответ" />
-                                <StackPanel HorizontalAlignment="Center"
+
+                                <StackPanel x:Name="AnswerEmptyState"
+                                            HorizontalAlignment="Center"
                                             VerticalAlignment="Center">
                                     <Border Width="44"
                                             Height="44"
@@ -1095,6 +1334,91 @@
                                                Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
                                                Text="или нажми, чтобы выбрать" />
                                 </StackPanel>
+
+                                <Grid x:Name="AnswerSelectedState"
+                                  Margin="28,18,48,18"
+                                  HorizontalAlignment="Stretch"
+                                  VerticalAlignment="Center"
+                                  Visibility="Collapsed">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="14" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="16" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <Border Grid.Column="0"
+                                        Width="46"
+                                        Height="46"
+                                        VerticalAlignment="Center"
+                                        Background="{DynamicResource Mnemora.Brush.Surface}"
+                                        BorderBrush="{DynamicResource Mnemora.Brush.Primary}"
+                                        BorderThickness="1"
+                                        CornerRadius="14">
+                                    <materialDesign:PackIcon Width="23"
+                                                             Height="23"
+                                                             HorizontalAlignment="Center"
+                                                             VerticalAlignment="Center"
+                                                             Foreground="{DynamicResource Mnemora.Brush.Primary}"
+                                                             Kind="FileDocumentOutline" />
+                                </Border>
+
+                                <StackPanel Grid.Column="2"
+                                            VerticalAlignment="Center">
+                                    <TextBlock x:Name="AnswerSelectedFileName"
+                                               FontSize="15"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Margin="0,4,0,0"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                               Text="Нажми на карточку, чтобы выбрать другой файл" />
+                                </StackPanel>
+
+                                <Button Grid.Column="4"
+                                        Height="34"
+                                        Padding="12,0"
+                                        VerticalAlignment="Center"
+                                        Tag="Answer"
+                                        Click="OpenSelectedMarkdown_OnClick"
+                                        Style="{StaticResource Mnemora.SecondaryButton}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Width="16"
+                                                                 Height="16"
+                                                                 VerticalAlignment="Center"
+                                                                 Kind="OpenInNew" />
+                                        <TextBlock Margin="6,0,0,0"
+                                                   VerticalAlignment="Center"
+                                                   Text="Открыть в редакторе" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+
+                            <Button x:Name="AnswerClearFileButton"
+                                    Margin="0,10,10,0"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Top"
+                                    Tag="Answer"
+                                    Click="ClearSelectedMarkdown_OnClick"
+                                    Panel.ZIndex="20"
+                                    Style="{StaticResource CreateMaterial.ClearFileButton}"
+                                    ToolTip="Сбросить выбранный файл"
+                                    Visibility="Collapsed">
+                                <materialDesign:PackIcon Width="17"
+                                                         Height="17"
+                                                         Kind="Close" />
+                            </Button>
+
+                            <TextBlock x:Name="AnswerFileError"
+                                           Margin="18,0,18,8"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Bottom"
+                                           FontSize="11"
+                                           Foreground="#D14343"
+                                           TextAlignment="Center"
+                                           Visibility="Collapsed" />
                             </Grid>
 
                             <Button Grid.Column="2"
