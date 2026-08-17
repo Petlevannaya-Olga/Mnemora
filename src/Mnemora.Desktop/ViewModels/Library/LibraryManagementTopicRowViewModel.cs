@@ -6,13 +6,16 @@ public sealed class LibraryManagementTopicRowViewModel
 {
     private readonly int _capacity;
 
-    public LibraryManagementTopicRowViewModel(int capacity)
+    public LibraryManagementTopicRowViewModel(int capacity, bool isFirstRow = false)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(capacity, 1);
         _capacity = capacity;
+        IsFirstRow = isFirstRow;
     }
 
     public ObservableCollection<LibraryManagementOrderItemViewModel> Topics { get; } = [];
+
+    public bool IsFirstRow { get; }
 
     public bool IsFull => Topics.Count >= _capacity;
 

@@ -1022,7 +1022,15 @@ public sealed partial class LibraryManagementViewModel(
     {
         LibraryManagementSectionRowViewModel? row = rows.LastOrDefault();
 
-        if (row is null || row.IsFull)
+        if (row is null)
+        {
+            // В первой строке одно место занимает плитка «Создать раздел».
+            row = new LibraryManagementSectionRowViewModel(
+                Math.Max(1, capacity - 1),
+                isFirstRow: true);
+            rows.Add(row);
+        }
+        else if (row.IsFull)
         {
             row = new LibraryManagementSectionRowViewModel(capacity);
             rows.Add(row);
@@ -1606,7 +1614,15 @@ public sealed partial class LibraryManagementViewModel(
     {
         LibraryManagementTopicRowViewModel? row = rows.LastOrDefault();
 
-        if (row is null || row.IsFull)
+        if (row is null)
+        {
+            // В первой строке одно место занимает плитка «Создать тему».
+            row = new LibraryManagementTopicRowViewModel(
+                Math.Max(1, capacity - 1),
+                isFirstRow: true);
+            rows.Add(row);
+        }
+        else if (row.IsFull)
         {
             row = new LibraryManagementTopicRowViewModel(capacity);
             rows.Add(row);

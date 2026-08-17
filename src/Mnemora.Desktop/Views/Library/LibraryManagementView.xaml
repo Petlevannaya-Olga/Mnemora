@@ -141,7 +141,7 @@
 
         <!-- В простом режиме используем те же карточки и кликабельную область, что в обзоре -->
         <Style x:Key="SectionOverviewCardStyle" TargetType="Border">
-            <Setter Property="MinHeight" Value="200" />
+            <Setter Property="MinHeight" Value="154" />
             <Setter Property="Margin" Value="0,0,16,16" />
             <Setter Property="Padding" Value="22" />
             <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
@@ -390,6 +390,83 @@
             <Setter Property="CornerRadius" Value="14" />
         </Style>
 
+        <!-- Плитка создания: занимает первое место в сетке, но визуально остаётся действием. -->
+        <Style x:Key="CreateEntityTileButtonStyle" TargetType="Button">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="{StaticResource Mnemora.Brush.BrandGradient}" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="TileBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="16">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="TileBorder" Property="Opacity" Value="0.9" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="TileBorder" Property="Opacity" Value="0.78" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="TileBorder" Property="Opacity" Value="0.45" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CreateLargeEntityTileButtonStyle"
+               TargetType="Button"
+               BasedOn="{StaticResource CreateEntityTileButtonStyle}">
+            <Setter Property="MinHeight" Value="154" />
+            <Setter Property="Margin" Value="0,0,16,16" />
+        </Style>
+
+        <Style x:Key="CreateCompactEntityTileButtonStyle"
+               TargetType="Button"
+               BasedOn="{StaticResource CreateEntityTileButtonStyle}">
+            <Setter Property="Height" Value="108" />
+            <Setter Property="Margin" Value="0,0,12,12" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="TileBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="14">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="TileBorder" Property="Opacity" Value="0.9" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="TileBorder" Property="Opacity" Value="0.78" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="TileBorder" Property="Opacity" Value="0.45" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- Таблица простого режима: визуально совпадает с таблицей Обзора. -->
         <Style x:Key="SimpleSectionTableTextStyle" TargetType="TextBlock">
             <Setter Property="VerticalAlignment" Value="Center" />
@@ -513,6 +590,14 @@
             <Setter Property="HorizontalContentAlignment" Value="Left" />
         </Style>
 
+        <Style
+            x:Key="SimpleSectionTableActionsCellStyle"
+            BasedOn="{StaticResource SimpleSectionTableCellStyle}"
+            TargetType="DataGridCell">
+            <Setter Property="Padding" Value="6,9" />
+            <Setter Property="HorizontalContentAlignment" Value="Right" />
+        </Style>
+
         <Style x:Key="SimpleSectionCountIconStyle" TargetType="materialDesign:PackIcon">
             <Setter Property="Width" Value="17" />
             <Setter Property="Height" Value="17" />
@@ -531,8 +616,6 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
-                                <RowDefinition Height="*" />
-                                <RowDefinition Height="58" />
                             </Grid.RowDefinitions>
 
                             <Grid>
@@ -658,31 +741,6 @@
                     </Button>
                 </StackPanel>
 
-                <Button Panel.ZIndex="10"
-                        Height="42"
-                        Margin="22,0,38,38"
-                        HorizontalAlignment="Stretch"
-                        VerticalAlignment="Bottom"
-                        Command="{Binding DataContext.AddSimpleTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
-                        CommandParameter="{Binding}"
-                        Style="{StaticResource Mnemora.SecondaryButton}"
-                        ToolTip="Создать тему в разделе">
-                    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
-                        <materialDesign:PackIcon Width="19" Height="19" Kind="Plus" />
-                        <TextBlock Margin="10,0,0,0">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Text" Value="Создать тему" />
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding TopicsCount}" Value="0">
-                                            <Setter Property="Text" Value="Создать первую тему" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                    </StackPanel>
-                </Button>
             </Grid>
         </DataTemplate>
 
@@ -775,40 +833,12 @@
                     </Border>
                 </Button>
 
-                <!-- Все действия остаются в привычном верхнем правом углу. -->
+                <!-- Редактирование и удаление остаются в привычном верхнем правом углу. -->
                 <StackPanel Panel.ZIndex="10"
                             Margin="0,14,26,0"
                             HorizontalAlignment="Right"
                             VerticalAlignment="Top"
                             Orientation="Horizontal">
-                    <Button Width="27"
-                            Height="26"
-                            Command="{Binding DataContext.AddSimpleTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
-                            CommandParameter="{Binding}"
-                            Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                            Style="{StaticResource SmallIconButtonStyle}"
-                            ToolTip="Создать тему">
-                        <Grid Width="17" Height="17">
-                            <materialDesign:PackIcon Width="15"
-                                                     Height="15"
-                                                     HorizontalAlignment="Left"
-                                                     VerticalAlignment="Bottom"
-                                                     Kind="BookOpenPageVariantOutline" />
-                            <Border Width="8"
-                                    Height="8"
-                                    HorizontalAlignment="Right"
-                                    VerticalAlignment="Top"
-                                    Background="{DynamicResource Mnemora.Brush.Surface}"
-                                    CornerRadius="4">
-                                <materialDesign:PackIcon Width="8"
-                                                         Height="8"
-                                                         HorizontalAlignment="Center"
-                                                         VerticalAlignment="Center"
-                                                         Kind="Plus" />
-                            </Border>
-                        </Grid>
-                    </Button>
-
                     <Button Width="27"
                             Height="26"
                             Command="{Binding DataContext.EditSimpleSectionCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
@@ -1074,7 +1104,7 @@
 
         <!-- Заголовок показываем только на корневом уровне и в расширенном режиме.
              На вложенных уровнях контекст задают хлебные крошки и шапка выбранного элемента. -->
-        <StackPanel Grid.Row="0" Margin="32,28,32,22">
+        <StackPanel Grid.Row="0" Margin="32,28,32,0">
             <StackPanel.Style>
                 <Style TargetType="StackPanel">
                     <Setter Property="Visibility" Value="Collapsed" />
@@ -1094,10 +1124,15 @@
             <TextBlock Margin="0,6,0,0"
                        Style="{StaticResource Mnemora.Description}"
                        Text="Создавайте структуру базы знаний и настраивайте свой порядок" />
+
+            <!-- Отделяем контекст страницы от рабочей панели инструментов. -->
+            <Border Height="1"
+                    Margin="0,22,0,0"
+                    Background="{DynamicResource Mnemora.Brush.Border}" />
         </StackPanel>
 
         <!-- Общая панель поиска -->
-        <Grid Grid.Row="1" Margin="32,0,32,24">
+        <Grid Grid.Row="1" Margin="32,22,32,24">
             <Grid.Style>
                 <Style TargetType="Grid">
                     <Setter Property="Visibility" Value="Collapsed" />
@@ -1113,8 +1148,10 @@
             </Grid.Style>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="20" />
+                <ColumnDefinition Width="24" />
                 <ColumnDefinition Width="220" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="32" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
@@ -1166,6 +1203,13 @@
                     <materialDesign:PackIcon Width="22" Height="22" Kind="FormatListBulleted" />
                 </ToggleButton>
             </StackPanel>
+
+            <ToggleButton Grid.Column="5"
+                          VerticalAlignment="Center"
+                          Command="{Binding ToggleEditingModeCommand}"
+                          Content="Расширенный режим"
+                          IsChecked="{Binding IsAdvancedMode, Mode=OneWay}"
+                          Style="{StaticResource AdvancedEditingToggleStyle}" />
         </Grid>
 
         <!-- ПРОСТОЙ РЕЖИМ: разделы -->
@@ -1178,23 +1222,11 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <Grid Margin="0,0,0,18">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-
-                <TextBlock VerticalAlignment="Center"
-                           FontSize="24"
-                           FontWeight="SemiBold"
-                           Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                           Text="Разделы" />
-
-                <Button Grid.Column="1"
-                        Height="40"
-                        Margin="16,0,0,0"
+            <Grid Margin="0,0,0,18"
+                  Visibility="{Binding IsSimpleSectionsEmpty, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <Button Height="40"
+                        Margin="0"
+                        HorizontalAlignment="Left"
                         VerticalAlignment="Center"
                         Command="{Binding AddSectionCommand}"
                         Style="{StaticResource Mnemora.PrimaryButton}">
@@ -1203,13 +1235,6 @@
                         <TextBlock Margin="8,0,0,0" Text="Создать раздел" />
                     </StackPanel>
                 </Button>
-
-                <ToggleButton Grid.Column="3"
-                              VerticalAlignment="Center"
-                              Command="{Binding ToggleEditingModeCommand}"
-                              Content="Расширенное редактирование"
-                              IsChecked="{Binding IsAdvancedMode, Mode=OneWay}"
-                              Style="{StaticResource AdvancedEditingToggleStyle}" />
             </Grid>
 
             <Grid Grid.Row="1">
@@ -1232,14 +1257,78 @@
                     </ListBox.ItemsPanel>
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <ItemsControl ItemsSource="{Binding Sections}"
-                                          ItemTemplate="{StaticResource SimpleSectionCardTemplate}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <UniformGrid Columns="3" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                            </ItemsControl>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <Button Grid.Column="0"
+                                        Command="{Binding DataContext.AddSectionCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                        ToolTip="Создать раздел">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource CreateLargeEntityTileButtonStyle}">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsFirstRow}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <Border Width="48" Height="48" HorizontalAlignment="Center" Background="#26FFFFFF" CornerRadius="24">
+                                            <materialDesign:PackIcon Width="25" Height="25"
+                                                                     HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                                     Foreground="White" Kind="Plus" />
+                                        </Border>
+                                        <TextBlock Margin="0,12,0,0" HorizontalAlignment="Center"
+                                                   FontSize="16" FontWeight="SemiBold"
+                                                   Foreground="White" Text="Создать раздел" />
+                                    </StackPanel>
+                                </Button>
+
+                                <ItemsControl Grid.Column="1" Grid.ColumnSpan="2"
+                                              ItemsSource="{Binding Sections}"
+                                              ItemTemplate="{StaticResource SimpleSectionCardTemplate}">
+                                    <ItemsControl.Style>
+                                        <Style TargetType="ItemsControl">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsFirstRow}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ItemsControl.Style>
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <UniformGrid Columns="2" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                </ItemsControl>
+
+                                <ItemsControl Grid.Column="0" Grid.ColumnSpan="3"
+                                              ItemsSource="{Binding Sections}"
+                                              ItemTemplate="{StaticResource SimpleSectionCardTemplate}">
+                                    <ItemsControl.Style>
+                                        <Style TargetType="ItemsControl">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsFirstRow}" Value="True">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ItemsControl.Style>
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <UniformGrid Columns="3" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                </ItemsControl>
+                            </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
@@ -1263,14 +1352,77 @@
                     </ListBox.ItemsPanel>
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <ItemsControl ItemsSource="{Binding Sections}"
-                                          ItemTemplate="{StaticResource SimpleCompactSectionCardTemplate}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <UniformGrid Columns="4" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                            </ItemsControl>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <Button Grid.Column="0"
+                                        Command="{Binding DataContext.AddSectionCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                        ToolTip="Создать раздел">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource CreateCompactEntityTileButtonStyle}">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsFirstRow}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal">
+                                        <materialDesign:PackIcon Width="21" Height="21"
+                                                                 VerticalAlignment="Center"
+                                                                 Foreground="White" Kind="Plus" />
+                                        <TextBlock Margin="9,0,0,0" VerticalAlignment="Center"
+                                                   FontSize="14" FontWeight="SemiBold"
+                                                   Foreground="White" Text="Создать раздел" />
+                                    </StackPanel>
+                                </Button>
+
+                                <ItemsControl Grid.Column="1" Grid.ColumnSpan="3"
+                                              ItemsSource="{Binding Sections}"
+                                              ItemTemplate="{StaticResource SimpleCompactSectionCardTemplate}">
+                                    <ItemsControl.Style>
+                                        <Style TargetType="ItemsControl">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsFirstRow}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ItemsControl.Style>
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <UniformGrid Columns="3" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                </ItemsControl>
+
+                                <ItemsControl Grid.Column="0" Grid.ColumnSpan="4"
+                                              ItemsSource="{Binding Sections}"
+                                              ItemTemplate="{StaticResource SimpleCompactSectionCardTemplate}">
+                                    <ItemsControl.Style>
+                                        <Style TargetType="ItemsControl">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsFirstRow}" Value="True">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ItemsControl.Style>
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <UniformGrid Columns="4" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                </ItemsControl>
+                            </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
@@ -1438,18 +1590,12 @@
 
                             <!-- Управляющие действия остаются только в Управлении. -->
                             <DataGridTemplateColumn
-                                Width="118"
+                                Width="82"
+                                CellStyle="{StaticResource SimpleSectionTableActionsCellStyle}"
                                 HeaderStyle="{StaticResource SimpleSectionTableColumnHeaderStyle}">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel HorizontalAlignment="Right" VerticalAlignment="Center" Orientation="Horizontal">
-                                            <Button
-                                                Command="{Binding DataContext.AddSimpleTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
-                                                CommandParameter="{Binding}"
-                                                Style="{StaticResource SmallIconButtonStyle}"
-                                                ToolTip="Создать тему">
-                                                <materialDesign:PackIcon Width="17" Height="17" Kind="Plus" />
-                                            </Button>
                                             <Button
                                                 Command="{Binding DataContext.EditSimpleSectionCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                                 CommandParameter="{Binding}"
@@ -1589,6 +1735,30 @@
                             Style="{StaticResource Mnemora.SecondaryButton}" />
                 </StackPanel>
 
+                <Button Height="42"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Command="{Binding AddSectionCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource Mnemora.PrimaryButton}">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding IsSimpleTableView}" Value="True" />
+                                        <Condition Binding="{Binding HasSimpleSections}" Value="True" />
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Width="18" Height="18" Kind="Plus" />
+                        <TextBlock Margin="8,0,0,0" Text="Создать раздел" />
+                    </StackPanel>
+                </Button>
+
             </Grid>
         </Grid>
 
@@ -1597,7 +1767,6 @@
               Margin="32,28,32,28"
               Visibility="{Binding IsSimpleTopicsPage, Converter={StaticResource BooleanToVisibilityConverter}}">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -1708,35 +1877,7 @@
                 </StackPanel>
             </Grid>
 
-            <!-- Заголовок списка и создание темы. Для полностью пустого раздела кнопку оставляем только в empty-state. -->
-            <Grid Grid.Row="3" Margin="0,0,0,18">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-
-                <TextBlock VerticalAlignment="Center"
-                           FontSize="24"
-                           FontWeight="SemiBold"
-                           Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                           Text="Темы" />
-
-                <Button Grid.Column="1"
-                        Height="40"
-                        Margin="16,0,0,0"
-                        VerticalAlignment="Center"
-                        Command="{Binding AddTopicCommand}"
-                        Style="{StaticResource Mnemora.PrimaryButton}"
-                        Visibility="{Binding HasSimpleTopicSource, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Width="18" Height="18" Kind="BookPlusOutline" />
-                        <TextBlock Margin="8,0,0,0" Text="Создать тему" />
-                    </StackPanel>
-                </Button>
-            </Grid>
-
-            <Grid Grid.Row="4">
+            <Grid Grid.Row="3">
                 <!-- Большие плитки: виртуализируем строки по 3 карточки. -->
                 <ListBox ItemsSource="{Binding SimpleTopicRows}"
                          ItemContainerStyle="{StaticResource SimpleSectionListBoxItemStyle}"
@@ -1768,14 +1909,78 @@
                     </ListBox.ItemsPanel>
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <ItemsControl ItemsSource="{Binding Topics}"
-                                          ItemTemplate="{StaticResource SimpleTopicCardTemplate}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <UniformGrid Columns="3" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                            </ItemsControl>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <Button Grid.Column="0"
+                                        Command="{Binding DataContext.AddTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                        ToolTip="Создать тему">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource CreateLargeEntityTileButtonStyle}">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsFirstRow}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <Border Width="48" Height="48" HorizontalAlignment="Center" Background="#26FFFFFF" CornerRadius="24">
+                                            <materialDesign:PackIcon Width="25" Height="25"
+                                                                     HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                                     Foreground="White" Kind="BookPlusOutline" />
+                                        </Border>
+                                        <TextBlock Margin="0,12,0,0" HorizontalAlignment="Center"
+                                                   FontSize="16" FontWeight="SemiBold"
+                                                   Foreground="White" Text="Создать тему" />
+                                    </StackPanel>
+                                </Button>
+
+                                <ItemsControl Grid.Column="1" Grid.ColumnSpan="2"
+                                              ItemsSource="{Binding Topics}"
+                                              ItemTemplate="{StaticResource SimpleTopicCardTemplate}">
+                                    <ItemsControl.Style>
+                                        <Style TargetType="ItemsControl">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsFirstRow}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ItemsControl.Style>
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <UniformGrid Columns="2" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                </ItemsControl>
+
+                                <ItemsControl Grid.Column="0" Grid.ColumnSpan="3"
+                                              ItemsSource="{Binding Topics}"
+                                              ItemTemplate="{StaticResource SimpleTopicCardTemplate}">
+                                    <ItemsControl.Style>
+                                        <Style TargetType="ItemsControl">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsFirstRow}" Value="True">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ItemsControl.Style>
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <UniformGrid Columns="3" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                </ItemsControl>
+                            </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
@@ -1811,14 +2016,77 @@
                     </ListBox.ItemsPanel>
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <ItemsControl ItemsSource="{Binding Topics}"
-                                          ItemTemplate="{StaticResource SimpleCompactTopicCardTemplate}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <UniformGrid Columns="4" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                            </ItemsControl>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <Button Grid.Column="0"
+                                        Command="{Binding DataContext.AddTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                        ToolTip="Создать тему">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource CreateCompactEntityTileButtonStyle}">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsFirstRow}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal">
+                                        <materialDesign:PackIcon Width="20" Height="20"
+                                                                 VerticalAlignment="Center"
+                                                                 Foreground="White" Kind="BookPlusOutline" />
+                                        <TextBlock Margin="9,0,0,0" VerticalAlignment="Center"
+                                                   FontSize="14" FontWeight="SemiBold"
+                                                   Foreground="White" Text="Создать тему" />
+                                    </StackPanel>
+                                </Button>
+
+                                <ItemsControl Grid.Column="1" Grid.ColumnSpan="3"
+                                              ItemsSource="{Binding Topics}"
+                                              ItemTemplate="{StaticResource SimpleCompactTopicCardTemplate}">
+                                    <ItemsControl.Style>
+                                        <Style TargetType="ItemsControl">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsFirstRow}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ItemsControl.Style>
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <UniformGrid Columns="3" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                </ItemsControl>
+
+                                <ItemsControl Grid.Column="0" Grid.ColumnSpan="4"
+                                              ItemsSource="{Binding Topics}"
+                                              ItemTemplate="{StaticResource SimpleCompactTopicCardTemplate}">
+                                    <ItemsControl.Style>
+                                        <Style TargetType="ItemsControl">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsFirstRow}" Value="True">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ItemsControl.Style>
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <UniformGrid Columns="4" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                </ItemsControl>
+                            </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
@@ -2079,15 +2347,38 @@
                 </StackPanel>
             </Grid>
 
-            <TextBlock Grid.Row="5"
-                       MinHeight="42"
-                       Margin="0,8,0,0"
-                       HorizontalAlignment="Left"
-                       VerticalAlignment="Center"
-                       FontSize="13"
-                       Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                       Text="{Binding SimpleTopicsShownCountText}"
-                       Visibility="{Binding HasSimpleTopicSource, Converter={StaticResource BooleanToVisibilityConverter}}" />
+            <Grid Grid.Row="4" MinHeight="54" Margin="0,8,0,0">
+                <TextBlock HorizontalAlignment="Left"
+                           VerticalAlignment="Center"
+                           FontSize="13"
+                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                           Text="{Binding SimpleTopicsShownCountText}"
+                           Visibility="{Binding HasSimpleTopicSource, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
+                <Button Height="42"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Command="{Binding AddTopicCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource Mnemora.PrimaryButton}">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding HasSimpleTopicSource}" Value="True" />
+                                        <Condition Binding="{Binding IsSimpleTableView}" Value="True" />
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Width="18" Height="18" Kind="BookPlusOutline" />
+                        <TextBlock Margin="8,0,0,0" Text="Создать тему" />
+                    </StackPanel>
+                </Button>
+            </Grid>
         </Grid>
 
         <!-- ПРОСТОЙ РЕЖИМ: материалы выбранной темы -->
@@ -2297,25 +2588,14 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <Grid Grid.Row="0" Grid.ColumnSpan="3" Margin="0,0,0,18">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-
-                <TextBlock VerticalAlignment="Center"
-                           FontSize="24"
-                           FontWeight="SemiBold"
-                           Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                           Text="Разделы" />
-
-                <ToggleButton Grid.Column="1"
-                              VerticalAlignment="Center"
-                              Command="{Binding ToggleEditingModeCommand}"
-                              Content="Расширенное редактирование"
-                              IsChecked="{Binding IsAdvancedMode, Mode=OneWay}"
-                              Style="{StaticResource AdvancedEditingToggleStyle}" />
-            </Grid>
+            <TextBlock Grid.Row="0"
+                       Grid.ColumnSpan="3"
+                       Margin="0,0,0,18"
+                       VerticalAlignment="Center"
+                       FontSize="24"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                       Text="Разделы" />
 
             <!-- Иерархия -->
             <Border Grid.Row="1" Style="{StaticResource ManagementCardStyle}">

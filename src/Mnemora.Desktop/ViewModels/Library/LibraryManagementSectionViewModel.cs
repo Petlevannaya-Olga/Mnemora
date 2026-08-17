@@ -72,7 +72,7 @@ public sealed class LibraryManagementSectionRowViewModel
 {
     private readonly int _capacity;
 
-    public LibraryManagementSectionRowViewModel(int capacity)
+    public LibraryManagementSectionRowViewModel(int capacity, bool isFirstRow = false)
     {
         if (capacity <= 0)
         {
@@ -80,9 +80,12 @@ public sealed class LibraryManagementSectionRowViewModel
         }
 
         _capacity = capacity;
+        IsFirstRow = isFirstRow;
     }
 
     public ObservableCollection<LibraryManagementSectionViewModel> Sections { get; } = [];
+
+    public bool IsFirstRow { get; }
 
     public bool IsFull => Sections.Count >= _capacity;
 
