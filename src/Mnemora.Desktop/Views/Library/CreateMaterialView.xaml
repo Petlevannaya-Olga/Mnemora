@@ -1117,6 +1117,8 @@
                         </Grid>
 
                         <Button Grid.Column="2"
+                                Tag="Article"
+                                Click="CreateMarkdownTemplate_OnClick"
                                 Style="{StaticResource CreateMaterial.TemplateSourceButton}">
                             <StackPanel HorizontalAlignment="Center"
                                         VerticalAlignment="Center">
@@ -1313,6 +1315,8 @@
                             </Grid>
 
                             <Button Grid.Column="2"
+                                    Tag="Question"
+                                    Click="CreateMarkdownTemplate_OnClick"
                                     Style="{StaticResource CreateMaterial.TemplateSourceButton}">
                                 <StackPanel HorizontalAlignment="Center"
                                             VerticalAlignment="Center">
@@ -1496,6 +1500,8 @@
                             </Grid>
 
                             <Button Grid.Column="2"
+                                    Tag="Answer"
+                                    Click="CreateMarkdownTemplate_OnClick"
                                     Style="{StaticResource CreateMaterial.TemplateSourceButton}">
                                 <StackPanel HorizontalAlignment="Center"
                                             VerticalAlignment="Center">

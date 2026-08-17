@@ -6,12 +6,6 @@ namespace Mnemora.Desktop.Views.Library;
 
 public partial class CreateMaterialView
 {
-    private readonly string _templateDirectory = Path.Combine(
-        Path.GetTempPath(),
-        "Mnemora",
-        "CreateMaterial",
-        Guid.NewGuid().ToString("N"));
-
     private void CreateMarkdownTemplate_OnClick(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement element ||
@@ -22,51 +16,61 @@ public partial class CreateMaterialView
 
         try
         {
-            Directory.CreateDirectory(_templateDirectory);
+            string path = CreateTemplateFile(source);
 
-            string path = GetAvailableTemplatePath(source);
-            File.WriteAllText(
-                path,
-                GetTemplateContent(source),
-                new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
-
+            // Используем тот же рабочий путь, что и выбор файла / drag & drop.
             SetSelectedFile(source, path);
         }
-        catch (Exception exception)
-            when (exception is IOException
-                  or UnauthorizedAccessException
-                  or ArgumentException
-                  or NotSupportedException)
+        catch (Exception)
         {
-            ShowFileError(source, "Не удалось создать Markdown-файл.");
+            ShowFileError(source, "Не удалось создать Markdown-файл по шаблону.");
         }
 
         e.Handled = true;
     }
 
-    private string GetAvailableTemplatePath(string source)
+    private static string CreateTemplateFile(string source)
     {
-        string fileName = source switch
+        string directory = Path.Combine(
+            Path.GetTempPath(),
+            "Mnemora",
+            "Drafts");
+
+        Directory.CreateDirectory(directory);
+
+        string baseName = source switch
         {
-            ArticleSource => "material.md",
-            QuestionSource => "question.md",
-            AnswerSource => "answer.md",
+            ArticleSource => "material",
+            QuestionSource => "question",
+            AnswerSource => "answer",
             _ => throw new ArgumentOutOfRangeException(nameof(source), source, null),
         };
 
-        string path = Path.Combine(_templateDirectory, fileName);
+        string path = GetAvailableTemplatePath(directory, baseName);
+        string content = GetTemplateContent(source);
+
+        File.WriteAllText(
+            path,
+            content,
+            new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+
+        return path;
+    }
+
+    private static string GetAvailableTemplatePath(
+        string directory,
+        string baseName)
+    {
+        string path = Path.Combine(directory, $"{baseName}.md");
 
         if (!File.Exists(path))
         {
             return path;
         }
 
-        string name = Path.GetFileNameWithoutExtension(fileName);
-        string extension = Path.GetExtension(fileName);
-
-        for (int index = 2; ; index++)
+        for (int number = 2; ; number++)
         {
-            path = Path.Combine(_templateDirectory, $"{name}-{index}{extension}");
+            path = Path.Combine(directory, $"{baseName}-{number}.md");
 
             if (!File.Exists(path))
             {
@@ -78,9 +82,17 @@ public partial class CreateMaterialView
     private static string GetTemplateContent(string source) =>
         source switch
         {
-            ArticleSource => "# Материал\n\n",
-            QuestionSource => "# Вопрос\n\n",
-            AnswerSource => "# Эталонный ответ\n\n",
+            ArticleSource =>
+                "## Основное\n\n" +
+                "\n\n## Пример\n\n" +
+                "```csharp\n\n```\n",
+
+            QuestionSource =>
+                "## Вопрос\n\n",
+
+            AnswerSource =>
+                "## Эталонный ответ\n\n",
+
             _ => throw new ArgumentOutOfRangeException(nameof(source), source, null),
         };
 }
