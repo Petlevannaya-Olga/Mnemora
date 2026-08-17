@@ -1,319 +1,403 @@
-<UserControl
-    x:Class="Mnemora.Desktop.Views.Library.CreateMaterialView"
-    x:Name="Root"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:converters="clr-namespace:Mnemora.Desktop.Converters"
-    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-    SnapsToDevicePixels="True"
-    TextOptions.TextFormattingMode="Display"
-    TextOptions.TextRenderingMode="ClearType"
-    UseLayoutRounding="True">
+<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:converters="clr-namespace:Mnemora.Desktop.Converters" xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes" x:Class="Mnemora.Desktop.Views.Library.CreateMaterialView" x:Name="Root" SnapsToDevicePixels="True" TextOptions.TextFormattingMode="Display" TextOptions.TextRenderingMode="ClearType" UseLayoutRounding="True">
 
     <UserControl.Resources>
-        <converters:TopicColorConverter x:Key="TopicColorConverter" />
+        <converters:TopicColorConverter x:Key="TopicColorConverter"/>
 
         <!-- Хлебная крошка — тот же спокойный back-link, что и на страницах управления. -->
         <Style x:Key="CreateMaterial.BreadcrumbButton" TargetType="Button">
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.Secondary}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <ContentPresenter/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Opacity" Value="0.72"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Компактная кнопка выбора иконки для узкой колонки второго шага. -->
+        <Style x:Key="CreateMaterial.IconPickerButton" TargetType="Button">
+            <Setter Property="Width" Value="36" />
+            <Setter Property="Height" Value="36" />
             <Setter Property="Padding" Value="0" />
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Secondary}" />
+            <Setter Property="BorderThickness" Value="1.5" />
             <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.Secondary}" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <ContentPresenter />
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Opacity" Value="0.72" />
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-
-        <!-- Карточка выбора типа. Вся карточка является RadioButton. -->
-        <Style x:Key="CreateMaterial.TypeCard" TargetType="RadioButton">
-            <Setter Property="Width" Value="350" />
-            <Setter Property="Height" Value="280" />
-            <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Border}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.TextPrimary}" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="RadioButton">
-                        <Grid>
-                            <Border x:Name="CardBorder"
-                                    Background="{TemplateBinding Background}"
-                                    BorderBrush="{TemplateBinding BorderBrush}"
-                                    BorderThickness="{TemplateBinding BorderThickness}"
-                                    CornerRadius="16">
-                                <ContentPresenter HorizontalAlignment="Stretch"
-                                                  VerticalAlignment="Stretch" />
-                            </Border>
-
-                            <Border x:Name="SelectedMark"
-                                    Width="28"
-                                    Height="28"
-                                    Margin="0,14,14,0"
-                                    HorizontalAlignment="Right"
-                                    VerticalAlignment="Top"
-                                    Background="{DynamicResource Mnemora.Brush.Secondary}"
-                                    CornerRadius="14"
-                                    Visibility="Collapsed">
-                                <materialDesign:PackIcon Width="17"
-                                                         Height="17"
-                                                         HorizontalAlignment="Center"
-                                                         VerticalAlignment="Center"
-                                                         Foreground="White"
-                                                         Kind="Check" />
-                            </Border>
-                        </Grid>
-
+                        <Border x:Name="ButtonBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="9">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="CardBorder"
-                                        Property="Background"
-                                        Value="#FAF9FF" />
-                                <Setter TargetName="CardBorder"
-                                        Property="BorderBrush"
-                                        Value="#DAD3F8" />
-                            </Trigger>
-
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="CardBorder"
+                                <Setter TargetName="ButtonBorder"
                                         Property="Background"
                                         Value="#F7F5FF" />
-                                <Setter TargetName="CardBorder"
-                                        Property="BorderBrush"
-                                        Value="{DynamicResource Mnemora.Brush.Secondary}" />
-                                <Setter TargetName="CardBorder"
-                                        Property="BorderThickness"
-                                        Value="2" />
-                                <Setter TargetName="SelectedMark"
-                                        Property="Visibility"
-                                        Value="Visible" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="ButtonBorder"
+                                        Property="Background"
+                                        Value="#F1EDFF" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- Карточка выбора типа. Вся карточка является RadioButton. -->
+        <Style x:Key="CreateMaterial.TypeCard" TargetType="RadioButton">
+            <Setter Property="Width" Value="350"/>
+            <Setter Property="Height" Value="280"/>
+            <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Border}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.TextPrimary}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Grid>
+                            <Border x:Name="CardBorder" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="16">
+                                <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                            </Border>
+
+                            <Border x:Name="SelectedMark" Width="28" Height="28" Margin="0,14,14,0" HorizontalAlignment="Right" VerticalAlignment="Top" Background="{DynamicResource Mnemora.Brush.Secondary}" CornerRadius="14" Visibility="Collapsed">
+                                <materialDesign:PackIcon Width="17" Height="17" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" Kind="Check"/>
+                            </Border>
+                        </Grid>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="CardBorder" Property="Background" Value="#FAF9FF"/>
+                                <Setter TargetName="CardBorder" Property="BorderBrush" Value="#DAD3F8"/>
+                            </Trigger>
+
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="CardBorder" Property="Background" Value="#F7F5FF"/>
+                                <Setter TargetName="CardBorder" Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Secondary}"/>
+                                <Setter TargetName="CardBorder" Property="BorderThickness" Value="2"/>
+                                <Setter TargetName="SelectedMark" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    <Style x:Key="CreateMaterial.TagChip" TargetType="Border">
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="Background" Value="#F1EDFF"/>
+            <Setter Property="CornerRadius" Value="8"/>
+        </Style>
     </UserControl.Resources>
 
-    <Grid Background="{DynamicResource Mnemora.Brush.SurfaceMuted}">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
-
-        <!-- 1. Хлебные крошки — наверху, как на остальных страницах библиотеки. -->
-        <Button Grid.Row="0"
-                Margin="32,28,32,0"
-                HorizontalAlignment="Left"
-                Style="{StaticResource CreateMaterial.BreadcrumbButton}">
+    <Grid Background="{DynamicResource Mnemora.Brush.SurfaceMuted}"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions><Button Grid.Row="0" Margin="32,28,32,0" HorizontalAlignment="Left" Style="{StaticResource CreateMaterial.BreadcrumbButton}">
             <StackPanel Orientation="Horizontal">
-                <materialDesign:PackIcon Width="18"
-                                         Height="18"
-                                         VerticalAlignment="Center"
-                                         Kind="ChevronLeft" />
-                <TextBlock Margin="4,0,0,0"
-                           VerticalAlignment="Center"
-                           FontSize="14"
-                           Text="Темы" />
+                <materialDesign:PackIcon Width="18" Height="18" VerticalAlignment="Center" Kind="ChevronLeft"/>
+                <TextBlock Margin="4,0,0,0" VerticalAlignment="Center" FontSize="14" Text="Темы"/>
             </StackPanel>
         </Button>
 
-        <!-- 2. Контекст текущей темы. Тонкий разделитель отделяет тему от процесса создания. -->
-        <Grid Grid.Row="1"
-              Margin="32,20,32,0">
+        <Grid Grid.Row="1" Margin="32,20,32,0">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <Border Width="64"
-                    Height="64"
-                    Background="{Binding SelectedTopic.TopicColor, Converter={StaticResource TopicColorConverter}}"
-                    CornerRadius="15">
-                <materialDesign:PackIcon Width="34"
-                                         Height="34"
-                                         HorizontalAlignment="Center"
-                                         VerticalAlignment="Center"
-                                         Foreground="White"
-                                         Kind="{Binding SelectedTopic.IconKind}" />
+            <Border Width="64" Height="64" Background="{Binding SelectedTopic.TopicColor, Converter={StaticResource TopicColorConverter}}" CornerRadius="15">
+                <materialDesign:PackIcon Width="34" Height="34" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" Kind="{Binding SelectedTopic.IconKind}"/>
             </Border>
 
-            <StackPanel Grid.Column="1"
-                        Margin="18,0,0,0"
-                        VerticalAlignment="Center">
-                <TextBlock FontSize="26"
-                           FontWeight="SemiBold"
-                           Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                           Text="{Binding SelectedTopic.Name, Mode=OneWay}"
-                           TextTrimming="CharacterEllipsis" />
-                <TextBlock Margin="0,5,0,0"
-                           FontSize="14"
-                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                           Text="Создать материал" />
+            <StackPanel Grid.Column="1" Margin="18,0,0,0" VerticalAlignment="Center">
+                <TextBlock FontSize="26" FontWeight="SemiBold" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="{Binding SelectedTopic.Name, Mode=OneWay}" TextTrimming="CharacterEllipsis"/>
+                <TextBlock Margin="0,5,0,0" FontSize="14" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="Создать материал"/>
             </StackPanel>
 
-            <Border Grid.Row="1"
-                    Grid.ColumnSpan="2"
-                    Height="1"
-                    Margin="0,14,0,0"
-                    Background="{DynamicResource Mnemora.Brush.Border}" />
+            <Border Grid.Row="1" Grid.ColumnSpan="2" Height="1" Margin="0,14,0,0" Background="{DynamicResource Mnemora.Brush.Border}"/>
         </Grid>
 
-        <!-- 3. Stepper — повторяет навигацию онбординга: активный шаг и соединение выделены фирменным градиентом. -->
-        <Grid Grid.Row="2"
-              Margin="72,26,72,0"
-              HorizontalAlignment="Stretch">
+        <TabControl x:Name="WizardTabs" Grid.Row="2" SelectedIndex="0" Background="Transparent" BorderThickness="0" Padding="0" Margin="0"><TabControl.Template><ControlTemplate TargetType="TabControl"><ContentPresenter ContentSource="SelectedContent"/></ControlTemplate></TabControl.Template><TabItem><Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions><Grid Grid.Row="0" Margin="72,26,72,0" HorizontalAlignment="Stretch">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="150" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="150" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="150" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="170" />
+                <ColumnDefinition Width="150"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="150"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="150"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="170"/>
             </Grid.ColumnDefinitions>
 
             <!-- Шаг 1 — активный. -->
-            <StackPanel Grid.Column="0"
-                        HorizontalAlignment="Center">
-                <Border Width="46"
-                        Height="46"
-                        HorizontalAlignment="Center"
-                        Background="{DynamicResource Mnemora.Brush.Surface}"
-                        BorderBrush="{DynamicResource Mnemora.Brush.BrandGradient}"
-                        BorderThickness="2"
-                        CornerRadius="23">
-                    <TextBlock HorizontalAlignment="Center"
-                               VerticalAlignment="Center"
-                               FontSize="16"
-                               FontWeight="SemiBold"
-                               Foreground="{DynamicResource Mnemora.Brush.Secondary}"
-                               Text="1" />
+            <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                <Border Width="46" Height="46" HorizontalAlignment="Center" Background="{DynamicResource Mnemora.Brush.Surface}" BorderBrush="{DynamicResource Mnemora.Brush.BrandGradient}" BorderThickness="2" CornerRadius="23">
+                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource Mnemora.Brush.Secondary}" Text="1"/>
                 </Border>
-                <TextBlock Margin="0,9,0,0"
-                           HorizontalAlignment="Center"
-                           FontSize="13"
-                           FontWeight="SemiBold"
-                           Foreground="{DynamicResource Mnemora.Brush.Secondary}"
-                           Text="Тип материала" />
+                <TextBlock Margin="0,9,0,0" HorizontalAlignment="Center" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource Mnemora.Brush.Secondary}" Text="Тип материала"/>
             </StackPanel>
 
-            <Border Grid.Column="1"
-                    Height="3"
-                    Margin="8,22,8,0"
-                    VerticalAlignment="Top"
-                    Background="{DynamicResource Mnemora.Brush.BrandGradient}"
-                    CornerRadius="2" />
+            <Border Grid.Column="1" Height="3" Margin="8,22,8,0" VerticalAlignment="Top" Background="{DynamicResource Mnemora.Brush.BrandGradient}" CornerRadius="2"/>
 
             <!-- Шаг 2. -->
-            <StackPanel Grid.Column="2"
-                        HorizontalAlignment="Center">
-                <Border Width="46"
-                        Height="46"
-                        HorizontalAlignment="Center"
-                        Background="{DynamicResource Mnemora.Brush.Surface}"
-                        BorderBrush="{DynamicResource Mnemora.Brush.Border}"
-                        BorderThickness="2"
-                        CornerRadius="23">
-                    <TextBlock HorizontalAlignment="Center"
-                               VerticalAlignment="Center"
-                               FontSize="16"
-                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                               Text="2" />
+            <StackPanel Grid.Column="2" HorizontalAlignment="Center">
+                <Border Width="46" Height="46" HorizontalAlignment="Center" Background="{DynamicResource Mnemora.Brush.Surface}" BorderBrush="{DynamicResource Mnemora.Brush.Border}" BorderThickness="2" CornerRadius="23">
+                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="2"/>
                 </Border>
-                <TextBlock Margin="0,9,0,0"
-                           HorizontalAlignment="Center"
-                           FontSize="13"
-                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                           Text="Основное" />
+                <TextBlock Margin="0,9,0,0" HorizontalAlignment="Center" FontSize="13" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="Основное"/>
             </StackPanel>
 
-            <Border Grid.Column="3"
-                    Height="2"
-                    Margin="8,22,8,0"
-                    VerticalAlignment="Top"
-                    Background="{DynamicResource Mnemora.Brush.Border}" />
+            <Border Grid.Column="3" Height="2" Margin="8,22,8,0" VerticalAlignment="Top" Background="{DynamicResource Mnemora.Brush.Border}"/>
 
             <!-- Шаг 3. -->
-            <StackPanel Grid.Column="4"
-                        HorizontalAlignment="Center">
-                <Border Width="46"
-                        Height="46"
-                        HorizontalAlignment="Center"
-                        Background="{DynamicResource Mnemora.Brush.Surface}"
-                        BorderBrush="{DynamicResource Mnemora.Brush.Border}"
-                        BorderThickness="2"
-                        CornerRadius="23">
-                    <TextBlock HorizontalAlignment="Center"
-                               VerticalAlignment="Center"
-                               FontSize="16"
-                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                               Text="3" />
+            <StackPanel Grid.Column="4" HorizontalAlignment="Center">
+                <Border Width="46" Height="46" HorizontalAlignment="Center" Background="{DynamicResource Mnemora.Brush.Surface}" BorderBrush="{DynamicResource Mnemora.Brush.Border}" BorderThickness="2" CornerRadius="23">
+                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="3"/>
                 </Border>
-                <TextBlock Margin="0,9,0,0"
-                           HorizontalAlignment="Center"
-                           FontSize="13"
-                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                           Text="Содержимое" />
+                <TextBlock Margin="0,9,0,0" HorizontalAlignment="Center" FontSize="13" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="Содержимое"/>
             </StackPanel>
 
-            <Border Grid.Column="5"
-                    Height="2"
-                    Margin="8,22,8,0"
-                    VerticalAlignment="Top"
-                    Background="{DynamicResource Mnemora.Brush.Border}" />
+            <Border Grid.Column="5" Height="2" Margin="8,22,8,0" VerticalAlignment="Top" Background="{DynamicResource Mnemora.Brush.Border}"/>
 
             <!-- Шаг 4. -->
-            <StackPanel Grid.Column="6"
-                        HorizontalAlignment="Center">
-                <Border Width="46"
-                        Height="46"
-                        HorizontalAlignment="Center"
-                        Background="{DynamicResource Mnemora.Brush.Surface}"
-                        BorderBrush="{DynamicResource Mnemora.Brush.Border}"
-                        BorderThickness="2"
-                        CornerRadius="23">
-                    <TextBlock HorizontalAlignment="Center"
-                               VerticalAlignment="Center"
-                               FontSize="16"
-                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                               Text="4" />
+            <StackPanel Grid.Column="6" HorizontalAlignment="Center">
+                <Border Width="46" Height="46" HorizontalAlignment="Center" Background="{DynamicResource Mnemora.Brush.Surface}" BorderBrush="{DynamicResource Mnemora.Brush.Border}" BorderThickness="2" CornerRadius="23">
+                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="4"/>
                 </Border>
-                <TextBlock Margin="0,9,0,0"
-                           HorizontalAlignment="Center"
-                           FontSize="13"
-                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                           Text="Обучение и связи" />
+                <TextBlock Margin="0,9,0,0" HorizontalAlignment="Center" FontSize="13" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="Обучение и связи"/>
             </StackPanel>
         </Grid>
 
-        <!-- 4. Содержимое только первого шага. -->
-        <ScrollViewer Grid.Row="3"
+        <ScrollViewer Grid.Row="1" Margin="32,28,32,20" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+            <Border MaxWidth="900" Padding="36,28,36,30" HorizontalAlignment="Center" VerticalAlignment="Top" Background="{DynamicResource Mnemora.Brush.Surface}" BorderBrush="{DynamicResource Mnemora.Brush.Border}" BorderThickness="1" CornerRadius="16">
+                <StackPanel>
+                    <TextBlock HorizontalAlignment="Center" FontSize="22" FontWeight="SemiBold" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="Что добавим в Mnemora?"/>
+
+                    <TextBlock Margin="0,7,0,0" HorizontalAlignment="Center" FontSize="13" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="Выбери формат — дальше настроим всё по шагам."/>
+
+                    <Grid Margin="0,24,0,0" HorizontalAlignment="Center">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="24"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <RadioButton x:Name="ArticleChoiceRadio" Grid.Column="0" GroupName="CreateMaterialType" Style="{StaticResource CreateMaterial.TypeCard}">
+                            <Grid Margin="26,20,26,12">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <Border Width="60" Height="60" HorizontalAlignment="Center" Background="#F1EDFF" CornerRadius="30">
+                                    <materialDesign:PackIcon Width="30" Height="30" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.Secondary}" Kind="FileDocumentOutline"/>
+                                </Border>
+
+                                <StackPanel Grid.Row="1" Margin="0,14,0,0">
+                                    <TextBlock HorizontalAlignment="Center" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="Статья"/>
+                                    <TextBlock Margin="0,5,0,0" HorizontalAlignment="Center" FontSize="13" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="Теория, конспект или подробный разбор"/>
+                                </StackPanel>
+
+                                <Border Grid.Row="2" Height="1" Margin="0,16,0,14" Background="{DynamicResource Mnemora.Brush.Border}"/>
+
+                                <StackPanel Grid.Row="3">
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="26"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Width="18" Height="18" VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.Secondary}" Kind="BookOpenPageVariantOutline"/>
+                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="13" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="Сохраняй теорию и разборы"/>
+                                    </Grid>
+
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="26"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Width="18" Height="18" VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.Secondary}" Kind="FormatListBulleted"/>
+                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="13" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="Структурируй материал с оглавлением"/>
+                                    </Grid>
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="26"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Width="18" Height="18" VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.Secondary}" Kind="HelpCircleOutline"/>
+                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="13" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="Закрепляй знания вопросами с ИИ-проверкой"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Grid>
+                        </RadioButton>
+
+                        <RadioButton x:Name="QuestionChoiceRadio" Grid.Column="2" GroupName="CreateMaterialType" Style="{StaticResource CreateMaterial.TypeCard}">
+                            <Grid Margin="26,20,26,12">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <Border Width="60" Height="60" HorizontalAlignment="Center" Background="#E8FAF7" CornerRadius="30">
+                                    <materialDesign:PackIcon Width="30" Height="30" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.Primary}" Kind="HelpCircleOutline"/>
+                                </Border>
+
+                                <StackPanel Grid.Row="1" Margin="0,14,0,0">
+                                    <TextBlock HorizontalAlignment="Center" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="Вопрос"/>
+                                    <TextBlock Margin="0,5,0,0" HorizontalAlignment="Center" FontSize="13" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="Практика и проверка знаний"/>
+                                </StackPanel>
+
+                                <Border Grid.Row="2" Height="1" Margin="0,16,0,14" Background="{DynamicResource Mnemora.Brush.Border}"/>
+
+                                <StackPanel Grid.Row="3">
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="26"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Width="18" Height="18" VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.Primary}" Kind="HelpCircleOutline"/>
+                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="13" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="Создавай вопросы для практики"/>
+                                    </Grid>
+
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="26"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Width="18" Height="18" VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.Primary}" Kind="Check"/>
+                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="13" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="Добавляй эталонные ответы"/>
+                                    </Grid>
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="26"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Width="18" Height="18" VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.Primary}" Kind="InformationOutline"/>
+                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="13" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="Получай ИИ-проверку и обратную связь"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Grid>
+                        </RadioButton>
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </ScrollViewer>
+
+        <Border Grid.Row="2" Padding="32,16" Background="{DynamicResource Mnemora.Brush.Surface}" BorderBrush="{DynamicResource Mnemora.Brush.Border}" BorderThickness="0,1,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <Button HorizontalAlignment="Left" Command="{Binding CancelCreateMaterialCommand}" Style="{StaticResource Mnemora.SecondaryButton}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Width="18" Height="18" VerticalAlignment="Center" Kind="ChevronLeft"/>
+                        <TextBlock Margin="7,0,0,0" VerticalAlignment="Center" Text="Назад к материалам"/>
+                    </StackPanel>
+                </Button>
+
+                <Button Grid.Column="1" MinWidth="132" Height="44" Click="GoToBasicStep_OnClick">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource Mnemora.PrimaryButton}">
+                            <Setter Property="IsEnabled" Value="False"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsChecked, ElementName=ArticleChoiceRadio}" Value="True">
+                                    <Setter Property="IsEnabled" Value="True"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsChecked, ElementName=QuestionChoiceRadio}" Value="True">
+                                    <Setter Property="IsEnabled" Value="True"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center" Text="Далее"/>
+                        <materialDesign:PackIcon Width="18" Height="18" Margin="7,0,0,0" VerticalAlignment="Center" Kind="ChevronRight"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+    </Grid></TabItem><TabItem><Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions><Grid Grid.Row="0" Margin="72,26,72,0" HorizontalAlignment="Stretch">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="150"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="150"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="150"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="170"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                <Border Width="46" Height="46" HorizontalAlignment="Center" Background="{DynamicResource Mnemora.Brush.Surface}" BorderBrush="{DynamicResource Mnemora.Brush.Primary}" BorderThickness="2" CornerRadius="23">
+                    <materialDesign:PackIcon Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.Primary}" Kind="Check"/>
+                </Border>
+                <TextBlock Margin="0,9,0,0" HorizontalAlignment="Center" FontSize="13" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="Тип материала"/>
+            </StackPanel>
+
+            <Border Grid.Column="1" Height="3" Margin="8,22,8,0" VerticalAlignment="Top" Background="{DynamicResource Mnemora.Brush.BrandGradient}" CornerRadius="2"/>
+
+            <StackPanel Grid.Column="2" HorizontalAlignment="Center">
+                <Border Width="46" Height="46" HorizontalAlignment="Center" Background="{DynamicResource Mnemora.Brush.Surface}" BorderBrush="{DynamicResource Mnemora.Brush.BrandGradient}" BorderThickness="2" CornerRadius="23">
+                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource Mnemora.Brush.Secondary}" Text="2"/>
+                </Border>
+                <TextBlock Margin="0,9,0,0" HorizontalAlignment="Center" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource Mnemora.Brush.Secondary}" Text="Основное"/>
+            </StackPanel>
+
+            <Border Grid.Column="3" Height="2" Margin="8,22,8,0" VerticalAlignment="Top" Background="{DynamicResource Mnemora.Brush.Border}"/>
+
+            <StackPanel Grid.Column="4" HorizontalAlignment="Center">
+                <Border Width="46" Height="46" HorizontalAlignment="Center" Background="{DynamicResource Mnemora.Brush.Surface}" BorderBrush="{DynamicResource Mnemora.Brush.Border}" BorderThickness="2" CornerRadius="23">
+                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="3"/>
+                </Border>
+                <TextBlock Margin="0,9,0,0" HorizontalAlignment="Center" FontSize="13" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="Содержимое"/>
+            </StackPanel>
+
+            <Border Grid.Column="5" Height="2" Margin="8,22,8,0" VerticalAlignment="Top" Background="{DynamicResource Mnemora.Brush.Border}"/>
+
+            <StackPanel Grid.Column="6" HorizontalAlignment="Center">
+                <Border Width="46" Height="46" HorizontalAlignment="Center" Background="{DynamicResource Mnemora.Brush.Surface}" BorderBrush="{DynamicResource Mnemora.Brush.Border}" BorderThickness="2" CornerRadius="23">
+                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="4"/>
+                </Border>
+                <TextBlock Margin="0,9,0,0" HorizontalAlignment="Center" FontSize="13" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="Обучение и связи"/>
+            </StackPanel>
+        </Grid>
+
+        <ScrollViewer Grid.Row="1"
                       Margin="32,28,32,20"
                       HorizontalScrollBarVisibility="Disabled"
                       VerticalScrollBarVisibility="Auto">
-            <Border MaxWidth="900"
-                    Padding="36,28,36,30"
-                    HorizontalAlignment="Center"
+            <Border Padding="36,26,36,26"
+                    HorizontalAlignment="Stretch"
                     VerticalAlignment="Top"
                     Background="{DynamicResource Mnemora.Brush.Surface}"
                     BorderBrush="{DynamicResource Mnemora.Brush.Border}"
@@ -324,277 +408,205 @@
                                FontSize="22"
                                FontWeight="SemiBold"
                                Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                               Text="Что добавим в Mnemora?" />
+                               Text="Добавим детали" />
 
                     <TextBlock Margin="0,7,0,0"
                                HorizontalAlignment="Center"
                                FontSize="13"
                                Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                               Text="Выбери формат — дальше настроим всё по шагам." />
+                               Text="Добавь название и детали — так материал будет проще найти." />
 
-                    <Grid Margin="0,24,0,0"
-                          HorizontalAlignment="Center">
+                    <!--
+                        Поля выстроены по приоритету:
+                        1 ряд — компактная иконка + длинное название;
+                        2 ряд — компактная сложность + теги.
+                    -->
+                    <Grid Margin="0,22,0,0">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="24" />
-                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="28*" />
+                            <ColumnDefinition Width="28" />
+                            <ColumnDefinition Width="72*" />
                         </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="14" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
 
-                        <RadioButton x:Name="ArticleChoiceRadio"
-                                     Grid.Column="0"
-                                     GroupName="CreateMaterialType"
-                                     Style="{StaticResource CreateMaterial.TypeCard}">
-                            <Grid Margin="26,20,26,12">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                </Grid.RowDefinitions>
+                        <!-- 1 ряд: иконка. -->
+                        <StackPanel Grid.Row="0" Grid.Column="0">
+                            <TextBlock Margin="0,0,0,8"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                       Text="Иконка" />
 
-                                <Border Width="60"
-                                        Height="60"
-                                        HorizontalAlignment="Center"
-                                        Background="#F1EDFF"
-                                        CornerRadius="30">
-                                    <materialDesign:PackIcon Width="30"
-                                                             Height="30"
-                                                             HorizontalAlignment="Center"
-                                                             VerticalAlignment="Center"
-                                                             Foreground="{DynamicResource Mnemora.Brush.Secondary}"
-                                                             Kind="FileDocumentOutline" />
-                                </Border>
+                            <Border Height="56"
+                                    Padding="6,8,8,8"
+                                    Background="{DynamicResource Mnemora.Brush.SurfaceMuted}"
+                                    BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                                    BorderThickness="1"
+                                    CornerRadius="10">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
 
-                                <StackPanel Grid.Row="1" Margin="0,14,0,0">
-                                    <TextBlock HorizontalAlignment="Center"
-                                               FontSize="20"
-                                               FontWeight="SemiBold"
+                                    <Border Width="36"
+                                            Height="36"
+                                            Background="#F1EDFF"
+                                            CornerRadius="10">
+                                        <materialDesign:PackIcon Width="20"
+                                                                 Height="20"
+                                                                 HorizontalAlignment="Center"
+                                                                 VerticalAlignment="Center"
+                                                                 Foreground="{DynamicResource Mnemora.Brush.Secondary}"
+                                                                 Kind="FileDocumentOutline" />
+                                    </Border>
+
+                                    <!-- Пока только визуальный макет: позже сюда подставим
+                                         человекочитаемое название выбранной иконки. -->
+                                    <TextBlock Grid.Column="1"
+                                               Margin="8,0,6,0"
+                                               VerticalAlignment="Center"
+                                               FontSize="13"
                                                Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                                               Text="Статья" />
-                                    <TextBlock Margin="0,5,0,0"
-                                               HorizontalAlignment="Center"
+                                               Text="Документ"
+                                               TextTrimming="CharacterEllipsis" />
+
+                                    <Button Grid.Column="2"
+                                            Margin="6,0,0,0"
+                                            VerticalAlignment="Center"
+                                            Style="{StaticResource CreateMaterial.IconPickerButton}"
+                                            ToolTip="Выбрать иконку">
+                                        <materialDesign:PackIcon Width="18"
+                                                                 Height="18"
+                                                                 HorizontalAlignment="Center"
+                                                                 VerticalAlignment="Center"
+                                                                 Kind="ShapeOutline" />
+                                    </Button>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- 1 ряд: название получает большую часть ширины. -->
+                        <StackPanel Grid.Row="0" Grid.Column="2">
+                            <TextBlock Margin="0,0,0,8"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                       Text="Название *" />
+                            <TextBox Height="56"
+                                     Padding="12,0"
+                                     VerticalContentAlignment="Center"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     materialDesign:HintAssist.Hint="Название материала"
+                                     Text="Отслеживание сущностей в EF Core" />
+                            <TextBlock Margin="2,6,0,0"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                       Text="Короткое название, по которому материал легко найти." />
+                        </StackPanel>
+
+                        <!-- 2 ряд: сложность. -->
+                        <StackPanel Grid.Row="2" Grid.Column="0">
+                            <TextBlock Margin="0,0,0,8"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                       Text="Сложность" />
+                            <ComboBox Height="56"
+                                      HorizontalAlignment="Stretch"
+                                      SelectedIndex="1"
+                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                      materialDesign:HintAssist.Hint="Сложность">
+                                <ComboBoxItem Content="Начальный" />
+                                <ComboBoxItem Content="Средний" />
+                                <ComboBoxItem Content="Продвинутый" />
+                            </ComboBox>
+                        </StackPanel>
+
+                        <!-- 2 ряд: теги получают большую часть ширины. -->
+                        <StackPanel Grid.Row="2" Grid.Column="2">
+                            <TextBlock Margin="0,0,0,8"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                       Text="Теги" />
+                            <Border Height="56"
+                                    Padding="12,8"
+                                    Background="{DynamicResource Mnemora.Brush.Surface}"
+                                    BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                                    BorderThickness="1"
+                                    CornerRadius="10">
+                                <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                                    <Border Style="{StaticResource CreateMaterial.TagChip}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock VerticalAlignment="Center"
+                                                       FontSize="13"
+                                                       Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                                       Text="EF Core" />
+                                            <materialDesign:PackIcon Width="15"
+                                                                     Height="15"
+                                                                     Margin="6,0,0,0"
+                                                                     VerticalAlignment="Center"
+                                                                     Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                                     Kind="Close" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource CreateMaterial.TagChip}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock VerticalAlignment="Center"
+                                                       FontSize="13"
+                                                       Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                                       Text="Change Tracker" />
+                                            <materialDesign:PackIcon Width="15"
+                                                                     Height="15"
+                                                                     Margin="6,0,0,0"
+                                                                     VerticalAlignment="Center"
+                                                                     Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                                     Kind="Close" />
+                                        </StackPanel>
+                                    </Border>
+                                    <TextBlock Margin="4,0,0,0"
+                                               VerticalAlignment="Center"
                                                FontSize="13"
                                                Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                                               Text="Теория, конспект или подробный разбор" />
+                                               Text="Добавить тег..." />
                                 </StackPanel>
-
-                                <Border Grid.Row="2"
-                                        Height="1"
-                                        Margin="0,16,0,14"
-                                        Background="{DynamicResource Mnemora.Brush.Border}" />
-
-                                <StackPanel Grid.Row="3">
-                                    <Grid Margin="0,0,0,10">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="26" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <materialDesign:PackIcon Width="18"
-                                                                 Height="18"
-                                                                 VerticalAlignment="Center"
-                                                                 Foreground="{DynamicResource Mnemora.Brush.Secondary}"
-                                                                 Kind="BookOpenPageVariantOutline" />
-                                        <TextBlock Grid.Column="1"
-                                                   VerticalAlignment="Center"
-                                                   FontSize="13"
-                                                   Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                                                   Text="Сохраняй теорию и разборы" />
-                                    </Grid>
-
-                                    <Grid Margin="0,0,0,10">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="26" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <materialDesign:PackIcon Width="18"
-                                                                 Height="18"
-                                                                 VerticalAlignment="Center"
-                                                                 Foreground="{DynamicResource Mnemora.Brush.Secondary}"
-                                                                 Kind="FormatListBulleted" />
-                                        <TextBlock Grid.Column="1"
-                                                   VerticalAlignment="Center"
-                                                   FontSize="13"
-                                                   Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                                                   Text="Структурируй материал с оглавлением" />
-                                    </Grid>
-
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="26" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <materialDesign:PackIcon Width="18"
-                                                                 Height="18"
-                                                                 VerticalAlignment="Center"
-                                                                 Foreground="{DynamicResource Mnemora.Brush.Secondary}"
-                                                                 Kind="HelpCircleOutline" />
-                                        <TextBlock Grid.Column="1"
-                                                   VerticalAlignment="Center"
-                                                   FontSize="13"
-                                                   Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                                                   Text="Закрепляй знания вопросами с ИИ-проверкой" />
-                                    </Grid>
-                                </StackPanel>
-                            </Grid>
-                        </RadioButton>
-
-                        <RadioButton x:Name="QuestionChoiceRadio"
-                                     Grid.Column="2"
-                                     GroupName="CreateMaterialType"
-                                     Style="{StaticResource CreateMaterial.TypeCard}">
-                            <Grid Margin="26,20,26,12">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                </Grid.RowDefinitions>
-
-                                <Border Width="60"
-                                        Height="60"
-                                        HorizontalAlignment="Center"
-                                        Background="#E8FAF7"
-                                        CornerRadius="30">
-                                    <materialDesign:PackIcon Width="30"
-                                                             Height="30"
-                                                             HorizontalAlignment="Center"
-                                                             VerticalAlignment="Center"
-                                                             Foreground="{DynamicResource Mnemora.Brush.Primary}"
-                                                             Kind="HelpCircleOutline" />
-                                </Border>
-
-                                <StackPanel Grid.Row="1" Margin="0,14,0,0">
-                                    <TextBlock HorizontalAlignment="Center"
-                                               FontSize="20"
-                                               FontWeight="SemiBold"
-                                               Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                                               Text="Вопрос" />
-                                    <TextBlock Margin="0,5,0,0"
-                                               HorizontalAlignment="Center"
-                                               FontSize="13"
-                                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                                               Text="Практика и проверка знаний" />
-                                </StackPanel>
-
-                                <Border Grid.Row="2"
-                                        Height="1"
-                                        Margin="0,16,0,14"
-                                        Background="{DynamicResource Mnemora.Brush.Border}" />
-
-                                <StackPanel Grid.Row="3">
-                                    <Grid Margin="0,0,0,10">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="26" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <materialDesign:PackIcon Width="18"
-                                                                 Height="18"
-                                                                 VerticalAlignment="Center"
-                                                                 Foreground="{DynamicResource Mnemora.Brush.Primary}"
-                                                                 Kind="HelpCircleOutline" />
-                                        <TextBlock Grid.Column="1"
-                                                   VerticalAlignment="Center"
-                                                   FontSize="13"
-                                                   Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                                                   Text="Создавай вопросы для практики" />
-                                    </Grid>
-
-                                    <Grid Margin="0,0,0,10">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="26" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <materialDesign:PackIcon Width="18"
-                                                                 Height="18"
-                                                                 VerticalAlignment="Center"
-                                                                 Foreground="{DynamicResource Mnemora.Brush.Primary}"
-                                                                 Kind="Check" />
-                                        <TextBlock Grid.Column="1"
-                                                   VerticalAlignment="Center"
-                                                   FontSize="13"
-                                                   Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                                                   Text="Добавляй эталонные ответы" />
-                                    </Grid>
-
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="26" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <materialDesign:PackIcon Width="18"
-                                                                 Height="18"
-                                                                 VerticalAlignment="Center"
-                                                                 Foreground="{DynamicResource Mnemora.Brush.Primary}"
-                                                                 Kind="InformationOutline" />
-                                        <TextBlock Grid.Column="1"
-                                                   VerticalAlignment="Center"
-                                                   FontSize="13"
-                                                   Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                                                   Text="Получай ИИ-проверку и обратную связь" />
-                                    </Grid>
-                                </StackPanel>
-                            </Grid>
-                        </RadioButton>
+                            </Border>
+                            <TextBlock Margin="2,6,0,0"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                       Text="Нажми Enter, чтобы добавить тег." />
+                        </StackPanel>
                     </Grid>
                 </StackPanel>
             </Border>
         </ScrollViewer>
 
-        <!-- 5. Фиксированный footer первого шага. Реальное создание материала пока не подключено. -->
-        <Border Grid.Row="4"
-                Padding="32,16"
-                Background="{DynamicResource Mnemora.Brush.Surface}"
-                BorderBrush="{DynamicResource Mnemora.Brush.Border}"
-                BorderThickness="0,1,0,0">
+        <Border Grid.Row="2" Padding="32,16" Background="{DynamicResource Mnemora.Brush.Surface}" BorderBrush="{DynamicResource Mnemora.Brush.Border}" BorderThickness="0,1,0,0">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <Button HorizontalAlignment="Left"
-                        Command="{Binding CancelCreateMaterialCommand}"
-                        Style="{StaticResource Mnemora.SecondaryButton}">
+                <Button HorizontalAlignment="Left" Style="{StaticResource Mnemora.SecondaryButton}" Click="GoToTypeStep_OnClick">
                     <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Width="18"
-                                                 Height="18"
-                                                 VerticalAlignment="Center"
-                                                 Kind="ChevronLeft" />
-                        <TextBlock Margin="7,0,0,0"
-                                   VerticalAlignment="Center"
-                                   Text="Назад к материалам" />
+                        <materialDesign:PackIcon Width="18" Height="18" VerticalAlignment="Center" Kind="ChevronLeft"/>
+                        <TextBlock Margin="7,0,0,0" VerticalAlignment="Center" Text="Назад"/>
                     </StackPanel>
                 </Button>
 
-                <Button Grid.Column="1"
-                        MinWidth="132"
-                        Height="44">
-                    <Button.Style>
-                        <Style TargetType="Button"
-                               BasedOn="{StaticResource Mnemora.PrimaryButton}">
-                            <Setter Property="IsEnabled" Value="False" />
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsChecked, ElementName=ArticleChoiceRadio}"
-                                             Value="True">
-                                    <Setter Property="IsEnabled" Value="True" />
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding IsChecked, ElementName=QuestionChoiceRadio}"
-                                             Value="True">
-                                    <Setter Property="IsEnabled" Value="True" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
+                <Button Grid.Column="1" MinWidth="132" Height="44" Style="{StaticResource Mnemora.PrimaryButton}">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock VerticalAlignment="Center" Text="Далее" />
-                        <materialDesign:PackIcon Width="18"
-                                                 Height="18"
-                                                 Margin="7,0,0,0"
-                                                 VerticalAlignment="Center"
-                                                 Kind="ChevronRight" />
+                        <TextBlock VerticalAlignment="Center" Text="Далее"/>
+                        <materialDesign:PackIcon Width="18" Height="18" Margin="7,0,0,0" VerticalAlignment="Center" Kind="ChevronRight"/>
                     </StackPanel>
                 </Button>
             </Grid>
         </Border>
-    </Grid>
-</UserControl>
+    </Grid></TabItem></TabControl></Grid></UserControl>
