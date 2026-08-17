@@ -814,65 +814,145 @@
                                 <ComboBoxItem Content="Продвинутый" />
                             </ComboBox>
 
-                            <Grid Grid.Column="2"
-                                  Height="52"
-                                  Background="#FFFFFF">
-                                <!-- Поле тегов рисуем без скрытого Material-контрола: так чипы
-                                     гарантированно остаются видимыми. Геометрия повторяет
-                                     MaterialDesignOutlinedComboBox у поля «Сложность». -->
-                                <Border Background="#FFFFFF"
-                                        BorderBrush="#616161"
-                                        BorderThickness="1"
-                                        CornerRadius="4" />
+                            <StackPanel Grid.Column="2"
+                                        Tag="TagsFieldHost">
+                                <Grid Height="52"
+                                      Background="#FFFFFF">
+                                    <!-- Геометрию оставляем той же, что у рабочего поля тегов. -->
+                                    <Border Background="#FFFFFF"
+                                            BorderBrush="#616161"
+                                            BorderThickness="1"
+                                            CornerRadius="4" />
 
-                                <Border Margin="14,-7,0,0"
-                                        Padding="4,0"
-                                        HorizontalAlignment="Left"
-                                        VerticalAlignment="Top"
-                                        Background="#FFFFFF">
-                                    <TextBlock FontSize="12"
-                                               Foreground="#212121"
-                                               Text="Теги" />
-                                </Border>
+                                    <Border Margin="14,-7,0,0"
+                                            Padding="4,0"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Top"
+                                            Background="#FFFFFF">
+                                        <TextBlock FontSize="12"
+                                                   Foreground="#212121"
+                                                   Text="Теги" />
+                                    </Border>
 
-                                <StackPanel Margin="16,0,14,0"
-                                            VerticalAlignment="Center"
-                                            Orientation="Horizontal">
-                                    <Border Style="{StaticResource CreateMaterial.TagChip}">
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock VerticalAlignment="Center"
-                                                       FontSize="13"
-                                                       Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                                                       Text="EF Core" />
-                                            <materialDesign:PackIcon Width="15"
-                                                                     Height="15"
-                                                                     Margin="6,0,0,0"
-                                                                     VerticalAlignment="Center"
-                                                                     Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                                                                     Kind="Close" />
-                                        </StackPanel>
-                                    </Border>
-                                    <Border Style="{StaticResource CreateMaterial.TagChip}">
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock VerticalAlignment="Center"
-                                                       FontSize="13"
-                                                       Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                                                       Text="Change Tracker" />
-                                            <materialDesign:PackIcon Width="15"
-                                                                     Height="15"
-                                                                     Margin="6,0,0,0"
-                                                                     VerticalAlignment="Center"
-                                                                     Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                                                                     Kind="Close" />
-                                        </StackPanel>
-                                    </Border>
-                                    <TextBlock Margin="4,0,0,0"
-                                               VerticalAlignment="Center"
-                                               FontSize="13"
-                                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                                               Text="Введите текст и нажмите Enter" />
-                                </StackPanel>
-                            </Grid>
+                                    <ScrollViewer Margin="16,0,14,0"
+                                                  VerticalAlignment="Center"
+                                                  HorizontalScrollBarVisibility="Hidden"
+                                                  VerticalScrollBarVisibility="Disabled">
+                                        <WrapPanel x:Name="TagsPanel"
+                                                   VerticalAlignment="Center"
+                                                   Orientation="Horizontal">
+                                            <Border Tag="EF Core"
+                                                    Style="{StaticResource CreateMaterial.TagChip}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock VerticalAlignment="Center"
+                                                               FontSize="13"
+                                                               Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                                               Text="EF Core" />
+                                                    <Button Width="18"
+                                                            Height="18"
+                                                            MinWidth="18"
+                                                            Margin="5,0,-3,0"
+                                                            Padding="0"
+                                                            VerticalAlignment="Center"
+                                                            Background="Transparent"
+                                                            BorderThickness="0"
+                                                            Cursor="Hand"
+                                                            Focusable="False"
+                                                            Tag="EF Core"
+                                                            Click="RemoveTag_OnClick"
+                                                            ToolTip="Удалить тег">
+                                                        <Button.Template>
+                                                            <ControlTemplate TargetType="Button">
+                                                                <ContentPresenter HorizontalAlignment="Center"
+                                                                                  VerticalAlignment="Center" />
+                                                            </ControlTemplate>
+                                                        </Button.Template>
+                                                        <materialDesign:PackIcon Width="15"
+                                                                                 Height="15"
+                                                                                 Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                                                 Kind="Close" />
+                                                    </Button>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <Border Tag="Change Tracker"
+                                                    Style="{StaticResource CreateMaterial.TagChip}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock VerticalAlignment="Center"
+                                                               FontSize="13"
+                                                               Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                                               Text="Change Tracker" />
+                                                    <Button Width="18"
+                                                            Height="18"
+                                                            MinWidth="18"
+                                                            Margin="5,0,-3,0"
+                                                            Padding="0"
+                                                            VerticalAlignment="Center"
+                                                            Background="Transparent"
+                                                            BorderThickness="0"
+                                                            Cursor="Hand"
+                                                            Focusable="False"
+                                                            Tag="Change Tracker"
+                                                            Click="RemoveTag_OnClick"
+                                                            ToolTip="Удалить тег">
+                                                        <Button.Template>
+                                                            <ControlTemplate TargetType="Button">
+                                                                <ContentPresenter HorizontalAlignment="Center"
+                                                                                  VerticalAlignment="Center" />
+                                                            </ControlTemplate>
+                                                        </Button.Template>
+                                                        <materialDesign:PackIcon Width="15"
+                                                                                 Height="15"
+                                                                                 Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                                                 Kind="Close" />
+                                                    </Button>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <Grid MinWidth="210"
+                                                  Height="32"
+                                                  Margin="4,0,0,0">
+                                                <TextBox x:Name="TagInput"
+                                                         MinWidth="210"
+                                                         Height="32"
+                                                         Padding="0"
+                                                         VerticalContentAlignment="Center"
+                                                         Background="Transparent"
+                                                         BorderThickness="0"
+                                                         FontSize="13"
+                                                         Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                                         KeyDown="TagInput_OnKeyDown"
+                                                         TextChanged="TagInput_OnTextChanged" />
+
+                                                <TextBlock Margin="0,0,0,0"
+                                                           VerticalAlignment="Center"
+                                                           IsHitTestVisible="False"
+                                                           FontSize="13"
+                                                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                           Text="Введите текст и нажмите Enter">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Text, ElementName=TagInput}" Value="">
+                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </Grid>
+                                        </WrapPanel>
+                                    </ScrollViewer>
+                                </Grid>
+
+                                <TextBlock Margin="4,5,0,0"
+                                           Tag="TagsError"
+                                           FontSize="12"
+                                           Foreground="#D14343"
+                                           TextWrapping="Wrap"
+                                           Visibility="Collapsed" />
+                            </StackPanel>
                         </Grid>
                     </Grid>
 
