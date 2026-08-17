@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
@@ -84,6 +84,13 @@ public sealed partial class LibraryManagementViewModel(
     private int? _simpleSectionLoadingVersion;
     private bool _isSimpleSectionsLoaded;
     private bool _isSimpleViewModeLoaded;
+    private bool _isSimpleSortSettingsLoaded;
+    private bool _isApplyingSimpleSortSettings;
+
+    // Сортировка тем зависит от раздела, а сортировка материалов — от темы.
+    // Поэтому эти настройки хранятся отдельно для каждого родительского контекста.
+    private readonly Dictionary<Guid, LibraryManagementSortMode> _topicSortBySection = new();
+    private readonly Dictionary<Guid, LibraryManagementSortMode> _materialSortByTopic = new();
 
     private Task? _loadTask;
     private bool _reloadRequested;
@@ -206,11 +213,9 @@ public sealed partial class LibraryManagementViewModel(
     [NotifyPropertyChangedFor(nameof(SimpleSectionsShownCountText))]
     private int _simpleSectionsTotalCount;
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsSimpleTilesView))]
-    [NotifyPropertyChangedFor(nameof(IsSimpleCompactTilesView))]
-    [NotifyPropertyChangedFor(nameof(IsSimpleTableView))]
-    private LibraryManagementViewMode _simpleViewMode = LibraryManagementViewMode.Tiles;
+    private LibraryManagementViewMode _simpleSectionsViewMode = LibraryManagementViewMode.Tiles;
+    private LibraryManagementViewMode _simpleTopicsViewMode = LibraryManagementViewMode.Tiles;
+    private LibraryManagementViewMode _simpleMaterialsViewMode = LibraryManagementViewMode.Table;
 
     [ObservableProperty]
     private LibraryManagementSectionSortOption _selectedSimpleSectionSortOption =
@@ -260,6 +265,9 @@ public sealed partial class LibraryManagementViewModel(
     [NotifyPropertyChangedFor(nameof(IsSimpleSectionsPage))]
     [NotifyPropertyChangedFor(nameof(IsSimpleTopicsPage))]
     [NotifyPropertyChangedFor(nameof(IsSimpleMaterialsPage))]
+    [NotifyPropertyChangedFor(nameof(IsSimpleTilesView))]
+    [NotifyPropertyChangedFor(nameof(IsSimpleCompactTilesView))]
+    [NotifyPropertyChangedFor(nameof(IsSimpleTableView))]
     [NotifyCanExecuteChangedFor(nameof(LoadNextSimpleSectionPageCommand))]
     private LibraryManagementSimplePage _simplePage = LibraryManagementSimplePage.Sections;
 
@@ -336,11 +344,20 @@ public sealed partial class LibraryManagementViewModel(
     public bool HasSimpleSectionsNextPageError =>
         !string.IsNullOrWhiteSpace(SimpleSectionsNextPageErrorMessage);
 
-    public bool IsSimpleTilesView => SimpleViewMode == LibraryManagementViewMode.Tiles;
+    private LibraryManagementViewMode CurrentSimpleViewMode =>
+        SimplePage switch
+        {
+            LibraryManagementSimplePage.Sections => _simpleSectionsViewMode,
+            LibraryManagementSimplePage.Topics => _simpleTopicsViewMode,
+            LibraryManagementSimplePage.Materials => _simpleMaterialsViewMode,
+            _ => LibraryManagementViewMode.Tiles,
+        };
 
-    public bool IsSimpleCompactTilesView => SimpleViewMode == LibraryManagementViewMode.CompactTiles;
+    public bool IsSimpleTilesView => CurrentSimpleViewMode == LibraryManagementViewMode.Tiles;
 
-    public bool IsSimpleTableView => SimpleViewMode == LibraryManagementViewMode.Table;
+    public bool IsSimpleCompactTilesView => CurrentSimpleViewMode == LibraryManagementViewMode.CompactTiles;
+
+    public bool IsSimpleTableView => CurrentSimpleViewMode == LibraryManagementViewMode.Table;
 
     public string SimpleSectionsShownCountText =>
         $"Показано {SimpleSections.Count} из {SimpleSectionsTotalCount}";
@@ -440,10 +457,13 @@ public sealed partial class LibraryManagementViewModel(
     public async Task LoadAsync(CancellationToken cancellationToken = default)
     {
         _viewCancellationToken = cancellationToken;
+
+        await EnsureSimpleViewModeLoadedAsync(cancellationToken);
+        await EnsureSimpleSortSettingsLoadedAsync(cancellationToken);
+
         _isSimpleSectionsLoaded = true;
         LoadNextSimpleSectionPageCommand.NotifyCanExecuteChanged();
 
-        await EnsureSimpleViewModeLoadedAsync(cancellationToken);
         await ReloadSimpleSectionsCoreAsync(cancellationToken);
     }
 
@@ -1092,6 +1112,13 @@ public sealed partial class LibraryManagementViewModel(
 
     partial void OnSelectedSimpleSectionSortOptionChanged(LibraryManagementSectionSortOption value)
     {
+        if (_isApplyingSimpleSortSettings)
+        {
+            return;
+        }
+
+        _ = SaveSimpleSectionSortAsync(value.Sort);
+
         if (_isSimpleSectionsLoaded)
         {
             _ = ReloadSimpleSectionsAfterSortChangedAsync();
@@ -1106,6 +1133,18 @@ public sealed partial class LibraryManagementViewModel(
 
     partial void OnSelectedSimpleTopicSortOptionChanged(LibraryManagementTopicSortOption value)
     {
+        if (_isApplyingSimpleSortSettings)
+        {
+            return;
+        }
+
+        if (SelectedSection is { } section)
+        {
+            LibraryManagementSortMode sortMode = ToSettingsSort(value.Sort);
+            _topicSortBySection[section.Id] = sortMode;
+            _ = SaveSimpleTopicSortAsync(section.Id, value.Sort);
+        }
+
         ApplySimpleTopicFilterAndSort();
     }
 
@@ -1117,6 +1156,18 @@ public sealed partial class LibraryManagementViewModel(
 
     partial void OnSelectedSimpleMaterialSortOptionChanged(LibraryManagementMaterialSortOption value)
     {
+        if (_isApplyingSimpleSortSettings)
+        {
+            return;
+        }
+
+        if (SelectedTopic is { } topic)
+        {
+            LibraryManagementSortMode sortMode = ToSettingsSort(value.Sort);
+            _materialSortByTopic[topic.Id] = sortMode;
+            _ = SaveSimpleMaterialSortAsync(topic.Id, value.Sort);
+        }
+
         ApplySimpleMaterialFilterAndSort();
     }
 
@@ -1128,6 +1179,7 @@ public sealed partial class LibraryManagementViewModel(
     partial void OnSelectedSectionChanged(LibraryManagementOrderItemViewModel? value)
     {
         OnPropertyChanged(nameof(SelectedPath));
+        ApplyTopicSortForSection(value?.Id);
 
         if (!_isLoaded || _suppressSelectionReload)
         {
@@ -1140,6 +1192,7 @@ public sealed partial class LibraryManagementViewModel(
     partial void OnSelectedTopicChanged(LibraryManagementOrderItemViewModel? value)
     {
         OnPropertyChanged(nameof(SelectedPath));
+        ApplyMaterialSortForTopic(value?.Id);
 
         if (!_isLoaded || _suppressSelectionReload)
         {
@@ -1394,8 +1447,11 @@ public sealed partial class LibraryManagementViewModel(
         try
         {
             AppSettings settings = await settingsService.LoadAsync(cancellationToken);
-            SimpleViewMode = settings.LibraryManagementViewMode;
+            _simpleSectionsViewMode = settings.LibraryManagementSectionsViewMode;
+            _simpleTopicsViewMode = settings.LibraryManagementTopicsViewMode;
+            _simpleMaterialsViewMode = settings.LibraryManagementMaterialsViewMode;
             _isSimpleViewModeLoaded = true;
+            NotifySimpleViewModeChanged();
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -1403,27 +1459,292 @@ public sealed partial class LibraryManagementViewModel(
         }
         catch (Exception exception)
         {
-            logger.LogWarning(exception, "Не удалось загрузить режим отображения управления библиотекой");
-            SimpleViewMode = LibraryManagementViewMode.Tiles;
+            logger.LogWarning(exception, "Не удалось загрузить режимы отображения управления библиотекой");
+            _simpleSectionsViewMode = LibraryManagementViewMode.Tiles;
+            _simpleTopicsViewMode = LibraryManagementViewMode.Tiles;
+            _simpleMaterialsViewMode = LibraryManagementViewMode.Table;
             _isSimpleViewModeLoaded = true;
+            NotifySimpleViewModeChanged();
         }
     }
+
+    private async Task EnsureSimpleSortSettingsLoadedAsync(CancellationToken cancellationToken)
+    {
+        if (_isSimpleSortSettingsLoaded)
+        {
+            return;
+        }
+
+        try
+        {
+            AppSettings settings = await settingsService.LoadAsync(cancellationToken);
+
+            _topicSortBySection.Clear();
+            foreach (var pair in settings.LibraryManagementTopicSortBySection)
+            {
+                _topicSortBySection[pair.Key] = pair.Value;
+            }
+
+            _materialSortByTopic.Clear();
+            foreach (var pair in settings.LibraryManagementMaterialSortByTopic)
+            {
+                _materialSortByTopic[pair.Key] = pair.Value;
+            }
+
+            _isApplyingSimpleSortSettings = true;
+
+            SelectedSimpleSectionSortOption = SimpleSectionSortOptions.First(option =>
+                option.Sort == ToSectionSort(settings.LibraryManagementSectionSort));
+
+            // До выбора конкретного раздела/темы дочерние сортировки остаются
+            // в значении по умолчанию. При смене контекста они восстанавливаются
+            // из словарей выше.
+            SelectedSimpleTopicSortOption = SimpleTopicSortOptions.First(option =>
+                option.Sort == LibraryManagementTopicSort.Custom);
+
+            SelectedSimpleMaterialSortOption = SimpleMaterialSortOptions.First(option =>
+                option.Sort == LibraryManagementMaterialSort.Custom);
+
+            _isSimpleSortSettingsLoaded = true;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Не удалось загрузить настройки сортировки управления библиотекой");
+
+            _topicSortBySection.Clear();
+            _materialSortByTopic.Clear();
+
+            _isApplyingSimpleSortSettings = true;
+            SelectedSimpleSectionSortOption = SimpleSectionSortOptions.First(option =>
+                option.Sort == LibraryManagementSectionSort.Custom);
+            SelectedSimpleTopicSortOption = SimpleTopicSortOptions.First(option =>
+                option.Sort == LibraryManagementTopicSort.Custom);
+            SelectedSimpleMaterialSortOption = SimpleMaterialSortOptions.First(option =>
+                option.Sort == LibraryManagementMaterialSort.Custom);
+
+            _isSimpleSortSettingsLoaded = true;
+        }
+        finally
+        {
+            _isApplyingSimpleSortSettings = false;
+        }
+    }
+
+    private void ApplyTopicSortForSection(Guid? sectionId)
+    {
+        if (!_isSimpleSortSettingsLoaded || sectionId is null)
+        {
+            return;
+        }
+
+        LibraryManagementSortMode sortMode =
+            _topicSortBySection.TryGetValue(sectionId.Value, out LibraryManagementSortMode savedSort)
+                ? savedSort
+                : LibraryManagementSortMode.Custom;
+
+        bool wasApplying = _isApplyingSimpleSortSettings;
+        _isApplyingSimpleSortSettings = true;
+
+        try
+        {
+            SelectedSimpleTopicSortOption = SimpleTopicSortOptions.First(option =>
+                option.Sort == ToTopicSort(sortMode));
+        }
+        finally
+        {
+            _isApplyingSimpleSortSettings = wasApplying;
+        }
+    }
+
+    private void ApplyMaterialSortForTopic(Guid? topicId)
+    {
+        if (!_isSimpleSortSettingsLoaded || topicId is null)
+        {
+            return;
+        }
+
+        LibraryManagementSortMode sortMode =
+            _materialSortByTopic.TryGetValue(topicId.Value, out LibraryManagementSortMode savedSort)
+                ? savedSort
+                : LibraryManagementSortMode.Custom;
+
+        bool wasApplying = _isApplyingSimpleSortSettings;
+        _isApplyingSimpleSortSettings = true;
+
+        try
+        {
+            SelectedSimpleMaterialSortOption = SimpleMaterialSortOptions.First(option =>
+                option.Sort == ToMaterialSort(sortMode));
+        }
+        finally
+        {
+            _isApplyingSimpleSortSettings = wasApplying;
+        }
+    }
+
+    private async Task SaveSimpleSectionSortAsync(LibraryManagementSectionSort sort)
+    {
+        try
+        {
+            await settingsService.SaveLibraryManagementSectionSortAsync(
+                ToSettingsSort(sort),
+                CancellationToken.None);
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Не удалось сохранить сортировку разделов управления библиотекой");
+        }
+    }
+
+    private async Task SaveSimpleTopicSortAsync(
+        Guid sectionId,
+        LibraryManagementTopicSort sort)
+    {
+        try
+        {
+            await settingsService.SaveLibraryManagementTopicSortAsync(
+                sectionId,
+                ToSettingsSort(sort),
+                CancellationToken.None);
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(
+                exception,
+                "Не удалось сохранить сортировку тем раздела {SectionId}",
+                sectionId);
+        }
+    }
+
+    private async Task SaveSimpleMaterialSortAsync(
+        Guid topicId,
+        LibraryManagementMaterialSort sort)
+    {
+        try
+        {
+            await settingsService.SaveLibraryManagementMaterialSortAsync(
+                topicId,
+                ToSettingsSort(sort),
+                CancellationToken.None);
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(
+                exception,
+                "Не удалось сохранить сортировку материалов темы {TopicId}",
+                topicId);
+        }
+    }
+
+    private static LibraryManagementSectionSort ToSectionSort(LibraryManagementSortMode sort) =>
+        sort switch
+        {
+            LibraryManagementSortMode.Custom => LibraryManagementSectionSort.Custom,
+            LibraryManagementSortMode.RecentActivity => LibraryManagementSectionSort.RecentActivity,
+            LibraryManagementSortMode.Name => LibraryManagementSectionSort.Name,
+            LibraryManagementSortMode.Newest => LibraryManagementSectionSort.Newest,
+            _ => LibraryManagementSectionSort.Custom,
+        };
+
+    private static LibraryManagementTopicSort ToTopicSort(LibraryManagementSortMode sort) =>
+        sort switch
+        {
+            LibraryManagementSortMode.Custom => LibraryManagementTopicSort.Custom,
+            LibraryManagementSortMode.RecentActivity => LibraryManagementTopicSort.RecentActivity,
+            LibraryManagementSortMode.Name => LibraryManagementTopicSort.Name,
+            LibraryManagementSortMode.Newest => LibraryManagementTopicSort.Newest,
+            _ => LibraryManagementTopicSort.Custom,
+        };
+
+    private static LibraryManagementMaterialSort ToMaterialSort(LibraryManagementSortMode sort) =>
+        sort switch
+        {
+            LibraryManagementSortMode.Custom => LibraryManagementMaterialSort.Custom,
+            LibraryManagementSortMode.RecentActivity => LibraryManagementMaterialSort.RecentActivity,
+            LibraryManagementSortMode.Name => LibraryManagementMaterialSort.Name,
+            LibraryManagementSortMode.Newest => LibraryManagementMaterialSort.Newest,
+            _ => LibraryManagementMaterialSort.Custom,
+        };
+
+    private static LibraryManagementSortMode ToSettingsSort(LibraryManagementSectionSort sort) =>
+        sort switch
+        {
+            LibraryManagementSectionSort.Custom => LibraryManagementSortMode.Custom,
+            LibraryManagementSectionSort.RecentActivity => LibraryManagementSortMode.RecentActivity,
+            LibraryManagementSectionSort.Name => LibraryManagementSortMode.Name,
+            LibraryManagementSectionSort.Newest => LibraryManagementSortMode.Newest,
+            _ => LibraryManagementSortMode.Custom,
+        };
+
+    private static LibraryManagementSortMode ToSettingsSort(LibraryManagementTopicSort sort) =>
+        sort switch
+        {
+            LibraryManagementTopicSort.Custom => LibraryManagementSortMode.Custom,
+            LibraryManagementTopicSort.RecentActivity => LibraryManagementSortMode.RecentActivity,
+            LibraryManagementTopicSort.Name => LibraryManagementSortMode.Name,
+            LibraryManagementTopicSort.Newest => LibraryManagementSortMode.Newest,
+            _ => LibraryManagementSortMode.Custom,
+        };
+
+    private static LibraryManagementSortMode ToSettingsSort(LibraryManagementMaterialSort sort) =>
+        sort switch
+        {
+            LibraryManagementMaterialSort.Custom => LibraryManagementSortMode.Custom,
+            LibraryManagementMaterialSort.RecentActivity => LibraryManagementSortMode.RecentActivity,
+            LibraryManagementMaterialSort.Name => LibraryManagementSortMode.Name,
+            LibraryManagementMaterialSort.Newest => LibraryManagementSortMode.Newest,
+            _ => LibraryManagementSortMode.Custom,
+        };
 
     private async Task SetSimpleViewModeAsync(
         LibraryManagementViewMode viewMode,
         CancellationToken cancellationToken)
     {
-        if (SimpleViewMode == viewMode && _isSimpleViewModeLoaded)
+        LibraryManagementSimplePage page = SimplePage;
+
+        if (CurrentSimpleViewMode == viewMode && _isSimpleViewModeLoaded)
         {
             return;
         }
 
-        SimpleViewMode = viewMode;
+        switch (page)
+        {
+            case LibraryManagementSimplePage.Sections:
+                _simpleSectionsViewMode = viewMode;
+                break;
+            case LibraryManagementSimplePage.Topics:
+                _simpleTopicsViewMode = viewMode;
+                break;
+            case LibraryManagementSimplePage.Materials:
+                _simpleMaterialsViewMode = viewMode;
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(page), page, null);
+        }
+
         _isSimpleViewModeLoaded = true;
+        NotifySimpleViewModeChanged();
 
         try
         {
-            await settingsService.SaveLibraryManagementViewModeAsync(viewMode, cancellationToken);
+            switch (page)
+            {
+                case LibraryManagementSimplePage.Sections:
+                    await settingsService.SaveLibraryManagementSectionsViewModeAsync(viewMode, cancellationToken);
+                    break;
+                case LibraryManagementSimplePage.Topics:
+                    await settingsService.SaveLibraryManagementTopicsViewModeAsync(viewMode, cancellationToken);
+                    break;
+                case LibraryManagementSimplePage.Materials:
+                    await settingsService.SaveLibraryManagementMaterialsViewModeAsync(viewMode, cancellationToken);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(page), page, null);
+            }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -1431,8 +1752,18 @@ public sealed partial class LibraryManagementViewModel(
         }
         catch (Exception exception)
         {
-            logger.LogWarning(exception, "Не удалось сохранить режим отображения управления библиотекой");
+            logger.LogWarning(
+                exception,
+                "Не удалось сохранить режим отображения управления библиотекой для страницы {Page}",
+                page);
         }
+    }
+
+    private void NotifySimpleViewModeChanged()
+    {
+        OnPropertyChanged(nameof(IsSimpleTilesView));
+        OnPropertyChanged(nameof(IsSimpleCompactTilesView));
+        OnPropertyChanged(nameof(IsSimpleTableView));
     }
 
     private async Task RefreshAfterMutationAsync(CancellationToken cancellationToken)

@@ -129,6 +129,39 @@ public sealed class JsonSettingsService :
             cancellationToken);
     }
 
+    public Task SaveLibraryManagementSectionsViewModeAsync(
+        LibraryManagementViewMode viewMode,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+
+        return UpdateAsync(
+            settings => settings.LibraryManagementSectionsViewMode = viewMode,
+            cancellationToken);
+    }
+
+    public Task SaveLibraryManagementTopicsViewModeAsync(
+        LibraryManagementViewMode viewMode,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+
+        return UpdateAsync(
+            settings => settings.LibraryManagementTopicsViewMode = viewMode,
+            cancellationToken);
+    }
+
+    public Task SaveLibraryManagementMaterialsViewModeAsync(
+        LibraryManagementViewMode viewMode,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+
+        return UpdateAsync(
+            settings => settings.LibraryManagementMaterialsViewMode = viewMode,
+            cancellationToken);
+    }
+
     public Task SaveLibraryTopicsViewModeAsync(
         LibraryTopicsViewMode viewMode,
         CancellationToken cancellationToken = default)
@@ -137,6 +170,49 @@ public sealed class JsonSettingsService :
 
         return UpdateAsync(
             settings => settings.LibraryTopicsViewMode = viewMode,
+            cancellationToken);
+    }
+
+    public Task SaveLibraryManagementSectionSortAsync(
+        LibraryManagementSortMode sortMode,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+
+        return UpdateAsync(
+            settings => settings.LibraryManagementSectionSort = sortMode,
+            cancellationToken);
+    }
+
+    public Task SaveLibraryManagementTopicSortAsync(
+        Guid sectionId,
+        LibraryManagementSortMode sortMode,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+
+        return UpdateAsync(
+            settings =>
+            {
+                settings.LibraryManagementTopicSortBySection ??= [];
+                settings.LibraryManagementTopicSortBySection[sectionId] = sortMode;
+            },
+            cancellationToken);
+    }
+
+    public Task SaveLibraryManagementMaterialSortAsync(
+        Guid topicId,
+        LibraryManagementSortMode sortMode,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+
+        return UpdateAsync(
+            settings =>
+            {
+                settings.LibraryManagementMaterialSortByTopic ??= [];
+                settings.LibraryManagementMaterialSortByTopic[topicId] = sortMode;
+            },
             cancellationToken);
     }
 

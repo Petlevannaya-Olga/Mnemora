@@ -16,8 +16,34 @@ public interface ISettingsService
         LibraryManagementViewMode viewMode,
         CancellationToken cancellationToken = default);
 
+    Task SaveLibraryManagementSectionsViewModeAsync(
+        LibraryManagementViewMode viewMode,
+        CancellationToken cancellationToken = default);
+
+    Task SaveLibraryManagementTopicsViewModeAsync(
+        LibraryManagementViewMode viewMode,
+        CancellationToken cancellationToken = default);
+
+    Task SaveLibraryManagementMaterialsViewModeAsync(
+        LibraryManagementViewMode viewMode,
+        CancellationToken cancellationToken = default);
+
     Task SaveLibraryTopicsViewModeAsync(
         LibraryTopicsViewMode viewMode,
+        CancellationToken cancellationToken = default);
+
+    Task SaveLibraryManagementSectionSortAsync(
+        LibraryManagementSortMode sortMode,
+        CancellationToken cancellationToken = default);
+
+    Task SaveLibraryManagementTopicSortAsync(
+        Guid sectionId,
+        LibraryManagementSortMode sortMode,
+        CancellationToken cancellationToken = default);
+
+    Task SaveLibraryManagementMaterialSortAsync(
+        Guid topicId,
+        LibraryManagementSortMode sortMode,
         CancellationToken cancellationToken = default);
 
     Task CompleteOnboardingAsync(
