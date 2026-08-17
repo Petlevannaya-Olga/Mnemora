@@ -21,4 +21,15 @@ public partial class CreateMaterialView : UserControl
     {
         WizardTabs.SelectedIndex = 0;
     }
+
+    private void GoToContentStep_OnClick(object sender, RoutedEventArgs e)
+    {
+        WizardTabs.SelectedIndex = 2;
+    }
+
+    private void GoToBasicStepFromContent_OnClick(object sender, RoutedEventArgs e)
+    {
+        WizardTabs.SelectedIndex = 1;
+    }
+
 }
