@@ -775,11 +775,13 @@
                                 <ComboBoxItem Content="Продвинутый" />
                             </ComboBox>
 
-                            <Grid Grid.Column="2" Height="52">
+                            <Grid Grid.Column="2"
+                                  Height="52"
+                                  Background="#FFFFFF">
                                 <!-- Поле тегов рисуем без скрытого Material-контрола: так чипы
                                      гарантированно остаются видимыми. Геометрия повторяет
                                      MaterialDesignOutlinedComboBox у поля «Сложность». -->
-                                <Border Background="{DynamicResource Mnemora.Brush.Surface}"
+                                <Border Background="#FFFFFF"
                                         BorderBrush="#616161"
                                         BorderThickness="1"
                                         CornerRadius="4" />
@@ -788,9 +790,9 @@
                                         Padding="4,0"
                                         HorizontalAlignment="Left"
                                         VerticalAlignment="Top"
-                                        Background="{DynamicResource Mnemora.Brush.Surface}">
+                                        Background="#FFFFFF">
                                     <TextBlock FontSize="12"
-                                               Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                               Foreground="#212121"
                                                Text="Теги" />
                                 </Border>
 
