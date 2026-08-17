@@ -73,6 +73,7 @@ public sealed partial class LibraryManagementViewModel(
     private static readonly TimeSpan SearchDelay = TimeSpan.FromMilliseconds(350);
 
     private Guid[]? _pendingSectionOrder;
+    private Guid[]? _orderSnapshot;
 
     private CancellationToken _viewCancellationToken;
     private int _simpleSectionNextOffset;
@@ -166,12 +167,16 @@ public sealed partial class LibraryManagementViewModel(
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelectedSection))]
     [NotifyPropertyChangedFor(nameof(SelectedPath))]
+    [NotifyPropertyChangedFor(nameof(OrderContextName))]
+    [NotifyPropertyChangedFor(nameof(HasOrderContext))]
     [NotifyCanExecuteChangedFor(nameof(AddTopicCommand))]
     private LibraryManagementOrderItemViewModel? _selectedSection;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelectedTopic))]
     [NotifyPropertyChangedFor(nameof(SelectedPath))]
+    [NotifyPropertyChangedFor(nameof(OrderContextName))]
+    [NotifyPropertyChangedFor(nameof(HasOrderContext))]
     private LibraryManagementOrderItemViewModel? _selectedTopic;
 
     [ObservableProperty]
@@ -237,13 +242,19 @@ public sealed partial class LibraryManagementViewModel(
     private string? _searchText;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsOrderMode))]
     [NotifyPropertyChangedFor(nameof(IsSimpleMode))]
     [NotifyPropertyChangedFor(nameof(IsSimpleSectionsPage))]
     [NotifyPropertyChangedFor(nameof(IsSimpleTopicsPage))]
     [NotifyPropertyChangedFor(nameof(IsSimpleMaterialsPage))]
-    [NotifyPropertyChangedFor(nameof(ShowOrderFooter))]
+    [NotifyPropertyChangedFor(nameof(OrderItems))]
+    [NotifyPropertyChangedFor(nameof(OrderTargetTag))]
+    [NotifyPropertyChangedFor(nameof(OrderTitle))]
+    [NotifyPropertyChangedFor(nameof(OrderDescription))]
+    [NotifyPropertyChangedFor(nameof(OrderContextName))]
+    [NotifyPropertyChangedFor(nameof(HasOrderContext))]
     [NotifyCanExecuteChangedFor(nameof(LoadNextSimpleSectionPageCommand))]
-    private bool _isAdvancedMode;
+    private LibraryOrderTarget? _activeOrderTarget;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsSimpleSectionsPage))]
@@ -252,13 +263,61 @@ public sealed partial class LibraryManagementViewModel(
     [NotifyCanExecuteChangedFor(nameof(LoadNextSimpleSectionPageCommand))]
     private LibraryManagementSimplePage _simplePage = LibraryManagementSimplePage.Sections;
 
-    public bool IsSimpleMode => !IsAdvancedMode;
+    public bool IsOrderMode => ActiveOrderTarget is not null;
+
+    public bool IsSimpleMode => !IsOrderMode;
 
     public bool IsSimpleSectionsPage => IsSimpleMode && SimplePage == LibraryManagementSimplePage.Sections;
 
     public bool IsSimpleTopicsPage => IsSimpleMode && SimplePage == LibraryManagementSimplePage.Topics;
 
     public bool IsSimpleMaterialsPage => IsSimpleMode && SimplePage == LibraryManagementSimplePage.Materials;
+
+    public IEnumerable<LibraryManagementOrderItemViewModel> OrderItems =>
+        ActiveOrderTarget switch
+        {
+            LibraryOrderTarget.Sections => Sections,
+            LibraryOrderTarget.Topics => Topics,
+            LibraryOrderTarget.Materials => Materials,
+            _ => Array.Empty<LibraryManagementOrderItemViewModel>(),
+        };
+
+    public string OrderTargetTag =>
+        ActiveOrderTarget switch
+        {
+            LibraryOrderTarget.Sections => "Sections",
+            LibraryOrderTarget.Topics => "Topics",
+            LibraryOrderTarget.Materials => "Materials",
+            _ => string.Empty,
+        };
+
+    public string OrderTitle =>
+        ActiveOrderTarget switch
+        {
+            LibraryOrderTarget.Sections => "Настроить порядок разделов",
+            LibraryOrderTarget.Topics => "Настроить порядок тем",
+            LibraryOrderTarget.Materials => "Настроить порядок материалов",
+            _ => "Настроить порядок",
+        };
+
+    public string OrderDescription =>
+        ActiveOrderTarget switch
+        {
+            LibraryOrderTarget.Sections => "Перетащите разделы в нужном порядке.",
+            LibraryOrderTarget.Topics => "Перетащите темы внутри выбранного раздела.",
+            LibraryOrderTarget.Materials => "Перетащите материалы внутри выбранной темы.",
+            _ => string.Empty,
+        };
+
+    public string OrderContextName =>
+        ActiveOrderTarget switch
+        {
+            LibraryOrderTarget.Topics => SelectedSection?.Name ?? string.Empty,
+            LibraryOrderTarget.Materials => SelectedTopic?.Name ?? string.Empty,
+            _ => string.Empty,
+        };
+
+    public bool HasOrderContext => !string.IsNullOrWhiteSpace(OrderContextName);
 
     public bool HasSimpleSections => SimpleSections.Count > 0;
 
@@ -361,7 +420,7 @@ public sealed partial class LibraryManagementViewModel(
         _pendingTopicOrders.Count > 0 ||
         _pendingMaterialOrders.Count > 0;
 
-    public bool ShowOrderFooter => IsAdvancedMode || HasUnsavedOrder;
+    public bool ShowOrderFooter => IsOrderMode || HasUnsavedOrder;
 
     public string SelectedPath
     {
@@ -421,35 +480,190 @@ public sealed partial class LibraryManagementViewModel(
         NotifyOrderChanged();
     }
 
-    [RelayCommand]
-    private void ShowSimpleMode()
+    /// <summary>
+    /// Загружает полный список элементов текущего уровня для отдельного окна настройки порядка.
+    /// Пагинация простого режима здесь намеренно не используется: для ручного порядка нужен весь уровень.
+    /// </summary>
+    public async Task<IReadOnlyList<LibraryManagementOrderItemViewModel>> LoadOrderItemsForDialogAsync(
+        LibraryOrderTarget target,
+        CancellationToken cancellationToken)
     {
-        IsAdvancedMode = false;
-        SimplePage = LibraryManagementSimplePage.Sections;
+        await EnsureOrderLibraryLoadedAsync(cancellationToken);
+
+        switch (target)
+        {
+            case LibraryOrderTarget.Sections:
+                break;
+
+            case LibraryOrderTarget.Topics:
+                if (SelectedSection is null)
+                {
+                    return Array.Empty<LibraryManagementOrderItemViewModel>();
+                }
+
+                await LoadTopicsAsync(SelectedTopic?.Id, cancellationToken);
+                break;
+
+            case LibraryOrderTarget.Materials:
+                if (SelectedTopic is null)
+                {
+                    return Array.Empty<LibraryManagementOrderItemViewModel>();
+                }
+
+                await LoadMaterialsAsync(cancellationToken);
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException(nameof(target), target, null);
+        }
+
+        return GetOrderCollection(target).ToArray();
     }
 
-    [RelayCommand]
-    private async Task ShowAdvancedModeAsync(CancellationToken cancellationToken)
+    /// <summary>
+    /// Сохраняет порядок, полученный из модального окна, и синхронизирует текущие коллекции экрана.
+    /// </summary>
+    public async Task<bool> SaveOrderFromDialogAsync(
+        LibraryOrderTarget target,
+        IReadOnlyList<Guid> orderedIds,
+        CancellationToken cancellationToken)
     {
-        IsAdvancedMode = true;
-        await EnsureAdvancedLibraryLoadedAsync(cancellationToken);
+        ArgumentNullException.ThrowIfNull(orderedIds);
 
-        if (SelectedSection is not null && SelectedTopic is null)
+        Guid? parentId = target switch
         {
-            SelectedTopic = Topics.FirstOrDefault();
+            LibraryOrderTarget.Sections => null,
+            LibraryOrderTarget.Topics => SelectedSection?.Id,
+            LibraryOrderTarget.Materials => SelectedTopic?.Id,
+            _ => throw new ArgumentOutOfRangeException(nameof(target), target, null),
+        };
+
+        if (target != LibraryOrderTarget.Sections && parentId is null)
+        {
+            return false;
+        }
+
+        IsSavingOrder = true;
+        ErrorMessage = null;
+
+        try
+        {
+            bool wasSaved = await SaveOrderCoreAsync(
+                target,
+                parentId,
+                orderedIds,
+                cancellationToken);
+
+            if (!wasSaved)
+            {
+                return false;
+            }
+
+            ApplyOrderToCollection(GetOrderCollection(target), orderedIds);
+            ClearPendingOrder(target);
+            notificationService.ShowSuccess("Порядок сохранён");
+
+            switch (target)
+            {
+                case LibraryOrderTarget.Sections
+                    when SelectedSimpleSectionSortOption.Sort == LibraryManagementSectionSort.Custom:
+                    await ReloadSimpleSectionsCoreAsync(cancellationToken);
+                    break;
+
+                case LibraryOrderTarget.Topics:
+                    ApplySimpleTopicFilterAndSort();
+                    break;
+
+                case LibraryOrderTarget.Materials:
+                    ApplySimpleMaterialFilterAndSort();
+                    break;
+            }
+
+            NotifyOrderChanged();
+            return true;
+        }
+        finally
+        {
+            IsSavingOrder = false;
         }
     }
 
     [RelayCommand]
-    private async Task ToggleEditingModeAsync(CancellationToken cancellationToken)
+    private async Task ConfigureSectionsOrderAsync(CancellationToken cancellationToken)
     {
-        if (IsAdvancedMode)
+        await EnsureOrderLibraryLoadedAsync(cancellationToken);
+
+        if (Sections.Count == 0)
         {
-            ShowSimpleMode();
             return;
         }
 
-        await ShowAdvancedModeAsync(cancellationToken);
+        BeginOrder(LibraryOrderTarget.Sections);
+    }
+
+    [RelayCommand]
+    private async Task ConfigureTopicsOrderAsync(CancellationToken cancellationToken)
+    {
+        if (SelectedSection is null)
+        {
+            return;
+        }
+
+        await EnsureOrderLibraryLoadedAsync(cancellationToken);
+        await LoadTopicsAsync(selectedTopicId: null, cancellationToken: cancellationToken);
+
+        if (Topics.Count == 0)
+        {
+            return;
+        }
+
+        BeginOrder(LibraryOrderTarget.Topics);
+    }
+
+    [RelayCommand]
+    private async Task ConfigureMaterialsOrderAsync(CancellationToken cancellationToken)
+    {
+        if (SelectedTopic is null)
+        {
+            return;
+        }
+
+        await EnsureOrderLibraryLoadedAsync(cancellationToken);
+        await LoadMaterialsAsync(cancellationToken);
+
+        if (Materials.Count == 0)
+        {
+            return;
+        }
+
+        BeginOrder(LibraryOrderTarget.Materials);
+    }
+
+    [RelayCommand]
+    private void CancelOrder()
+    {
+        if (ActiveOrderTarget is null)
+        {
+            return;
+        }
+
+        RestoreOrderSnapshot(ActiveOrderTarget.Value);
+        ClearPendingOrder(ActiveOrderTarget.Value);
+
+        ActiveOrderTarget = null;
+        _orderSnapshot = null;
+
+        ApplySimpleTopicFilterAndSort();
+        ApplySimpleMaterialFilterAndSort();
+        NotifyOrderChanged();
+    }
+
+    private void BeginOrder(LibraryOrderTarget target)
+    {
+        ActiveOrderTarget = target;
+        _orderSnapshot = GetOrderCollection(target)
+            .Select(item => item.Id)
+            .ToArray();
     }
 
     [RelayCommand]
@@ -462,18 +676,18 @@ public sealed partial class LibraryManagementViewModel(
             return;
         }
 
-        await EnsureAdvancedLibraryLoadedAsync(cancellationToken);
+        await EnsureOrderLibraryLoadedAsync(cancellationToken);
 
-        LibraryManagementOrderItemViewModel? advancedSection =
+        LibraryManagementOrderItemViewModel? sectionItem =
             Sections.FirstOrDefault(section => section.Id == item.Id);
 
-        if (advancedSection is null)
+        if (sectionItem is null)
         {
             return;
         }
 
         SelectedTopic = null;
-        SelectedSection = advancedSection;
+        SelectedSection = sectionItem;
         SimplePage = LibraryManagementSimplePage.Topics;
     }
 
@@ -674,8 +888,10 @@ public sealed partial class LibraryManagementViewModel(
     [RelayCommand(CanExecute = nameof(CanSaveOrder))]
     private async Task SaveOrderAsync(CancellationToken cancellationToken)
     {
+        LibraryOrderTarget? savedTarget = ActiveOrderTarget;
         IsSavingOrder = true;
         ErrorMessage = null;
+        bool wasSaved = false;
 
         try
         {
@@ -723,14 +939,32 @@ public sealed partial class LibraryManagementViewModel(
 
             notificationService.ShowSuccess("Порядок сохранён");
 
-            if (SelectedSimpleSectionSortOption.Sort == LibraryManagementSectionSort.Custom)
+            if (savedTarget == LibraryOrderTarget.Sections &&
+                SelectedSimpleSectionSortOption.Sort == LibraryManagementSectionSort.Custom)
             {
                 await ReloadSimpleSectionsCoreAsync(cancellationToken);
             }
+            else if (savedTarget == LibraryOrderTarget.Topics)
+            {
+                ApplySimpleTopicFilterAndSort();
+            }
+            else if (savedTarget == LibraryOrderTarget.Materials)
+            {
+                ApplySimpleMaterialFilterAndSort();
+            }
+
+            wasSaved = true;
         }
         finally
         {
             IsSavingOrder = false;
+
+            if (wasSaved)
+            {
+                ActiveOrderTarget = null;
+                _orderSnapshot = null;
+            }
+
             NotifyOrderChanged();
         }
     }
@@ -740,11 +974,11 @@ public sealed partial class LibraryManagementViewModel(
     {
         await ReloadSimpleSectionsCoreAsync(cancellationToken);
 
-        if (IsAdvancedMode || _isLoaded)
+        if (IsOrderMode || _isLoaded)
         {
             _preferredSectionId = SelectedSection?.Id;
             _preferredTopicId = SelectedTopic?.Id;
-            await ReloadAdvancedLibraryAsync(cancellationToken);
+            await ReloadOrderLibraryAsync(cancellationToken);
         }
     }
 
@@ -820,12 +1054,12 @@ public sealed partial class LibraryManagementViewModel(
             return;
         }
 
-        await EnsureAdvancedLibraryLoadedAsync(cancellationToken);
+        await EnsureOrderLibraryLoadedAsync(cancellationToken);
 
-        LibraryManagementOrderItemViewModel? advancedItem =
+        LibraryManagementOrderItemViewModel? orderItem =
             Sections.FirstOrDefault(section => section.Id == item.Id);
 
-        await EditSectionAsync(advancedItem, cancellationToken);
+        await EditSectionAsync(orderItem, cancellationToken);
     }
 
     [RelayCommand]
@@ -838,12 +1072,12 @@ public sealed partial class LibraryManagementViewModel(
             return;
         }
 
-        await EnsureAdvancedLibraryLoadedAsync(cancellationToken);
+        await EnsureOrderLibraryLoadedAsync(cancellationToken);
 
-        LibraryManagementOrderItemViewModel? advancedItem =
+        LibraryManagementOrderItemViewModel? orderItem =
             Sections.FirstOrDefault(section => section.Id == item.Id);
 
-        await DeleteSectionAsync(advancedItem, cancellationToken);
+        await DeleteSectionAsync(orderItem, cancellationToken);
     }
 
     partial void OnSearchTextChanged(string? value)
@@ -853,38 +1087,7 @@ public sealed partial class LibraryManagementViewModel(
         if (_isSimpleSectionsLoaded && IsSimpleSectionsPage)
         {
             _ = ReloadSimpleSectionsAfterSearchDelayAsync(searchVersion);
-            return;
         }
-
-        // В расширенном режиме поиск не фильтрует коллекцию, чтобы не ломать
-        // семантику ручного порядка. Он только переводит выбор к найденному элементу.
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return;
-        }
-
-        string search = value.Trim();
-
-        LibraryManagementOrderItemViewModel? section = Sections.FirstOrDefault(item =>
-            item.Name.Contains(search, StringComparison.OrdinalIgnoreCase));
-
-        if (section is not null)
-        {
-            SelectedSection = section;
-            return;
-        }
-
-        LibraryManagementOrderItemViewModel? topic = Topics.FirstOrDefault(item =>
-            item.Name.Contains(search, StringComparison.OrdinalIgnoreCase));
-
-        if (topic is not null)
-        {
-            SelectedTopic = topic;
-            return;
-        }
-
-        SelectedMaterial = Materials.FirstOrDefault(item =>
-            item.Name.Contains(search, StringComparison.OrdinalIgnoreCase));
     }
 
     partial void OnSelectedSimpleSectionSortOptionChanged(LibraryManagementSectionSortOption value)
@@ -946,17 +1149,17 @@ public sealed partial class LibraryManagementViewModel(
         _ = ChangeTopicContextSafelyAsync(value);
     }
 
-    private async Task EnsureAdvancedLibraryLoadedAsync(CancellationToken cancellationToken)
+    private async Task EnsureOrderLibraryLoadedAsync(CancellationToken cancellationToken)
     {
         if (_isLoaded && _library.Count > 0)
         {
             return;
         }
 
-        await ReloadAdvancedLibraryAsync(cancellationToken);
+        await ReloadOrderLibraryAsync(cancellationToken);
     }
 
-    private Task ReloadAdvancedLibraryAsync(CancellationToken cancellationToken)
+    private Task ReloadOrderLibraryAsync(CancellationToken cancellationToken)
     {
         if (_loadTask is { IsCompleted: false })
         {
@@ -1236,9 +1439,9 @@ public sealed partial class LibraryManagementViewModel(
     {
         await ReloadSimpleSectionsCoreAsync(cancellationToken);
 
-        if (_isLoaded || IsAdvancedMode || SimplePage != LibraryManagementSimplePage.Sections)
+        if (_isLoaded || IsOrderMode || SimplePage != LibraryManagementSimplePage.Sections)
         {
-            await ReloadAdvancedLibraryAsync(cancellationToken);
+            await ReloadOrderLibraryAsync(cancellationToken);
         }
     }
 
@@ -1411,8 +1614,7 @@ public sealed partial class LibraryManagementViewModel(
         _suppressSelectionReload = true;
         try
         {
-            SelectedTopic = Topics.FirstOrDefault(topic => topic.Id == selectedTopicId)
-                            ?? (IsAdvancedMode ? Topics.FirstOrDefault() : null);
+            SelectedTopic = Topics.FirstOrDefault(topic => topic.Id == selectedTopicId);
         }
         finally
         {
@@ -1814,6 +2016,94 @@ public sealed partial class LibraryManagementViewModel(
         }
 
         NotifySimpleMaterialsStateChanged();
+    }
+
+    private ObservableCollection<LibraryManagementOrderItemViewModel> GetOrderCollection(
+        LibraryOrderTarget target)
+    {
+        return target switch
+        {
+            LibraryOrderTarget.Sections => Sections,
+            LibraryOrderTarget.Topics => Topics,
+            LibraryOrderTarget.Materials => Materials,
+            _ => throw new ArgumentOutOfRangeException(nameof(target), target, null),
+        };
+    }
+
+    private static void ApplyOrderToCollection(
+        ObservableCollection<LibraryManagementOrderItemViewModel> collection,
+        IReadOnlyList<Guid> orderedIds)
+    {
+        var itemsById = collection.ToDictionary(item => item.Id);
+        var orderedItems = new List<LibraryManagementOrderItemViewModel>(collection.Count);
+
+        foreach (Guid id in orderedIds)
+        {
+            if (itemsById.Remove(id, out LibraryManagementOrderItemViewModel? item))
+            {
+                orderedItems.Add(item);
+            }
+        }
+
+        orderedItems.AddRange(collection.Where(item => itemsById.ContainsKey(item.Id)));
+
+        collection.Clear();
+
+        for (int index = 0; index < orderedItems.Count; index++)
+        {
+            orderedItems[index].Position = index + 1;
+            collection.Add(orderedItems[index]);
+        }
+    }
+
+    private void RestoreOrderSnapshot(LibraryOrderTarget target)
+    {
+        if (_orderSnapshot is null)
+        {
+            return;
+        }
+
+        ObservableCollection<LibraryManagementOrderItemViewModel> collection =
+            GetOrderCollection(target);
+
+        var itemsById = collection.ToDictionary(item => item.Id);
+        var restored = new List<LibraryManagementOrderItemViewModel>(collection.Count);
+
+        foreach (Guid id in _orderSnapshot)
+        {
+            if (itemsById.Remove(id, out LibraryManagementOrderItemViewModel? item))
+            {
+                restored.Add(item);
+            }
+        }
+
+        restored.AddRange(collection.Where(item => itemsById.ContainsKey(item.Id)));
+
+        collection.Clear();
+
+        for (int index = 0; index < restored.Count; index++)
+        {
+            restored[index].Position = index + 1;
+            collection.Add(restored[index]);
+        }
+    }
+
+    private void ClearPendingOrder(LibraryOrderTarget target)
+    {
+        switch (target)
+        {
+            case LibraryOrderTarget.Sections:
+                _pendingSectionOrder = null;
+                break;
+
+            case LibraryOrderTarget.Topics when SelectedSection is not null:
+                _pendingTopicOrders.Remove(SelectedSection.Id);
+                break;
+
+            case LibraryOrderTarget.Materials when SelectedTopic is not null:
+                _pendingMaterialOrders.Remove(SelectedTopic.Id);
+                break;
+        }
     }
 
     private bool CanAddTopic(LibraryManagementOrderItemViewModel? item)
