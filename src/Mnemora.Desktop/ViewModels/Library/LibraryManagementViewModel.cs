@@ -37,6 +37,25 @@ public sealed record LibraryManagementTopicSortOption(
     string Name,
     LibraryManagementTopicSort Sort);
 
+public enum LibraryManagementMaterialFilter
+{
+    All,
+    Articles,
+    Questions,
+}
+
+public enum LibraryManagementMaterialSort
+{
+    Custom,
+    RecentActivity,
+    Name,
+    Newest,
+}
+
+public sealed record LibraryManagementMaterialSortOption(
+    string Name,
+    LibraryManagementMaterialSort Sort);
+
 public sealed partial class LibraryManagementViewModel(
     IQueryDispatcher queryDispatcher,
     ICommandDispatcher commandDispatcher,
@@ -60,6 +79,7 @@ public sealed partial class LibraryManagementViewModel(
     private int _simpleSectionLoadVersion;
     private int _simpleSectionSearchVersion;
     private int _simpleTopicSearchVersion;
+    private int _simpleMaterialSearchVersion;
     private int? _simpleSectionLoadingVersion;
     private bool _isSimpleSectionsLoaded;
     private bool _isSimpleViewModeLoaded;
@@ -86,6 +106,8 @@ public sealed partial class LibraryManagementViewModel(
 
     public ObservableCollection<LibraryManagementOrderItemViewModel> SimpleTopics { get; } = [];
 
+    public ObservableCollection<LibraryManagementOrderItemViewModel> SimpleMaterials { get; } = [];
+
     public ObservableCollection<LibraryManagementTopicRowViewModel> SimpleTopicRows { get; } = [];
 
     public ObservableCollection<LibraryManagementTopicRowViewModel> SimpleCompactTopicRows { get; } = [];
@@ -106,11 +128,21 @@ public sealed partial class LibraryManagementViewModel(
         new("Сначала новые", LibraryManagementTopicSort.Newest),
     ];
 
+    public IReadOnlyList<LibraryManagementMaterialSortOption> SimpleMaterialSortOptions { get; } =
+    [
+        new("Мой порядок", LibraryManagementMaterialSort.Custom),
+        new("Последняя активность", LibraryManagementMaterialSort.RecentActivity),
+        new("По названию", LibraryManagementMaterialSort.Name),
+        new("Сначала новые", LibraryManagementMaterialSort.Newest),
+    ];
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasError))]
     [NotifyPropertyChangedFor(nameof(IsEmpty))]
     [NotifyPropertyChangedFor(nameof(IsSimpleTopicsEmpty))]
     [NotifyPropertyChangedFor(nameof(HasNoSimpleTopicSearchResults))]
+    [NotifyPropertyChangedFor(nameof(IsSimpleMaterialsEmpty))]
+    [NotifyPropertyChangedFor(nameof(HasNoSimpleMaterialResults))]
     private string? _errorMessage;
 
     [ObservableProperty]
@@ -122,6 +154,8 @@ public sealed partial class LibraryManagementViewModel(
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsSimpleTopicsEmpty))]
     [NotifyPropertyChangedFor(nameof(HasNoSimpleTopicSearchResults))]
+    [NotifyPropertyChangedFor(nameof(IsSimpleMaterialsEmpty))]
+    [NotifyPropertyChangedFor(nameof(HasNoSimpleMaterialResults))]
     [NotifyCanExecuteChangedFor(nameof(SaveOrderCommand))]
     private bool _isContextLoading;
 
@@ -183,6 +217,21 @@ public sealed partial class LibraryManagementViewModel(
 
     [ObservableProperty]
     private string? _simpleTopicSearchText;
+
+    [ObservableProperty]
+    private LibraryManagementMaterialSortOption _selectedSimpleMaterialSortOption =
+        new("Мой порядок", LibraryManagementMaterialSort.Custom);
+
+    [ObservableProperty]
+    private string? _simpleMaterialSearchText;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSimpleAllMaterialsFilter))]
+    [NotifyPropertyChangedFor(nameof(IsSimpleArticlesFilter))]
+    [NotifyPropertyChangedFor(nameof(IsSimpleQuestionsFilter))]
+    [NotifyPropertyChangedFor(nameof(IsSimpleMaterialsEmpty))]
+    [NotifyPropertyChangedFor(nameof(HasNoSimpleMaterialResults))]
+    private LibraryManagementMaterialFilter _simpleMaterialFilter = LibraryManagementMaterialFilter.All;
 
     [ObservableProperty]
     private string? _searchText;
@@ -256,6 +305,34 @@ public sealed partial class LibraryManagementViewModel(
 
     public string SimpleTopicsShownCountText =>
         $"Показано {SimpleTopics.Count} из {Topics.Count}";
+
+    public bool HasSimpleMaterialSource => Materials.Count > 0;
+
+    public bool HasSimpleMaterials => SimpleMaterials.Count > 0;
+
+    public bool IsSimpleAllMaterialsFilter => SimpleMaterialFilter == LibraryManagementMaterialFilter.All;
+
+    public bool IsSimpleArticlesFilter => SimpleMaterialFilter == LibraryManagementMaterialFilter.Articles;
+
+    public bool IsSimpleQuestionsFilter => SimpleMaterialFilter == LibraryManagementMaterialFilter.Questions;
+
+    public bool IsSimpleMaterialsEmpty =>
+        !IsContextLoading &&
+        !HasError &&
+        !HasSimpleMaterialSource &&
+        string.IsNullOrWhiteSpace(SimpleMaterialSearchText) &&
+        SimpleMaterialFilter == LibraryManagementMaterialFilter.All;
+
+    public bool HasNoSimpleMaterialResults =>
+        !IsContextLoading &&
+        !HasError &&
+        HasSimpleMaterialSource &&
+        !HasSimpleMaterials &&
+        (!string.IsNullOrWhiteSpace(SimpleMaterialSearchText) ||
+         SimpleMaterialFilter != LibraryManagementMaterialFilter.All);
+
+    public string SimpleMaterialsShownCountText =>
+        $"Показано {SimpleMaterials.Count} из {Materials.Count}";
 
     public bool HasError => !string.IsNullOrWhiteSpace(ErrorMessage);
 
@@ -408,6 +485,8 @@ public sealed partial class LibraryManagementViewModel(
             return;
         }
 
+        SimpleMaterialSearchText = null;
+        SimpleMaterialFilter = LibraryManagementMaterialFilter.All;
         SelectedTopic = item;
         SimplePage = LibraryManagementSimplePage.Materials;
     }
@@ -425,6 +504,24 @@ public sealed partial class LibraryManagementViewModel(
                 SimplePage = LibraryManagementSimplePage.Sections;
                 break;
         }
+    }
+
+    [RelayCommand]
+    private void SelectAllSimpleMaterials()
+    {
+        SimpleMaterialFilter = LibraryManagementMaterialFilter.All;
+    }
+
+    [RelayCommand]
+    private void SelectSimpleArticles()
+    {
+        SimpleMaterialFilter = LibraryManagementMaterialFilter.Articles;
+    }
+
+    [RelayCommand]
+    private void SelectSimpleQuestions()
+    {
+        SimpleMaterialFilter = LibraryManagementMaterialFilter.Questions;
     }
 
     [RelayCommand]
@@ -807,6 +904,22 @@ public sealed partial class LibraryManagementViewModel(
     partial void OnSelectedSimpleTopicSortOptionChanged(LibraryManagementTopicSortOption value)
     {
         ApplySimpleTopicFilterAndSort();
+    }
+
+    partial void OnSimpleMaterialSearchTextChanged(string? value)
+    {
+        int searchVersion = Interlocked.Increment(ref _simpleMaterialSearchVersion);
+        _ = ApplySimpleMaterialFilterAfterDelayAsync(searchVersion);
+    }
+
+    partial void OnSelectedSimpleMaterialSortOptionChanged(LibraryManagementMaterialSortOption value)
+    {
+        ApplySimpleMaterialFilterAndSort();
+    }
+
+    partial void OnSimpleMaterialFilterChanged(LibraryManagementMaterialFilter value)
+    {
+        ApplySimpleMaterialFilterAndSort();
     }
 
     partial void OnSelectedSectionChanged(LibraryManagementOrderItemViewModel? value)
@@ -1312,10 +1425,12 @@ public sealed partial class LibraryManagementViewModel(
     private async Task LoadMaterialsAsync(CancellationToken cancellationToken)
     {
         Materials.Clear();
+        SimpleMaterials.Clear();
         SelectedMaterial = null;
 
         if (SelectedTopic is null)
         {
+            NotifySimpleMaterialsStateChanged();
             NotifyCollectionStateChanged();
             return;
         }
@@ -1327,6 +1442,7 @@ public sealed partial class LibraryManagementViewModel(
 
         if (result is null)
         {
+            NotifySimpleMaterialsStateChanged();
             return;
         }
 
@@ -1355,6 +1471,7 @@ public sealed partial class LibraryManagementViewModel(
         }
 
         SelectedMaterial = Materials.FirstOrDefault();
+        ApplySimpleMaterialFilterAndSort();
         NotifyCollectionStateChanged();
     }
 
@@ -1631,6 +1748,74 @@ public sealed partial class LibraryManagementViewModel(
         row.Add(topic);
     }
 
+    private async Task ApplySimpleMaterialFilterAfterDelayAsync(int searchVersion)
+    {
+        try
+        {
+            await Task.Delay(SearchDelay, _viewCancellationToken);
+
+            if (searchVersion == Volatile.Read(ref _simpleMaterialSearchVersion))
+            {
+                ApplySimpleMaterialFilterAndSort();
+            }
+        }
+        catch (OperationCanceledException) when (_viewCancellationToken.IsCancellationRequested)
+        {
+            // ignore
+        }
+    }
+
+    private void ApplySimpleMaterialFilterAndSort()
+    {
+        IEnumerable<LibraryManagementOrderItemViewModel> materials = Materials;
+
+        if (!string.IsNullOrWhiteSpace(SimpleMaterialSearchText))
+        {
+            string search = SimpleMaterialSearchText.Trim();
+            materials = materials.Where(material =>
+                material.Name.Contains(search, StringComparison.OrdinalIgnoreCase));
+        }
+
+        materials = SimpleMaterialFilter switch
+        {
+            LibraryManagementMaterialFilter.Articles => materials.Where(material =>
+                string.Equals(material.Material?.Type, "Article", StringComparison.OrdinalIgnoreCase)),
+
+            LibraryManagementMaterialFilter.Questions => materials.Where(material =>
+                string.Equals(material.Material?.Type, "Question", StringComparison.OrdinalIgnoreCase)),
+
+            _ => materials,
+        };
+
+        materials = SelectedSimpleMaterialSortOption.Sort switch
+        {
+            LibraryManagementMaterialSort.Custom => materials
+                .OrderBy(material => material.Position),
+
+            LibraryManagementMaterialSort.RecentActivity => materials
+                .OrderByDescending(material => material.Material?.UpdatedAt ?? DateTime.MinValue)
+                .ThenBy(material => material.Name, StringComparer.OrdinalIgnoreCase),
+
+            LibraryManagementMaterialSort.Name => materials
+                .OrderBy(material => material.Name, StringComparer.OrdinalIgnoreCase),
+
+            LibraryManagementMaterialSort.Newest => materials
+                .OrderByDescending(material => material.Material?.CreatedAt ?? DateTime.MinValue)
+                .ThenBy(material => material.Name, StringComparer.OrdinalIgnoreCase),
+
+            _ => materials.OrderBy(material => material.Position),
+        };
+
+        SimpleMaterials.Clear();
+
+        foreach (LibraryManagementOrderItemViewModel material in materials)
+        {
+            SimpleMaterials.Add(material);
+        }
+
+        NotifySimpleMaterialsStateChanged();
+    }
+
     private bool CanAddTopic(LibraryManagementOrderItemViewModel? item)
     {
         return !IsLoading && (item is not null || SelectedSection is not null);
@@ -1663,6 +1848,15 @@ public sealed partial class LibraryManagementViewModel(
         OnPropertyChanged(nameof(SimpleTopicsShownCountText));
     }
 
+    private void NotifySimpleMaterialsStateChanged()
+    {
+        OnPropertyChanged(nameof(HasSimpleMaterialSource));
+        OnPropertyChanged(nameof(HasSimpleMaterials));
+        OnPropertyChanged(nameof(IsSimpleMaterialsEmpty));
+        OnPropertyChanged(nameof(HasNoSimpleMaterialResults));
+        OnPropertyChanged(nameof(SimpleMaterialsShownCountText));
+    }
+
     private void NotifyCollectionStateChanged()
     {
         OnPropertyChanged(nameof(IsEmpty));
@@ -1671,6 +1865,8 @@ public sealed partial class LibraryManagementViewModel(
         OnPropertyChanged(nameof(LoadedMaterialsCount));
         OnPropertyChanged(nameof(TotalMaterialsCount));
         OnPropertyChanged(nameof(MaterialsShownCountText));
+        OnPropertyChanged(nameof(HasSimpleMaterialSource));
+        OnPropertyChanged(nameof(SimpleMaterialsShownCountText));
         OnPropertyChanged(nameof(SelectedPath));
     }
 }
