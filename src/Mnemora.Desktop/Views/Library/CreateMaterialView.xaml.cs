@@ -27,12 +27,12 @@ public partial class CreateMaterialView : UserControl
 
     private void GoToBasicStep_OnClick(object sender, RoutedEventArgs e)
     {
-        WizardTabs.SelectedIndex = 1;
+        FindRequiredControl<TabControl>("WizardTabs").SelectedIndex = 1;
     }
 
     private void GoToTypeStep_OnClick(object sender, RoutedEventArgs e)
     {
-        WizardTabs.SelectedIndex = 0;
+        FindRequiredControl<TabControl>("WizardTabs").SelectedIndex = 0;
     }
 
     private void MarkdownDropZone_OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
@@ -335,31 +335,44 @@ public partial class CreateMaterialView : UserControl
         source switch
         {
             ArticleSource => (
-                ArticleEmptyState,
-                ArticleSelectedState,
-                ArticleSelectedFileName,
-                ArticleFileError,
-                ArticleDropBorder,
-                ArticleClearFileButton),
+                FindRequiredControl<StackPanel>("ArticleEmptyState"),
+                FindRequiredControl<Grid>("ArticleSelectedState"),
+                FindRequiredControl<TextBlock>("ArticleSelectedFileName"),
+                FindRequiredControl<TextBlock>("ArticleFileError"),
+                FindRequiredControl<Rectangle>("ArticleDropBorder"),
+                FindRequiredControl<Button>("ArticleClearFileButton")),
 
             QuestionSource => (
-                QuestionEmptyState,
-                QuestionSelectedState,
-                QuestionSelectedFileName,
-                QuestionFileError,
-                QuestionDropBorder,
-                QuestionClearFileButton),
+                FindRequiredControl<StackPanel>("QuestionEmptyState"),
+                FindRequiredControl<Grid>("QuestionSelectedState"),
+                FindRequiredControl<TextBlock>("QuestionSelectedFileName"),
+                FindRequiredControl<TextBlock>("QuestionFileError"),
+                FindRequiredControl<Rectangle>("QuestionDropBorder"),
+                FindRequiredControl<Button>("QuestionClearFileButton")),
 
             AnswerSource => (
-                AnswerEmptyState,
-                AnswerSelectedState,
-                AnswerSelectedFileName,
-                AnswerFileError,
-                AnswerDropBorder,
-                AnswerClearFileButton),
+                FindRequiredControl<StackPanel>("AnswerEmptyState"),
+                FindRequiredControl<Grid>("AnswerSelectedState"),
+                FindRequiredControl<TextBlock>("AnswerSelectedFileName"),
+                FindRequiredControl<TextBlock>("AnswerFileError"),
+                FindRequiredControl<Rectangle>("AnswerDropBorder"),
+                FindRequiredControl<Button>("AnswerClearFileButton")),
 
             _ => throw new ArgumentOutOfRangeException(nameof(source), source, null),
         };
+
+
+    private T FindRequiredControl<T>(string name)
+        where T : FrameworkElement
+    {
+        if (FindName(name) is T control)
+        {
+            return control;
+        }
+
+        throw new InvalidOperationException(
+            $"Элемент '{name}' типа {typeof(T).Name} не найден в CreateMaterialView.xaml.");
+    }
 
     private static bool TryGetSource(FrameworkElement element, out string source)
     {

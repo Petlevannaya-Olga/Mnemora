@@ -901,11 +901,11 @@
                               AllowDrop="True"
                               Background="Transparent"
                               Cursor="Hand"
-                              DragEnter="MarkdownDropZone_OnDragEnter"
-                              DragOver="MarkdownDropZone_OnDragOver"
-                              DragLeave="MarkdownDropZone_OnDragLeave"
-                              Drop="MarkdownDropZone_OnDrop"
-                              MouseLeftButtonUp="MarkdownDropZone_OnMouseLeftButtonUp">
+                              PreviewDragEnter="MarkdownDropZone_OnDragEnter"
+                              PreviewDragOver="MarkdownDropZone_OnDragOver"
+                              PreviewDragLeave="MarkdownDropZone_OnDragLeave"
+                              PreviewDrop="MarkdownDropZone_OnDrop"
+                              PreviewMouseLeftButtonUp="MarkdownDropZone_OnMouseLeftButtonUp">
                             <Rectangle x:Name="ArticleDropBorder"
                                        Margin="1"
                                        RadiusX="16"
@@ -995,21 +995,19 @@
                                 </StackPanel>
 
                                 <Button Grid.Column="4"
-                                        Height="34"
-                                        Padding="12,0"
+                                        Width="40"
+                                        Height="40"
+                                        Padding="0"
                                         VerticalAlignment="Center"
                                         Tag="Article"
                                         Click="OpenSelectedMarkdown_OnClick"
-                                        Style="{StaticResource Mnemora.SecondaryButton}">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Width="16"
-                                                                 Height="16"
-                                                                 VerticalAlignment="Center"
-                                                                 Kind="OpenInNew" />
-                                        <TextBlock Margin="6,0,0,0"
-                                                   VerticalAlignment="Center"
-                                                   Text="Открыть в редакторе" />
-                                    </StackPanel>
+                                        Style="{StaticResource Mnemora.SecondaryButton}"
+                                        ToolTip="Открыть в редакторе">
+                                    <materialDesign:PackIcon Width="18"
+                                                             Height="18"
+                                                             HorizontalAlignment="Center"
+                                                             VerticalAlignment="Center"
+                                                             Kind="OpenInNew" />
                                 </Button>
                             </Grid>
 
@@ -1096,11 +1094,11 @@
                                   AllowDrop="True"
                                   Background="Transparent"
                                   Cursor="Hand"
-                                  DragEnter="MarkdownDropZone_OnDragEnter"
-                                  DragOver="MarkdownDropZone_OnDragOver"
-                                  DragLeave="MarkdownDropZone_OnDragLeave"
-                                  Drop="MarkdownDropZone_OnDrop"
-                                  MouseLeftButtonUp="MarkdownDropZone_OnMouseLeftButtonUp">
+                                  PreviewDragEnter="MarkdownDropZone_OnDragEnter"
+                                  PreviewDragOver="MarkdownDropZone_OnDragOver"
+                                  PreviewDragLeave="MarkdownDropZone_OnDragLeave"
+                                  PreviewDrop="MarkdownDropZone_OnDrop"
+                                  PreviewMouseLeftButtonUp="MarkdownDropZone_OnMouseLeftButtonUp">
                                 <Rectangle x:Name="QuestionDropBorder"
                                            Margin="1"
                                            RadiusX="16"
@@ -1193,21 +1191,19 @@
                                 </StackPanel>
 
                                 <Button Grid.Column="4"
-                                        Height="34"
-                                        Padding="12,0"
+                                        Width="40"
+                                        Height="40"
+                                        Padding="0"
                                         VerticalAlignment="Center"
                                         Tag="Question"
                                         Click="OpenSelectedMarkdown_OnClick"
-                                        Style="{StaticResource Mnemora.SecondaryButton}">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Width="16"
-                                                                 Height="16"
-                                                                 VerticalAlignment="Center"
-                                                                 Kind="OpenInNew" />
-                                        <TextBlock Margin="6,0,0,0"
-                                                   VerticalAlignment="Center"
-                                                   Text="Открыть в редакторе" />
-                                    </StackPanel>
+                                        Style="{StaticResource Mnemora.SecondaryButton}"
+                                        ToolTip="Открыть в редакторе">
+                                    <materialDesign:PackIcon Width="18"
+                                                             Height="18"
+                                                             HorizontalAlignment="Center"
+                                                             VerticalAlignment="Center"
+                                                             Kind="OpenInNew" />
                                 </Button>
                             </Grid>
 
@@ -1281,11 +1277,11 @@
                                   AllowDrop="True"
                                   Background="Transparent"
                                   Cursor="Hand"
-                                  DragEnter="MarkdownDropZone_OnDragEnter"
-                                  DragOver="MarkdownDropZone_OnDragOver"
-                                  DragLeave="MarkdownDropZone_OnDragLeave"
-                                  Drop="MarkdownDropZone_OnDrop"
-                                  MouseLeftButtonUp="MarkdownDropZone_OnMouseLeftButtonUp">
+                                  PreviewDragEnter="MarkdownDropZone_OnDragEnter"
+                                  PreviewDragOver="MarkdownDropZone_OnDragOver"
+                                  PreviewDragLeave="MarkdownDropZone_OnDragLeave"
+                                  PreviewDrop="MarkdownDropZone_OnDrop"
+                                  PreviewMouseLeftButtonUp="MarkdownDropZone_OnMouseLeftButtonUp">
                                 <Rectangle x:Name="AnswerDropBorder"
                                            Margin="1"
                                            RadiusX="16"
@@ -1378,21 +1374,19 @@
                                 </StackPanel>
 
                                 <Button Grid.Column="4"
-                                        Height="34"
-                                        Padding="12,0"
+                                        Width="40"
+                                        Height="40"
+                                        Padding="0"
                                         VerticalAlignment="Center"
                                         Tag="Answer"
                                         Click="OpenSelectedMarkdown_OnClick"
-                                        Style="{StaticResource Mnemora.SecondaryButton}">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Width="16"
-                                                                 Height="16"
-                                                                 VerticalAlignment="Center"
-                                                                 Kind="OpenInNew" />
-                                        <TextBlock Margin="6,0,0,0"
-                                                   VerticalAlignment="Center"
-                                                   Text="Открыть в редакторе" />
-                                    </StackPanel>
+                                        Style="{StaticResource Mnemora.SecondaryButton}"
+                                        ToolTip="Открыть в редакторе">
+                                    <materialDesign:PackIcon Width="18"
+                                                             Height="18"
+                                                             HorizontalAlignment="Center"
+                                                             VerticalAlignment="Center"
+                                                             Kind="OpenInNew" />
                                 </Button>
                             </Grid>
 
