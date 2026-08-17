@@ -1498,7 +1498,7 @@
                               SelectionMode="Single"
                               SelectionUnit="FullRow"
                               VirtualizingPanel.IsVirtualizing="True"
-                              VirtualizingPanel.VirtualizationMode="Recycling">
+                              VirtualizingPanel.VirtualizationMode="Standard">
                         <DataGrid.Columns>
                             <DataGridTemplateColumn
                                 Header="Раздел"
@@ -2193,7 +2193,7 @@
                               SelectionUnit="FullRow"
                               VerticalScrollBarVisibility="Auto"
                               VirtualizingPanel.IsVirtualizing="True"
-                              VirtualizingPanel.VirtualizationMode="Recycling">
+                              VirtualizingPanel.VirtualizationMode="Standard">
                         <DataGrid.Columns>
                             <DataGridTemplateColumn Width="*" MinWidth="270" Header="Тема">
                                 <DataGridTemplateColumn.CellStyle>
@@ -2601,7 +2601,7 @@
                               SelectionMode="Single"
                               SelectionUnit="FullRow"
                               VirtualizingPanel.IsVirtualizing="True"
-                              VirtualizingPanel.VirtualizationMode="Recycling">
+                              VirtualizingPanel.VirtualizationMode="Standard">
                         <DataGrid.Columns>
                             <DataGridTemplateColumn Width="2.5*" MinWidth="280" Header="Материал">
                                 <DataGridTemplateColumn.CellStyle>
