@@ -157,6 +157,7 @@ public sealed partial class LibraryManagementViewModel(
     [NotifyPropertyChangedFor(nameof(IsEmpty))]
     [NotifyCanExecuteChangedFor(nameof(SaveOrderCommand))]
     [NotifyCanExecuteChangedFor(nameof(AddTopicCommand))]
+    [NotifyCanExecuteChangedFor(nameof(StartCreateMaterialCommand))]
     private bool _isLoading;
 
     [ObservableProperty]
@@ -165,6 +166,7 @@ public sealed partial class LibraryManagementViewModel(
     [NotifyPropertyChangedFor(nameof(IsSimpleMaterialsEmpty))]
     [NotifyPropertyChangedFor(nameof(HasNoSimpleMaterialResults))]
     [NotifyCanExecuteChangedFor(nameof(SaveOrderCommand))]
+    [NotifyCanExecuteChangedFor(nameof(StartCreateMaterialCommand))]
     private bool _isContextLoading;
 
     [ObservableProperty]
@@ -177,6 +179,7 @@ public sealed partial class LibraryManagementViewModel(
     [NotifyPropertyChangedFor(nameof(OrderContextName))]
     [NotifyPropertyChangedFor(nameof(HasOrderContext))]
     [NotifyCanExecuteChangedFor(nameof(AddTopicCommand))]
+    [NotifyCanExecuteChangedFor(nameof(StartCreateMaterialCommand))]
     private LibraryManagementOrderItemViewModel? _selectedSection;
 
     [ObservableProperty]
@@ -184,10 +187,14 @@ public sealed partial class LibraryManagementViewModel(
     [NotifyPropertyChangedFor(nameof(SelectedPath))]
     [NotifyPropertyChangedFor(nameof(OrderContextName))]
     [NotifyPropertyChangedFor(nameof(HasOrderContext))]
+    [NotifyCanExecuteChangedFor(nameof(StartCreateMaterialCommand))]
     private LibraryManagementOrderItemViewModel? _selectedTopic;
 
     [ObservableProperty]
     private LibraryManagementOrderItemViewModel? _selectedMaterial;
+
+    [ObservableProperty]
+    private bool _isCreatingMaterial;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSimpleSections))]
@@ -738,6 +745,29 @@ public sealed partial class LibraryManagementViewModel(
                 SimplePage = LibraryManagementSimplePage.Sections;
                 break;
         }
+    }
+
+    [RelayCommand(CanExecute = nameof(CanStartCreateMaterial))]
+    private void StartCreateMaterial()
+    {
+        if (!CanStartCreateMaterial())
+        {
+            return;
+        }
+
+        IsCreatingMaterial = true;
+    }
+
+    private bool CanStartCreateMaterial() =>
+        SelectedSection is not null &&
+        SelectedTopic is not null &&
+        !IsLoading &&
+        !IsContextLoading;
+
+    [RelayCommand]
+    private void CancelCreateMaterial()
+    {
+        IsCreatingMaterial = false;
     }
 
     [RelayCommand]
