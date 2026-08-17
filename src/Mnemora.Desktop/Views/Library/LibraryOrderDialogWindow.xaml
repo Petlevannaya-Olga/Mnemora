@@ -5,7 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     Width="900"
-    Height="690"
+    Height="640"
     AllowsTransparency="True"
     Background="Transparent"
     ResizeMode="NoResize"
@@ -35,7 +35,7 @@
         </Style>
 
         <Style x:Key="OrderGridRowStyle" TargetType="DataGridRow">
-            <Setter Property="MinHeight" Value="72" />
+            <Setter Property="MinHeight" Value="60" />
             <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
@@ -52,7 +52,7 @@
                             <Border
                                 x:Name="SelectionIndicator"
                                 Width="4"
-                                Margin="0,9,0,9"
+                                Margin="0,7,0,7"
                                 HorizontalAlignment="Left"
                                 Background="{DynamicResource Mnemora.Brush.Primary}"
                                 CornerRadius="0,3,3,0"
@@ -77,7 +77,7 @@
         </Style>
 
         <Style x:Key="OrderGridCellStyle" TargetType="DataGridCell">
-            <Setter Property="Padding" Value="16,9" />
+            <Setter Property="Padding" Value="14,5" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
@@ -110,14 +110,14 @@
             x:Key="OrderGridHandleCellStyle"
             BasedOn="{StaticResource OrderGridCellStyle}"
             TargetType="DataGridCell">
-            <Setter Property="Padding" Value="10,9,4,9" />
+            <Setter Property="Padding" Value="10,5,4,5" />
         </Style>
 
         <Style
             x:Key="OrderGridPositionCellStyle"
             BasedOn="{StaticResource OrderGridCellStyle}"
             TargetType="DataGridCell">
-            <Setter Property="Padding" Value="8,9,16,9" />
+            <Setter Property="Padding" Value="8,5,14,5" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
         </Style>
     </Window.Resources>
@@ -136,7 +136,7 @@
             </Border.Effect>
         </Border>
 
-        <Border Padding="30,26,30,28"
+        <Border Padding="28,22,28,24"
                 Background="{DynamicResource Mnemora.Brush.Surface}"
                 BorderBrush="{DynamicResource Mnemora.Brush.Border}"
                 BorderThickness="1"
@@ -144,11 +144,11 @@
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="20" />
-                    <RowDefinition Height="*" />
                     <RowDefinition Height="16" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="12" />
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="18" />
+                    <RowDefinition Height="14" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
@@ -212,17 +212,19 @@
                 <!-- Таблица порядка -->
                 <Border Grid.Row="2"
                         Background="{DynamicResource Mnemora.Brush.Surface}"
-                        BorderBrush="{DynamicResource Mnemora.Brush.Border}"
-                        BorderThickness="1"
+                        BorderThickness="0"
                         ClipToBounds="True"
                         CornerRadius="12">
-                    <AdornerDecorator>
-                        <DataGrid
+                    <Grid>
+                        <!-- Таблица уходит на 1 px внутрь и не участвует в отрисовке рамки. -->
+                        <Grid Margin="1">
+                            <AdornerDecorator>
+                            <DataGrid
                             x:Name="OrderGrid"
                             ItemsSource="{Binding Items}"
                             AllowDrop="True"
                             AutoGenerateColumns="False"
-                            Background="{DynamicResource Mnemora.Brush.Surface}"
+                            Background="Transparent"
                             BorderThickness="0"
                             CanUserAddRows="False"
                             CanUserDeleteRows="False"
@@ -285,8 +287,8 @@
                                                 </Grid.ColumnDefinitions>
 
                                                 <Border
-                                                    Width="40"
-                                                    Height="40"
+                                                    Width="36"
+                                                    Height="36"
                                                     HorizontalAlignment="Left"
                                                     VerticalAlignment="Center"
                                                     Background="#F2EEFF"
@@ -294,8 +296,8 @@
                                                     BorderThickness="1"
                                                     CornerRadius="9">
                                                     <materialDesign:PackIcon
-                                                        Width="22"
-                                                        Height="22"
+                                                        Width="20"
+                                                        Height="20"
                                                         HorizontalAlignment="Center"
                                                         VerticalAlignment="Center"
                                                         Foreground="{DynamicResource Mnemora.Brush.Secondary}"
@@ -330,13 +332,28 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
                             </DataGrid.Columns>
-                        </DataGrid>
-                    </AdornerDecorator>
+                            </DataGrid>
+                            </AdornerDecorator>
+                        </Grid>
+
+                        <!-- Отдельный stroke поверх DataGrid даёт непрерывную дугу в углах.
+                             Rectangle здесь надёжнее Border: дочерний ScrollViewer не может перекрыть рамку. -->
+                        <Rectangle
+                            Margin="0.5"
+                            Panel.ZIndex="200"
+                            Fill="Transparent"
+                            IsHitTestVisible="False"
+                            RadiusX="12"
+                            RadiusY="12"
+                            SnapsToDevicePixels="False"
+                            Stroke="{DynamicResource Mnemora.Brush.Border}"
+                            StrokeThickness="1" />
+                    </Grid>
                 </Border>
 
                 <!-- Зачем нужен пользовательский порядок -->
                 <Border Grid.Row="4"
-                        Padding="14,11"
+                        Padding="13,9"
                         Background="#FAF9FF"
                         BorderBrush="#E5DEFF"
                         BorderThickness="1"
