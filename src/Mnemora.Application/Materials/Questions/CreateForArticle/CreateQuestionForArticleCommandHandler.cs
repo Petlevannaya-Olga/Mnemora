@@ -47,13 +47,6 @@ public sealed class CreateQuestionForArticleCommandHandler(
             return rewardsResult.Error.ToErrors();
         }
 
-        var tagsResult = CreateTags(command.Tags);
-
-        if (tagsResult.IsFailure)
-        {
-            return tagsResult.Error.ToErrors();
-        }
-
         var contentResult = QuestionContent.Create(command.PromptMarkdown, command.ReferenceAnswerMarkdown);
 
         if (contentResult.IsFailure)
@@ -89,7 +82,7 @@ public sealed class CreateQuestionForArticleCommandHandler(
             command.Difficulty,
             iconResult.Value,
             rewardsResult.Value,
-            tagsResult.Value);
+            Array.Empty<MaterialTag>());
 
         if (questionResult.IsFailure)
         {
@@ -147,30 +140,6 @@ public sealed class CreateQuestionForArticleCommandHandler(
         return iconResult.IsFailure
             ? iconResult.Error
             : Result.Success<MaterialIcon?, Error>(iconResult.Value);
-    }
-
-    private static Result<IReadOnlyCollection<MaterialTag>, Error> CreateTags(IReadOnlyCollection<string>? tags)
-    {
-        if (tags is null)
-        {
-            return Result.Success<IReadOnlyCollection<MaterialTag>, Error>(Array.Empty<MaterialTag>());
-        }
-
-        var materialTags = new List<MaterialTag>(tags.Count);
-
-        foreach (string tag in tags)
-        {
-            var tagResult = MaterialTag.Create(tag);
-
-            if (tagResult.IsFailure)
-            {
-                return tagResult.Error;
-            }
-
-            materialTags.Add(tagResult.Value);
-        }
-
-        return Result.Success<IReadOnlyCollection<MaterialTag>, Error>(materialTags);
     }
 
     private void TryDeleteContent(Question question)

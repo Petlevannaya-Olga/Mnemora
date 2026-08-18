@@ -3,6 +3,8 @@ using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MaterialDesignThemes.Wpf;
+using Mnemora.Application.Commands;
+using Mnemora.Application.Materials.CreateGraph;
 using Mnemora.Application.Materials.Learning.GetOptions;
 using Mnemora.Application.Materials.Learning.Picker;
 using Mnemora.Application.Queries;
@@ -21,7 +23,8 @@ public sealed partial class CreateMaterialViewModel(
     IMarkdownEditorService markdownEditorService,
     ISettingsService settingsService,
     IDialogService dialogService,
-    IQueryDispatcher queryDispatcher)
+    IQueryDispatcher queryDispatcher,
+    ICommandDispatcher commandDispatcher)
     : ViewModelBase
 {
     private const string MaterialsDirectoryName = "materials";
@@ -35,6 +38,7 @@ public sealed partial class CreateMaterialViewModel(
         PackIconKind.HelpCircleOutline;
 
     private Action? _closeRequested;
+    private Action? _createdRequested;
 
     [ObservableProperty]
     private LibraryManagementOrderItemViewModel? _selectedTopic;
@@ -45,6 +49,8 @@ public sealed partial class CreateMaterialViewModel(
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsArticleMaterial))]
+    [NotifyPropertyChangedFor(nameof(SummaryMaterialTypeText))]
+    [NotifyPropertyChangedFor(nameof(SummaryCreateActionText))]
     private bool _isQuestionMaterial;
 
     [ObservableProperty]
@@ -58,6 +64,7 @@ public sealed partial class CreateMaterialViewModel(
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SelectedArticleId))]
+    [NotifyPropertyChangedFor(nameof(HasSelectedArticle))]
     private LearningArticleOptionViewModel? _selectedArticle;
 
     [ObservableProperty]
@@ -133,6 +140,26 @@ public sealed partial class CreateMaterialViewModel(
     private string? _relatedQuestionEditorError;
 
     [ObservableProperty]
+    private string _summaryTitle = string.Empty;
+
+    [ObservableProperty]
+    private string _summaryDifficultyText = string.Empty;
+
+    [ObservableProperty]
+    private string _summaryBodyFileName = string.Empty;
+
+    [ObservableProperty]
+    private string _summaryAnswerFileName = string.Empty;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasSummaryError))]
+    private string? _summaryError;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SummaryCreateActionText))]
+    private bool _isSummaryCreating;
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(RelatedQuestionEditorTitle))]
     [NotifyPropertyChangedFor(nameof(RelatedQuestionEditorActionText))]
     private RelatedQuestionDraftViewModel? _editingRelatedQuestion;
@@ -145,6 +172,9 @@ public sealed partial class CreateMaterialViewModel(
 
     public ObservableCollection<RelatedQuestionDraftViewModel>
         NewRelatedQuestions { get; } = [];
+
+    public ObservableCollection<string>
+        SummaryTags { get; } = [];
 
     public IReadOnlyList<RelatedQuestionDifficultyOption>
         RelatedQuestionDifficultyOptions { get; } =
@@ -162,6 +192,41 @@ public sealed partial class CreateMaterialViewModel(
 
     public bool IsArticleMaterial =>
         !IsQuestionMaterial;
+
+    public string SummaryMaterialTypeText =>
+        IsQuestionMaterial
+            ? "Вопрос"
+            : "Статья";
+
+    public string SummaryCreateActionText =>
+        IsSummaryCreating
+            ? "Создаём…"
+            : IsQuestionMaterial
+                ? "Создать вопрос"
+                : "Создать статью";
+
+    public string SummaryTopicName =>
+        SelectedTopic?.Name
+        ?? string.Empty;
+
+    public bool HasSummaryTags =>
+        SummaryTags.Count > 0;
+
+    public bool HasSummaryError =>
+        !string.IsNullOrWhiteSpace(SummaryError);
+
+    public bool HasQuestionsMovingToArticleTopic =>
+        AvailableQuestions.Any(question =>
+            question.MovesToArticleTopic);
+
+    public int QuestionsMovingToArticleTopicCount =>
+        AvailableQuestions.Count(question =>
+            question.MovesToArticleTopic);
+
+    public string QuestionsMovingToArticleTopicText =>
+        QuestionsMovingToArticleTopicCount == 0
+            ? string.Empty
+            : $"{FormatCount(QuestionsMovingToArticleTopicCount, "вопрос", "вопроса", "вопросов")} перейдут в тему статьи.";
 
     public bool HasLearningOptionsError =>
         !string.IsNullOrWhiteSpace(
@@ -232,6 +297,9 @@ public sealed partial class CreateMaterialViewModel(
 
     public Guid? SelectedArticleId =>
         SelectedArticle?.Id;
+
+    public bool HasSelectedArticle =>
+        SelectedArticleId is not null;
 
     public int RelatedQuestionReviewMaximum =>
         GetReviewMaximum(RelatedQuestionStudyPoints);
@@ -327,13 +395,15 @@ public sealed partial class CreateMaterialViewModel(
 
     public void Initialize(
         LibraryManagementOrderItemViewModel selectedTopic,
-        Action closeRequested)
+        Action closeRequested,
+        Action? createdRequested = null)
     {
         ArgumentNullException.ThrowIfNull(selectedTopic);
         ArgumentNullException.ThrowIfNull(closeRequested);
 
         SelectedTopic = selectedTopic;
         _closeRequested = closeRequested;
+        _createdRequested = createdRequested;
 
         ResetLearningState();
     }
@@ -343,8 +413,16 @@ public sealed partial class CreateMaterialViewModel(
         SelectedTopic = null;
         SelectedIconKind = DefaultMaterialIconKind;
         _closeRequested = null;
+        _createdRequested = null;
 
         ResetLearningState();
+    }
+
+    partial void OnSelectedTopicChanged(
+        LibraryManagementOrderItemViewModel? value)
+    {
+        OnPropertyChanged(
+            nameof(SummaryTopicName));
     }
 
     partial void OnSelectedIconKindChanged(
@@ -398,6 +476,106 @@ public sealed partial class CreateMaterialViewModel(
         if (value > maximum)
         {
             RelatedQuestionReviewPoints = maximum;
+        }
+    }
+
+    public void PrepareSummary(
+        string title,
+        string difficultyText,
+        IEnumerable<string> tags,
+        string bodyPath,
+        string? answerPath)
+    {
+        SummaryTitle = title.Trim();
+        SummaryDifficultyText = difficultyText.Trim();
+        SummaryBodyFileName = Path.GetFileName(bodyPath);
+        SummaryAnswerFileName =
+            string.IsNullOrWhiteSpace(answerPath)
+                ? string.Empty
+                : Path.GetFileName(answerPath);
+
+        SummaryTags.Clear();
+        foreach (string tag in tags
+                     .Where(tag => !string.IsNullOrWhiteSpace(tag))
+                     .Select(tag => tag.Trim())
+                     .Distinct(StringComparer.CurrentCultureIgnoreCase))
+        {
+            SummaryTags.Add(tag);
+        }
+
+        SummaryError = null;
+        IsSummaryCreating = false;
+
+        OnPropertyChanged(nameof(SummaryTopicName));
+        OnPropertyChanged(nameof(HasSummaryTags));
+        OnPropertyChanged(nameof(HasQuestionsMovingToArticleTopic));
+        OnPropertyChanged(nameof(QuestionsMovingToArticleTopicCount));
+        OnPropertyChanged(nameof(QuestionsMovingToArticleTopicText));
+    }
+
+    public void SetSummaryError(string? message)
+    {
+        SummaryError = message;
+    }
+
+    public async Task<Guid?> CreateSummaryMaterialAsync(
+        CreateMaterialGraphCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        if (IsSummaryCreating)
+        {
+            return null;
+        }
+
+        SummaryError = null;
+        IsSummaryCreating = true;
+
+        try
+        {
+            var result =
+                await commandDispatcher.SendAsync<
+                    CreateMaterialGraphCommand,
+                    Guid>(
+                    command,
+                    cancellationToken);
+
+            if (result.IsFailure)
+            {
+                SummaryError =
+                    result.Error
+                        .FirstOrDefault()
+                        ?.Message
+                    ?? "Не удалось создать материал.";
+
+                return null;
+            }
+
+            // Сначала даём View удалить временные draft-файлы, затем закрываем
+            // мастер тем же callback, которым закрывается отмена.
+            Closing?.Invoke(
+                this,
+                EventArgs.Empty);
+
+            (_createdRequested ?? _closeRequested)?.Invoke();
+
+            return result.Value;
+        }
+        catch (OperationCanceledException)
+            when (cancellationToken.IsCancellationRequested)
+        {
+            SummaryError = "Создание материала было отменено.";
+            return null;
+        }
+        catch (Exception)
+        {
+            SummaryError =
+                "Не удалось создать материал. Попробуйте ещё раз.";
+
+            return null;
+        }
+        finally
+        {
+            IsSummaryCreating = false;
         }
     }
 
@@ -851,6 +1029,15 @@ public sealed partial class CreateMaterialViewModel(
         OnPropertyChanged(
             nameof(SelectedLinkedQuestionIds));
 
+        OnPropertyChanged(
+            nameof(HasQuestionsMovingToArticleTopic));
+
+        OnPropertyChanged(
+            nameof(QuestionsMovingToArticleTopicCount));
+
+        OnPropertyChanged(
+            nameof(QuestionsMovingToArticleTopicText));
+
         NotifyArticleQuestionsChanged();
     }
 
@@ -896,6 +1083,14 @@ public sealed partial class CreateMaterialViewModel(
         HasRelatedQuestionValidationAttempted = false;
         RelatedQuestionEditorError = null;
         EditingRelatedQuestion = null;
+
+        SummaryTitle = string.Empty;
+        SummaryDifficultyText = string.Empty;
+        SummaryBodyFileName = string.Empty;
+        SummaryAnswerFileName = string.Empty;
+        SummaryTags.Clear();
+        SummaryError = null;
+        IsSummaryCreating = false;
 
         NotifyLearningCollectionsChanged();
         NotifySelectedQuestionsChanged();

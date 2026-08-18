@@ -2599,6 +2599,7 @@
                               ScrollViewer.CanContentScroll="True"
                               ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                               ScrollViewer.VerticalScrollBarVisibility="Auto"
+                              ScrollViewer.ScrollChanged="MaterialsScroll_OnScrollChanged"
                               SelectionMode="Single"
                               SelectionUnit="FullRow"
                               VirtualizingPanel.IsVirtualizing="True"
@@ -2652,6 +2653,17 @@
                                                        Foreground="#315CC7"
                                                        Text="{Binding MaterialTypeText}" />
                                         </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Width="140" Header="Вопросы">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock VerticalAlignment="Center"
+                                                   FontSize="12"
+                                                   Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                   Text="{Binding ArticleQuestionCountText}" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>

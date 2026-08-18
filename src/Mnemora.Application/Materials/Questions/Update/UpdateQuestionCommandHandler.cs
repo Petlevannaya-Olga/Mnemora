@@ -1,4 +1,4 @@
-﻿using CSharpFunctionalExtensions;
+using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
 using Mnemora.Application.Database;
 using Mnemora.Application.Topics;
@@ -59,13 +59,6 @@ public sealed class UpdateQuestionCommandHandler(
             return rewardsResult.Error.ToErrors();
         }
 
-        var tagsResult = CreateTags(command.Tags);
-
-        if (tagsResult.IsFailure)
-        {
-            return tagsResult.Error.ToErrors();
-        }
-
         var materialResult = await materialsRepository.GetByIdAsync(questionIdResult.Value, cancellationToken);
 
         if (materialResult.IsFailure)
@@ -89,6 +82,8 @@ public sealed class UpdateQuestionCommandHandler(
                 "Указанный материал не является вопросом.",
                 nameof(command.QuestionId)).ToErrors();
         }
+
+        bool wasAttached = question.ArticleId is not null;
 
         UnitResult<Error> relationshipResult;
 
@@ -160,13 +155,37 @@ public sealed class UpdateQuestionCommandHandler(
             return relationshipResult.Error.ToErrors();
         }
 
+        IReadOnlyCollection<MaterialTag> effectiveTags;
+
+        if (question.ArticleId is null && !wasAttached)
+        {
+            // Самостоятельный вопрос, который и раньше был самостоятельным,
+            // сохраняет обычное редактирование собственных тегов.
+            var tagsResult = CreateTags(command.Tags);
+
+            if (tagsResult.IsFailure)
+            {
+                return tagsResult.Error.ToErrors();
+            }
+
+            effectiveTags = tagsResult.Value;
+        }
+        else
+        {
+            // Связанный вопрос собственных тегов не хранит. При переносе между
+            // статьями они также остаются пустыми. При отвязке старые теги не
+            // восстанавливаем и теги статьи не копируем — вопрос становится
+            // самостоятельным без тегов, как зафиксировано в доменной модели.
+            effectiveTags = Array.Empty<MaterialTag>();
+        }
+
         var commonChangesResult = ApplyCommonChanges(
             question,
             titleResult.Value,
             command.Difficulty,
             iconResult.Value,
             rewardsResult.Value,
-            tagsResult.Value);
+            effectiveTags);
 
         if (commonChangesResult.IsFailure)
         {

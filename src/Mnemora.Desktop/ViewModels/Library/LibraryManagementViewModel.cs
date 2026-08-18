@@ -73,6 +73,7 @@ public sealed partial class LibraryManagementViewModel(
     public CreateMaterialViewModel CreateMaterial { get; } = createMaterialViewModel;
 
     private const int SimpleSectionPageSize = 30;
+    private const int SimpleMaterialPageSize = 30;
     private static readonly TimeSpan SearchDelay = TimeSpan.FromMilliseconds(350);
 
     private Guid[]? _pendingSectionOrder;
@@ -84,6 +85,8 @@ public sealed partial class LibraryManagementViewModel(
     private int _simpleSectionSearchVersion;
     private int _simpleTopicSearchVersion;
     private int _simpleMaterialSearchVersion;
+    private int _simpleMaterialVisibleCount = SimpleMaterialPageSize;
+    private int _simpleMaterialsFilteredTotalCount;
     private int? _simpleSectionLoadingVersion;
     private bool _isSimpleSectionsLoaded;
     private bool _isSimpleViewModeLoaded;
@@ -392,9 +395,13 @@ public sealed partial class LibraryManagementViewModel(
     public string SimpleTopicsShownCountText =>
         $"Показано {SimpleTopics.Count} из {Topics.Count}";
 
-    public bool HasSimpleMaterialSource => Materials.Count > 0;
+    public bool HasSimpleMaterialSource =>
+        Materials.Any(material => material.IsTopLevelMaterial);
 
     public bool HasSimpleMaterials => SimpleMaterials.Count > 0;
+
+    public bool SimpleMaterialsHasMore =>
+        SimpleMaterials.Count < _simpleMaterialsFilteredTotalCount;
 
     public bool IsSimpleAllMaterialsFilter => SimpleMaterialFilter == LibraryManagementMaterialFilter.All;
 
@@ -418,7 +425,7 @@ public sealed partial class LibraryManagementViewModel(
          SimpleMaterialFilter != LibraryManagementMaterialFilter.All);
 
     public string SimpleMaterialsShownCountText =>
-        $"Показано {SimpleMaterials.Count} из {Materials.Count}";
+        $"Показано {SimpleMaterials.Count} из {_simpleMaterialsFilteredTotalCount}";
 
     public bool HasError => !string.IsNullOrWhiteSpace(ErrorMessage);
 
@@ -547,7 +554,16 @@ public sealed partial class LibraryManagementViewModel(
                 throw new ArgumentOutOfRangeException(nameof(target), target, null);
         }
 
-        return GetOrderCollection(target).ToArray();
+        LibraryManagementOrderItemViewModel[] items =
+            GetOrderCollection(target)
+                .ToArray();
+
+        return target == LibraryOrderTarget.Materials
+            ? items
+                .Where(material =>
+                    material.IsTopLevelMaterial)
+                .ToArray()
+            : items;
     }
 
     /// <summary>
@@ -578,10 +594,16 @@ public sealed partial class LibraryManagementViewModel(
 
         try
         {
+            IReadOnlyList<Guid> effectiveOrderedIds =
+                target == LibraryOrderTarget.Materials
+                    ? ExpandMaterialOrderWithLinkedQuestions(
+                        orderedIds)
+                    : orderedIds;
+
             bool wasSaved = await SaveOrderCoreAsync(
                 target,
                 parentId,
-                orderedIds,
+                effectiveOrderedIds,
                 cancellationToken);
 
             if (!wasSaved)
@@ -589,7 +611,9 @@ public sealed partial class LibraryManagementViewModel(
                 return false;
             }
 
-            ApplyOrderToCollection(GetOrderCollection(target), orderedIds);
+            ApplyOrderToCollection(
+                GetOrderCollection(target),
+                effectiveOrderedIds);
             ClearPendingOrder(target);
             notificationService.ShowSuccess("Порядок сохранён");
 
@@ -731,6 +755,7 @@ public sealed partial class LibraryManagementViewModel(
 
         SimpleMaterialSearchText = null;
         SimpleMaterialFilter = LibraryManagementMaterialFilter.All;
+        ResetSimpleMaterialPage();
         SelectedTopic = item;
         SimplePage = LibraryManagementSimplePage.Materials;
     }
@@ -761,7 +786,8 @@ public sealed partial class LibraryManagementViewModel(
 
         CreateMaterial.Initialize(
             SelectedTopic,
-            CancelCreateMaterial);
+            CancelCreateMaterial,
+            CompleteCreateMaterial);
 
         IsCreatingMaterial = true;
     }
@@ -777,6 +803,37 @@ public sealed partial class LibraryManagementViewModel(
     {
         IsCreatingMaterial = false;
         CreateMaterial.Reset();
+    }
+
+    private async void CompleteCreateMaterial()
+    {
+        string message =
+            CreateMaterial.IsQuestionMaterial
+                ? "Вопрос создан"
+                : "Статья создана";
+
+        _preferredSectionId = SelectedSection?.Id;
+        _preferredTopicId = SelectedTopic?.Id;
+
+        IsCreatingMaterial = false;
+        CreateMaterial.Reset();
+
+        notificationService.ShowSuccess(message);
+
+        try
+        {
+            await RefreshAfterMutationAsync(
+                CancellationToken.None);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(
+                exception,
+                "Материал создан, но не удалось обновить библиотеку");
+
+            ErrorMessage =
+                "Материал создан, но список библиотеки не удалось обновить. Нажмите «Попробовать снова».";
+        }
     }
 
     [RelayCommand]
@@ -1207,11 +1264,13 @@ public sealed partial class LibraryManagementViewModel(
             _ = SaveSimpleMaterialSortAsync(topic.Id, value.Sort);
         }
 
+        ResetSimpleMaterialPage();
         ApplySimpleMaterialFilterAndSort();
     }
 
     partial void OnSimpleMaterialFilterChanged(LibraryManagementMaterialFilter value)
     {
+        ResetSimpleMaterialPage();
         ApplySimpleMaterialFilterAndSort();
     }
 
@@ -1996,6 +2055,7 @@ public sealed partial class LibraryManagementViewModel(
 
     private async Task LoadMaterialsAsync(CancellationToken cancellationToken)
     {
+        ResetSimpleMaterialPage();
         Materials.Clear();
         SimpleMaterials.Clear();
         SelectedMaterial = null;
@@ -2021,20 +2081,54 @@ public sealed partial class LibraryManagementViewModel(
         _pendingMaterialOrders.TryGetValue(SelectedTopic.Id, out Guid[]? pendingOrder);
         IReadOnlyList<LibraryOrderItemDto> orderedItems = ApplyPendingOrder(result, pendingOrder);
 
-        IReadOnlyList<LibraryMaterialDto> topicMaterials = GetTopicMaterials(FindTopic(SelectedTopic.Id));
-        var materialsById = topicMaterials.ToDictionary(material => material.Id);
+        IReadOnlyList<LibraryMaterialDto> topicMaterials =
+            GetTopicMaterials(
+                FindTopic(
+                    SelectedTopic.Id));
+
+        var materialsById =
+            topicMaterials.ToDictionary(
+                material => material.Id);
+
+        var questionCountsByArticleId =
+            topicMaterials
+                .Where(material =>
+                    string.Equals(
+                        material.Type,
+                        "Question",
+                        StringComparison.OrdinalIgnoreCase) &&
+                    material.ArticleId is not null)
+                .GroupBy(material =>
+                    material.ArticleId!.Value)
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.Count());
 
         int position = 1;
 
         foreach (var orderItem in orderedItems)
         {
-            materialsById.TryGetValue(orderItem.Id, out LibraryMaterialDto? material);
+            materialsById.TryGetValue(
+                orderItem.Id,
+                out LibraryMaterialDto? material);
 
-            Materials.Add(new LibraryManagementOrderItemViewModel(
-                orderItem,
-                LibraryOrderTarget.Materials,
-                position++,
-                material: material));
+            int articleQuestionCount =
+                material is not null &&
+                string.Equals(
+                    material.Type,
+                    "Article",
+                    StringComparison.OrdinalIgnoreCase)
+                    ? questionCountsByArticleId.GetValueOrDefault(
+                        material.Id)
+                    : 0;
+
+            Materials.Add(
+                new LibraryManagementOrderItemViewModel(
+                    orderItem,
+                    LibraryOrderTarget.Materials,
+                    position++,
+                    material: material,
+                    articleQuestionCount: articleQuestionCount));
         }
 
         if (pendingOrder is not null)
@@ -2042,7 +2136,8 @@ public sealed partial class LibraryManagementViewModel(
             _pendingMaterialOrders[SelectedTopic.Id] = Materials.Select(material => material.Id).ToArray();
         }
 
-        SelectedMaterial = Materials.FirstOrDefault();
+        SelectedMaterial = Materials.FirstOrDefault(material =>
+            material.IsTopLevelMaterial);
         ApplySimpleMaterialFilterAndSort();
         NotifyCollectionStateChanged();
     }
@@ -2125,6 +2220,80 @@ public sealed partial class LibraryManagementViewModel(
                 IsContextLoading = false;
             }
         }
+    }
+
+    private IReadOnlyList<Guid> ExpandMaterialOrderWithLinkedQuestions(
+        IReadOnlyList<Guid> topLevelOrderedIds)
+    {
+        var linkedQuestionsByArticleId =
+            Materials
+                .Where(material =>
+                    material.IsLinkedQuestion &&
+                    material.Material?.ArticleId is not null)
+                .GroupBy(material =>
+                    material.Material!.ArticleId!.Value)
+                .ToDictionary(
+                    group => group.Key,
+                    group => group
+                        .OrderBy(material =>
+                            material.Position)
+                        .Select(material =>
+                            material.Id)
+                        .ToArray());
+
+        var result =
+            new List<Guid>(
+                Materials.Count);
+
+        var added =
+            new HashSet<Guid>();
+
+        foreach (Guid materialId
+                 in topLevelOrderedIds)
+        {
+            if (!added.Add(
+                    materialId))
+            {
+                continue;
+            }
+
+            result.Add(
+                materialId);
+
+            if (!linkedQuestionsByArticleId.TryGetValue(
+                    materialId,
+                    out Guid[]? linkedQuestionIds))
+            {
+                continue;
+            }
+
+            foreach (Guid questionId
+                     in linkedQuestionIds)
+            {
+                if (added.Add(
+                        questionId))
+                {
+                    result.Add(
+                        questionId);
+                }
+            }
+        }
+
+        // Защита от старых или неконсистентных данных:
+        // ни один material id не должен потеряться при сохранении порядка.
+        foreach (LibraryManagementOrderItemViewModel material
+                 in Materials.OrderBy(item =>
+                     item.Position))
+        {
+            if (added.Add(
+                    material.Id))
+            {
+                result.Add(
+                    material.Id);
+            }
+        }
+
+        return result;
     }
 
     private async Task<bool> SaveOrderCoreAsync(
@@ -2328,6 +2497,7 @@ public sealed partial class LibraryManagementViewModel(
 
             if (searchVersion == Volatile.Read(ref _simpleMaterialSearchVersion))
             {
+                ResetSimpleMaterialPage();
                 ApplySimpleMaterialFilterAndSort();
             }
         }
@@ -2339,54 +2509,124 @@ public sealed partial class LibraryManagementViewModel(
 
     private void ApplySimpleMaterialFilterAndSort()
     {
-        IEnumerable<LibraryManagementOrderItemViewModel> materials = Materials;
+        IEnumerable<LibraryManagementOrderItemViewModel> materials =
+            Materials.Where(material =>
+                material.IsTopLevelMaterial);
 
-        if (!string.IsNullOrWhiteSpace(SimpleMaterialSearchText))
+        if (!string.IsNullOrWhiteSpace(
+                SimpleMaterialSearchText))
         {
-            string search = SimpleMaterialSearchText.Trim();
-            materials = materials.Where(material =>
-                material.Name.Contains(search, StringComparison.OrdinalIgnoreCase));
+            string search =
+                SimpleMaterialSearchText.Trim();
+
+            materials =
+                materials.Where(material =>
+                    material.Name.Contains(
+                        search,
+                        StringComparison.OrdinalIgnoreCase));
         }
 
         materials = SimpleMaterialFilter switch
         {
-            LibraryManagementMaterialFilter.Articles => materials.Where(material =>
-                string.Equals(material.Material?.Type, "Article", StringComparison.OrdinalIgnoreCase)),
+            LibraryManagementMaterialFilter.Articles =>
+                materials.Where(material =>
+                    material.IsArticle),
 
-            LibraryManagementMaterialFilter.Questions => materials.Where(material =>
-                string.Equals(material.Material?.Type, "Question", StringComparison.OrdinalIgnoreCase)),
+            LibraryManagementMaterialFilter.Questions =>
+                materials.Where(material =>
+                    string.Equals(
+                        material.Material?.Type,
+                        "Question",
+                        StringComparison.OrdinalIgnoreCase)),
 
             _ => materials,
         };
 
-        materials = SelectedSimpleMaterialSortOption.Sort switch
-        {
-            LibraryManagementMaterialSort.Custom => materials
-                .OrderBy(material => material.Position),
+        materials =
+            SelectedSimpleMaterialSortOption.Sort switch
+            {
+                LibraryManagementMaterialSort.Custom =>
+                    materials.OrderBy(material =>
+                        material.Position),
 
-            LibraryManagementMaterialSort.RecentActivity => materials
-                .OrderByDescending(material => material.Material?.UpdatedAt ?? DateTime.MinValue)
-                .ThenBy(material => material.Name, StringComparer.OrdinalIgnoreCase),
+                LibraryManagementMaterialSort.RecentActivity =>
+                    materials
+                        .OrderByDescending(material =>
+                            material.Material?.UpdatedAt ??
+                            DateTime.MinValue)
+                        .ThenBy(
+                            material => material.Name,
+                            StringComparer.OrdinalIgnoreCase),
 
-            LibraryManagementMaterialSort.Name => materials
-                .OrderBy(material => material.Name, StringComparer.OrdinalIgnoreCase),
+                LibraryManagementMaterialSort.Name =>
+                    materials.OrderBy(
+                        material => material.Name,
+                        StringComparer.OrdinalIgnoreCase),
 
-            LibraryManagementMaterialSort.Newest => materials
-                .OrderByDescending(material => material.Material?.CreatedAt ?? DateTime.MinValue)
-                .ThenBy(material => material.Name, StringComparer.OrdinalIgnoreCase),
+                LibraryManagementMaterialSort.Newest =>
+                    materials
+                        .OrderByDescending(material =>
+                            material.Material?.CreatedAt ??
+                            DateTime.MinValue)
+                        .ThenBy(
+                            material => material.Name,
+                            StringComparer.OrdinalIgnoreCase),
 
-            _ => materials.OrderBy(material => material.Position),
-        };
+                _ =>
+                    materials.OrderBy(material =>
+                        material.Position),
+            };
+
+        LibraryManagementOrderItemViewModel[] filteredMaterials =
+            materials.ToArray();
+
+        _simpleMaterialsFilteredTotalCount =
+            filteredMaterials.Length;
+
+        int visibleCount =
+            Math.Min(
+                _simpleMaterialVisibleCount,
+                _simpleMaterialsFilteredTotalCount);
 
         SimpleMaterials.Clear();
 
-        foreach (LibraryManagementOrderItemViewModel material in materials)
+        foreach (LibraryManagementOrderItemViewModel material
+                 in filteredMaterials.Take(visibleCount))
         {
-            SimpleMaterials.Add(material);
+            SimpleMaterials.Add(
+                material);
         }
 
         NotifySimpleMaterialsStateChanged();
     }
+
+    private void ResetSimpleMaterialPage()
+    {
+        _simpleMaterialVisibleCount =
+            SimpleMaterialPageSize;
+    }
+
+    [RelayCommand(CanExecute = nameof(CanLoadNextSimpleMaterialPage))]
+    private void LoadNextSimpleMaterialPage()
+    {
+        if (!CanLoadNextSimpleMaterialPage())
+        {
+            return;
+        }
+
+        _simpleMaterialVisibleCount =
+            Math.Min(
+                _simpleMaterialVisibleCount +
+                SimpleMaterialPageSize,
+                _simpleMaterialsFilteredTotalCount);
+
+        ApplySimpleMaterialFilterAndSort();
+    }
+
+    private bool CanLoadNextSimpleMaterialPage() =>
+        IsSimpleMaterialsPage &&
+        !IsContextLoading &&
+        SimpleMaterialsHasMore;
 
     private ObservableCollection<LibraryManagementOrderItemViewModel> GetOrderCollection(
         LibraryOrderTarget target)
@@ -2515,6 +2755,8 @@ public sealed partial class LibraryManagementViewModel(
         OnPropertyChanged(nameof(IsSimpleMaterialsEmpty));
         OnPropertyChanged(nameof(HasNoSimpleMaterialResults));
         OnPropertyChanged(nameof(SimpleMaterialsShownCountText));
+        OnPropertyChanged(nameof(SimpleMaterialsHasMore));
+        LoadNextSimpleMaterialPageCommand.NotifyCanExecuteChanged();
     }
 
     private void NotifyCollectionStateChanged()
@@ -2527,6 +2769,8 @@ public sealed partial class LibraryManagementViewModel(
         OnPropertyChanged(nameof(MaterialsShownCountText));
         OnPropertyChanged(nameof(HasSimpleMaterialSource));
         OnPropertyChanged(nameof(SimpleMaterialsShownCountText));
+        OnPropertyChanged(nameof(SimpleMaterialsHasMore));
+        LoadNextSimpleMaterialPageCommand.NotifyCanExecuteChanged();
         OnPropertyChanged(nameof(SelectedPath));
     }
 }

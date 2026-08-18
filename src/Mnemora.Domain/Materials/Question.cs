@@ -1,4 +1,4 @@
-﻿using CSharpFunctionalExtensions;
+using CSharpFunctionalExtensions;
 using Mnemora.Domain.Topics;
 using Mnemora.Shared;
 
@@ -52,7 +52,16 @@ public sealed class Question : Material
             return CommonErrors.IsRequired(nameof(article));
         }
 
-        return CreateCore(article.TopicId, title, difficulty, icon, experienceRewards, tags, article.Id);
+        // Связанный вопрос не хранит собственных тегов. Теги отображаются
+        // через связанную статью и поэтому не копируются в Question.
+        return CreateCore(
+            article.TopicId,
+            title,
+            difficulty,
+            icon,
+            experienceRewards,
+            Array.Empty<MaterialTag>(),
+            article.Id);
     }
 
     public UnitResult<Error> AttachToArticle(Article? article)
@@ -64,7 +73,16 @@ public sealed class Question : Material
 
         if (ArticleId == article.Id)
         {
-            return ChangeTopicCore(article.TopicId);
+            var existingArticleTopicResult =
+                ChangeTopicCore(article.TopicId);
+
+            if (existingArticleTopicResult.IsFailure)
+            {
+                return existingArticleTopicResult.Error;
+            }
+
+            return ReplaceTags(
+                Array.Empty<MaterialTag>());
         }
 
         if (ArticleId is not null)
@@ -79,6 +97,14 @@ public sealed class Question : Material
             return topicResult.Error;
         }
 
+        var clearTagsResult =
+            ReplaceTags(Array.Empty<MaterialTag>());
+
+        if (clearTagsResult.IsFailure)
+        {
+            return clearTagsResult.Error;
+        }
+
         ArticleId = article.Id;
         Touch();
 
@@ -90,6 +116,16 @@ public sealed class Question : Material
         if (ArticleId is null)
         {
             return UnitResult.Success<Error>();
+        }
+
+        // При отвязке вопрос становится самостоятельным без тегов. Старые
+        // собственные теги не восстанавливаем и теги статьи не копируем.
+        var clearTagsResult =
+            ReplaceTags(Array.Empty<MaterialTag>());
+
+        if (clearTagsResult.IsFailure)
+        {
+            return clearTagsResult.Error;
         }
 
         ArticleId = null;

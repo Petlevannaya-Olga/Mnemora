@@ -80,6 +80,42 @@ public partial class LibraryManagementView : UserControl
         }
     }
 
+    private void MaterialsScroll_OnScrollChanged(
+        object sender,
+        ScrollChangedEventArgs e)
+    {
+        if (e.ExtentHeight <= 0 ||
+            e.ViewportHeight <= 0)
+        {
+            return;
+        }
+
+        double remainingDistance =
+            e.ExtentHeight -
+            e.VerticalOffset -
+            e.ViewportHeight;
+
+        double loadingThreshold =
+            Math.Max(
+                2d,
+                e.ViewportHeight * 0.5d);
+
+        if (remainingDistance >
+            loadingThreshold)
+        {
+            return;
+        }
+
+        if (DataContext
+                is LibraryManagementViewModel viewModel &&
+            viewModel.LoadNextSimpleMaterialPageCommand
+                .CanExecute(null))
+        {
+            viewModel.LoadNextSimpleMaterialPageCommand
+                .Execute(null);
+        }
+    }
+
     private void SimpleSectionTableRow_OnMouseLeftButtonUp(
         object sender,
         MouseButtonEventArgs e)

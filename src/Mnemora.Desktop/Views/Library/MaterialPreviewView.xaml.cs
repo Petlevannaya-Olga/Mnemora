@@ -1550,6 +1550,20 @@ public partial class MaterialPreviewView : UserControl
         }
     }
 
+    /// <summary>
+    /// Opens this preview using the same full-screen reader overlay as the
+    /// built-in expand button. The control must already belong to AppShellView.
+    /// </summary>
+    public void OpenFullscreen()
+    {
+        if (_expandedOwner is not null || _isFocusMode)
+        {
+            return;
+        }
+
+        EnterFocusMode();
+    }
+
     private void ToggleToc_OnClick(
         object sender,
         RoutedEventArgs e)

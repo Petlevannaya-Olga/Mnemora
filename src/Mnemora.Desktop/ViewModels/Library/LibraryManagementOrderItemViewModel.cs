@@ -14,7 +14,8 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
         int position,
         LibrarySectionDto? section = null,
         LibraryTopicDto? topic = null,
-        LibraryMaterialDto? material = null)
+        LibraryMaterialDto? material = null,
+        int articleQuestionCount = 0)
     {
         ArgumentNullException.ThrowIfNull(orderItem);
 
@@ -25,6 +26,7 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
         Section = section;
         Topic = topic;
         Material = material;
+        ArticleQuestionCount = articleQuestionCount;
         IconKind = ResolveIcon(orderItem.Icon, target, orderItem.Details);
         _position = position;
     }
@@ -43,6 +45,34 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
 
     public LibraryMaterialDto? Material { get; }
 
+    public int ArticleQuestionCount { get; }
+
+    public bool IsArticle =>
+        string.Equals(
+            Material?.Type,
+            "Article",
+            StringComparison.OrdinalIgnoreCase);
+
+    public bool IsLinkedQuestion =>
+        string.Equals(
+            Material?.Type,
+            "Question",
+            StringComparison.OrdinalIgnoreCase) &&
+        Material?.ArticleId is not null;
+
+    public bool IsTopLevelMaterial =>
+        Material is not null &&
+        !IsLinkedQuestion;
+
+    public string ArticleQuestionCountText =>
+        IsArticle
+            ? FormatCount(
+                ArticleQuestionCount,
+                "вопрос",
+                "вопроса",
+                "вопросов")
+            : "—";
+
     public PackIconKind IconKind { get; }
 
     public string Color => Section?.Color ?? string.Empty;
@@ -53,7 +83,8 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
 
     public int TopicsCount => Section?.Topics.Count ?? 0;
 
-    public int MaterialsCount => GetSectionMaterials().Count;
+    public int MaterialsCount =>
+        GetSectionMaterials().Count(IsTopLevelMaterialDto);
 
     public string TopicsSummaryText => TopicsCount == 0
         ? "Тем пока нет"
@@ -66,7 +97,11 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
         string.Equals(material.Type, "Article", StringComparison.OrdinalIgnoreCase));
 
     public int QuestionsCount => GetSectionMaterials().Count(material =>
-        string.Equals(material.Type, "Question", StringComparison.OrdinalIgnoreCase));
+        string.Equals(
+            material.Type,
+            "Question",
+            StringComparison.OrdinalIgnoreCase) &&
+        material.ArticleId is null);
 
     public bool HasProgress => false;
 
@@ -134,7 +169,11 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
     public int TopicQuestionsCount => Topic is null
         ? 0
         : GetTopicMaterials(Topic).Count(material =>
-            string.Equals(material.Type, "Question", StringComparison.OrdinalIgnoreCase));
+            string.Equals(
+                material.Type,
+                "Question",
+                StringComparison.OrdinalIgnoreCase) &&
+            material.ArticleId is null);
 
     public string TopicMaterialsSummaryText => TopicMaterialsCount == 0
         ? "Материалов пока нет"
@@ -203,15 +242,21 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
             : 0;
     }
 
-    private static int GetTopicMaterialsCount(LibraryTopicDto topic)
+    private static int GetTopicMaterialsCount(
+        LibraryTopicDto topic)
     {
-        var property = typeof(LibraryTopicDto).GetProperty("Materials");
+        return GetTopicMaterials(topic)
+            .Count(IsTopLevelMaterialDto);
+    }
 
-        return property?.GetValue(topic) is System.Collections.ICollection collection
-            ? collection.Count
-            : property?.GetValue(topic) is IEnumerable<LibraryMaterialDto> materials
-                ? materials.Count()
-                : 0;
+    private static bool IsTopLevelMaterialDto(
+        LibraryMaterialDto material)
+    {
+        return !string.Equals(
+                   material.Type,
+                   "Question",
+                   StringComparison.OrdinalIgnoreCase) ||
+               material.ArticleId is null;
     }
 
     private IReadOnlyList<LibraryMaterialDto> GetSectionMaterials()
