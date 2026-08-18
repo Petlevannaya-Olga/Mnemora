@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -7,6 +8,7 @@ using System.Windows.Shapes;
 using Microsoft.Win32;
 using Mnemora.Desktop.Editors;
 using Mnemora.Desktop.ViewModels.Library;
+using Mnemora.Domain.Materials;
 using Path = System.IO.Path;
 
 namespace Mnemora.Desktop.Views.Library;
@@ -55,6 +57,18 @@ public partial class CreateMaterialView : UserControl
         ClearSelectedFile(QuestionSource);
         ClearSelectedFile(AnswerSource);
 
+        HideMaterialStepError();
+
+        if (FindName("ReviewMaterialPreview") is MaterialPreviewView preview)
+        {
+            preview.Title = string.Empty;
+            preview.TopicName = string.Empty;
+            preview.Difficulty = string.Empty;
+            preview.Tags = Array.Empty<string>();
+            preview.BodyMarkdown = string.Empty;
+            preview.ReferenceAnswerMarkdown = string.Empty;
+        }
+
         FindRequiredControl<TabControl>("WizardTabs").SelectedIndex = 0;
     }
 
@@ -66,6 +80,270 @@ public partial class CreateMaterialView : UserControl
     private void GoToTypeStep_OnClick(object sender, RoutedEventArgs e)
     {
         FindRequiredControl<TabControl>("WizardTabs").SelectedIndex = 0;
+    }
+
+    private async void GoToReviewStep_OnClick(
+        object sender,
+        RoutedEventArgs e)
+    {
+        e.Handled = true;
+
+        if (!await TryPrepareReviewAsync())
+        {
+            return;
+        }
+
+        FindRequiredControl<TabControl>(
+            "WizardTabs").SelectedIndex = 2;
+    }
+
+    private void GoToMaterialStep_OnClick(
+        object sender,
+        RoutedEventArgs e)
+    {
+        HideMaterialStepError();
+
+        FindRequiredControl<TabControl>(
+            "WizardTabs").SelectedIndex = 1;
+    }
+
+    private async Task<bool> TryPrepareReviewAsync()
+    {
+        HideMaterialStepError();
+
+        TextBox titleInput =
+            FindRequiredControl<TextBox>(
+                "MaterialTitleInput");
+
+        string title =
+            titleInput.Text.Trim();
+
+        if (title.Length is
+            < MaterialTitle.MinLength
+            or > MaterialTitle.MaxLength)
+        {
+            ShowMaterialStepError(
+                $"Название должно содержать от {MaterialTitle.MinLength} до {MaterialTitle.MaxLength} символов.");
+
+            titleInput.Focus();
+            return false;
+        }
+
+        ComboBox difficultyComboBox =
+            FindRequiredControl<ComboBox>(
+                "DifficultyComboBox");
+
+        string difficulty =
+            (difficultyComboBox.SelectedItem
+                as ComboBoxItem)?
+            .Content?
+            .ToString()
+            ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(
+                difficulty))
+        {
+            ShowMaterialStepError(
+                "Выберите сложность материала.");
+
+            difficultyComboBox.Focus();
+            return false;
+        }
+
+        RadioButton articleChoice =
+            FindRequiredControl<RadioButton>(
+                "ArticleChoiceRadio");
+
+        RadioButton questionChoice =
+            FindRequiredControl<RadioButton>(
+                "QuestionChoiceRadio");
+
+        bool isArticle =
+            articleChoice.IsChecked == true;
+
+        bool isQuestion =
+            questionChoice.IsChecked == true;
+
+        if (!isArticle &&
+            !isQuestion)
+        {
+            ShowMaterialStepError(
+                "Сначала выберите тип материала.");
+
+            FindRequiredControl<TabControl>(
+                "WizardTabs").SelectedIndex = 0;
+
+            return false;
+        }
+
+        string? bodyPath =
+            isArticle
+                ? GetSelectedPath(
+                    ArticleSource)
+                : GetSelectedPath(
+                    QuestionSource);
+
+        string bodySource =
+            isArticle
+                ? ArticleSource
+                : QuestionSource;
+
+        if (string.IsNullOrWhiteSpace(
+                bodyPath) ||
+            !File.Exists(
+                bodyPath))
+        {
+            string message =
+                isArticle
+                    ? "Выберите Markdown-файл статьи."
+                    : "Выберите Markdown-файл вопроса.";
+
+            ShowFileError(
+                bodySource,
+                message);
+
+            ShowMaterialStepError(
+                message);
+
+            return false;
+        }
+
+        string? answerPath =
+            isQuestion
+                ? GetSelectedPath(
+                    AnswerSource)
+                : null;
+
+        if (isQuestion &&
+            (string.IsNullOrWhiteSpace(
+                 answerPath) ||
+             !File.Exists(
+                 answerPath)))
+        {
+            const string message =
+                "Выберите Markdown-файл эталонного ответа.";
+
+            ShowFileError(
+                AnswerSource,
+                message);
+
+            ShowMaterialStepError(
+                message);
+
+            return false;
+        }
+
+        try
+        {
+            // ВАЖНО: читаем файлы заново при каждом переходе на шаг 3.
+            // Поэтому правки, сохранённые в Obsidian/VS Code после возврата
+            // на шаг 2, всегда попадают в финальную проверку.
+            string bodyMarkdown =
+                await ReadMarkdownSnapshotAsync(
+                    bodyPath);
+
+            string answerMarkdown =
+                isQuestion
+                    ? await ReadMarkdownSnapshotAsync(
+                        answerPath!)
+                    : string.Empty;
+
+            if (DataContext
+                is not CreateMaterialViewModel viewModel)
+            {
+                ShowMaterialStepError(
+                    "Не удалось получить состояние создаваемого материала.");
+
+                return false;
+            }
+
+            var preview =
+                FindRequiredControl<
+                    MaterialPreviewView>(
+                    "ReviewMaterialPreview");
+
+            preview.Title = title;
+            preview.TypeLabel =
+                isQuestion
+                    ? "Вопрос"
+                    : "Статья";
+            preview.IsQuestion =
+                isQuestion;
+            preview.TopicName =
+                viewModel.SelectedTopic?.Name
+                ?? string.Empty;
+            preview.Difficulty =
+                difficulty;
+            preview.IconKind =
+                viewModel.SelectedIconKind;
+            preview.Tags =
+                GetTags(
+                    FindRequiredControl<WrapPanel>(
+                        "TagsPanel"));
+            preview.BodyMarkdown =
+                bodyMarkdown;
+            preview.ReferenceAnswerMarkdown =
+                answerMarkdown;
+
+            return true;
+        }
+        catch (Exception exception)
+            when (exception is IOException
+                      or UnauthorizedAccessException
+                      or ArgumentException
+                      or NotSupportedException
+                      or DecoderFallbackException)
+        {
+            ShowMaterialStepError(
+                "Не удалось прочитать Markdown-файл. Сохраните изменения в редакторе и попробуйте снова.");
+
+            return false;
+        }
+    }
+
+    private static async Task<string> ReadMarkdownSnapshotAsync(
+        string path)
+    {
+        await using var stream =
+            new FileStream(
+                path,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.ReadWrite
+                | FileShare.Delete,
+                bufferSize: 4096,
+                useAsync: true);
+
+        using var reader =
+            new StreamReader(
+                stream,
+                Encoding.UTF8,
+                detectEncodingFromByteOrderMarks: true);
+
+        return await reader.ReadToEndAsync();
+    }
+
+    private void ShowMaterialStepError(
+        string message)
+    {
+        TextBlock error =
+            FindRequiredControl<TextBlock>(
+                "MaterialStepError");
+
+        error.Text = message;
+        error.Visibility =
+            Visibility.Visible;
+    }
+
+    private void HideMaterialStepError()
+    {
+        TextBlock error =
+            FindRequiredControl<TextBlock>(
+                "MaterialStepError");
+
+        error.Text = string.Empty;
+        error.Visibility =
+            Visibility.Collapsed;
     }
 
     private async void MarkdownDropZone_OnMouseLeftButtonUp(

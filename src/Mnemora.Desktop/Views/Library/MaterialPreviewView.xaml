@@ -1,0 +1,209 @@
+<UserControl
+    x:Class="Mnemora.Desktop.Views.Library.MaterialPreviewView"
+    x:Name="Root"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    SnapsToDevicePixels="True"
+    TextOptions.TextFormattingMode="Display"
+    TextOptions.TextRenderingMode="ClearType"
+    UseLayoutRounding="True">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+
+        <Style x:Key="MaterialPreview.MetaChip" TargetType="Border">
+            <Setter Property="Margin" Value="0,0,8,6" />
+            <Setter Property="Padding" Value="10,5" />
+            <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.SurfaceMuted}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Border}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+
+        <Style x:Key="MaterialPreview.TagChip" TargetType="Border">
+            <Setter Property="Margin" Value="0,0,7,7" />
+            <Setter Property="Padding" Value="9,4" />
+            <Setter Property="Background" Value="#F3F0FF" />
+            <Setter Property="BorderBrush" Value="#E2DCFF" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+    </UserControl.Resources>
+
+    <Border Padding="30,28,30,34"
+            Background="{DynamicResource Mnemora.Brush.Surface}"
+            BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+            BorderThickness="1"
+            CornerRadius="16">
+
+        <StackPanel>
+            <!-- Реальная шапка материала. -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="18" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Border Width="64"
+                        Height="64"
+                        Background="#F1EDFF"
+                        BorderBrush="#E3DCFF"
+                        BorderThickness="1"
+                        CornerRadius="15">
+                    <materialDesign:PackIcon Width="32"
+                                             Height="32"
+                                             HorizontalAlignment="Center"
+                                             VerticalAlignment="Center"
+                                             Foreground="{DynamicResource Mnemora.Brush.Secondary}"
+                                             Kind="{Binding IconKind, ElementName=Root}" />
+                </Border>
+
+                <StackPanel Grid.Column="2"
+                            VerticalAlignment="Center">
+                    <TextBlock FontSize="28"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                               Text="{Binding Title, ElementName=Root}"
+                               TextTrimming="CharacterEllipsis"
+                               TextWrapping="Wrap" />
+
+                    <WrapPanel Margin="0,11,0,0">
+                        <Border Style="{StaticResource MaterialPreview.MetaChip}">
+                            <TextBlock FontSize="12"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource Mnemora.Brush.Secondary}"
+                                       Text="{Binding TypeLabel, ElementName=Root}" />
+                        </Border>
+
+                        <Border Style="{StaticResource MaterialPreview.MetaChip}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Width="15"
+                                                         Height="15"
+                                                         Margin="0,0,6,0"
+                                                         VerticalAlignment="Center"
+                                                         Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                         Kind="BookOpenPageVariantOutline" />
+                                <TextBlock VerticalAlignment="Center"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                           Text="{Binding TopicName, ElementName=Root}" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource MaterialPreview.MetaChip}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Width="15"
+                                                         Height="15"
+                                                         Margin="0,0,6,0"
+                                                         VerticalAlignment="Center"
+                                                         Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                         Kind="FormatListBulleted" />
+                                <TextBlock VerticalAlignment="Center"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                           Text="{Binding Difficulty, ElementName=Root}" />
+                            </StackPanel>
+                        </Border>
+                    </WrapPanel>
+                </StackPanel>
+            </Grid>
+
+            <ItemsControl Margin="82,13,0,0"
+                          ItemsSource="{Binding Tags, ElementName=Root}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource MaterialPreview.TagChip}">
+                            <TextBlock FontSize="12"
+                                       Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                       Text="{Binding}" />
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <Border Height="1"
+                    Margin="0,22,0,24"
+                    Background="{DynamicResource Mnemora.Brush.Border}" />
+
+            <!-- Статья -->
+            <StackPanel>
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Visible" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsQuestion, ElementName=Root}"
+                                         Value="True">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+
+                <StackPanel x:Name="ArticleMarkdownHost" />
+            </StackPanel>
+
+            <!-- Вопрос -->
+            <StackPanel Visibility="{Binding IsQuestion, ElementName=Root, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <TextBlock Margin="0,0,0,14"
+                           FontSize="15"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                           Text="Вопрос" />
+
+                <StackPanel x:Name="QuestionMarkdownHost" />
+
+                <Border Height="1"
+                        Margin="0,26,0,24"
+                        Background="{DynamicResource Mnemora.Brush.Border}" />
+
+                <Grid Margin="0,0,0,14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="10" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Width="34"
+                            Height="34"
+                            Background="#E8FAF7"
+                            CornerRadius="9">
+                        <materialDesign:PackIcon Width="18"
+                                                 Height="18"
+                                                 HorizontalAlignment="Center"
+                                                 VerticalAlignment="Center"
+                                                 Foreground="{DynamicResource Mnemora.Brush.Primary}"
+                                                 Kind="CheckCircleOutline" />
+                    </Border>
+
+                    <StackPanel Grid.Column="2"
+                                VerticalAlignment="Center">
+                        <TextBlock FontSize="15"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                   Text="Эталонный ответ" />
+                        <TextBlock Margin="0,2,0,0"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                   Text="Ответ для сравнения и ИИ-проверки" />
+                    </StackPanel>
+                </Grid>
+
+                <Border Padding="20"
+                        Background="{DynamicResource Mnemora.Brush.SurfaceMuted}"
+                        BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                        BorderThickness="1"
+                        CornerRadius="12">
+                    <StackPanel x:Name="AnswerMarkdownHost" />
+                </Border>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</UserControl>
