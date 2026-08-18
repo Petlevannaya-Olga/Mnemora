@@ -1,4 +1,4 @@
-﻿namespace Mnemora.Desktop.Settings;
+namespace Mnemora.Desktop.Settings;
 
 public interface ISettingsService
 {
@@ -7,6 +7,12 @@ public interface ISettingsService
     Task SaveUserNameAsync(string userName, CancellationToken cancellationToken = default);
 
     Task SaveStoragePathAsync(string storagePath, CancellationToken cancellationToken = default);
+
+    Task SaveMarkdownEditorAsync(
+        MarkdownEditorType? editor,
+        string? visualStudioCodePath,
+        string? obsidianVaultPath,
+        CancellationToken cancellationToken = default);
 
     Task SaveLibraryOverviewViewModeAsync(
         LibraryOverviewViewMode viewMode,

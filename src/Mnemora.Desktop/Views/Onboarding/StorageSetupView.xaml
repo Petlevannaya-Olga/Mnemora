@@ -158,7 +158,7 @@
         <!-- Шаги онбординга -->
 
         <Grid Grid.Row="1"
-              MaxWidth="720"
+              MaxWidth="820"
               Margin="24,0,24,0"
               HorizontalAlignment="Stretch">
 
@@ -175,9 +175,9 @@
                 <ColumnDefinition Width="96" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="96" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="96" />
             </Grid.ColumnDefinitions>
-
-            <!-- Шаг 1 завершён -->
 
             <Border Grid.Row="0"
                     Grid.Column="0"
@@ -204,8 +204,6 @@
                     CornerRadius="2"
                     VerticalAlignment="Center" />
 
-            <!-- Шаг 2 активен -->
-
             <Border Grid.Row="0"
                     Grid.Column="2"
                     Width="40"
@@ -230,8 +228,6 @@
                     Background="#53618C"
                     CornerRadius="2"
                     VerticalAlignment="Center" />
-
-            <!-- Шаги 3 и 4 неактивны -->
 
             <Border Grid.Row="0"
                     Grid.Column="4"
@@ -263,6 +259,25 @@
                            VerticalAlignment="Center" />
             </Border>
 
+            <Border Grid.Row="0"
+                    Grid.Column="7"
+                    Height="3"
+                    Margin="4,0"
+                    Background="#53618C"
+                    CornerRadius="2"
+                    VerticalAlignment="Center" />
+
+            <Border Grid.Row="0"
+                    Grid.Column="8"
+                    Style="{StaticResource OnboardingInactiveStepStyle}">
+                <TextBlock Text="5"
+                           Foreground="#D5DAED"
+                           FontSize="16"
+                           FontWeight="SemiBold"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center" />
+            </Border>
+
             <TextBlock Grid.Row="1"
                        Grid.Column="0"
                        Text="Профиль"
@@ -280,13 +295,20 @@
 
             <TextBlock Grid.Row="1"
                        Grid.Column="4"
-                       Text="ИИ"
+                       Text="Редактор"
                        Foreground="#C9CFE3"
                        FontSize="14"
                        TextAlignment="Center" />
 
             <TextBlock Grid.Row="1"
                        Grid.Column="6"
+                       Text="ИИ"
+                       Foreground="#C9CFE3"
+                       FontSize="14"
+                       TextAlignment="Center" />
+
+            <TextBlock Grid.Row="1"
+                       Grid.Column="8"
                        Text="Начало"
                        Foreground="#C9CFE3"
                        FontSize="14"
@@ -600,7 +622,7 @@
 
                 </Border>
 
-                <TextBlock Text="Шаг 2 из 4"
+                <TextBlock Text="Шаг 2 из 5"
                            Foreground="White"
                            FontSize="15"
                            HorizontalAlignment="Center"

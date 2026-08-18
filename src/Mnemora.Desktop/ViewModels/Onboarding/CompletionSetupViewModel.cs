@@ -50,6 +50,16 @@ public sealed partial class CompletionSetupViewModel(
 
     public string StorageStatus => "Папка для материалов выбрана";
 
+    public bool IsEditorConfigured =>
+        onboardingState.MarkdownEditor is not null;
+
+    public string EditorStatus => onboardingState.MarkdownEditor switch
+    {
+        MarkdownEditorType.VisualStudioCode => "Visual Studio Code",
+        MarkdownEditorType.Obsidian => "Obsidian",
+        _ => "Не настроен",
+    };
+
     public bool IsAiConfigured => onboardingState.IsAiConfigured;
 
     public bool IsAiSkipped => !IsAiConfigured;
@@ -72,6 +82,13 @@ public sealed partial class CompletionSetupViewModel(
 
         try
         {
+            if (onboardingState.MarkdownEditor is null)
+            {
+                CompletionErrorMessage =
+                    "Markdown-редактор не настроен. Вернитесь к шагу редактора и завершите проверку.";
+                return;
+            }
+
             if (onboardingState.IsAiConfigured && string.IsNullOrWhiteSpace(onboardingState.PendingApiKey))
             {
                 CompletionErrorMessage = "Не найден проверенный API-ключ. Вернитесь на предыдущий шаг и проверьте подключение.";

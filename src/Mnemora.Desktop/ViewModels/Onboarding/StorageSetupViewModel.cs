@@ -97,7 +97,7 @@ public sealed partial class StorageSetupViewModel(
 
             onboardingState.StoragePath = storagePath;
 
-            navigationService.NavigateTo<AiSetupViewModel>();
+            navigationService.NavigateTo<EditorSetupViewModel>();
         }
         catch (Exception exception)
             when (exception is IOException

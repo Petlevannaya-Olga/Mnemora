@@ -12,6 +12,7 @@ using Mnemora.Application.Storage;
 using Mnemora.Desktop.Ai;
 using Mnemora.Desktop.Commands;
 using Mnemora.Desktop.Dialogs;
+using Mnemora.Desktop.Editors;
 using Mnemora.Desktop.Navigation;
 using Mnemora.Desktop.Notifications;
 using Mnemora.Desktop.Queries;
@@ -47,9 +48,15 @@ public partial class App : System.Windows.Application
 
         var onboardingState = _serviceProvider.GetRequiredService<OnboardingState>();
 
+        bool wasOnboardingCompleted =
+            onboardingState.IsOnboardingCompleted;
+
         bool storageIsConfigured =
-            onboardingState.IsOnboardingCompleted &&
+            wasOnboardingCompleted &&
             !string.IsNullOrWhiteSpace(onboardingState.StoragePath);
+
+        bool editorIsConfigured =
+            HasEditorConfiguration(onboardingState);
 
         if (storageIsConfigured)
         {
@@ -74,9 +81,17 @@ public partial class App : System.Windows.Application
         var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
         var navigationService = _serviceProvider.GetRequiredService<INavigationService>();
 
-        if (storageIsConfigured)
+        if (storageIsConfigured && editorIsConfigured)
         {
             navigationService.NavigateTo<AppShellViewModel>();
+        }
+        else if (storageIsConfigured && wasOnboardingCompleted)
+        {
+            // Пользователь уже проходил старый онбординг,
+            // но обязательной настройки Markdown-редактора ещё нет.
+            onboardingState.IsOnboardingCompleted = false;
+            onboardingState.IsMarkdownEditorVerified = false;
+            navigationService.NavigateTo<EditorSetupViewModel>();
         }
         else
         {
@@ -92,6 +107,23 @@ public partial class App : System.Windows.Application
     {
         _serviceProvider?.Dispose();
         base.OnExit(e);
+    }
+
+    private static bool HasEditorConfiguration(
+        OnboardingState onboardingState)
+    {
+        return onboardingState.MarkdownEditor switch
+        {
+            MarkdownEditorType.VisualStudioCode =>
+                !string.IsNullOrWhiteSpace(
+                    onboardingState.VisualStudioCodePath),
+
+            MarkdownEditorType.Obsidian =>
+                !string.IsNullOrWhiteSpace(
+                    onboardingState.ObsidianVaultPath),
+
+            _ => false,
+        };
     }
 
     private static async Task LoadSettingsAsync(IServiceProvider serviceProvider)
@@ -113,6 +145,20 @@ public partial class App : System.Windows.Application
                     ? null
                     : settings.StoragePath.Trim();
 
+            onboardingState.MarkdownEditor =
+                settings.MarkdownEditor;
+
+            onboardingState.VisualStudioCodePath =
+                string.IsNullOrWhiteSpace(settings.VisualStudioCodePath)
+                    ? null
+                    : settings.VisualStudioCodePath.Trim();
+
+            onboardingState.ObsidianVaultPath =
+                string.IsNullOrWhiteSpace(settings.ObsidianVaultPath)
+                    ? null
+                    : settings.ObsidianVaultPath.Trim();
+
+            onboardingState.IsMarkdownEditorVerified = false;
             onboardingState.IsAiConfigured = settings.IsAiConfigured;
             onboardingState.IsOnboardingCompleted = settings.IsOnboardingCompleted;
         }
@@ -121,6 +167,10 @@ public partial class App : System.Windows.Application
         {
             onboardingState.UserName = null;
             onboardingState.StoragePath = null;
+            onboardingState.MarkdownEditor = null;
+            onboardingState.VisualStudioCodePath = null;
+            onboardingState.ObsidianVaultPath = null;
+            onboardingState.IsMarkdownEditorVerified = false;
             onboardingState.IsAiConfigured = false;
             onboardingState.IsOnboardingCompleted = false;
             onboardingState.PendingApiKey = null;
@@ -179,6 +229,7 @@ public partial class App : System.Windows.Application
 
         services.AddSingleton<OnboardingState>();
         services.AddSingleton<ISettingsService, JsonSettingsService>();
+        services.AddSingleton<IMarkdownEditorService, MarkdownEditorService>();
         services.AddSingleton<IStoragePathProvider, StoragePathProvider>();
         services.AddSingleton(TimeProvider.System);
 
@@ -225,6 +276,7 @@ public partial class App : System.Windows.Application
         services.AddTransient<WelcomeViewModel>();
         services.AddTransient<ProfileSetupViewModel>();
         services.AddTransient<StorageSetupViewModel>();
+        services.AddTransient<EditorSetupViewModel>();
         services.AddTransient<AiSetupViewModel>();
         services.AddTransient<CompletionSetupViewModel>();
 

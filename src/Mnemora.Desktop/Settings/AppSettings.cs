@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 
 namespace Mnemora.Desktop.Settings;
 
@@ -12,6 +12,12 @@ public sealed class AppSettings
     public string? UserName { get; set; }
 
     public string? StoragePath { get; set; }
+
+    public MarkdownEditorType? MarkdownEditor { get; set; }
+
+    public string? VisualStudioCodePath { get; set; }
+
+    public string? ObsidianVaultPath { get; set; }
 
     public bool IsAiConfigured { get; set; }
 

@@ -149,6 +149,7 @@ public partial class CreateMaterialView
         }
         catch (UnauthorizedAccessException)
         {
+            // ignore
         }
         finally
         {
@@ -205,9 +206,11 @@ public partial class CreateMaterialView
         }
         catch (IOException)
         {
+            // ignore
         }
         catch (UnauthorizedAccessException)
         {
+            // ignore
         }
     }
 

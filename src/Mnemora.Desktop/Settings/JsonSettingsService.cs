@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -104,6 +104,32 @@ public sealed class JsonSettingsService :
             settings =>
                 settings.StoragePath =
                     normalizedStoragePath,
+            cancellationToken);
+    }
+
+    public Task SaveMarkdownEditorAsync(
+        MarkdownEditorType? editor,
+        string? visualStudioCodePath,
+        string? obsidianVaultPath,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+
+        string? normalizedVisualStudioCodePath =
+            NormalizeOptionalPath(visualStudioCodePath);
+
+        string? normalizedObsidianVaultPath =
+            NormalizeOptionalPath(obsidianVaultPath);
+
+        return UpdateAsync(
+            settings =>
+            {
+                settings.MarkdownEditor = editor;
+                settings.VisualStudioCodePath =
+                    normalizedVisualStudioCodePath;
+                settings.ObsidianVaultPath =
+                    normalizedObsidianVaultPath;
+            },
             cancellationToken);
     }
 
@@ -326,6 +352,17 @@ public sealed class JsonSettingsService :
             _ = TryDeleteFile(
                 temporaryPath);
         }
+    }
+
+    private static string? NormalizeOptionalPath(
+        string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return null;
+        }
+
+        return Path.GetFullPath(path.Trim());
     }
 
     private static bool TryDeleteFile(

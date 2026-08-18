@@ -137,4 +137,8 @@
         <library:LibraryTopicView />
     </DataTemplate>
     
+    <DataTemplate DataType="{x:Type onboardingViewModels:EditorSetupViewModel}">
+        <onboardingViews:EditorSetupView />
+    </DataTemplate>
+    
 </ResourceDictionary>

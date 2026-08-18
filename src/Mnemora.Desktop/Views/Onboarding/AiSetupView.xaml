@@ -239,8 +239,8 @@
         <!-- Шаги онбординга -->
 
         <Grid Grid.Row="1"
-              MaxWidth="720"
-              Margin="24,0"
+              MaxWidth="820"
+              Margin="24,0,24,0"
               HorizontalAlignment="Stretch">
 
             <Grid.RowDefinitions>
@@ -249,6 +249,8 @@
             </Grid.RowDefinitions>
 
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="96" />
+                <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="96" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="96" />
@@ -317,7 +319,32 @@
                     BorderThickness="2"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center">
-                <TextBlock Text="3"
+                <materialDesign:PackIcon Kind="CheckBold"
+                                         Width="18"
+                                         Height="18"
+                                         Foreground="{StaticResource Mnemora.Brush.Primary}"
+                                         HorizontalAlignment="Center"
+                                         VerticalAlignment="Center" />
+            </Border>
+
+            <Border Grid.Row="0"
+                    Grid.Column="5"
+                    Height="3"
+                    Margin="4,0"
+                    Background="{StaticResource Mnemora.Brush.Primary}"
+                    CornerRadius="2"
+                    VerticalAlignment="Center" />
+
+            <Border Grid.Row="0"
+                    Grid.Column="6"
+                    Width="40"
+                    Height="40"
+                    CornerRadius="20"
+                    BorderBrush="{StaticResource Mnemora.Brush.Primary}"
+                    BorderThickness="2"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+                <TextBlock Text="4"
                            Foreground="{StaticResource Mnemora.Brush.Primary}"
                            FontSize="16"
                            FontWeight="SemiBold"
@@ -326,7 +353,7 @@
             </Border>
 
             <Border Grid.Row="0"
-                    Grid.Column="5"
+                    Grid.Column="7"
                     Height="3"
                     Margin="4,0"
                     Background="#53618C"
@@ -334,9 +361,9 @@
                     VerticalAlignment="Center" />
 
             <Border Grid.Row="0"
-                    Grid.Column="6"
+                    Grid.Column="8"
                     Style="{StaticResource OnboardingInactiveStepStyle}">
-                <TextBlock Text="4"
+                <TextBlock Text="5"
                            Foreground="#D5DAED"
                            FontSize="16"
                            FontWeight="SemiBold"
@@ -360,6 +387,13 @@
 
             <TextBlock Grid.Row="1"
                        Grid.Column="4"
+                       Text="Редактор"
+                       Foreground="#C9CFE3"
+                       FontSize="14"
+                       TextAlignment="Center" />
+
+            <TextBlock Grid.Row="1"
+                       Grid.Column="6"
                        Text="ИИ"
                        Foreground="{StaticResource Mnemora.Brush.Primary}"
                        FontSize="14"
@@ -367,7 +401,7 @@
                        TextAlignment="Center" />
 
             <TextBlock Grid.Row="1"
-                       Grid.Column="6"
+                       Grid.Column="8"
                        Text="Начало"
                        Foreground="#C9CFE3"
                        FontSize="14"
@@ -757,7 +791,7 @@
 
                 </Border>
 
-                <TextBlock Text="Шаг 3 из 4"
+                <TextBlock Text="Шаг 4 из 5"
                            Margin="0,24,0,0"
                            Foreground="White"
                            FontSize="15"

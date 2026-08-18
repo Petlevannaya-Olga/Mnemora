@@ -137,13 +137,11 @@
                RenderOptions.BitmapScalingMode="HighQuality"
                SnapsToDevicePixels="True" />
 
-        <!-- Шаги онбординга.
-             Ширина соединителей теперь вычисляется автоматически,
-             а для названий выделены отдельные широкие колонки. -->
+        <!-- Шаги онбординга -->
 
         <Grid Grid.Row="1"
-              MaxWidth="720"
-              Margin="24,0,24,10"
+              MaxWidth="820"
+              Margin="24,0,24,0"
               HorizontalAlignment="Stretch">
 
             <Grid.RowDefinitions>
@@ -152,6 +150,8 @@
             </Grid.RowDefinitions>
 
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="96" />
+                <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="96" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="96" />
@@ -235,11 +235,31 @@
                            VerticalAlignment="Center" />
             </Border>
 
+            <Border Grid.Row="0"
+                    Grid.Column="7"
+                    Height="3"
+                    Margin="4,0"
+                    Background="#53618C"
+                    CornerRadius="2"
+                    VerticalAlignment="Center" />
+
+            <Border Grid.Row="0"
+                    Grid.Column="8"
+                    Style="{StaticResource OnboardingInactiveStepStyle}">
+                <TextBlock Text="5"
+                           Foreground="#D5DAED"
+                           FontSize="16"
+                           FontWeight="SemiBold"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center" />
+            </Border>
+
             <TextBlock Grid.Row="1"
                        Grid.Column="0"
                        Text="Профиль"
                        Foreground="{StaticResource Mnemora.Brush.Primary}"
                        FontSize="14"
+                       FontWeight="SemiBold"
                        TextAlignment="Center" />
 
             <TextBlock Grid.Row="1"
@@ -251,13 +271,20 @@
 
             <TextBlock Grid.Row="1"
                        Grid.Column="4"
-                       Text="ИИ"
+                       Text="Редактор"
                        Foreground="#C9CFE3"
                        FontSize="14"
                        TextAlignment="Center" />
 
             <TextBlock Grid.Row="1"
                        Grid.Column="6"
+                       Text="ИИ"
+                       Foreground="#C9CFE3"
+                       FontSize="14"
+                       TextAlignment="Center" />
+
+            <TextBlock Grid.Row="1"
+                       Grid.Column="8"
                        Text="Начало"
                        Foreground="#C9CFE3"
                        FontSize="14"
@@ -473,7 +500,7 @@
         </Border>
 
         <TextBlock Grid.Row="4"
-                   Text="Шаг 1 из 4"
+                   Text="Шаг 1 из 5"
                    Foreground="White"
                    FontSize="15"
                    HorizontalAlignment="Center"

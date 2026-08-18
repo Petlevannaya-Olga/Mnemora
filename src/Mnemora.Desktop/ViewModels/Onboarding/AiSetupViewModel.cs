@@ -215,7 +215,7 @@ public sealed partial class AiSetupViewModel
     private void Back()
     {
         _navigationService
-            .NavigateTo<StorageSetupViewModel>();
+            .NavigateTo<EditorSetupViewModel>();
     }
     
     private void LoadApiKey()
