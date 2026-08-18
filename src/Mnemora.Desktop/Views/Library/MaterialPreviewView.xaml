@@ -29,6 +29,70 @@
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="8" />
         </Style>
+
+        <Style x:Key="MaterialPreview.IconButton" TargetType="Button">
+            <Setter Property="Width" Value="36" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.TextSecondary}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonBorder"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonBorder"
+                                        Property="Background"
+                                        Value="{DynamicResource Mnemora.Brush.SurfaceMuted}" />
+                                <Setter Property="Foreground"
+                                        Value="{DynamicResource Mnemora.Brush.Secondary}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="MaterialPreview.TocButton" TargetType="Button">
+            <Setter Property="MinHeight" Value="32" />
+            <Setter Property="Padding" Value="9,6" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.TextPrimary}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonBorder"
+                                Padding="{TemplateBinding Padding}"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="7">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonBorder"
+                                        Property="Background"
+                                        Value="{DynamicResource Mnemora.Brush.SurfaceMuted}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
 
     <Border Padding="30,28,30,34"
@@ -37,13 +101,21 @@
             BorderThickness="1"
             CornerRadius="16">
 
-        <StackPanel>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Шапка материала остаётся на месте, прокручивается только содержимое. -->
+            <StackPanel Grid.Row="0">
             <!-- Реальная шапка материала. -->
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="18" />
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
                 <Border Width="64"
@@ -108,6 +180,20 @@
                         </Border>
                     </WrapPanel>
                 </StackPanel>
+
+                <Button x:Name="FocusModeButton"
+                        Grid.Column="3"
+                        Margin="16,0,0,0"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Top"
+                        Click="ToggleFocusMode_OnClick"
+                        Style="{StaticResource MaterialPreview.IconButton}"
+                        ToolTip="Развернуть статью">
+                    <materialDesign:PackIcon x:Name="FocusModeIcon"
+                                             Width="20"
+                                             Height="20"
+                                             Kind="Fullscreen" />
+                </Button>
             </Grid>
 
             <ItemsControl Margin="82,13,0,0"
@@ -133,10 +219,12 @@
                     Margin="0,22,0,24"
                     Background="{DynamicResource Mnemora.Brush.Border}" />
 
-            <!-- Статья -->
-            <StackPanel>
-                <StackPanel.Style>
-                    <Style TargetType="StackPanel">
+            </StackPanel>
+
+            <!-- Статья и панель чтения. -->
+            <Grid Grid.Row="1">
+                <Grid.Style>
+                    <Style TargetType="Grid">
                         <Setter Property="Visibility" Value="Visible" />
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding IsQuestion, ElementName=Root}"
@@ -145,13 +233,106 @@
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
-                </StackPanel.Style>
+                </Grid.Style>
 
-                <StackPanel x:Name="ArticleMarkdownHost" />
-            </StackPanel>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="22" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <ScrollViewer x:Name="ArticleScrollViewer"
+                              Grid.Column="0"
+                              Margin="0,0,2,0"
+                              HorizontalScrollBarVisibility="Disabled"
+                              VerticalScrollBarVisibility="Auto">
+                    <StackPanel x:Name="ArticleMarkdownHost"
+                                Margin="0,0,10,8" />
+                </ScrollViewer>
+
+                <Border x:Name="ReadingPanel"
+                        Grid.Column="2"
+                        Width="270"
+                        VerticalAlignment="Stretch"
+                        Background="{DynamicResource Mnemora.Brush.Surface}"
+                        BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                        BorderThickness="1"
+                        CornerRadius="12">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="1" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Grid x:Name="TocHeader"
+                              Margin="12,10,10,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock x:Name="TocTitle"
+                                       VerticalAlignment="Center"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                       Text="Содержание" />
+
+                            <Button x:Name="ToggleTocButton"
+                                    Grid.Column="1"
+                                    Click="ToggleToc_OnClick"
+                                    Style="{StaticResource MaterialPreview.IconButton}"
+                                    ToolTip="Свернуть содержание">
+                                <StackPanel HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Orientation="Horizontal">
+                                    <materialDesign:PackIcon x:Name="ToggleTocMenuIcon"
+                                                             Width="18"
+                                                             Height="18"
+                                                             Margin="0,0,1,0"
+                                                             VerticalAlignment="Center"
+                                                             Kind="FormatListBulleted"
+                                                             Visibility="Collapsed" />
+                                    <materialDesign:PackIcon x:Name="ToggleTocIcon"
+                                                             Width="18"
+                                                             Height="18"
+                                                             VerticalAlignment="Center"
+                                                             Kind="ChevronRight" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+
+                        <Border x:Name="TocDivider"
+                                Grid.Row="1"
+                                Height="1"
+                                Background="{DynamicResource Mnemora.Brush.Border}" />
+
+                        <ScrollViewer Grid.Row="2"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      VerticalScrollBarVisibility="Auto">
+                            <StackPanel x:Name="TocContentHost"
+                                        Margin="10,13,10,12">
+                                <StackPanel x:Name="TocItemsHost" />
+
+                                <TextBlock x:Name="TocEmptyState"
+                                           Margin="9,2"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                           Text="Добавьте заголовки ## и ### — содержание появится автоматически."
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+            </Grid>
 
             <!-- Вопрос -->
-            <StackPanel Visibility="{Binding IsQuestion, ElementName=Root, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <ScrollViewer Grid.Row="1"
+                          HorizontalScrollBarVisibility="Disabled"
+                          VerticalScrollBarVisibility="Auto"
+                          Visibility="{Binding IsQuestion, ElementName=Root, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <StackPanel Margin="0,0,10,8">
                 <TextBlock Margin="0,0,0,14"
                            FontSize="15"
                            FontWeight="SemiBold"
@@ -203,7 +384,8 @@
                         CornerRadius="12">
                     <StackPanel x:Name="AnswerMarkdownHost" />
                 </Border>
-            </StackPanel>
-        </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
     </Border>
 </UserControl>

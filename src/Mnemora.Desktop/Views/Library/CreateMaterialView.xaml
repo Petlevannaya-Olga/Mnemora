@@ -1731,55 +1731,62 @@
             </StackPanel>
         </Grid>
 
-        <ScrollViewer Grid.Row="1"
-                      Margin="32,22,32,20"
-                      HorizontalScrollBarVisibility="Disabled"
-                      VerticalScrollBarVisibility="Auto">
-            <StackPanel MaxWidth="1040"
-                        HorizontalAlignment="Center">
-                <Border Padding="18,15"
-                        Background="#F7F5FF"
-                        BorderBrush="#E6DFFF"
-                        BorderThickness="1"
-                        CornerRadius="12">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="14" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
+        <Grid Grid.Row="1"
+              Margin="32,22,32,20"
+              MaxWidth="1040"
+              HorizontalAlignment="Center">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="16" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
 
-                        <Border Width="42"
-                                Height="42"
-                                Background="#EEE9FF"
-                                CornerRadius="11">
-                            <materialDesign:PackIcon Width="22"
-                                                     Height="22"
-                                                     HorizontalAlignment="Center"
-                                                     VerticalAlignment="Center"
-                                                     Foreground="{DynamicResource Mnemora.Brush.Secondary}"
-                                                     Kind="CheckCircleOutline" />
-                        </Border>
+            <!-- Служебная плашка остаётся сверху; прокручивается только тело материала. -->
+            <Border Grid.Row="0"
+                    Padding="18,15"
+                    Background="#F7F5FF"
+                    BorderBrush="#E6DFFF"
+                    BorderThickness="1"
+                    CornerRadius="12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="14" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
 
-                        <StackPanel Grid.Column="2"
-                                    VerticalAlignment="Center">
-                            <TextBlock FontSize="15"
-                                       FontWeight="SemiBold"
-                                       Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                                       Text="Материал готов к проверке" />
-                            <TextBlock Margin="0,3,0,0"
-                                       FontSize="12"
-                                       Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                                       Text="Это финальный вид в Mnemora. Чтобы изменить материал, вернитесь назад, откройте файл в редакторе и снова перейдите к проверке."
-                                       TextWrapping="Wrap" />
-                        </StackPanel>
-                    </Grid>
-                </Border>
+                    <Border Width="42"
+                            Height="42"
+                            Background="#EEE9FF"
+                            CornerRadius="11">
+                        <materialDesign:PackIcon Width="22"
+                                                 Height="22"
+                                                 HorizontalAlignment="Center"
+                                                 VerticalAlignment="Center"
+                                                 Foreground="{DynamicResource Mnemora.Brush.Secondary}"
+                                                 Kind="CheckCircleOutline" />
+                    </Border>
 
-                <views:MaterialPreviewView x:Name="ReviewMaterialPreview"
-                                           Margin="0,16,0,2" />
-            </StackPanel>
-        </ScrollViewer>
+                    <StackPanel Grid.Column="2"
+                                VerticalAlignment="Center">
+                        <TextBlock FontSize="15"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                   Text="Материал готов к проверке" />
+                        <TextBlock Margin="0,3,0,0"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                   Text="Это финальный вид в Mnemora. Чтобы изменить материал, вернитесь назад, откройте файл в редакторе и снова перейдите к проверке."
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <views:MaterialPreviewView x:Name="ReviewMaterialPreview"
+                                       Grid.Row="2"
+                                       HorizontalAlignment="Stretch"
+                                       VerticalAlignment="Stretch" />
+        </Grid>
 
         <Border Grid.Row="2"
                 Padding="32,16"

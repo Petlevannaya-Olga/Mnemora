@@ -310,6 +310,7 @@
         <!-- Боковая панель -->
 
         <Border
+            x:Name="SidebarHost"
             Grid.Column="0"
             Background="{StaticResource Mnemora.Brush.SidebarBackground}"
             ClipToBounds="True">
@@ -884,8 +885,26 @@
         <!-- Текущая страница -->
 
         <ContentControl
+            x:Name="PageHost"
             Grid.Column="1"
             Content="{Binding CurrentPageViewModel}" />
+
+        <!-- Раскрытый материал занимает только рабочую область.
+             Левый shell остаётся видимым и доступным визуально. -->
+        <Grid
+            x:Name="ReaderOverlayHost"
+            Grid.Column="1"
+            Panel.ZIndex="200"
+            Background="{DynamicResource Mnemora.Brush.SurfaceMuted}"
+            Visibility="Collapsed">
+
+            <!-- Прокруткой управляет MaterialPreviewView: его шапка остаётся закреплённой. -->
+            <ContentControl
+                x:Name="ReaderOverlayContent"
+                Margin="14"
+                HorizontalContentAlignment="Stretch"
+                VerticalContentAlignment="Stretch" />
+        </Grid>
 
         <ItemsControl
             Grid.ColumnSpan="2"
