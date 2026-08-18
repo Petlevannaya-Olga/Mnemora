@@ -64,6 +64,7 @@ public partial class CreateMaterialView : UserControl
             return;
         }
 
+        DeleteOwnedTemplate(source);
         ClearSelectedFile(source);
         e.Handled = true;
     }
@@ -200,6 +201,7 @@ public partial class CreateMaterialView : UserControl
     private void SetSelectedFile(string source, string path)
     {
         string fullPath = Path.GetFullPath(path);
+        DeleteOwnedTemplateIfReplaced(source, fullPath);
         SetSelectedPath(source, fullPath);
 
         var controls = GetSourceControls(source);
