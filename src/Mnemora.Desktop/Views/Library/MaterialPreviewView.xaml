@@ -325,6 +325,22 @@
                         </ScrollViewer>
                     </Grid>
                 </Border>
+
+                <!-- В свернутом состоянии вместо высокой пустой панели остаётся только иконка. -->
+                <Button x:Name="CollapsedTocButton"
+                        Grid.Column="2"
+                        Width="36"
+                        Height="36"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Top"
+                        Click="ToggleToc_OnClick"
+                        Style="{StaticResource MaterialPreview.IconButton}"
+                        ToolTip="Показать содержание"
+                        Visibility="Collapsed">
+                    <materialDesign:PackIcon Width="20"
+                                             Height="20"
+                                             Kind="FormatListBulleted" />
+                </Button>
             </Grid>
 
             <!-- Вопрос -->

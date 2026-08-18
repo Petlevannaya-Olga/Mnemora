@@ -17,7 +17,6 @@ namespace Mnemora.Desktop.Views.Library;
 public partial class MaterialPreviewView : UserControl
 {
     private const double ExpandedTocWidth = 270;
-    private const double CollapsedTocWidth = 48;
 
     private bool _isInitialized;
     private bool _isTocExpanded = true;
@@ -1695,53 +1694,31 @@ public partial class MaterialPreviewView : UserControl
             return;
         }
 
-        ReadingPanel.Width = _isTocExpanded
-            ? ExpandedTocWidth
-            : CollapsedTocWidth;
-
-        TocTitle.Visibility = _isTocExpanded
+        // Развернутое содержание занимает обычную боковую панель.
+        // В свернутом состоянии сама панель полностью исчезает —
+        // остаётся только компактная кнопка в правом верхнем углу статьи.
+        ReadingPanel.Width = ExpandedTocWidth;
+        ReadingPanel.Visibility = _isTocExpanded
             ? Visibility.Visible
             : Visibility.Collapsed;
 
-        TocContentHost.Visibility = _isTocExpanded
-            ? Visibility.Visible
-            : Visibility.Collapsed;
-
-        TocDivider.Visibility = _isTocExpanded
-            ? Visibility.Visible
-            : Visibility.Collapsed;
-
-        TocHeader.Margin = _isTocExpanded
-            ? new Thickness(12, 10, 10, 8)
-            : new Thickness(3);
-
-        ToggleTocButton.Width = _isTocExpanded
-            ? 36
-            : 40;
-
-        ToggleTocButton.Height = _isTocExpanded
-            ? 36
-            : 40;
-
-        ToggleTocMenuIcon.Visibility = _isTocExpanded
+        CollapsedTocButton.Visibility = _isTocExpanded
             ? Visibility.Collapsed
             : Visibility.Visible;
 
-        ToggleTocIcon.Width = _isTocExpanded
-            ? 18
-            : 13;
+        TocTitle.Visibility = Visibility.Visible;
+        TocContentHost.Visibility = Visibility.Visible;
+        TocDivider.Visibility = Visibility.Visible;
+        TocHeader.Margin = new Thickness(12, 10, 10, 8);
 
-        ToggleTocIcon.Height = _isTocExpanded
-            ? 18
-            : 13;
-
-        ToggleTocIcon.Kind = _isTocExpanded
-            ? PackIconKind.ChevronRight
-            : PackIconKind.ChevronLeft;
-
-        ToggleTocButton.ToolTip = _isTocExpanded
-            ? "Свернуть содержание"
-            : "Показать содержание";
+        ToggleTocButton.Width = 36;
+        ToggleTocButton.Height = 36;
+        ToggleTocMenuIcon.Visibility = Visibility.Collapsed;
+        ToggleTocIcon.Width = 18;
+        ToggleTocIcon.Height = 18;
+        ToggleTocIcon.Kind = PackIconKind.ChevronRight;
+        ToggleTocButton.ToolTip = "Свернуть содержание";
+        CollapsedTocButton.ToolTip = "Показать содержание";
 
         bool isExpandedPresentation =
             _isFocusMode || _expandedOwner is not null;
