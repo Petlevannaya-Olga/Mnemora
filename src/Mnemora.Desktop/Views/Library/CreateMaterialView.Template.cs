@@ -1,7 +1,8 @@
-using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Windows;
+using Mnemora.Desktop.Dialogs;
+using Mnemora.Desktop.ViewModels.Library;
 
 namespace Mnemora.Desktop.Views.Library;
 
@@ -9,11 +10,14 @@ public partial class CreateMaterialView
 {
     private readonly string _templateSessionId = Guid.NewGuid().ToString("N");
 
-    private string? _articleTemplatePath;
-    private string? _questionTemplatePath;
-    private string? _answerTemplatePath;
+    private readonly HashSet<string> _ownedDraftPaths =
+        new(StringComparer.OrdinalIgnoreCase);
 
-    private void CreateMarkdownTemplate_OnClick(object sender, RoutedEventArgs e)
+    private string? _templateDirectory;
+
+    private async void CreateMarkdownTemplate_OnClick(
+        object sender,
+        RoutedEventArgs e)
     {
         if (sender is not FrameworkElement element ||
             !TryGetSource(element, out string source))
@@ -25,48 +29,80 @@ public partial class CreateMaterialView
 
         try
         {
-            string? selectedPath = GetSelectedPath(source);
-            string? templatePath = GetOwnedTemplatePath(source);
-
-            if (!string.IsNullOrWhiteSpace(templatePath) &&
-                File.Exists(templatePath))
-            {
-                SetSelectedFile(source, templatePath);
-                OpenTemplateFile(source, templatePath);
-                return;
-            }
+            string? selectedPath =
+                GetSelectedPath(source);
 
             if (!string.IsNullOrWhiteSpace(selectedPath))
             {
-                MessageBoxResult replaceResult = MessageBox.Show(
-                    "Для материала уже выбран Markdown-файл. Заменить его новым файлом по шаблону?",
-                    "Mnemora",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Question);
+                string selectedFileName =
+                    Path.GetFileName(selectedPath);
 
-                if (replaceResult != MessageBoxResult.Yes)
+                if (!ShowReplaceDraftDialog(
+                        selectedFileName))
                 {
                     return;
                 }
             }
 
-            string path = CreateTemplateFile(source);
-            SetOwnedTemplatePath(source, path);
+            string path =
+                await CreateTemplateFileAsync(source);
 
-            // Используем тот же проверенный путь смены состояния,
-            // что и выбор файла / drag & drop.
+            RegisterOwnedDraft(path);
+
+            // Создание файла только меняет текущий файл мастера.
+            // Внешний редактор открывается исключительно по явной кнопке
+            // «Открыть в редакторе».
             SetSelectedFile(source, path);
-            OpenTemplateFile(source, path);
+        }
+        catch (OperationCanceledException)
+        {
+            // ignore
         }
         catch (Exception)
         {
-            ShowFileError(source, "Не удалось создать Markdown-файл по шаблону.");
+            ShowFileError(
+                source,
+                "Не удалось создать Markdown-файл по шаблону.");
         }
     }
 
-    private string CreateTemplateFile(string source)
+    private bool ShowReplaceDraftDialog(
+        string selectedFileName)
     {
-        string directory = GetTemplateDirectory();
+        var dialog =
+            new ReplaceMaterialDraftDialogWindow(
+                selectedFileName);
+
+        Window? owner =
+            Window.GetWindow(this);
+
+        if (owner is not null)
+        {
+            dialog.Owner = owner;
+        }
+
+        var overlayHost =
+            System.Windows.Application.Current.MainWindow
+                as IDialogOverlayHost;
+
+        overlayHost?.ShowDialogOverlay();
+
+        try
+        {
+            return dialog.ShowDialog() == true;
+        }
+        finally
+        {
+            overlayHost?.HideDialogOverlay();
+        }
+    }
+
+    private async Task<string> CreateTemplateFileAsync(
+        string source)
+    {
+        string directory =
+            await GetTemplateDirectoryAsync();
+
         Directory.CreateDirectory(directory);
 
         string fileName = source switch
@@ -74,128 +110,189 @@ public partial class CreateMaterialView
             ArticleSource => "article.md",
             QuestionSource => "question.md",
             AnswerSource => "answer.md",
-            _ => throw new ArgumentOutOfRangeException(nameof(source), source, null),
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(source),
+                source,
+                null),
         };
 
-        string path = Path.Combine(directory, fileName);
+        string path =
+            GetUniqueFilePath(
+                directory,
+                fileName);
 
-        // В рамках одного мастера для каждого источника существует
-        // ровно один физический файл-шаблон.
-        if (!File.Exists(path))
-        {
-            File.WriteAllText(
-                path,
-                GetTemplateContent(source),
-                new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
-        }
+        File.WriteAllText(
+            path,
+            GetTemplateContent(source),
+            new UTF8Encoding(
+                encoderShouldEmitUTF8Identifier: false));
 
         return Path.GetFullPath(path);
     }
 
-    private void OpenTemplateFile(string source, string path)
+    private async Task<string> ImportMarkdownIntoDraftAsync(
+        string source,
+        string sourcePath)
     {
-        if (!File.Exists(path))
+        string fullSourcePath =
+            Path.GetFullPath(sourcePath);
+
+        string draftDirectory =
+            await GetTemplateDirectoryAsync();
+
+        string sourceDirectoryName = source switch
         {
-            ShowFileError(source, "Файл шаблона больше не найден.");
+            ArticleSource => "article",
+            QuestionSource => "question",
+            AnswerSource => "answer",
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(source),
+                source,
+                null),
+        };
+
+        string importDirectory =
+            Path.Combine(
+                draftDirectory,
+                "imports",
+                sourceDirectoryName);
+
+        Directory.CreateDirectory(importDirectory);
+
+        string destinationPath =
+            GetUniqueFilePath(
+                importDirectory,
+                Path.GetFileName(fullSourcePath));
+
+        if (PathsEqual(
+                fullSourcePath,
+                destinationPath))
+        {
+            return fullSourcePath;
+        }
+
+        // Копируем, а не перемещаем: исходный пользовательский файл
+        // остаётся на месте. Дальше мастер работает только со своей копией.
+        File.Copy(
+            fullSourcePath,
+            destinationPath,
+            overwrite: true);
+
+        return destinationPath;
+    }
+
+    private void RegisterOwnedDraft(
+        string path)
+    {
+        _ownedDraftPaths.Add(
+            Path.GetFullPath(path));
+    }
+
+    private void DeleteAllOwnedDrafts()
+    {
+        foreach (string ownedDraftPath in
+                 _ownedDraftPaths.ToArray())
+        {
+            try
+            {
+                if (File.Exists(ownedDraftPath))
+                {
+                    File.Delete(ownedDraftPath);
+                }
+            }
+            catch (IOException)
+            {
+                // Редактор может ещё удерживать файл.
+                // Очистка временных файлов выполняется best effort.
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // ignore
+            }
+        }
+
+        _ownedDraftPaths.Clear();
+
+        TryDeleteTemplateDirectoryTree();
+    }
+
+    private async Task<string> GetTemplateDirectoryAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(_templateDirectory))
+        {
+            return _templateDirectory;
+        }
+
+        if (DataContext is not CreateMaterialViewModel viewModel)
+        {
+            throw new InvalidOperationException(
+                "Не удалось определить состояние мастера создания материала.");
+        }
+
+        _templateDirectory =
+            await viewModel.GetDraftDirectoryAsync(
+                _templateSessionId);
+
+        return _templateDirectory;
+    }
+
+    private void TryDeleteTemplateDirectoryTree()
+    {
+        if (string.IsNullOrWhiteSpace(_templateDirectory))
+        {
             return;
         }
+
+        string sessionDirectory =
+            _templateDirectory;
+
+        string? createMaterialDirectory =
+            Path.GetDirectoryName(sessionDirectory);
+
+        string? draftsRootDirectory =
+            createMaterialDirectory is null
+                ? null
+                : Path.GetDirectoryName(createMaterialDirectory);
 
         try
         {
-            Process.Start(new ProcessStartInfo(path)
+            if (Directory.Exists(sessionDirectory))
             {
-                UseShellExecute = true,
-            });
-        }
-        catch (Exception)
-        {
-            ShowFileError(source, "Файл создан, но не удалось открыть его в системном редакторе.");
-        }
-    }
-
-    private void DeleteOwnedTemplateIfReplaced(string source, string newPath)
-    {
-        string? templatePath = GetOwnedTemplatePath(source);
-
-        if (string.IsNullOrWhiteSpace(templatePath) ||
-            PathsEqual(templatePath, newPath))
-        {
-            return;
-        }
-
-        DeleteOwnedTemplate(source);
-    }
-
-    private void DeleteOwnedTemplate(string source)
-    {
-        string? templatePath = GetOwnedTemplatePath(source);
-
-        if (string.IsNullOrWhiteSpace(templatePath))
-        {
-            return;
-        }
-
-        try
-        {
-            if (File.Exists(templatePath))
-            {
-                File.Delete(templatePath);
+                Directory.Delete(
+                    sessionDirectory,
+                    recursive: true);
             }
         }
         catch (IOException)
         {
-            // Сброс выбранного файла не должен ломаться из-за невозможности
-            // удалить временный черновик (например, если редактор держит файл).
+            // ignore
         }
         catch (UnauthorizedAccessException)
         {
             // ignore
         }
-        finally
+
+        if (createMaterialDirectory is not null)
         {
-            SetOwnedTemplatePath(source, null);
-            TryDeleteTemplateDirectoryIfEmpty();
+            TryDeleteDirectoryIfEmpty(
+                createMaterialDirectory);
+        }
+
+        if (draftsRootDirectory is not null)
+        {
+            TryDeleteDirectoryIfEmpty(
+                draftsRootDirectory);
+        }
+
+        if (!Directory.Exists(sessionDirectory))
+        {
+            _templateDirectory = null;
         }
     }
 
-    private string? GetOwnedTemplatePath(string source) =>
-        source switch
-        {
-            ArticleSource => _articleTemplatePath,
-            QuestionSource => _questionTemplatePath,
-            AnswerSource => _answerTemplatePath,
-            _ => null,
-        };
-
-    private void SetOwnedTemplatePath(string source, string? path)
+    private static void TryDeleteDirectoryIfEmpty(
+        string directory)
     {
-        switch (source)
-        {
-            case ArticleSource:
-                _articleTemplatePath = path;
-                break;
-            case QuestionSource:
-                _questionTemplatePath = path;
-                break;
-            case AnswerSource:
-                _answerTemplatePath = path;
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(source), source, null);
-        }
-    }
-
-    private string GetTemplateDirectory() =>
-        Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "Mnemora",
-            "Temp",
-            _templateSessionId);
-
-    private void TryDeleteTemplateDirectoryIfEmpty()
-    {
-        string directory = GetTemplateDirectory();
-
         try
         {
             if (Directory.Exists(directory) &&
@@ -212,6 +309,36 @@ public partial class CreateMaterialView
         {
             // ignore
         }
+    }
+
+    private static string GetUniqueFilePath(
+        string directory,
+        string fileName)
+    {
+        string baseName =
+            Path.GetFileNameWithoutExtension(fileName);
+
+        string extension =
+            Path.GetExtension(fileName);
+
+        string candidate =
+            Path.Combine(
+                directory,
+                fileName);
+
+        int suffix = 2;
+
+        while (File.Exists(candidate))
+        {
+            candidate =
+                Path.Combine(
+                    directory,
+                    $"{baseName}-{suffix}{extension}");
+
+            suffix++;
+        }
+
+        return Path.GetFullPath(candidate);
     }
 
     private static bool PathsEqual(string left, string right) =>

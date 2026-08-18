@@ -1,0 +1,209 @@
+<Window
+    x:Class="Mnemora.Desktop.Views.Library.ReplaceMaterialDraftDialogWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    Width="610"
+    Height="390"
+    AllowsTransparency="True"
+    Background="Transparent"
+    ResizeMode="NoResize"
+    ShowInTaskbar="False"
+    WindowStartupLocation="CenterOwner"
+    WindowStyle="None"
+    SnapsToDevicePixels="True"
+    TextOptions.TextFormattingMode="Display"
+    TextOptions.TextRenderingMode="ClearType"
+    UseLayoutRounding="True"
+    PreviewKeyDown="Window_OnPreviewKeyDown">
+
+    <Grid Margin="22">
+        <!-- Отдельный слой тени, как в остальных диалогах Mnemora. -->
+        <Border
+            Margin="1"
+            Background="{DynamicResource Mnemora.Brush.Surface}"
+            CornerRadius="18">
+            <Border.Effect>
+                <DropShadowEffect
+                    BlurRadius="26"
+                    Color="#061735"
+                    Opacity="0.28"
+                    ShadowDepth="7" />
+            </Border.Effect>
+        </Border>
+
+        <Border
+            Padding="30,26,30,30"
+            Background="{DynamicResource Mnemora.Brush.Surface}"
+            BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+            BorderThickness="1"
+            CornerRadius="18">
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- Заголовок -->
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border
+                        Width="48"
+                        Height="48"
+                        Background="#F2EEFF"
+                        CornerRadius="12">
+                        <materialDesign:PackIcon
+                            Width="26"
+                            Height="26"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource Mnemora.Brush.Secondary}"
+                            Kind="FileDocumentOutline" />
+                    </Border>
+
+                    <StackPanel
+                        Grid.Column="1"
+                        Margin="15,0"
+                        VerticalAlignment="Center">
+                        <TextBlock
+                            FontSize="21"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                            Text="Создать новый файл?" />
+
+                        <TextBlock
+                            Margin="0,3,0,0"
+                            FontSize="13"
+                            Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                            Text="Новый черновик станет текущим файлом материала" />
+                    </StackPanel>
+
+                    <Button
+                        Grid.Column="2"
+                        Click="Cancel_OnClick"
+                        Style="{StaticResource Mnemora.DialogCloseButton}">
+                        <materialDesign:PackIcon
+                            Width="20"
+                            Height="20"
+                            Foreground="{Binding Foreground,
+                                RelativeSource={RelativeSource AncestorType=Button}}"
+                            Kind="Close" />
+                    </Button>
+                </Grid>
+
+                <!-- Текущий файл -->
+                <Border
+                    Grid.Row="1"
+                    Margin="0,24,0,0"
+                    Padding="14,12"
+                    Background="{DynamicResource Mnemora.Brush.SurfaceMuted}"
+                    BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                    BorderThickness="1"
+                    CornerRadius="10">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <materialDesign:PackIcon
+                            Width="20"
+                            Height="20"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource Mnemora.Brush.PrimaryDark}"
+                            Kind="FileDocumentOutline" />
+
+                        <StackPanel
+                            Grid.Column="1"
+                            Margin="11,0,0,0">
+                            <TextBlock
+                                FontSize="12"
+                                Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                Text="Сейчас выбран" />
+
+                            <TextBlock
+                                x:Name="SelectedFileNameText"
+                                Margin="0,2,0,0"
+                                FontSize="14"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Пояснение -->
+                <Border
+                    Grid.Row="2"
+                    Margin="0,14,0,0"
+                    Padding="13,11"
+                    VerticalAlignment="Top"
+                    Background="#F7F5FF"
+                    CornerRadius="9">
+                    <DockPanel>
+                        <materialDesign:PackIcon
+                            Width="19"
+                            Height="19"
+                            Margin="0,1,10,0"
+                            VerticalAlignment="Top"
+                            Foreground="{DynamicResource Mnemora.Brush.Secondary}"
+                            Kind="InformationOutline" />
+
+                        <TextBlock
+                            FontSize="13"
+                            Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                            TextWrapping="Wrap">
+                            <Run Text="Текущий временный файл останется до закрытия мастера. " />
+                            <Run Text="Если файл был импортирован, исходный файл останется без изменений." />
+                        </TextBlock>
+                    </DockPanel>
+                </Border>
+
+                <!-- Действия -->
+                <Grid
+                    Grid.Row="3"
+                    Margin="0,24,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="14" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Button
+                        Grid.Column="0"
+                        Click="Cancel_OnClick"
+                        Content="Отмена"
+                        Style="{StaticResource Mnemora.SecondaryButton}" />
+
+                    <Button
+                        Grid.Column="2"
+                        Click="Confirm_OnClick"
+                        IsDefault="True"
+                        Style="{StaticResource Mnemora.PrimaryButton}">
+                        <StackPanel
+                            HorizontalAlignment="Center"
+                            Orientation="Horizontal">
+                            <materialDesign:PackIcon
+                                Width="19"
+                                Height="19"
+                                VerticalAlignment="Center"
+                                Kind="Plus" />
+                            <TextBlock
+                                Margin="10,0,0,0"
+                                VerticalAlignment="Center"
+                                Text="Создать новый" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

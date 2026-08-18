@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Text.Json;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
@@ -255,6 +255,7 @@ public partial class App : System.Windows.Application
         services.AddTransient<LibrarySectionViewModel>();
         services.AddTransient<AllMaterialsViewModel>();
         services.AddTransient<LibraryOverviewViewModel>();
+        services.AddTransient<CreateMaterialViewModel>();
         services.AddTransient<LibraryManagementViewModel>();
         services.AddTransient<DeleteTopicDialogViewModel>();
         services.AddTransient<EditTopicDialogViewModel>();

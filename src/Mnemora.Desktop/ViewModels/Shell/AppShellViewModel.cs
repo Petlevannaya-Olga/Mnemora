@@ -39,13 +39,6 @@ public sealed partial class AppShellViewModel : ViewModelBase
 
             NotifySelectedPageChanged();
 
-            // Управление библиотекой всегда работает внутри раскрытого shell.
-            // Вложенные уровни (раздел -> темы -> материалы) не должны убирать левую навигацию.
-            if (IsLibraryManagementSelected)
-            {
-                IsSidebarExpanded = true;
-            }
-
             IsLibraryMenuExpanded = IsLibrarySelected;
         }
     }
@@ -89,12 +82,6 @@ public sealed partial class AppShellViewModel : ViewModelBase
     [RelayCommand]
     private void ToggleSidebar()
     {
-        if (IsLibraryManagementSelected)
-        {
-            IsSidebarExpanded = true;
-            return;
-        }
-
         IsSidebarExpanded = !IsSidebarExpanded;
     }
 

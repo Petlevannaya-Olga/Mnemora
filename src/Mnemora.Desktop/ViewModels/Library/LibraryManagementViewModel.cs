@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
@@ -62,12 +62,15 @@ public sealed partial class LibraryManagementViewModel(
     IDialogService dialogService,
     ISettingsService settingsService,
     INotificationService notificationService,
+    CreateMaterialViewModel createMaterialViewModel,
     ILogger<LibraryManagementViewModel> logger)
     : ViewModelBase
 {
     private readonly List<LibrarySectionDto> _library = [];
     private readonly Dictionary<Guid, Guid[]> _pendingTopicOrders = new();
     private readonly Dictionary<Guid, Guid[]> _pendingMaterialOrders = new();
+
+    public CreateMaterialViewModel CreateMaterial { get; } = createMaterialViewModel;
 
     private const int SimpleSectionPageSize = 30;
     private static readonly TimeSpan SearchDelay = TimeSpan.FromMilliseconds(350);
@@ -750,10 +753,15 @@ public sealed partial class LibraryManagementViewModel(
     [RelayCommand(CanExecute = nameof(CanStartCreateMaterial))]
     private void StartCreateMaterial()
     {
-        if (!CanStartCreateMaterial())
+        if (!CanStartCreateMaterial() ||
+            SelectedTopic is null)
         {
             return;
         }
+
+        CreateMaterial.Initialize(
+            SelectedTopic,
+            CancelCreateMaterial);
 
         IsCreatingMaterial = true;
     }
@@ -768,6 +776,7 @@ public sealed partial class LibraryManagementViewModel(
     private void CancelCreateMaterial()
     {
         IsCreatingMaterial = false;
+        CreateMaterial.Reset();
     }
 
     [RelayCommand]

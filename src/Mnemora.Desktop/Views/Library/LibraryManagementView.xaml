@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     x:Class="Mnemora.Desktop.Views.Library.LibraryManagementView"
     x:Name="Root"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -2846,11 +2846,13 @@
             </StackPanel>
         </Border>
 
-        <!-- Создание материала открывается поверх текущей темы,
-             поэтому контекст раздела/темы остаётся в этом же ViewModel. -->
-        <views:CreateMaterialView
-            Grid.RowSpan="4"
-            Panel.ZIndex="100"
-            Visibility="{Binding IsCreatingMaterial, Converter={StaticResource BooleanToVisibilityConverter}}" />
+        <!-- Создание материала открывается поверх текущей темы.
+             Видимость контролирует LibraryManagementViewModel,
+             а состояние мастера живёт в отдельном CreateMaterialViewModel. -->
+        <Grid Grid.RowSpan="4"
+              Panel.ZIndex="100"
+              Visibility="{Binding IsCreatingMaterial, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <views:CreateMaterialView DataContext="{Binding CreateMaterial}" />
+        </Grid>
     </Grid>
 </UserControl>

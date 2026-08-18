@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -6,6 +5,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using Microsoft.Win32;
+using Mnemora.Desktop.Editors;
+using Mnemora.Desktop.ViewModels.Library;
 using Path = System.IO.Path;
 
 namespace Mnemora.Desktop.Views.Library;
@@ -23,6 +24,38 @@ public partial class CreateMaterialView : UserControl
     public CreateMaterialView()
     {
         InitializeComponent();
+        DataContextChanged += CreateMaterialView_OnDataContextChanged;
+    }
+
+    private void CreateMaterialView_OnDataContextChanged(
+        object sender,
+        DependencyPropertyChangedEventArgs e)
+    {
+        if (e.OldValue is CreateMaterialViewModel oldViewModel)
+        {
+            oldViewModel.Closing -= CreateMaterialViewModel_OnClosing;
+        }
+
+        if (e.NewValue is CreateMaterialViewModel newViewModel)
+        {
+            newViewModel.Closing += CreateMaterialViewModel_OnClosing;
+        }
+    }
+
+    private void CreateMaterialViewModel_OnClosing(
+        object? sender,
+        EventArgs e)
+    {
+        // Все созданные Mnemora временные файлы живут до закрытия мастера.
+        // Это позволяет безопасно оставить старый черновик открытым
+        // в VS Code / Obsidian, даже если пользователь создал новый.
+        DeleteAllOwnedDrafts();
+
+        ClearSelectedFile(ArticleSource);
+        ClearSelectedFile(QuestionSource);
+        ClearSelectedFile(AnswerSource);
+
+        FindRequiredControl<TabControl>("WizardTabs").SelectedIndex = 0;
     }
 
     private void GoToBasicStep_OnClick(object sender, RoutedEventArgs e)
@@ -35,7 +68,9 @@ public partial class CreateMaterialView : UserControl
         FindRequiredControl<TabControl>("WizardTabs").SelectedIndex = 0;
     }
 
-    private void MarkdownDropZone_OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    private async void MarkdownDropZone_OnMouseLeftButtonUp(
+        object sender,
+        MouseButtonEventArgs e)
     {
         if (sender is not FrameworkElement element ||
             !TryGetSource(element, out string source))
@@ -51,8 +86,8 @@ public partial class CreateMaterialView : UserControl
             return;
         }
 
-        ChooseMarkdownFile(source);
         e.Handled = true;
+        await ChooseMarkdownFileAsync(source);
     }
 
 
@@ -64,12 +99,15 @@ public partial class CreateMaterialView : UserControl
             return;
         }
 
-        DeleteOwnedTemplate(source);
+        // Снимаем выбор, но не удаляем временный файл сразу:
+        // он может оставаться открытым во внешнем редакторе.
         ClearSelectedFile(source);
         e.Handled = true;
     }
 
-    private void OpenSelectedMarkdown_OnClick(object sender, RoutedEventArgs e)
+    private async void OpenSelectedMarkdown_OnClick(
+        object sender,
+        RoutedEventArgs e)
     {
         if (sender is not FrameworkElement element ||
             !TryGetSource(element, out string source))
@@ -77,27 +115,49 @@ public partial class CreateMaterialView : UserControl
             return;
         }
 
+        e.Handled = true;
+
         string? path = GetSelectedPath(source);
 
         if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
         {
-            ShowFileError(source, "Файл больше не найден. Выберите его снова.");
+            ShowFileError(
+                source,
+                "Файл больше не найден. Выберите его снова.");
+            return;
+        }
+
+        if (DataContext is not CreateMaterialViewModel viewModel)
+        {
+            ShowFileError(
+                source,
+                "Не удалось определить настройки Markdown-редактора.");
             return;
         }
 
         try
         {
-            Process.Start(new ProcessStartInfo(path)
+            MarkdownEditorLaunchResult result =
+                await viewModel.OpenMarkdownAsync(path);
+
+            if (!result.IsSuccess)
             {
-                UseShellExecute = true,
-            });
+                ShowFileError(source, result.Message);
+                return;
+            }
+
+            HideFileError(source);
+        }
+        catch (OperationCanceledException)
+        {
+            // Пользователь закрыл мастер или операция была отменена.
         }
         catch (Exception)
         {
-            ShowFileError(source, "Не удалось открыть файл в системном редакторе.");
+            ShowFileError(
+                source,
+                "Не удалось открыть файл в настроенном Markdown-редакторе.");
         }
-
-        e.Handled = true;
     }
 
     private void MarkdownDropZone_OnDragEnter(object sender, DragEventArgs e)
@@ -121,7 +181,9 @@ public partial class CreateMaterialView : UserControl
         e.Handled = true;
     }
 
-    private void MarkdownDropZone_OnDrop(object sender, DragEventArgs e)
+    private async void MarkdownDropZone_OnDrop(
+        object sender,
+        DragEventArgs e)
     {
         if (sender is not FrameworkElement element ||
             !TryGetSource(element, out string source))
@@ -129,6 +191,7 @@ public partial class CreateMaterialView : UserControl
             return;
         }
 
+        e.Handled = true;
         ResetDropZoneVisual(source);
 
         string[] files = GetDroppedFiles(e.Data);
@@ -137,7 +200,6 @@ public partial class CreateMaterialView : UserControl
         {
             ShowFileError(source, "Перетащите один Markdown-файл.");
             e.Effects = DragDropEffects.None;
-            e.Handled = true;
             return;
         }
 
@@ -145,13 +207,17 @@ public partial class CreateMaterialView : UserControl
         {
             ShowFileError(source, error ?? "Не удалось выбрать файл.");
             e.Effects = DragDropEffects.None;
-            e.Handled = true;
             return;
         }
 
-        SetSelectedFile(source, files[0]);
-        e.Effects = DragDropEffects.Copy;
-        e.Handled = true;
+        bool imported =
+            await ImportAndSelectMarkdownAsync(
+                source,
+                files[0]);
+
+        e.Effects = imported
+            ? DragDropEffects.Copy
+            : DragDropEffects.None;
     }
 
     private void UpdateDragState(object sender, DragEventArgs e)
@@ -174,7 +240,8 @@ public partial class CreateMaterialView : UserControl
         e.Handled = true;
     }
 
-    private void ChooseMarkdownFile(string source)
+    private async Task ChooseMarkdownFileAsync(
+        string source)
     {
         var dialog = new OpenFileDialog
         {
@@ -195,13 +262,53 @@ public partial class CreateMaterialView : UserControl
             return;
         }
 
-        SetSelectedFile(source, dialog.FileName);
+        await ImportAndSelectMarkdownAsync(
+            source,
+            dialog.FileName);
+    }
+
+    private async Task<bool> ImportAndSelectMarkdownAsync(
+        string source,
+        string sourcePath)
+    {
+        try
+        {
+            string importedPath =
+                await ImportMarkdownIntoDraftAsync(
+                    source,
+                    sourcePath);
+
+            // Импортированная копия принадлежит Mnemora.
+            // Исходный пользовательский файл не трогаем.
+            RegisterOwnedDraft(importedPath);
+
+            // Предыдущий временный файл не удаляем: он может быть открыт
+            // в редакторе. Новый импорт просто становится текущим.
+            SetSelectedFile(source, importedPath);
+
+            return true;
+        }
+        catch (OperationCanceledException)
+        {
+            return false;
+        }
+        catch (Exception exception)
+            when (exception is IOException
+                      or UnauthorizedAccessException
+                      or ArgumentException
+                      or NotSupportedException
+                      or PathTooLongException)
+        {
+            ShowFileError(
+                source,
+                "Не удалось скопировать Markdown-файл в хранилище Mnemora.");
+            return false;
+        }
     }
 
     private void SetSelectedFile(string source, string path)
     {
         string fullPath = Path.GetFullPath(path);
-        DeleteOwnedTemplateIfReplaced(source, fullPath);
         SetSelectedPath(source, fullPath);
 
         var controls = GetSourceControls(source);
@@ -210,6 +317,10 @@ public partial class CreateMaterialView : UserControl
         controls.ClearButton.Visibility = Visibility.Visible;
         controls.SelectedFileName.Text = Path.GetFileName(fullPath);
         controls.SelectedFileName.ToolTip = fullPath;
+
+        UpdateTemplateActionText(
+            source,
+            hasSelectedFile: true);
 
         HideFileError(source);
         ResetDropZoneVisual(source);
@@ -225,6 +336,10 @@ public partial class CreateMaterialView : UserControl
         controls.EmptyState.Visibility = Visibility.Visible;
         controls.SelectedFileName.Text = string.Empty;
         controls.SelectedFileName.ToolTip = null;
+
+        UpdateTemplateActionText(
+            source,
+            hasSelectedFile: false);
 
         HideFileError(source);
         ResetDropZoneVisual(source);
@@ -326,6 +441,53 @@ public partial class CreateMaterialView : UserControl
             default:
                 throw new ArgumentOutOfRangeException(nameof(source), source, null);
         }
+    }
+
+    private void UpdateTemplateActionText(
+        string source,
+        bool hasSelectedFile)
+    {
+        TextBlock title = source switch
+        {
+            ArticleSource =>
+                FindRequiredControl<TextBlock>(
+                    "ArticleCreateTemplateTitle"),
+            QuestionSource =>
+                FindRequiredControl<TextBlock>(
+                    "QuestionCreateTemplateTitle"),
+            AnswerSource =>
+                FindRequiredControl<TextBlock>(
+                    "AnswerCreateTemplateTitle"),
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(source),
+                source,
+                null),
+        };
+
+        TextBlock subtitle = source switch
+        {
+            ArticleSource =>
+                FindRequiredControl<TextBlock>(
+                    "ArticleCreateTemplateSubtitle"),
+            QuestionSource =>
+                FindRequiredControl<TextBlock>(
+                    "QuestionCreateTemplateSubtitle"),
+            AnswerSource =>
+                FindRequiredControl<TextBlock>(
+                    "AnswerCreateTemplateSubtitle"),
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(source),
+                source,
+                null),
+        };
+
+        title.Text = hasSelectedFile
+            ? "Создать новый"
+            : "Создать по шаблону";
+
+        subtitle.Text = hasSelectedFile
+            ? "Заменить текущий .md"
+            : "Новый .md для редактора";
     }
 
     private (StackPanel EmptyState,
