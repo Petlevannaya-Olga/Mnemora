@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="Mnemora.Desktop.Views.Onboarding.EditorSetupView"
+<UserControl x:Class="Mnemora.Desktop.Views.Onboarding.EditorSetupView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -661,15 +661,13 @@
                             <StackPanel Grid.Row="3"
                                         Margin="0,12,0,0">
 
-                                <Border Padding="14,11"
+                                <Border Padding="14,9"
                                         Background="{StaticResource Mnemora.Brush.SurfaceMuted}"
                                         CornerRadius="12">
                                     <Border.Style>
                                         <Style TargetType="Border">
                                             <Setter Property="Visibility" Value="Collapsed" />
                                             <Style.Triggers>
-                                                <!-- Блок настройки нужен только для Obsidian:
-                                                     после обнаружения приложения пользователь выбирает Vault. -->
                                                 <MultiDataTrigger>
                                                     <MultiDataTrigger.Conditions>
                                                         <Condition Binding="{Binding IsObsidianSelected}"
@@ -682,99 +680,72 @@
                                             </Style.Triggers>
                                         </Style>
                                     </Border.Style>
-                                    <Grid>
-                                        <!-- Obsidian -->
-                                        <StackPanel>
-                                            <StackPanel.Style>
-                                                <Style TargetType="StackPanel">
-                                                    <Setter Property="Visibility" Value="Collapsed" />
+
+                                    <StackPanel>
+                                        <TextBlock Text="Vault Obsidian"
+                                                   Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold" />
+
+                                        <TextBlock Margin="0,3,0,0"
+                                                   Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Text"
+                                                            Value="Для Obsidian используется та же папка, которую вы выбрали для хранилища Mnemora." />
                                                     <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsObsidianSelected}"
+                                                        <DataTrigger Binding="{Binding IsObsidianVerified}"
                                                                      Value="True">
-                                                            <Setter Property="Visibility" Value="Visible" />
+                                                            <Setter Property="Text"
+                                                                    Value="Obsidian использует хранилище Mnemora как Vault." />
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
-                                            </StackPanel.Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
 
-                                            <Grid>
-                                                <Grid.Style>
-                                                    <Style TargetType="Grid">
-                                                        <Setter Property="Visibility" Value="Collapsed" />
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding IsObsidianInstalled}"
-                                                                         Value="True">
-                                                                <Setter Property="Visibility" Value="Visible" />
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Grid.Style>
-                                                <Grid.RowDefinitions>
-                                                    <RowDefinition Height="Auto" />
-                                                    <RowDefinition Height="Auto" />
-                                                    <RowDefinition Height="Auto" />
-                                                </Grid.RowDefinitions>
-
-                                                <TextBlock Text="Хранилище Obsidian"
+                                        <Border Margin="0,6,0,0"
+                                                Padding="10,7"
+                                                Background="{StaticResource Mnemora.Brush.Surface}"
+                                                BorderBrush="{StaticResource Mnemora.Brush.Border}"
+                                                BorderThickness="1"
+                                                CornerRadius="8">
+                                            <DockPanel LastChildFill="True">
+                                                <materialDesign:PackIcon Kind="FolderOutline"
+                                                                         Width="17"
+                                                                         Height="17"
+                                                                         Margin="0,0,8,0"
+                                                                         Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
+                                                                         VerticalAlignment="Center" />
+                                                <TextBlock Text="{Binding StoragePath}"
+                                                           ToolTip="{Binding StoragePath}"
                                                            Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
-                                                           FontSize="13"
-                                                           FontWeight="SemiBold" />
+                                                           FontSize="11"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           VerticalAlignment="Center" />
+                                            </DockPanel>
+                                        </Border>
 
-                                                <StackPanel Grid.Row="1"
-                                                            Margin="0,4,0,0">
-                                                    <StackPanel.Style>
-                                                        <Style TargetType="StackPanel">
+                                        <TextBlock Text="Откройте эту папку в Obsidian через «Открыть папку как Vault». Не создавайте новый Vault внутри неё."
+                                                   Margin="0,5,0,0"
+                                                   Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsObsidianVerified}"
+                                                                     Value="True">
                                                             <Setter Property="Visibility" Value="Collapsed" />
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding ObsidianVaultPath}"
-                                                                             Value="{x:Null}">
-                                                                    <Setter Property="Visibility" Value="Visible" />
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </StackPanel.Style>
-
-                                                    <TextBlock Text="Сначала создайте или откройте Vault в Obsidian, затем выберите его здесь."
-                                                               Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
-                                                               FontSize="11"
-                                                               TextWrapping="Wrap" />
-                                                    <TextBlock Text="Vault — это папка Obsidian, содержащая каталог .obsidian."
-                                                               Margin="0,2,0,0"
-                                                               Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
-                                                               FontSize="11"
-                                                               TextWrapping="Wrap" />
-                                                </StackPanel>
-
-                                                <Grid Grid.Row="2"
-                                                      Margin="0,8,0,0">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="*" />
-                                                        <ColumnDefinition Width="10" />
-                                                        <ColumnDefinition Width="48" />
-                                                    </Grid.ColumnDefinitions>
-
-                                                    <TextBox Text="{Binding ObsidianVaultPath, Mode=OneWay}"
-                                                             ToolTip="{Binding ObsidianVaultPath}"
-                                                             IsReadOnly="True"
-                                                             Style="{StaticResource EditorPathTextBoxStyle}" />
-
-                                                    <Button Grid.Column="2"
-                                                            Width="48"
-                                                            Height="48"
-                                                            Padding="0"
-                                                            ToolTip="Выбрать хранилище Obsidian"
-                                                            Command="{Binding SelectObsidianVaultCommand}"
-                                                            Style="{StaticResource OnboardingOutlineButtonStyle}">
-                                                        <materialDesign:PackIcon Kind="FolderOpenOutline"
-                                                                                 Width="20"
-                                                                                 Height="20"
-                                                                                 HorizontalAlignment="Center"
-                                                                                 VerticalAlignment="Center" />
-                                                    </Button>
-                                                </Grid>
-                                            </Grid>
-                                        </StackPanel>
-                                    </Grid>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </StackPanel>
                                 </Border>
 
                                 <!-- Проверка редактора — тот же паттерн, что на экране ИИ -->
@@ -1056,13 +1027,6 @@
                                             </StackPanel>
                                         </Button>
 
-                                        <Button Margin="12,0,0,0"
-                                                ToolTip="Выбрать Vault вручную"
-                                                Command="{Binding SelectObsidianVaultCommand}"
-                                                Style="{StaticResource EditorSecondaryTextButtonStyle}">
-                                            <TextBlock Text="Выбрать Vault вручную"
-                                                       VerticalAlignment="Center" />
-                                        </Button>
                                     </StackPanel>
                                 </Grid>
 

@@ -45,7 +45,10 @@ public sealed partial class EditorSetupViewModel : ViewModelBase
 
         _selectedEditor = onboardingState.MarkdownEditor;
         _visualStudioCodePath = onboardingState.VisualStudioCodePath;
-        _obsidianVaultPath = onboardingState.ObsidianVaultPath;
+
+        // Для Obsidian отдельный путь больше не выбирается:
+        // Vault всегда совпадает с хранилищем Mnemora.
+        _obsidianVaultPath = onboardingState.StoragePath;
 
         string? detectedVisualStudioCode =
             markdownEditorService.FindVisualStudioCodeExecutable();
@@ -148,22 +151,11 @@ public sealed partial class EditorSetupViewModel : ViewModelBase
         }
     }
 
-    public string? ObsidianVaultPath
-    {
-        get => _obsidianVaultPath;
-        private set
-        {
-            if (!SetProperty(ref _obsidianVaultPath, value))
-            {
-                return;
-            }
+    public string? StoragePath =>
+        _onboardingState.StoragePath;
 
-            _onboardingState.ObsidianVaultPath = value;
-
-            ResetObsidianVerification();
-            RefreshConfigurationState();
-        }
-    }
+    public string? ObsidianVaultPath =>
+        _obsidianVaultPath;
 
     public bool IsVisualStudioCodeInstalled =>
         _isVisualStudioCodeInstalled;
@@ -311,31 +303,6 @@ public sealed partial class EditorSetupViewModel : ViewModelBase
         }
 
         VisualStudioCodePath = executable;
-    }
-
-    [RelayCommand]
-    private void SelectObsidianVault()
-    {
-        string? selectedPath =
-            _folderPickerService.SelectFolder(
-                ObsidianVaultPath);
-
-        if (selectedPath is null)
-        {
-            return;
-        }
-
-        string fullPath =
-            Path.GetFullPath(selectedPath);
-
-        ObsidianVaultPath = fullPath;
-
-        if (!IsValidObsidianVault(fullPath))
-        {
-            ShowConfigurationError(
-                "Это не Vault Obsidian",
-                "Выберите папку, содержащую каталог .obsidian");
-        }
     }
 
     [RelayCommand]
@@ -733,9 +700,10 @@ public sealed partial class EditorSetupViewModel : ViewModelBase
                              ObsidianVaultPath))
                 {
                     ConfigurationTitle =
-                        "Выберите Vault Obsidian";
+                        "Подключите папку Mnemora к Obsidian";
                     ConfigurationMessage =
-                        "Нужна папка Vault, содержащая каталог .obsidian";
+                        "Откройте указанную папку в Obsidian через «Открыть папку как Vault», " +
+                        "затем нажмите «Найти снова»";
                 }
                 else
                 {
