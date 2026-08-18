@@ -712,6 +712,7 @@
                                                 <Grid.RowDefinitions>
                                                     <RowDefinition Height="Auto" />
                                                     <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
                                                 </Grid.RowDefinitions>
 
                                                 <TextBlock Text="Хранилище Obsidian"
@@ -719,7 +720,32 @@
                                                            FontSize="13"
                                                            FontWeight="SemiBold" />
 
-                                                <Grid Grid.Row="1"
+                                                <StackPanel Grid.Row="1"
+                                                            Margin="0,4,0,0">
+                                                    <StackPanel.Style>
+                                                        <Style TargetType="StackPanel">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding ObsidianVaultPath}"
+                                                                             Value="{x:Null}">
+                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </StackPanel.Style>
+
+                                                    <TextBlock Text="Сначала создайте или откройте Vault в Obsidian, затем выберите его здесь."
+                                                               Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
+                                                               FontSize="11"
+                                                               TextWrapping="Wrap" />
+                                                    <TextBlock Text="Vault — это папка Obsidian, содержащая каталог .obsidian."
+                                                               Margin="0,2,0,0"
+                                                               Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
+                                                               FontSize="11"
+                                                               TextWrapping="Wrap" />
+                                                </StackPanel>
+
+                                                <Grid Grid.Row="2"
                                                       Margin="0,8,0,0">
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="*" />
