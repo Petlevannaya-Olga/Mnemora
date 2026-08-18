@@ -1,15 +1,20 @@
 using System.IO;
+using MaterialDesignThemes.Wpf;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Mnemora.Desktop.Dialogs;
 using Mnemora.Desktop.Editors;
 using Mnemora.Desktop.Settings;
 using Mnemora.Desktop.ViewModels.Common;
+using Mnemora.Desktop.ViewModels.Topics;
+using Mnemora.Domain.Topics;
 
 namespace Mnemora.Desktop.ViewModels.Library;
 
 public sealed partial class CreateMaterialViewModel(
     IMarkdownEditorService markdownEditorService,
-    ISettingsService settingsService)
+    ISettingsService settingsService,
+    IDialogService dialogService)
     : ViewModelBase
 {
     private const string MaterialsDirectoryName =
@@ -18,10 +23,20 @@ public sealed partial class CreateMaterialViewModel(
     private const string DraftsDirectoryName =
         "_drafts";
 
+    private const PackIconKind DefaultMaterialIconKind =
+        PackIconKind.FileDocumentOutline;
+
     private Action? _closeRequested;
 
     [ObservableProperty]
     private LibraryManagementOrderItemViewModel? _selectedTopic;
+
+    [ObservableProperty]
+    private PackIconKind _selectedIconKind =
+        DefaultMaterialIconKind;
+
+    public string SelectedIconKey =>
+        SelectedIconKind.ToString();
 
     public event EventHandler? Closing;
 
@@ -39,7 +54,14 @@ public sealed partial class CreateMaterialViewModel(
     public void Reset()
     {
         SelectedTopic = null;
+        SelectedIconKind = DefaultMaterialIconKind;
         _closeRequested = null;
+    }
+
+    partial void OnSelectedIconKindChanged(
+        PackIconKind value)
+    {
+        OnPropertyChanged(nameof(SelectedIconKey));
     }
 
     public Task<MarkdownEditorLaunchResult> OpenMarkdownAsync(
@@ -82,6 +104,39 @@ public sealed partial class CreateMaterialViewModel(
             DraftsDirectoryName,
             "create-material",
             sessionId);
+    }
+
+
+    [RelayCommand]
+    private void OpenIconPicker()
+    {
+        var currentOption =
+            TopicAppearanceOptions.Icons
+                .FirstOrDefault(option =>
+                    option.Kind == SelectedIconKind)
+            ?? TopicAppearanceOptions.Icons[0];
+
+        var selectedIcon = dialogService
+            .Show<SelectTopicIconDialogViewModel, TopicIcon?>(
+                viewModel =>
+                    viewModel.Initialize(currentOption.Value));
+
+        if (selectedIcon is null)
+        {
+            return;
+        }
+
+        var selectedOption =
+            TopicAppearanceOptions.Icons
+                .FirstOrDefault(option =>
+                    option.Value == selectedIcon.Value);
+
+        if (selectedOption is null)
+        {
+            return;
+        }
+
+        SelectedIconKind = selectedOption.Kind;
     }
 
     [RelayCommand]

@@ -750,6 +750,7 @@
                                     Background="{DynamicResource Mnemora.Brush.SurfaceMuted}"
                                     BorderBrush="{DynamicResource Mnemora.Brush.Border}"
                                     BorderThickness="1"
+                                    Command="{Binding OpenIconPickerCommand}"
                                     Cursor="Hand"
                                     FocusVisualStyle="{x:Null}"
                                     ToolTip="Выбрать иконку">
@@ -783,7 +784,7 @@
                                 <materialDesign:PackIcon Width="25"
                                                          Height="25"
                                                          Foreground="{DynamicResource Mnemora.Brush.Secondary}"
-                                                         Kind="FileDocumentOutline" />
+                                                         Kind="{Binding SelectedIconKind}" />
                             </Button>
 
                             <TextBox Grid.Column="2"
