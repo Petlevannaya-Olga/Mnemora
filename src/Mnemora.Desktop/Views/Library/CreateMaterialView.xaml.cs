@@ -107,6 +107,73 @@ public partial class CreateMaterialView : UserControl
             "WizardTabs").SelectedIndex = 1;
     }
 
+    private async void GoToLearningStep_OnClick(
+        object sender,
+        RoutedEventArgs e)
+    {
+        e.Handled = true;
+
+        // Шаг 4 не должен быть доступен, если обязательные Markdown-файлы
+        // отсутствуют или были удалены после открытия шага проверки.
+        // Повторно используем ту же проверку, что и при переходе 2 -> 3,
+        // чтобы у мастера был единый набор предусловий.
+        if (!await TryPrepareReviewAsync())
+        {
+            FindRequiredControl<TabControl>(
+                "WizardTabs").SelectedIndex = 1;
+
+            return;
+        }
+
+        if (DataContext
+            is not CreateMaterialViewModel viewModel)
+        {
+            return;
+        }
+
+        bool isQuestion =
+            FindRequiredControl<RadioButton>(
+                    "QuestionChoiceRadio")
+                .IsChecked == true;
+
+        await viewModel
+            .LoadLearningOptionsAsync(
+                isQuestion);
+
+        FindRequiredControl<TabControl>(
+            "WizardTabs").SelectedIndex = 3;
+    }
+
+    private void GoToReviewFromLearningStep_OnClick(
+        object sender,
+        RoutedEventArgs e)
+    {
+        FindRequiredControl<TabControl>(
+            "WizardTabs").SelectedIndex = 2;
+    }
+
+    private void GoToExperienceStep_OnClick(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (DataContext is CreateMaterialViewModel viewModel &&
+            !viewModel.CanProceedFromLinks)
+        {
+            return;
+        }
+
+        FindRequiredControl<TabControl>(
+            "WizardTabs").SelectedIndex = 4;
+    }
+
+    private void GoToLinksFromExperienceStep_OnClick(
+        object sender,
+        RoutedEventArgs e)
+    {
+        FindRequiredControl<TabControl>(
+            "WizardTabs").SelectedIndex = 3;
+    }
+
     private async Task<bool> TryPrepareReviewAsync()
     {
         HideMaterialStepError();

@@ -267,6 +267,70 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- Карточки шагов «Связи» и «Обучение». -->
+        <Style x:Key="CreateMaterial.LearningSectionCard" TargetType="Border">
+            <Setter Property="Padding" Value="24" />
+            <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Border}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="16" />
+        </Style>
+
+        <Style x:Key="CreateMaterial.LearningQuestionCard" TargetType="Border">
+            <Setter Property="Margin" Value="0,0,0,8" />
+            <Setter Property="Padding" Value="14,12" />
+            <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Border}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                    <Setter Property="Background" Value="#F7F5FF" />
+                    <Setter Property="BorderBrush" Value="#D8CFFF" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Числовое поле XP: тот же компактный контрол, что в окне связанного вопроса. -->
+        <Style x:Key="CreateMaterial.XpTextBoxStyle" TargetType="TextBox">
+            <Setter Property="Width" Value="68" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Padding" Value="8,0" />
+            <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Border}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.TextPrimary}" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="TextAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="XpBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8">
+                            <ScrollViewer x:Name="PART_ContentHost"
+                                          Margin="{TemplateBinding Padding}"
+                                          VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter TargetName="XpBorder"
+                                        Property="BorderBrush"
+                                        Value="{DynamicResource Mnemora.Brush.Secondary}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.55" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
 
     <Grid Background="{DynamicResource Mnemora.Brush.SurfaceMuted}"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions><Button Grid.Row="0" Margin="32,28,32,0" HorizontalAlignment="Left" Style="{StaticResource CreateMaterial.BreadcrumbButton}">
@@ -305,7 +369,7 @@
         </ControlTemplate>
     </TabControl.Template>
 <TabItem><Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions><Grid Grid.Row="0"
-              Margin="72,16,72,4"
+              Margin="32,16,32,4"
               HorizontalAlignment="Stretch"
               VerticalAlignment="Center">
             <Grid.ColumnDefinitions>
@@ -316,9 +380,11 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-
-            <!-- Компактный stepper: круг и подпись находятся в одной строке. -->
             <StackPanel Grid.Column="0"
                         VerticalAlignment="Center"
                         Orientation="Horizontal">
@@ -335,21 +401,19 @@
                                Foreground="{DynamicResource Mnemora.Brush.Secondary}"
                                Text="1" />
                 </Border>
-                <TextBlock Margin="10,0,0,0"
+                <TextBlock Margin="9,0,0,0"
                            VerticalAlignment="Center"
-                           FontSize="13"
+                           FontSize="12"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource Mnemora.Brush.Secondary}"
-                           Text="Тип материала" />
+                           Text="Тип" />
             </StackPanel>
-
             <Border Grid.Column="1"
-                    Height="3"
-                    Margin="16,0"
+                    Height="2"
+                    Margin="12,0"
                     VerticalAlignment="Center"
-                    Background="{DynamicResource Mnemora.Brush.BrandGradient}"
+                    Background="{DynamicResource Mnemora.Brush.Border}"
                     CornerRadius="2" />
-
             <StackPanel Grid.Column="2"
                         VerticalAlignment="Center"
                         Orientation="Horizontal">
@@ -365,19 +429,40 @@
                                Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
                                Text="2" />
                 </Border>
-                <TextBlock Margin="10,0,0,0"
+                <TextBlock Margin="9,0,0,0"
                            VerticalAlignment="Center"
-                           FontSize="13"
-                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                           Text="Материал" />
-            </StackPanel>
+                           FontSize="12"
+                           FontWeight="Normal"
+                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}">
 
+                    <TextBlock.Style>
+
+                        <Style TargetType="TextBlock">
+
+                            <Setter Property="Text" Value="Статья" />
+
+                            <Style.Triggers>
+
+                                <DataTrigger Binding="{Binding IsChecked, ElementName=QuestionChoiceRadio}" Value="True">
+
+                                    <Setter Property="Text" Value="Вопрос" />
+
+                                </DataTrigger>
+
+                            </Style.Triggers>
+
+                        </Style>
+
+                    </TextBlock.Style>
+
+                </TextBlock>
+            </StackPanel>
             <Border Grid.Column="3"
                     Height="2"
-                    Margin="16,0"
+                    Margin="12,0"
                     VerticalAlignment="Center"
-                    Background="{DynamicResource Mnemora.Brush.Border}" />
-
+                    Background="{DynamicResource Mnemora.Brush.Border}"
+                    CornerRadius="2" />
             <StackPanel Grid.Column="4"
                         VerticalAlignment="Center"
                         Orientation="Horizontal">
@@ -393,19 +478,19 @@
                                Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
                                Text="3" />
                 </Border>
-                <TextBlock Margin="10,0,0,0"
+                <TextBlock Margin="9,0,0,0"
                            VerticalAlignment="Center"
-                           FontSize="13"
+                           FontSize="12"
+                           FontWeight="Normal"
                            Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
                            Text="Проверка" />
             </StackPanel>
-
             <Border Grid.Column="5"
                     Height="2"
-                    Margin="16,0"
+                    Margin="12,0"
                     VerticalAlignment="Center"
-                    Background="{DynamicResource Mnemora.Brush.Border}" />
-
+                    Background="{DynamicResource Mnemora.Brush.Border}"
+                    CornerRadius="2" />
             <StackPanel Grid.Column="6"
                         VerticalAlignment="Center"
                         Orientation="Horizontal">
@@ -421,11 +506,89 @@
                                Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
                                Text="4" />
                 </Border>
-                <TextBlock Margin="10,0,0,0"
+                <TextBlock Margin="9,0,0,0"
                            VerticalAlignment="Center"
-                           FontSize="13"
+                           FontSize="12"
+                           FontWeight="Normal"
+                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}">
+
+                    <TextBlock.Style>
+
+                        <Style TargetType="TextBlock">
+
+                            <Setter Property="Text" Value="Вопросы" />
+
+                            <Style.Triggers>
+
+                                <DataTrigger Binding="{Binding IsChecked, ElementName=QuestionChoiceRadio}" Value="True">
+
+                                    <Setter Property="Text" Value="Связь" />
+
+                                </DataTrigger>
+
+                            </Style.Triggers>
+
+                        </Style>
+
+                    </TextBlock.Style>
+
+                </TextBlock>
+            </StackPanel>
+            <Border Grid.Column="7"
+                    Height="2"
+                    Margin="12,0"
+                    VerticalAlignment="Center"
+                    Background="{DynamicResource Mnemora.Brush.Border}"
+                    CornerRadius="2" />
+            <StackPanel Grid.Column="8"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal">
+                <Border Width="36"
+                        Height="36"
+                        Background="{DynamicResource Mnemora.Brush.Surface}"
+                        BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                        BorderThickness="2"
+                        CornerRadius="18">
+                    <TextBlock HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               FontSize="14"
+                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                               Text="5" />
+                </Border>
+                <TextBlock Margin="9,0,0,0"
+                           VerticalAlignment="Center"
+                           FontSize="12"
+                           FontWeight="Normal"
                            Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                           Text="Обучение и связи" />
+                           Text="Обучение" />
+            </StackPanel>
+            <Border Grid.Column="9"
+                    Height="2"
+                    Margin="12,0"
+                    VerticalAlignment="Center"
+                    Background="{DynamicResource Mnemora.Brush.Border}"
+                    CornerRadius="2" />
+            <StackPanel Grid.Column="10"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal">
+                <Border Width="36"
+                        Height="36"
+                        Background="{DynamicResource Mnemora.Brush.Surface}"
+                        BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                        BorderThickness="2"
+                        CornerRadius="18">
+                    <TextBlock HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               FontSize="14"
+                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                               Text="6" />
+                </Border>
+                <TextBlock Margin="9,0,0,0"
+                           VerticalAlignment="Center"
+                           FontSize="12"
+                           FontWeight="Normal"
+                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                           Text="Итог" />
             </StackPanel>
         </Grid>
 
@@ -591,7 +754,7 @@
 
         <!-- Шаг 2: компактный stepper. -->
         <Grid Grid.Row="0"
-              Margin="72,16,72,4"
+              Margin="32,16,32,4"
               HorizontalAlignment="Stretch"
               VerticalAlignment="Center">
             <Grid.ColumnDefinitions>
@@ -602,8 +765,11 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-
             <StackPanel Grid.Column="0"
                         VerticalAlignment="Center"
                         Orientation="Horizontal">
@@ -613,27 +779,26 @@
                         BorderBrush="{DynamicResource Mnemora.Brush.Primary}"
                         BorderThickness="2"
                         CornerRadius="18">
-                    <materialDesign:PackIcon Width="18"
-                                             Height="18"
+                    <materialDesign:PackIcon Width="19"
+                                             Height="19"
                                              HorizontalAlignment="Center"
                                              VerticalAlignment="Center"
                                              Foreground="{DynamicResource Mnemora.Brush.Primary}"
                                              Kind="Check" />
                 </Border>
-                <TextBlock Margin="10,0,0,0"
+                <TextBlock Margin="9,0,0,0"
                            VerticalAlignment="Center"
-                           FontSize="13"
+                           FontSize="12"
+                           FontWeight="SemiBold"
                            Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                           Text="Тип материала" />
+                           Text="Тип" />
             </StackPanel>
-
             <Border Grid.Column="1"
                     Height="3"
-                    Margin="16,0"
+                    Margin="12,0"
                     VerticalAlignment="Center"
                     Background="{DynamicResource Mnemora.Brush.BrandGradient}"
                     CornerRadius="2" />
-
             <StackPanel Grid.Column="2"
                         VerticalAlignment="Center"
                         Orientation="Horizontal">
@@ -650,20 +815,40 @@
                                Foreground="{DynamicResource Mnemora.Brush.Secondary}"
                                Text="2" />
                 </Border>
-                <TextBlock Margin="10,0,0,0"
+                <TextBlock Margin="9,0,0,0"
                            VerticalAlignment="Center"
-                           FontSize="13"
+                           FontSize="12"
                            FontWeight="SemiBold"
-                           Foreground="{DynamicResource Mnemora.Brush.Secondary}"
-                           Text="Материал" />
-            </StackPanel>
+                           Foreground="{DynamicResource Mnemora.Brush.Secondary}">
 
+                    <TextBlock.Style>
+
+                        <Style TargetType="TextBlock">
+
+                            <Setter Property="Text" Value="Статья" />
+
+                            <Style.Triggers>
+
+                                <DataTrigger Binding="{Binding IsChecked, ElementName=QuestionChoiceRadio}" Value="True">
+
+                                    <Setter Property="Text" Value="Вопрос" />
+
+                                </DataTrigger>
+
+                            </Style.Triggers>
+
+                        </Style>
+
+                    </TextBlock.Style>
+
+                </TextBlock>
+            </StackPanel>
             <Border Grid.Column="3"
                     Height="2"
-                    Margin="16,0"
+                    Margin="12,0"
                     VerticalAlignment="Center"
-                    Background="{DynamicResource Mnemora.Brush.Border}" />
-
+                    Background="{DynamicResource Mnemora.Brush.Border}"
+                    CornerRadius="2" />
             <StackPanel Grid.Column="4"
                         VerticalAlignment="Center"
                         Orientation="Horizontal">
@@ -679,19 +864,19 @@
                                Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
                                Text="3" />
                 </Border>
-                <TextBlock Margin="10,0,0,0"
+                <TextBlock Margin="9,0,0,0"
                            VerticalAlignment="Center"
-                           FontSize="13"
+                           FontSize="12"
+                           FontWeight="Normal"
                            Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
                            Text="Проверка" />
             </StackPanel>
-
             <Border Grid.Column="5"
                     Height="2"
-                    Margin="16,0"
+                    Margin="12,0"
                     VerticalAlignment="Center"
-                    Background="{DynamicResource Mnemora.Brush.Border}" />
-
+                    Background="{DynamicResource Mnemora.Brush.Border}"
+                    CornerRadius="2" />
             <StackPanel Grid.Column="6"
                         VerticalAlignment="Center"
                         Orientation="Horizontal">
@@ -707,11 +892,89 @@
                                Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
                                Text="4" />
                 </Border>
-                <TextBlock Margin="10,0,0,0"
+                <TextBlock Margin="9,0,0,0"
                            VerticalAlignment="Center"
-                           FontSize="13"
+                           FontSize="12"
+                           FontWeight="Normal"
+                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}">
+
+                    <TextBlock.Style>
+
+                        <Style TargetType="TextBlock">
+
+                            <Setter Property="Text" Value="Вопросы" />
+
+                            <Style.Triggers>
+
+                                <DataTrigger Binding="{Binding IsChecked, ElementName=QuestionChoiceRadio}" Value="True">
+
+                                    <Setter Property="Text" Value="Связь" />
+
+                                </DataTrigger>
+
+                            </Style.Triggers>
+
+                        </Style>
+
+                    </TextBlock.Style>
+
+                </TextBlock>
+            </StackPanel>
+            <Border Grid.Column="7"
+                    Height="2"
+                    Margin="12,0"
+                    VerticalAlignment="Center"
+                    Background="{DynamicResource Mnemora.Brush.Border}"
+                    CornerRadius="2" />
+            <StackPanel Grid.Column="8"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal">
+                <Border Width="36"
+                        Height="36"
+                        Background="{DynamicResource Mnemora.Brush.Surface}"
+                        BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                        BorderThickness="2"
+                        CornerRadius="18">
+                    <TextBlock HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               FontSize="14"
+                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                               Text="5" />
+                </Border>
+                <TextBlock Margin="9,0,0,0"
+                           VerticalAlignment="Center"
+                           FontSize="12"
+                           FontWeight="Normal"
                            Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                           Text="Обучение и связи" />
+                           Text="Обучение" />
+            </StackPanel>
+            <Border Grid.Column="9"
+                    Height="2"
+                    Margin="12,0"
+                    VerticalAlignment="Center"
+                    Background="{DynamicResource Mnemora.Brush.Border}"
+                    CornerRadius="2" />
+            <StackPanel Grid.Column="10"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal">
+                <Border Width="36"
+                        Height="36"
+                        Background="{DynamicResource Mnemora.Brush.Surface}"
+                        BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                        BorderThickness="2"
+                        CornerRadius="18">
+                    <TextBlock HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               FontSize="14"
+                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                               Text="6" />
+                </Border>
+                <TextBlock Margin="9,0,0,0"
+                           VerticalAlignment="Center"
+                           FontSize="12"
+                           FontWeight="Normal"
+                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                           Text="Итог" />
             </StackPanel>
         </Grid>
 
@@ -1579,8 +1842,40 @@
                 <Button Grid.Column="1"
                         MinWidth="132"
                         Height="44"
-                        Click="GoToReviewStep_OnClick"
-                        Style="{StaticResource Mnemora.PrimaryButton}">
+                        Click="GoToReviewStep_OnClick">
+                    <Button.Style>
+                        <Style TargetType="Button"
+                               BasedOn="{StaticResource Mnemora.PrimaryButton}">
+                            <Setter Property="IsEnabled" Value="False" />
+
+                            <!-- Статья: достаточно выбранного Markdown статьи. -->
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding IsChecked, ElementName=ArticleChoiceRadio}"
+                                                   Value="True" />
+                                        <Condition Binding="{Binding Visibility, ElementName=ArticleSelectedState}"
+                                                   Value="Visible" />
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="IsEnabled" Value="True" />
+                                </MultiDataTrigger>
+
+                                <!-- Вопрос: обязательны и вопрос, и эталонный ответ. -->
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding IsChecked, ElementName=QuestionChoiceRadio}"
+                                                   Value="True" />
+                                        <Condition Binding="{Binding Visibility, ElementName=QuestionSelectedState}"
+                                                   Value="Visible" />
+                                        <Condition Binding="{Binding Visibility, ElementName=AnswerSelectedState}"
+                                                   Value="Visible" />
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="IsEnabled" Value="True" />
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+
                     <StackPanel Orientation="Horizontal">
                         <TextBlock VerticalAlignment="Center" Text="Далее" />
                         <materialDesign:PackIcon Width="18" Height="18"
@@ -1605,7 +1900,7 @@
 
         <!-- Шаг 3: проверка. Первые два шага завершены, третий активен. -->
         <Grid Grid.Row="0"
-              Margin="72,16,72,4"
+              Margin="32,16,32,4"
               HorizontalAlignment="Stretch"
               VerticalAlignment="Center">
             <Grid.ColumnDefinitions>
@@ -1616,8 +1911,11 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-
             <StackPanel Grid.Column="0"
                         VerticalAlignment="Center"
                         Orientation="Horizontal">
@@ -1627,27 +1925,26 @@
                         BorderBrush="{DynamicResource Mnemora.Brush.Primary}"
                         BorderThickness="2"
                         CornerRadius="18">
-                    <materialDesign:PackIcon Width="18"
-                                             Height="18"
+                    <materialDesign:PackIcon Width="19"
+                                             Height="19"
                                              HorizontalAlignment="Center"
                                              VerticalAlignment="Center"
                                              Foreground="{DynamicResource Mnemora.Brush.Primary}"
                                              Kind="Check" />
                 </Border>
-                <TextBlock Margin="10,0,0,0"
+                <TextBlock Margin="9,0,0,0"
                            VerticalAlignment="Center"
-                           FontSize="13"
+                           FontSize="12"
+                           FontWeight="SemiBold"
                            Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                           Text="Тип материала" />
+                           Text="Тип" />
             </StackPanel>
-
             <Border Grid.Column="1"
                     Height="3"
-                    Margin="16,0"
+                    Margin="12,0"
                     VerticalAlignment="Center"
                     Background="{DynamicResource Mnemora.Brush.BrandGradient}"
                     CornerRadius="2" />
-
             <StackPanel Grid.Column="2"
                         VerticalAlignment="Center"
                         Orientation="Horizontal">
@@ -1657,27 +1954,47 @@
                         BorderBrush="{DynamicResource Mnemora.Brush.Primary}"
                         BorderThickness="2"
                         CornerRadius="18">
-                    <materialDesign:PackIcon Width="18"
-                                             Height="18"
+                    <materialDesign:PackIcon Width="19"
+                                             Height="19"
                                              HorizontalAlignment="Center"
                                              VerticalAlignment="Center"
                                              Foreground="{DynamicResource Mnemora.Brush.Primary}"
                                              Kind="Check" />
                 </Border>
-                <TextBlock Margin="10,0,0,0"
+                <TextBlock Margin="9,0,0,0"
                            VerticalAlignment="Center"
-                           FontSize="13"
-                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                           Text="Материал" />
-            </StackPanel>
+                           FontSize="12"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}">
 
+                    <TextBlock.Style>
+
+                        <Style TargetType="TextBlock">
+
+                            <Setter Property="Text" Value="Статья" />
+
+                            <Style.Triggers>
+
+                                <DataTrigger Binding="{Binding IsChecked, ElementName=QuestionChoiceRadio}" Value="True">
+
+                                    <Setter Property="Text" Value="Вопрос" />
+
+                                </DataTrigger>
+
+                            </Style.Triggers>
+
+                        </Style>
+
+                    </TextBlock.Style>
+
+                </TextBlock>
+            </StackPanel>
             <Border Grid.Column="3"
                     Height="3"
-                    Margin="16,0"
+                    Margin="12,0"
                     VerticalAlignment="Center"
                     Background="{DynamicResource Mnemora.Brush.BrandGradient}"
                     CornerRadius="2" />
-
             <StackPanel Grid.Column="4"
                         VerticalAlignment="Center"
                         Orientation="Horizontal">
@@ -1694,20 +2011,19 @@
                                Foreground="{DynamicResource Mnemora.Brush.Secondary}"
                                Text="3" />
                 </Border>
-                <TextBlock Margin="10,0,0,0"
+                <TextBlock Margin="9,0,0,0"
                            VerticalAlignment="Center"
-                           FontSize="13"
+                           FontSize="12"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource Mnemora.Brush.Secondary}"
                            Text="Проверка" />
             </StackPanel>
-
             <Border Grid.Column="5"
                     Height="2"
-                    Margin="16,0"
+                    Margin="12,0"
                     VerticalAlignment="Center"
-                    Background="{DynamicResource Mnemora.Brush.Border}" />
-
+                    Background="{DynamicResource Mnemora.Brush.Border}"
+                    CornerRadius="2" />
             <StackPanel Grid.Column="6"
                         VerticalAlignment="Center"
                         Orientation="Horizontal">
@@ -1723,11 +2039,89 @@
                                Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
                                Text="4" />
                 </Border>
-                <TextBlock Margin="10,0,0,0"
+                <TextBlock Margin="9,0,0,0"
                            VerticalAlignment="Center"
-                           FontSize="13"
+                           FontSize="12"
+                           FontWeight="Normal"
+                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}">
+
+                    <TextBlock.Style>
+
+                        <Style TargetType="TextBlock">
+
+                            <Setter Property="Text" Value="Вопросы" />
+
+                            <Style.Triggers>
+
+                                <DataTrigger Binding="{Binding IsChecked, ElementName=QuestionChoiceRadio}" Value="True">
+
+                                    <Setter Property="Text" Value="Связь" />
+
+                                </DataTrigger>
+
+                            </Style.Triggers>
+
+                        </Style>
+
+                    </TextBlock.Style>
+
+                </TextBlock>
+            </StackPanel>
+            <Border Grid.Column="7"
+                    Height="2"
+                    Margin="12,0"
+                    VerticalAlignment="Center"
+                    Background="{DynamicResource Mnemora.Brush.Border}"
+                    CornerRadius="2" />
+            <StackPanel Grid.Column="8"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal">
+                <Border Width="36"
+                        Height="36"
+                        Background="{DynamicResource Mnemora.Brush.Surface}"
+                        BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                        BorderThickness="2"
+                        CornerRadius="18">
+                    <TextBlock HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               FontSize="14"
+                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                               Text="5" />
+                </Border>
+                <TextBlock Margin="9,0,0,0"
+                           VerticalAlignment="Center"
+                           FontSize="12"
+                           FontWeight="Normal"
                            Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                           Text="Обучение и связи" />
+                           Text="Обучение" />
+            </StackPanel>
+            <Border Grid.Column="9"
+                    Height="2"
+                    Margin="12,0"
+                    VerticalAlignment="Center"
+                    Background="{DynamicResource Mnemora.Brush.Border}"
+                    CornerRadius="2" />
+            <StackPanel Grid.Column="10"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal">
+                <Border Width="36"
+                        Height="36"
+                        Background="{DynamicResource Mnemora.Brush.Surface}"
+                        BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                        BorderThickness="2"
+                        CornerRadius="18">
+                    <TextBlock HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               FontSize="14"
+                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                               Text="6" />
+                </Border>
+                <TextBlock Margin="9,0,0,0"
+                           VerticalAlignment="Center"
+                           FontSize="12"
+                           FontWeight="Normal"
+                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                           Text="Итог" />
             </StackPanel>
         </Grid>
 
@@ -1813,11 +2207,10 @@
                     </StackPanel>
                 </Button>
 
-                <!-- Шаг 4 пока не проектируем: действие появится после согласования его сценария. -->
                 <Button Grid.Column="1"
                         MinWidth="132"
                         Height="44"
-                        IsEnabled="False"
+                        Click="GoToLearningStep_OnClick"
                         Style="{StaticResource Mnemora.PrimaryButton}">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock VerticalAlignment="Center"
@@ -1834,4 +2227,1182 @@
     </Grid>
 </TabItem>
 
-</TabControl></Grid></UserControl>
+
+<TabItem>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0"
+              Margin="32,16,32,4"
+              HorizontalAlignment="Stretch"
+              VerticalAlignment="Center">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal">
+                <Border Width="36"
+                        Height="36"
+                        Background="{DynamicResource Mnemora.Brush.Surface}"
+                        BorderBrush="{DynamicResource Mnemora.Brush.Primary}"
+                        BorderThickness="2"
+                        CornerRadius="18">
+                    <materialDesign:PackIcon Width="19"
+                                             Height="19"
+                                             HorizontalAlignment="Center"
+                                             VerticalAlignment="Center"
+                                             Foreground="{DynamicResource Mnemora.Brush.Primary}"
+                                             Kind="Check" />
+                </Border>
+                <TextBlock Margin="9,0,0,0"
+                           VerticalAlignment="Center"
+                           FontSize="12"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                           Text="Тип" />
+            </StackPanel>
+            <Border Grid.Column="1"
+                    Height="3"
+                    Margin="12,0"
+                    VerticalAlignment="Center"
+                    Background="{DynamicResource Mnemora.Brush.BrandGradient}"
+                    CornerRadius="2" />
+            <StackPanel Grid.Column="2"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal">
+                <Border Width="36"
+                        Height="36"
+                        Background="{DynamicResource Mnemora.Brush.Surface}"
+                        BorderBrush="{DynamicResource Mnemora.Brush.Primary}"
+                        BorderThickness="2"
+                        CornerRadius="18">
+                    <materialDesign:PackIcon Width="19"
+                                             Height="19"
+                                             HorizontalAlignment="Center"
+                                             VerticalAlignment="Center"
+                                             Foreground="{DynamicResource Mnemora.Brush.Primary}"
+                                             Kind="Check" />
+                </Border>
+                <TextBlock Margin="9,0,0,0"
+                           VerticalAlignment="Center"
+                           FontSize="12"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}">
+
+                    <TextBlock.Style>
+
+                        <Style TargetType="TextBlock">
+
+                            <Setter Property="Text" Value="Статья" />
+
+                            <Style.Triggers>
+
+                                <DataTrigger Binding="{Binding IsChecked, ElementName=QuestionChoiceRadio}" Value="True">
+
+                                    <Setter Property="Text" Value="Вопрос" />
+
+                                </DataTrigger>
+
+                            </Style.Triggers>
+
+                        </Style>
+
+                    </TextBlock.Style>
+
+                </TextBlock>
+            </StackPanel>
+            <Border Grid.Column="3"
+                    Height="3"
+                    Margin="12,0"
+                    VerticalAlignment="Center"
+                    Background="{DynamicResource Mnemora.Brush.BrandGradient}"
+                    CornerRadius="2" />
+            <StackPanel Grid.Column="4"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal">
+                <Border Width="36"
+                        Height="36"
+                        Background="{DynamicResource Mnemora.Brush.Surface}"
+                        BorderBrush="{DynamicResource Mnemora.Brush.Primary}"
+                        BorderThickness="2"
+                        CornerRadius="18">
+                    <materialDesign:PackIcon Width="19"
+                                             Height="19"
+                                             HorizontalAlignment="Center"
+                                             VerticalAlignment="Center"
+                                             Foreground="{DynamicResource Mnemora.Brush.Primary}"
+                                             Kind="Check" />
+                </Border>
+                <TextBlock Margin="9,0,0,0"
+                           VerticalAlignment="Center"
+                           FontSize="12"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                           Text="Проверка" />
+            </StackPanel>
+            <Border Grid.Column="5"
+                    Height="3"
+                    Margin="12,0"
+                    VerticalAlignment="Center"
+                    Background="{DynamicResource Mnemora.Brush.BrandGradient}"
+                    CornerRadius="2" />
+            <StackPanel Grid.Column="6"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal">
+                <Border Width="36"
+                        Height="36"
+                        Background="{DynamicResource Mnemora.Brush.Surface}"
+                        BorderBrush="{DynamicResource Mnemora.Brush.BrandGradient}"
+                        BorderThickness="2"
+                        CornerRadius="18">
+                    <TextBlock HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               FontSize="14"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource Mnemora.Brush.Secondary}"
+                               Text="4" />
+                </Border>
+                <TextBlock Margin="9,0,0,0"
+                           VerticalAlignment="Center"
+                           FontSize="12"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource Mnemora.Brush.Secondary}">
+
+                    <TextBlock.Style>
+
+                        <Style TargetType="TextBlock">
+
+                            <Setter Property="Text" Value="Вопросы" />
+
+                            <Style.Triggers>
+
+                                <DataTrigger Binding="{Binding IsChecked, ElementName=QuestionChoiceRadio}" Value="True">
+
+                                    <Setter Property="Text" Value="Связь" />
+
+                                </DataTrigger>
+
+                            </Style.Triggers>
+
+                        </Style>
+
+                    </TextBlock.Style>
+
+                </TextBlock>
+            </StackPanel>
+            <Border Grid.Column="7"
+                    Height="2"
+                    Margin="12,0"
+                    VerticalAlignment="Center"
+                    Background="{DynamicResource Mnemora.Brush.Border}"
+                    CornerRadius="2" />
+            <StackPanel Grid.Column="8"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal">
+                <Border Width="36"
+                        Height="36"
+                        Background="{DynamicResource Mnemora.Brush.Surface}"
+                        BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                        BorderThickness="2"
+                        CornerRadius="18">
+                    <TextBlock HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               FontSize="14"
+                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                               Text="5" />
+                </Border>
+                <TextBlock Margin="9,0,0,0"
+                           VerticalAlignment="Center"
+                           FontSize="12"
+                           FontWeight="Normal"
+                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                           Text="Обучение" />
+            </StackPanel>
+            <Border Grid.Column="9"
+                    Height="2"
+                    Margin="12,0"
+                    VerticalAlignment="Center"
+                    Background="{DynamicResource Mnemora.Brush.Border}"
+                    CornerRadius="2" />
+            <StackPanel Grid.Column="10"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal">
+                <Border Width="36"
+                        Height="36"
+                        Background="{DynamicResource Mnemora.Brush.Surface}"
+                        BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                        BorderThickness="2"
+                        CornerRadius="18">
+                    <TextBlock HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               FontSize="14"
+                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                               Text="6" />
+                </Border>
+                <TextBlock Margin="9,0,0,0"
+                           VerticalAlignment="Center"
+                           FontSize="12"
+                           FontWeight="Normal"
+                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                           Text="Итог" />
+            </StackPanel>
+        </Grid>
+
+        <Grid Grid.Row="1"
+              Margin="32,24,32,20"
+              ClipToBounds="True">
+            <Grid MaxWidth="1180"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Stretch">
+
+                <!-- Статья: готовые и новые вопросы. -->
+                <Border VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                                    <Border.Style>
+                                        <Style TargetType="Border" BasedOn="{StaticResource CreateMaterial.LearningSectionCard}">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsArticleMaterial}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                
+                                    <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions><Grid Grid.Row="0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                
+                                            <StackPanel>
+                                                <TextBlock FontSize="22" FontWeight="SemiBold" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="Вопросы к статье"/>
+                                                <TextBlock Margin="0,5,0,0" FontSize="13" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="Добавь готовые вопросы из библиотеки или создай новые." TextWrapping="Wrap"/>
+                                            </StackPanel>
+                
+                                            <Border Grid.Column="1" Margin="16,0,0,0" Padding="10,5" VerticalAlignment="Top" Background="#F1EDFF" CornerRadius="8">
+                                                <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource Mnemora.Brush.Secondary}" Text="{Binding ArticleQuestionCountText}"/>
+                                            </Border>
+                                        </Grid>
+                
+                                        <Grid Margin="0,20,0,0" Grid.Row="1">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="14"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                
+                                            <Button Height="44" Click="OpenExistingQuestionsPicker_OnClick" Style="{StaticResource Mnemora.SecondaryButton}">
+                                                <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                                    <materialDesign:PackIcon Width="18" Height="18" VerticalAlignment="Center" Kind="LinkVariant"/>
+                                                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" Text="Выбрать готовые"/>
+                                                </StackPanel>
+                                            </Button>
+                
+                                            <Button Grid.Column="2" Height="44" Click="OpenNewRelatedQuestion_OnClick" Style="{StaticResource Mnemora.PrimaryButton}">
+                                                <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                                    <materialDesign:PackIcon Width="18" Height="18" VerticalAlignment="Center" Kind="Plus"/>
+                                                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" Text="Создать вопрос"/>
+                                                </StackPanel>
+                                            </Button>
+                                        </Grid>
+                
+                                        <Border Margin="0,16,0,0" Padding="13,10" Background="#FFF9EC" BorderBrush="#F0DFC0" BorderThickness="1" CornerRadius="10" Grid.Row="2">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="10"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <materialDesign:PackIcon Width="18" Height="18" VerticalAlignment="Top" Foreground="#9A6A12" Kind="InformationOutline"/>
+                                                <TextBlock Grid.Column="2" FontSize="12" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="После финального подтверждения готовые вопросы перестанут быть самостоятельными. Вопросы из других тем перейдут в тему статьи." TextWrapping="Wrap"/>
+                                            </Grid>
+                                        </Border>
+                
+                                        <Border Margin="0,14,0,0" Padding="12,9" Background="#FFF2F2" BorderBrush="#F4D2D2" BorderThickness="1" CornerRadius="9" Grid.Row="3">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasLearningOptionsError}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock FontSize="12" Foreground="#B42318" Text="{Binding LearningOptionsError}" TextWrapping="Wrap"/>
+                                        </Border>
+                
+                                        <ScrollViewer Grid.Row="4" Margin="0,20,0,0" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" PanningMode="VerticalOnly"><StackPanel><StackPanel Margin="0">
+                                            <StackPanel.Style>
+                                                <Style TargetType="StackPanel">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasVisibleQuestions}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </StackPanel.Style>
+                
+                                            <TextBlock Margin="2,0,0,9" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="ИЗ БИБЛИОТЕКИ"/>
+                
+                                            <ItemsControl ItemsSource="{Binding AvailableQuestions}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border Style="{StaticResource CreateMaterial.LearningQuestionCard}">
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                    <ColumnDefinition Width="12"/>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                </Grid.ColumnDefinitions>
+                
+                                                                <Border Width="36" Height="36" VerticalAlignment="Center" Background="#EAF9F7" CornerRadius="10">
+                                                                    <materialDesign:PackIcon Width="19" Height="19" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.Primary}" Kind="LinkVariant"/>
+                                                                </Border>
+                
+                                                                <StackPanel Grid.Column="2">
+                                                                    <TextBlock FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="{Binding Title}" TextWrapping="Wrap"/>
+                                                                    <StackPanel Margin="0,4,0,0" Orientation="Horizontal">
+                                                                        <TextBlock FontSize="11" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="{Binding OriginText}"/>
+                                                                        <TextBlock Margin="10,0,0,0" FontSize="11" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="•"/>
+                                                                        <TextBlock Margin="10,0,0,0" FontSize="11" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="{Binding Difficulty}"/>
+                                                                        <TextBlock Margin="10,0,0,0" FontSize="11" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="•"/>
+                                                                        <TextBlock Margin="10,0,0,0" FontSize="11" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="{Binding ExperienceText}"/>
+                                                                    </StackPanel>
+                                                                    <TextBlock Margin="0,4,0,0" FontSize="11" Foreground="#9A6A12" Text="{Binding MoveText}">
+                                                                        <TextBlock.Style>
+                                                                            <Style TargetType="TextBlock">
+                                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                                                <Style.Triggers>
+                                                                                    <DataTrigger Binding="{Binding MovesToArticleTopic}" Value="True">
+                                                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                                                    </DataTrigger>
+                                                                                </Style.Triggers>
+                                                                            </Style>
+                                                                        </TextBlock.Style>
+                                                                    </TextBlock>
+                                                                </StackPanel>
+                
+                                                                <Button Grid.Column="3" Width="34" Height="34" Tag="{Binding}" Click="RemoveStandaloneQuestion_OnClick" ToolTip="Убрать из статьи" Style="{StaticResource CreateMaterial.PreviewIconButton}">
+                                                                    <materialDesign:PackIcon Width="17" Height="17" Kind="Close"/>
+                                                                </Button>
+                                                            </Grid>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                
+                                        <StackPanel Margin="0,18,0,0">
+                                            <StackPanel.Style>
+                                                <Style TargetType="StackPanel">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasNewRelatedQuestions}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </StackPanel.Style>
+                
+                                            <TextBlock Margin="2,0,0,9" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="СОЗДАННЫЕ СЕЙЧАС"/>
+                
+                                            <ItemsControl ItemsSource="{Binding NewRelatedQuestions}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border Style="{StaticResource CreateMaterial.LearningQuestionCard}">
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                    <ColumnDefinition Width="12"/>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                    <ColumnDefinition Width="5"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                </Grid.ColumnDefinitions>
+                
+                                                                <Border Width="36" Height="36" VerticalAlignment="Center" Background="#F1EDFF" CornerRadius="10">
+                                                                    <materialDesign:PackIcon Width="19" Height="19" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.Secondary}" Kind="HelpCircleOutline"/>
+                                                                </Border>
+                
+                                                                <StackPanel Grid.Column="2">
+                                                                    <TextBlock FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="{Binding Title}" TextWrapping="Wrap"/>
+                                                                    <StackPanel Margin="0,4,0,0" Orientation="Horizontal">
+                                                                        <TextBlock FontSize="11" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="Новый вопрос"/>
+                                                                        <TextBlock Margin="10,0,0,0" FontSize="11" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="•"/>
+                                                                        <TextBlock Margin="10,0,0,0" FontSize="11" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="{Binding DifficultyText}"/>
+                                                                        <TextBlock Margin="10,0,0,0" FontSize="11" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="•"/>
+                                                                        <TextBlock Margin="10,0,0,0" FontSize="11" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="{Binding ExperienceText}"/>
+                                                                    </StackPanel>
+                                                                </StackPanel>
+                
+                                                                <Button Grid.Column="3" Width="34" Height="34" Tag="{Binding}" Click="EditRelatedQuestion_OnClick" ToolTip="Изменить вопрос" Style="{StaticResource CreateMaterial.PreviewIconButton}">
+                                                                    <materialDesign:PackIcon Width="17" Height="17" Kind="PencilOutline"/>
+                                                                </Button>
+                
+                                                                <Button Grid.Column="5" Width="34" Height="34" Tag="{Binding}" Click="RemoveRelatedQuestion_OnClick" ToolTip="Убрать вопрос" Style="{StaticResource CreateMaterial.PreviewIconButton}">
+                                                                    <materialDesign:PackIcon Width="17" Height="17" Kind="Close"/>
+                                                                </Button>
+                                                            </Grid>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                
+                                        <Border Margin="0,20,0,0" MinHeight="150" Padding="24" Background="{DynamicResource Mnemora.Brush.SurfaceMuted}" BorderBrush="{DynamicResource Mnemora.Brush.Border}" BorderThickness="1" CornerRadius="12">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasArticleQuestions}" Value="False">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <materialDesign:PackIcon Width="30" Height="30" HorizontalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Kind="HelpCircleOutline"/>
+                                                <TextBlock Margin="0,10,0,0" HorizontalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="Вопросы пока не добавлены"/>
+                                                <TextBlock Margin="0,4,0,0" HorizontalAlignment="Center" FontSize="12" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="Можно продолжить без вопросов — статья останется черновиком."/>
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel></ScrollViewer></Grid></Border>
+
+                <!-- Вопрос: необязательная связь со статьёй текущей темы. -->
+                <Border VerticalAlignment="Top" HorizontalAlignment="Stretch">
+                    <Border.Style>
+                        <Style TargetType="Border"
+                               BasedOn="{StaticResource CreateMaterial.LearningSectionCard}">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsQuestionMaterial}"
+                                             Value="True">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="14" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <Border Width="48"
+                                    Height="48"
+                                    Background="#F1EDFF"
+                                    CornerRadius="12">
+                                <materialDesign:PackIcon Width="25"
+                                                         Height="25"
+                                                         HorizontalAlignment="Center"
+                                                         VerticalAlignment="Center"
+                                                         Foreground="{DynamicResource Mnemora.Brush.Secondary}"
+                                                         Kind="LinkVariant" />
+                            </Border>
+
+                            <StackPanel Grid.Column="2"
+                                        VerticalAlignment="Center">
+                                <TextBlock FontSize="22"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                           Text="Связь со статьёй" />
+                                <TextBlock Margin="0,4,0,0"
+                                           FontSize="13"
+                                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                           Text="Вопрос может остаться самостоятельным или относиться к статье."
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Grid>
+
+                        <ComboBox Margin="0,26,0,0"
+                                  Height="50"
+                                  ItemsSource="{Binding AvailableArticles}"
+                                  DisplayMemberPath="Title"
+                                  SelectedItem="{Binding SelectedArticle, Mode=TwoWay}"
+                                  VerticalContentAlignment="Center"
+                                  materialDesign:HintAssist.Hint="Связанная статья"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}" />
+
+                        <Border Margin="0,18,0,0"
+                                Padding="13,10"
+                                Background="#F7F5FF"
+                                CornerRadius="10">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon Width="18"
+                                                         Height="18"
+                                                         VerticalAlignment="Top"
+                                                         Foreground="{DynamicResource Mnemora.Brush.Secondary}"
+                                                         Kind="InformationOutline" />
+                                <TextBlock Grid.Column="2"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                           Text="Без связанной статьи вопрос останется самостоятельным."
+                                           TextWrapping="Wrap" />
+                            </Grid>
+                        </Border>
+
+                        <Border Margin="0,14,0,0"
+                                Padding="12,9"
+                                Background="#FFF2F2"
+                                BorderBrush="#F4D2D2"
+                                BorderThickness="1"
+                                CornerRadius="9">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasLearningOptionsError}"
+                                                     Value="True">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <TextBlock FontSize="12"
+                                       Foreground="#B42318"
+                                       Text="{Binding LearningOptionsError}"
+                                       TextWrapping="Wrap" />
+                        </Border>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <Border Grid.Row="2"
+                Padding="32,16"
+                Background="{DynamicResource Mnemora.Brush.Surface}"
+                BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                BorderThickness="0,1,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <Button HorizontalAlignment="Left"
+                        Click="GoToReviewFromLearningStep_OnClick"
+                        Style="{StaticResource Mnemora.SecondaryButton}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Width="18"
+                                                 Height="18"
+                                                 VerticalAlignment="Center"
+                                                 Kind="ChevronLeft" />
+                        <TextBlock Margin="7,0,0,0"
+                                   VerticalAlignment="Center"
+                                   Text="Назад" />
+                    </StackPanel>
+                </Button>
+
+                <Button Grid.Column="1"
+                        MinWidth="132"
+                        Height="44"
+                        Click="GoToExperienceStep_OnClick"
+                        IsEnabled="{Binding CanProceedFromLinks}"
+                        Style="{StaticResource Mnemora.PrimaryButton}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   Text="Далее" />
+                        <materialDesign:PackIcon Width="18"
+                                                 Height="18"
+                                                 Margin="7,0,0,0"
+                                                 VerticalAlignment="Center"
+                                                 Kind="ChevronRight" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+    </Grid>
+</TabItem>
+<TabItem>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0"
+              Margin="32,16,32,4"
+              HorizontalAlignment="Stretch"
+              VerticalAlignment="Center">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal">
+                <Border Width="36"
+                        Height="36"
+                        Background="{DynamicResource Mnemora.Brush.Surface}"
+                        BorderBrush="{DynamicResource Mnemora.Brush.Primary}"
+                        BorderThickness="2"
+                        CornerRadius="18">
+                    <materialDesign:PackIcon Width="19"
+                                             Height="19"
+                                             HorizontalAlignment="Center"
+                                             VerticalAlignment="Center"
+                                             Foreground="{DynamicResource Mnemora.Brush.Primary}"
+                                             Kind="Check" />
+                </Border>
+                <TextBlock Margin="9,0,0,0"
+                           VerticalAlignment="Center"
+                           FontSize="12"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                           Text="Тип" />
+            </StackPanel>
+            <Border Grid.Column="1"
+                    Height="3"
+                    Margin="12,0"
+                    VerticalAlignment="Center"
+                    Background="{DynamicResource Mnemora.Brush.BrandGradient}"
+                    CornerRadius="2" />
+            <StackPanel Grid.Column="2"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal">
+                <Border Width="36"
+                        Height="36"
+                        Background="{DynamicResource Mnemora.Brush.Surface}"
+                        BorderBrush="{DynamicResource Mnemora.Brush.Primary}"
+                        BorderThickness="2"
+                        CornerRadius="18">
+                    <materialDesign:PackIcon Width="19"
+                                             Height="19"
+                                             HorizontalAlignment="Center"
+                                             VerticalAlignment="Center"
+                                             Foreground="{DynamicResource Mnemora.Brush.Primary}"
+                                             Kind="Check" />
+                </Border>
+                <TextBlock Margin="9,0,0,0"
+                           VerticalAlignment="Center"
+                           FontSize="12"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}">
+
+                    <TextBlock.Style>
+
+                        <Style TargetType="TextBlock">
+
+                            <Setter Property="Text" Value="Статья" />
+
+                            <Style.Triggers>
+
+                                <DataTrigger Binding="{Binding IsChecked, ElementName=QuestionChoiceRadio}" Value="True">
+
+                                    <Setter Property="Text" Value="Вопрос" />
+
+                                </DataTrigger>
+
+                            </Style.Triggers>
+
+                        </Style>
+
+                    </TextBlock.Style>
+
+                </TextBlock>
+            </StackPanel>
+            <Border Grid.Column="3"
+                    Height="3"
+                    Margin="12,0"
+                    VerticalAlignment="Center"
+                    Background="{DynamicResource Mnemora.Brush.BrandGradient}"
+                    CornerRadius="2" />
+            <StackPanel Grid.Column="4"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal">
+                <Border Width="36"
+                        Height="36"
+                        Background="{DynamicResource Mnemora.Brush.Surface}"
+                        BorderBrush="{DynamicResource Mnemora.Brush.Primary}"
+                        BorderThickness="2"
+                        CornerRadius="18">
+                    <materialDesign:PackIcon Width="19"
+                                             Height="19"
+                                             HorizontalAlignment="Center"
+                                             VerticalAlignment="Center"
+                                             Foreground="{DynamicResource Mnemora.Brush.Primary}"
+                                             Kind="Check" />
+                </Border>
+                <TextBlock Margin="9,0,0,0"
+                           VerticalAlignment="Center"
+                           FontSize="12"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                           Text="Проверка" />
+            </StackPanel>
+            <Border Grid.Column="5"
+                    Height="3"
+                    Margin="12,0"
+                    VerticalAlignment="Center"
+                    Background="{DynamicResource Mnemora.Brush.BrandGradient}"
+                    CornerRadius="2" />
+            <StackPanel Grid.Column="6"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal">
+                <Border Width="36"
+                        Height="36"
+                        Background="{DynamicResource Mnemora.Brush.Surface}"
+                        BorderBrush="{DynamicResource Mnemora.Brush.Primary}"
+                        BorderThickness="2"
+                        CornerRadius="18">
+                    <materialDesign:PackIcon Width="19"
+                                             Height="19"
+                                             HorizontalAlignment="Center"
+                                             VerticalAlignment="Center"
+                                             Foreground="{DynamicResource Mnemora.Brush.Primary}"
+                                             Kind="Check" />
+                </Border>
+                <TextBlock Margin="9,0,0,0"
+                           VerticalAlignment="Center"
+                           FontSize="12"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}">
+
+                    <TextBlock.Style>
+
+                        <Style TargetType="TextBlock">
+
+                            <Setter Property="Text" Value="Вопросы" />
+
+                            <Style.Triggers>
+
+                                <DataTrigger Binding="{Binding IsChecked, ElementName=QuestionChoiceRadio}" Value="True">
+
+                                    <Setter Property="Text" Value="Связь" />
+
+                                </DataTrigger>
+
+                            </Style.Triggers>
+
+                        </Style>
+
+                    </TextBlock.Style>
+
+                </TextBlock>
+            </StackPanel>
+            <Border Grid.Column="7"
+                    Height="3"
+                    Margin="12,0"
+                    VerticalAlignment="Center"
+                    Background="{DynamicResource Mnemora.Brush.BrandGradient}"
+                    CornerRadius="2" />
+            <StackPanel Grid.Column="8"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal">
+                <Border Width="36"
+                        Height="36"
+                        Background="{DynamicResource Mnemora.Brush.Surface}"
+                        BorderBrush="{DynamicResource Mnemora.Brush.BrandGradient}"
+                        BorderThickness="2"
+                        CornerRadius="18">
+                    <TextBlock HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               FontSize="14"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource Mnemora.Brush.Secondary}"
+                               Text="5" />
+                </Border>
+                <TextBlock Margin="9,0,0,0"
+                           VerticalAlignment="Center"
+                           FontSize="12"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource Mnemora.Brush.Secondary}"
+                           Text="Обучение" />
+            </StackPanel>
+            <Border Grid.Column="9"
+                    Height="2"
+                    Margin="12,0"
+                    VerticalAlignment="Center"
+                    Background="{DynamicResource Mnemora.Brush.Border}"
+                    CornerRadius="2" />
+            <StackPanel Grid.Column="10"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal">
+                <Border Width="36"
+                        Height="36"
+                        Background="{DynamicResource Mnemora.Brush.Surface}"
+                        BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                        BorderThickness="2"
+                        CornerRadius="18">
+                    <TextBlock HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               FontSize="14"
+                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                               Text="6" />
+                </Border>
+                <TextBlock Margin="9,0,0,0"
+                           VerticalAlignment="Center"
+                           FontSize="12"
+                           FontWeight="Normal"
+                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                           Text="Итог" />
+            </StackPanel>
+        </Grid>
+
+        <ScrollViewer Grid.Row="1"
+                      Margin="32,24,32,20"
+                      HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto">
+            <Border MaxWidth="1040"
+                    Padding="30"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top"
+                    Style="{StaticResource CreateMaterial.LearningSectionCard}">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="14" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Border Width="52"
+                                Height="52"
+                                Background="#E8FAF7"
+                                CornerRadius="13">
+                            <materialDesign:PackIcon Width="27"
+                                                     Height="27"
+                                                     HorizontalAlignment="Center"
+                                                     VerticalAlignment="Center"
+                                                     Foreground="{DynamicResource Mnemora.Brush.Primary}"
+                                                     Kind="BookOpenPageVariant" />
+                        </Border>
+
+                        <StackPanel Grid.Column="2"
+                                    VerticalAlignment="Center">
+                            <TextBlock FontSize="23"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                       Text="Обучение" />
+                            <TextBlock Margin="0,4,0,0"
+                                       FontSize="13"
+                                       Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                       Text="Настрой награды за работу с материалом. Их можно изменить позже."
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Margin="0,24,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="18" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Первичное изучение -->
+                        <Border Padding="18,16"
+                                Background="{DynamicResource Mnemora.Brush.SurfaceMuted}"
+                                CornerRadius="14">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="10" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="38"
+                                            Height="38"
+                                            Background="#E8FAF7"
+                                            CornerRadius="10">
+                                        <materialDesign:PackIcon Width="20"
+                                                                 Height="20"
+                                                                 HorizontalAlignment="Center"
+                                                                 VerticalAlignment="Center"
+                                                                 Foreground="{DynamicResource Mnemora.Brush.Primary}"
+                                                                 Kind="CheckCircleOutline" />
+                                    </Border>
+                                    <StackPanel Grid.Column="2"
+                                                VerticalAlignment="Center">
+                                        <TextBlock FontSize="16"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                                   Text="Первичное изучение" />
+                                        <TextBlock Margin="0,2,0,0"
+                                                   FontSize="11"
+                                                   Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                   Text="За первое завершение текущей ревизии" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <Grid Grid.Row="1"
+                                      Margin="0,16,0,0"
+                                      VerticalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="12" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="7" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Slider VerticalAlignment="Center"
+                                            Minimum="5"
+                                            Maximum="100"
+                                            TickFrequency="5"
+                                            SmallChange="5"
+                                            LargeChange="10"
+                                            IsSnapToTickEnabled="True"
+                                            Value="{Binding StudyPoints, Mode=TwoWay}" />
+                                    <TextBox Grid.Column="2"
+                                             Text="{Binding StudyPoints, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                             Style="{StaticResource CreateMaterial.XpTextBoxStyle}" />
+                                    <TextBlock Grid.Column="4"
+                                               VerticalAlignment="Center"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                               Text="XP" />
+                                </Grid>
+
+                                <Grid Grid.Row="2" Margin="0,4,87,0">
+                                    <TextBlock HorizontalAlignment="Left"
+                                               FontSize="10"
+                                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                               Text="5" />
+                                    <TextBlock HorizontalAlignment="Right"
+                                               FontSize="10"
+                                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                               Text="100" />
+                                </Grid>
+                            </Grid>
+                        </Border>
+
+                        <!-- Повторение -->
+                        <Border Grid.Column="2"
+                                Padding="18,16"
+                                Background="{DynamicResource Mnemora.Brush.SurfaceMuted}"
+                                CornerRadius="14">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="10" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="38"
+                                            Height="38"
+                                            Background="#F1EDFF"
+                                            CornerRadius="10">
+                                        <materialDesign:PackIcon Width="20"
+                                                                 Height="20"
+                                                                 HorizontalAlignment="Center"
+                                                                 VerticalAlignment="Center"
+                                                                 Foreground="{DynamicResource Mnemora.Brush.Secondary}"
+                                                                 Kind="Refresh" />
+                                    </Border>
+                                    <StackPanel Grid.Column="2"
+                                                VerticalAlignment="Center">
+                                        <TextBlock FontSize="16"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                                   Text="Повторение" />
+                                        <TextBlock Margin="0,2,0,0"
+                                                   FontSize="11"
+                                                   Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                   Text="За последующие повторения материала" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <Grid Grid.Row="1"
+                                      Margin="0,16,0,0"
+                                      VerticalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="12" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="7" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Slider VerticalAlignment="Center"
+                                            Minimum="5"
+                                            Maximum="{Binding ReviewMaximum}"
+                                            TickFrequency="5"
+                                            SmallChange="5"
+                                            LargeChange="10"
+                                            IsSnapToTickEnabled="True"
+                                            Value="{Binding ReviewPoints, Mode=TwoWay}" />
+                                    <TextBox Grid.Column="2"
+                                             Text="{Binding ReviewPoints, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                             Style="{StaticResource CreateMaterial.XpTextBoxStyle}" />
+                                    <TextBlock Grid.Column="4"
+                                               VerticalAlignment="Center"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                               Text="XP" />
+                                </Grid>
+
+                                <Grid Grid.Row="2" Margin="0,4,87,0">
+                                    <TextBlock HorizontalAlignment="Left"
+                                               FontSize="10"
+                                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                               Text="5" />
+                                    <TextBlock HorizontalAlignment="Right"
+                                               FontSize="10"
+                                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                               Text="{Binding ReviewMaximum, StringFormat=до {0}}" />
+                                </Grid>
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                    <Border Margin="0,18,0,0"
+                            Padding="13,10"
+                            Background="#FFF2F2"
+                            BorderBrush="#F4D2D2"
+                            BorderThickness="1"
+                            CornerRadius="10">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasLearningValidationError}"
+                                                 Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="9" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <materialDesign:PackIcon Width="18"
+                                                     Height="18"
+                                                     VerticalAlignment="Top"
+                                                     Foreground="#B42318"
+                                                     Kind="InformationOutline" />
+                            <TextBlock Grid.Column="2"
+                                       FontSize="12"
+                                       Foreground="#B42318"
+                                       Text="{Binding LearningValidationMessage}"
+                                       TextWrapping="Wrap" />
+                        </Grid>
+                    </Border>
+
+                    <Border Margin="0,18,0,0"
+                            Padding="14,11"
+                            Background="#F7F5FF"
+                            CornerRadius="10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="10" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <materialDesign:PackIcon Width="19"
+                                                     Height="19"
+                                                     VerticalAlignment="Top"
+                                                     Foreground="{DynamicResource Mnemora.Brush.Secondary}"
+                                                     Kind="InformationOutline" />
+                            <TextBlock Grid.Column="2"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                       Text="Первичная награда начисляется один раз за текущую учебную ревизию. Повторения могут приносить опыт многократно."
+                                       TextWrapping="Wrap" />
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </ScrollViewer>
+
+        <Border Grid.Row="2"
+                Padding="32,16"
+                Background="{DynamicResource Mnemora.Brush.Surface}"
+                BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                BorderThickness="0,1,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <Button HorizontalAlignment="Left"
+                        Click="GoToLinksFromExperienceStep_OnClick"
+                        Style="{StaticResource Mnemora.SecondaryButton}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Width="18"
+                                                 Height="18"
+                                                 VerticalAlignment="Center"
+                                                 Kind="ChevronLeft" />
+                        <TextBlock Margin="7,0,0,0"
+                                   VerticalAlignment="Center"
+                                   Text="Назад" />
+                    </StackPanel>
+                </Button>
+
+                <!-- Summary будет следующим изменением. -->
+                <Button Grid.Column="1"
+                        MinWidth="132"
+                        Height="44"
+                        IsEnabled="False"
+                        ToolTip="Итоговый шаг добавим следующим этапом"
+                        Style="{StaticResource Mnemora.PrimaryButton}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   Text="Далее" />
+                        <materialDesign:PackIcon Width="18"
+                                                 Height="18"
+                                                 Margin="7,0,0,0"
+                                                 VerticalAlignment="Center"
+                                                 Kind="ChevronRight" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+    </Grid>
+</TabItem>
+
+</TabControl>
+
+
+</Grid></UserControl>
