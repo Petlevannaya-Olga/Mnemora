@@ -1,14 +1,20 @@
-﻿using System.Data.Common;
+using System.Data.Common;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace Mnemora.Infrastructure.Persistence;
 
-internal sealed class SqliteUnicodeCollationInterceptor : DbConnectionInterceptor
+internal sealed class SqliteUnicodeCollationInterceptor
+    : DbConnectionInterceptor
 {
-    public override void ConnectionOpened(DbConnection connection, ConnectionEndEventData eventData)
+    private const string UnicodeContainsFunctionName =
+        "MNEMORA_UNICODE_CONTAINS";
+
+    public override void ConnectionOpened(
+        DbConnection connection,
+        ConnectionEndEventData eventData)
     {
-        RegisterDatabaseFeatures(connection);
+        RegisterSqliteExtensions(connection);
     }
 
     public override Task ConnectionOpenedAsync(
@@ -16,11 +22,12 @@ internal sealed class SqliteUnicodeCollationInterceptor : DbConnectionIntercepto
         ConnectionEndEventData eventData,
         CancellationToken cancellationToken = default)
     {
-        RegisterDatabaseFeatures(connection);
+        RegisterSqliteExtensions(connection);
         return Task.CompletedTask;
     }
 
-    private static void RegisterDatabaseFeatures(DbConnection connection)
+    private static void RegisterSqliteExtensions(
+        DbConnection connection)
     {
         if (connection is not SqliteConnection sqliteConnection)
         {
@@ -32,18 +39,12 @@ internal sealed class SqliteUnicodeCollationInterceptor : DbConnectionIntercepto
             StringComparer.OrdinalIgnoreCase.Compare);
 
         sqliteConnection.CreateFunction<string?, string?, bool>(
-            SqliteFunctions.UnicodeContains,
-            UnicodeContains,
-            isDeterministic: true);
-    }
-
-    private static bool UnicodeContains(string? source, string? value)
-    {
-        if (string.IsNullOrEmpty(value))
-        {
-            return true;
-        }
-
-        return source?.Contains(value, StringComparison.OrdinalIgnoreCase) == true;
+            UnicodeContainsFunctionName,
+            static (source, search) =>
+                source is not null &&
+                search is not null &&
+                source.Contains(
+                    search,
+                    StringComparison.OrdinalIgnoreCase));
     }
 }

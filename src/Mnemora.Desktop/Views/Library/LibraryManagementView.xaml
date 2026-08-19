@@ -1499,7 +1499,7 @@
                               SelectionMode="Single"
                               SelectionUnit="FullRow"
                               VirtualizingPanel.IsVirtualizing="True"
-                              VirtualizingPanel.VirtualizationMode="Standard">
+                              VirtualizingPanel.VirtualizationMode="Recycling">
                         <DataGrid.Columns>
                             <DataGridTemplateColumn
                                 Header="Раздел"
@@ -1946,6 +1946,7 @@
                          ScrollViewer.CanContentScroll="True"
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                          ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         ScrollViewer.ScrollChanged="TopicsScroll_OnScrollChanged"
                          VirtualizingPanel.IsVirtualizing="True"
                          VirtualizingPanel.VirtualizationMode="Recycling">
                     <ListBox.Style>
@@ -2053,6 +2054,7 @@
                          ScrollViewer.CanContentScroll="True"
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                          ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         ScrollViewer.ScrollChanged="TopicsScroll_OnScrollChanged"
                          VirtualizingPanel.IsVirtualizing="True"
                          VirtualizingPanel.VirtualizationMode="Recycling">
                     <ListBox.Style>
@@ -2193,8 +2195,10 @@
                               SelectionMode="Single"
                               SelectionUnit="FullRow"
                               VerticalScrollBarVisibility="Auto"
+                              ScrollViewer.CanContentScroll="True"
+                              ScrollViewer.ScrollChanged="TopicsScroll_OnScrollChanged"
                               VirtualizingPanel.IsVirtualizing="True"
-                              VirtualizingPanel.VirtualizationMode="Standard">
+                              VirtualizingPanel.VirtualizationMode="Recycling">
                         <DataGrid.Columns>
                             <DataGridTemplateColumn Width="*" MinWidth="270" Header="Тема">
                                 <DataGridTemplateColumn.CellStyle>
@@ -2603,7 +2607,7 @@
                               SelectionMode="Single"
                               SelectionUnit="FullRow"
                               VirtualizingPanel.IsVirtualizing="True"
-                              VirtualizingPanel.VirtualizationMode="Standard">
+                              VirtualizingPanel.VirtualizationMode="Recycling">
                         <DataGrid.Columns>
                             <DataGridTemplateColumn Width="2.5*" MinWidth="280" Header="Материал">
                                 <DataGridTemplateColumn.CellStyle>

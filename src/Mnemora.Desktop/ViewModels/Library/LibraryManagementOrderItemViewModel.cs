@@ -31,6 +31,65 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
         _position = position;
     }
 
+    /// <summary>
+    /// Lightweight section item for the paged browse mode. It deliberately does not
+    /// carry the complete LibrarySectionDto tree.
+    /// </summary>
+    public LibraryManagementOrderItemViewModel(
+        LibrarySectionOverviewDto section,
+        int position)
+    {
+        ArgumentNullException.ThrowIfNull(section);
+
+        SectionOverview = section;
+        Id = section.Id;
+        Name = section.Name;
+        Details = "Раздел";
+        Target = LibraryOrderTarget.Sections;
+        IconKind = ResolveIcon(section.Icon, Target, Details);
+        _position = position;
+    }
+
+    /// <summary>
+    /// Lightweight topic item for the paged browse mode.
+    /// </summary>
+    public LibraryManagementOrderItemViewModel(
+        LibraryManagementTopicOverviewDto topic,
+        int position)
+    {
+        ArgumentNullException.ThrowIfNull(topic);
+
+        TopicOverview = topic;
+        Id = topic.Id;
+        Name = topic.Name;
+        Details = "Тема";
+        Target = LibraryOrderTarget.Topics;
+        IconKind = ResolveIcon(topic.Icon, Target, Details);
+        _position = position;
+    }
+
+    /// <summary>
+    /// Lightweight top-level material item for the paged browse mode.
+    /// Linked questions never reach this constructor because they are filtered in SQL.
+    /// </summary>
+    public LibraryManagementOrderItemViewModel(
+        LibraryManagementMaterialOverviewDto material,
+        int position)
+    {
+        ArgumentNullException.ThrowIfNull(material);
+
+        MaterialOverview = material;
+        Id = material.Id;
+        Name = material.Title;
+        Details = string.Equals(material.Type, "Question", StringComparison.OrdinalIgnoreCase)
+            ? "Вопрос"
+            : "Статья";
+        Target = LibraryOrderTarget.Materials;
+        ArticleQuestionCount = material.ArticleQuestionCount;
+        IconKind = ResolveIcon(material.Icon, Target, Details);
+        _position = position;
+    }
+
     public Guid Id { get; }
 
     public string Name { get; }
@@ -39,52 +98,51 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
 
     public LibraryOrderTarget Target { get; }
 
+    // Full-tree DTOs are retained for explicit order/admin scenarios.
     public LibrarySectionDto? Section { get; }
-
     public LibraryTopicDto? Topic { get; }
-
     public LibraryMaterialDto? Material { get; }
+
+    // Lightweight DTOs are used for normal paged browsing.
+    public LibrarySectionOverviewDto? SectionOverview { get; }
+    public LibraryManagementTopicOverviewDto? TopicOverview { get; }
+    public LibraryManagementMaterialOverviewDto? MaterialOverview { get; }
 
     public int ArticleQuestionCount { get; }
 
+    private string? MaterialType => MaterialOverview?.Type ?? Material?.Type;
+    private string? MaterialDifficulty => MaterialOverview?.Difficulty ?? Material?.Difficulty;
+    private DateTime? MaterialUpdatedAt => MaterialOverview?.UpdatedAt ?? Material?.UpdatedAt;
+    private DateTime? MaterialCreatedAt => MaterialOverview?.CreatedAt ?? Material?.CreatedAt;
+
     public bool IsArticle =>
-        string.Equals(
-            Material?.Type,
-            "Article",
-            StringComparison.OrdinalIgnoreCase);
+        string.Equals(MaterialType, "Article", StringComparison.OrdinalIgnoreCase);
 
     public bool IsLinkedQuestion =>
-        string.Equals(
-            Material?.Type,
-            "Question",
-            StringComparison.OrdinalIgnoreCase) &&
+        MaterialOverview is null &&
+        string.Equals(Material?.Type, "Question", StringComparison.OrdinalIgnoreCase) &&
         Material?.ArticleId is not null;
 
     public bool IsTopLevelMaterial =>
-        Material is not null &&
-        !IsLinkedQuestion;
+        MaterialOverview is not null ||
+        (Material is not null && !IsLinkedQuestion);
 
     public string ArticleQuestionCountText =>
         IsArticle
-            ? FormatCount(
-                ArticleQuestionCount,
-                "вопрос",
-                "вопроса",
-                "вопросов")
+            ? FormatCount(ArticleQuestionCount, "вопрос", "вопроса", "вопросов")
             : "—";
 
     public PackIconKind IconKind { get; }
 
-    public string Color => Section?.Color ?? string.Empty;
+    public string Color => SectionOverview?.Color ?? Section?.Color ?? string.Empty;
 
-    public string Icon => Section?.Icon ?? string.Empty;
+    public string Icon => SectionOverview?.Icon ?? Section?.Icon ?? string.Empty;
 
-    public DateTime CreatedAt => Section?.CreatedAt ?? DateTime.MinValue;
+    public DateTime CreatedAt => SectionOverview?.CreatedAt ?? Section?.CreatedAt ?? DateTime.MinValue;
 
-    public int TopicsCount => Section?.Topics.Count ?? 0;
+    public int TopicsCount => SectionOverview?.TopicsCount ?? Section?.Topics.Count ?? 0;
 
-    public int MaterialsCount =>
-        GetSectionMaterials().Count(IsTopLevelMaterialDto);
+    public int MaterialsCount => SectionOverview?.MaterialsCount ?? GetSectionMaterials().Count(IsTopLevelMaterialDto);
 
     public string TopicsSummaryText => TopicsCount == 0
         ? "Тем пока нет"
@@ -93,14 +151,11 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
     public string MaterialsSummaryText =>
         FormatCount(MaterialsCount, "материал", "материала", "материалов");
 
-    public int ArticlesCount => GetSectionMaterials().Count(material =>
+    public int ArticlesCount => SectionOverview?.ArticlesCount ?? GetSectionMaterials().Count(material =>
         string.Equals(material.Type, "Article", StringComparison.OrdinalIgnoreCase));
 
-    public int QuestionsCount => GetSectionMaterials().Count(material =>
-        string.Equals(
-            material.Type,
-            "Question",
-            StringComparison.OrdinalIgnoreCase) &&
+    public int QuestionsCount => SectionOverview?.QuestionsCount ?? GetSectionMaterials().Count(material =>
+        string.Equals(material.Type, "Question", StringComparison.OrdinalIgnoreCase) &&
         material.ArticleId is null);
 
     public bool HasProgress => false;
@@ -121,6 +176,13 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
     {
         get
         {
+            if (SectionOverview is not null)
+            {
+                return SectionOverview.LastActivityAt > SectionOverview.CreatedAt
+                    ? $"Активность {ToLocalTime(SectionOverview.LastActivityAt):dd.MM.yyyy}"
+                    : $"Создано {ToLocalTime(SectionOverview.CreatedAt):dd.MM.yyyy}";
+            }
+
             if (Section is null)
             {
                 return string.Empty;
@@ -134,14 +196,14 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
         }
     }
 
-    public string MaterialTypeText => Material?.Type switch
+    public string MaterialTypeText => MaterialType switch
     {
         "Article" => "Статья",
         "Question" => "Вопрос",
         _ => Details,
     };
 
-    public string DifficultyText => Material?.Difficulty switch
+    public string DifficultyText => MaterialDifficulty switch
     {
         "Easy" => "Легко",
         "Medium" => "Средне",
@@ -149,31 +211,30 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
         _ => string.Empty,
     };
 
-    public DateTime? UpdatedAtLocal => Material?.UpdatedAt.ToLocalTime();
+    public DateTime? UpdatedAtLocal => MaterialUpdatedAt?.ToLocalTime();
 
-    public string TopicColor => Topic?.Color ?? string.Empty;
+    public string TopicColor => TopicOverview?.Color ?? Topic?.Color ?? string.Empty;
 
-    public DateTime TopicCreatedAt => Topic?.CreatedAt ?? DateTime.MinValue;
+    public DateTime TopicCreatedAt => TopicOverview?.CreatedAt ?? Topic?.CreatedAt ?? DateTime.MinValue;
 
-    public DateTime TopicCreatedAtLocal => Topic is null
-        ? DateTime.MinValue
-        : ToLocalTime(Topic.CreatedAt);
+    public DateTime TopicCreatedAtLocal => TopicOverview is not null
+        ? ToLocalTime(TopicOverview.CreatedAt)
+        : Topic is null
+            ? DateTime.MinValue
+            : ToLocalTime(Topic.CreatedAt);
 
-    public int TopicMaterialsCount => Topic is null ? 0 : GetTopicMaterialsCount(Topic);
+    public int TopicMaterialsCount => TopicOverview?.MaterialsCount ?? (Topic is null ? 0 : GetTopicMaterialsCount(Topic));
 
-    public int TopicArticlesCount => Topic is null
+    public int TopicArticlesCount => TopicOverview?.ArticlesCount ?? (Topic is null
         ? 0
         : GetTopicMaterials(Topic).Count(material =>
-            string.Equals(material.Type, "Article", StringComparison.OrdinalIgnoreCase));
+            string.Equals(material.Type, "Article", StringComparison.OrdinalIgnoreCase)));
 
-    public int TopicQuestionsCount => Topic is null
+    public int TopicQuestionsCount => TopicOverview?.QuestionsCount ?? (Topic is null
         ? 0
         : GetTopicMaterials(Topic).Count(material =>
-            string.Equals(
-                material.Type,
-                "Question",
-                StringComparison.OrdinalIgnoreCase) &&
-            material.ArticleId is null);
+            string.Equals(material.Type, "Question", StringComparison.OrdinalIgnoreCase) &&
+            material.ArticleId is null));
 
     public string TopicMaterialsSummaryText => TopicMaterialsCount == 0
         ? "Материалов пока нет"
@@ -183,12 +244,19 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
     {
         get
         {
+            if (TopicOverview is not null)
+            {
+                return TopicOverview.LastActivityAt;
+            }
+
             if (Topic is null)
             {
                 return DateTime.MinValue;
             }
 
-            DateTime lastActivityAt = Topic.CreatedAt;
+            DateTime lastActivityAt = Topic.UpdatedAt > Topic.CreatedAt
+                ? Topic.UpdatedAt
+                : Topic.CreatedAt;
 
             foreach (LibraryMaterialDto material in GetTopicMaterials(Topic))
             {
@@ -202,11 +270,11 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
         }
     }
 
-    public DateTime TopicLastActivityAtLocal => Topic is null
+    public DateTime TopicLastActivityAtLocal => TopicLastActivityAt == DateTime.MinValue
         ? DateTime.MinValue
         : ToLocalTime(TopicLastActivityAt);
 
-    public string TopicActivityText => Topic is null
+    public string TopicActivityText => TopicOverview is null && Topic is null
         ? string.Empty
         : TopicLastActivityAt > TopicCreatedAt
             ? $"Активность {TopicLastActivityAtLocal:dd.MM.yyyy}"
@@ -219,45 +287,39 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
         get
         {
             int count = GetItemCount();
-
-            return count > 0
-                ? FormatMaterialsCount(count)
-                : string.Empty;
+            return count > 0 ? FormatMaterialsCount(count) : string.Empty;
         }
     }
 
     [ObservableProperty]
     private int _position;
 
-
     private int GetItemCount()
     {
+        if (SectionOverview is not null)
+        {
+            return SectionOverview.MaterialsCount;
+        }
+
+        if (TopicOverview is not null)
+        {
+            return TopicOverview.MaterialsCount;
+        }
+
         if (Section is not null)
         {
             return Section.Topics.Sum(GetTopicMaterialsCount);
         }
 
-        return Topic is not null
-            ? GetTopicMaterialsCount(Topic)
-            : 0;
+        return Topic is not null ? GetTopicMaterialsCount(Topic) : 0;
     }
 
-    private static int GetTopicMaterialsCount(
-        LibraryTopicDto topic)
-    {
-        return GetTopicMaterials(topic)
-            .Count(IsTopLevelMaterialDto);
-    }
+    private static int GetTopicMaterialsCount(LibraryTopicDto topic) =>
+        GetTopicMaterials(topic).Count(IsTopLevelMaterialDto);
 
-    private static bool IsTopLevelMaterialDto(
-        LibraryMaterialDto material)
-    {
-        return !string.Equals(
-                   material.Type,
-                   "Question",
-                   StringComparison.OrdinalIgnoreCase) ||
-               material.ArticleId is null;
-    }
+    private static bool IsTopLevelMaterialDto(LibraryMaterialDto material) =>
+        !string.Equals(material.Type, "Question", StringComparison.OrdinalIgnoreCase) ||
+        material.ArticleId is null;
 
     private IReadOnlyList<LibraryMaterialDto> GetSectionMaterials()
     {
@@ -266,9 +328,7 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
             return [];
         }
 
-        return Section.Topics
-            .SelectMany(GetTopicMaterials)
-            .ToArray();
+        return Section.Topics.SelectMany(GetTopicMaterials).ToArray();
     }
 
     private static IReadOnlyList<LibraryMaterialDto> GetTopicMaterials(LibraryTopicDto topic)
@@ -284,14 +344,14 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
     {
         DateTime lastActivityAt = section.CreatedAt;
 
-        foreach (var topic in section.Topics)
+        foreach (LibraryTopicDto topic in section.Topics)
         {
             if (topic.CreatedAt > lastActivityAt)
             {
                 lastActivityAt = topic.CreatedAt;
             }
 
-            foreach (var material in GetTopicMaterials(topic))
+            foreach (LibraryMaterialDto material in GetTopicMaterials(topic))
             {
                 if (material.UpdatedAt > lastActivityAt)
                 {
@@ -305,17 +365,15 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
 
     private static DateTime ToLocalTime(DateTime value)
     {
-        var utcValue = value.Kind == DateTimeKind.Utc
+        DateTime utcValue = value.Kind == DateTimeKind.Utc
             ? value
             : DateTime.SpecifyKind(value, DateTimeKind.Utc);
 
         return utcValue.ToLocalTime();
     }
 
-    private static string FormatMaterialsCount(int count)
-    {
-        return FormatCount(count, "материал", "материала", "материалов");
-    }
+    private static string FormatMaterialsCount(int count) =>
+        FormatCount(count, "материал", "материала", "материалов");
 
     private static string FormatCount(int count, string one, string few, string many)
     {

@@ -72,22 +72,20 @@ public sealed partial class LibraryManagementViewModel(
 
     public CreateMaterialViewModel CreateMaterial { get; } = createMaterialViewModel;
 
-    private const int SimpleSectionPageSize = 30;
-    private const int SimpleMaterialPageSize = 30;
+    private const int SimpleSectionPageSize = LibraryPagingDefaults.PageSize;
+    private const int SimpleMaterialPageSize = LibraryPagingDefaults.PageSize;
     private static readonly TimeSpan SearchDelay = TimeSpan.FromMilliseconds(350);
 
     private Guid[]? _pendingSectionOrder;
     private Guid[]? _orderSnapshot;
 
     private CancellationToken _viewCancellationToken;
-    private int _simpleSectionNextOffset;
     private int _simpleSectionLoadVersion;
     private int _simpleSectionSearchVersion;
     private int _simpleTopicSearchVersion;
     private int _simpleMaterialSearchVersion;
     private int _simpleMaterialVisibleCount = SimpleMaterialPageSize;
     private int _simpleMaterialsFilteredTotalCount;
-    private int? _simpleSectionLoadingVersion;
     private bool _isSimpleSectionsLoaded;
     private bool _isSimpleViewModeLoaded;
     private bool _isSimpleSortSettingsLoaded;
@@ -372,10 +370,25 @@ public sealed partial class LibraryManagementViewModel(
 
     public bool IsSimpleTableView => CurrentSimpleViewMode == LibraryManagementViewMode.Table;
 
-    public string SimpleSectionsShownCountText =>
-        $"Показано {SimpleSections.Count} из {SimpleSectionsTotalCount}";
+    public string SimpleSectionsShownCountText
+    {
+        get
+        {
+            int visibleCount = Math.Min(
+                SimpleSectionPageSize,
+                Math.Max(0, SimpleSectionsTotalCount - SimpleSectionCurrentPageOffset));
 
-    public bool HasSimpleTopicSource => Topics.Count > 0;
+            return LibraryRangeTextFormatter.FormatEntity(
+                "Разделы",
+                "Разделы не найдены",
+                SimpleSectionCurrentPageOffset,
+                visibleCount,
+                SimpleSectionsTotalCount,
+                !string.IsNullOrWhiteSpace(SearchText));
+        }
+    }
+
+    public bool HasSimpleTopicSource => _simpleTopicSourceTotalCount > 0;
 
     public bool HasSimpleTopics => SimpleTopics.Count > 0;
 
@@ -392,16 +405,32 @@ public sealed partial class LibraryManagementViewModel(
         !HasSimpleTopics &&
         !string.IsNullOrWhiteSpace(SimpleTopicSearchText);
 
-    public string SimpleTopicsShownCountText =>
-        $"Показано {SimpleTopics.Count} из {Topics.Count}";
+    public string SimpleTopicsShownCountText
+    {
+        get
+        {
+            int visibleCount = Math.Min(
+                SimpleTopicPageSize,
+                Math.Max(0, _simpleTopicsTotalCount - SimpleTopicCurrentPageOffset));
+
+            return LibraryRangeTextFormatter.FormatEntity(
+                "Темы",
+                "Темы не найдены",
+                SimpleTopicCurrentPageOffset,
+                visibleCount,
+                _simpleTopicsTotalCount,
+                !string.IsNullOrWhiteSpace(SimpleTopicSearchText));
+        }
+    }
 
     public bool HasSimpleMaterialSource =>
-        Materials.Any(material => material.IsTopLevelMaterial);
+        _simpleMaterialSourceTotalCount > 0;
 
     public bool HasSimpleMaterials => SimpleMaterials.Count > 0;
 
     public bool SimpleMaterialsHasMore =>
-        SimpleMaterials.Count < _simpleMaterialsFilteredTotalCount;
+        _simpleMaterialWindowEndOffset < _simpleMaterialsFilteredTotalCount &&
+        !_isSimpleMaterialsLoadingNextPage;
 
     public bool IsSimpleAllMaterialsFilter => SimpleMaterialFilter == LibraryManagementMaterialFilter.All;
 
@@ -425,7 +454,7 @@ public sealed partial class LibraryManagementViewModel(
          SimpleMaterialFilter != LibraryManagementMaterialFilter.All);
 
     public string SimpleMaterialsShownCountText =>
-        $"Показано {SimpleMaterials.Count} из {_simpleMaterialsFilteredTotalCount}";
+        FormatSimpleMaterialRangeText();
 
     public bool HasError => !string.IsNullOrWhiteSpace(ErrorMessage);
 
@@ -625,11 +654,17 @@ public sealed partial class LibraryManagementViewModel(
                     break;
 
                 case LibraryOrderTarget.Topics:
-                    ApplySimpleTopicFilterAndSort();
+                    if (IsSimpleTopicsPage)
+                    {
+                        await ReloadSimpleTopicsPagedAsync(cancellationToken);
+                    }
                     break;
 
                 case LibraryOrderTarget.Materials:
-                    ApplySimpleMaterialFilterAndSort();
+                    if (IsSimpleMaterialsPage)
+                    {
+                        await ReloadSimpleMaterialsPagedAsync(cancellationToken);
+                    }
                     break;
             }
 
@@ -707,8 +742,15 @@ public sealed partial class LibraryManagementViewModel(
         ActiveOrderTarget = null;
         _orderSnapshot = null;
 
-        ApplySimpleTopicFilterAndSort();
-        ApplySimpleMaterialFilterAndSort();
+        if (IsSimpleTopicsPage && SelectedSection is not null)
+        {
+            _ = ReloadSimpleTopicsPagedAsync(_viewCancellationToken);
+        }
+        else if (IsSimpleMaterialsPage && SelectedTopic is not null)
+        {
+            _ = ReloadSimpleMaterialsPagedAsync(_viewCancellationToken);
+        }
+
         NotifyOrderChanged();
     }
 
@@ -730,23 +772,19 @@ public sealed partial class LibraryManagementViewModel(
             return;
         }
 
-        await EnsureOrderLibraryLoadedAsync(cancellationToken);
-
-        LibraryManagementOrderItemViewModel? sectionItem =
-            Sections.FirstOrDefault(section => section.Id == item.Id);
-
-        if (sectionItem is null)
-        {
-            return;
-        }
-
+        // Normal browsing must stay lightweight: do not materialize the full library tree.
         SelectedTopic = null;
-        SelectedSection = sectionItem;
+        SelectedSection = new LibraryManagementOrderItemViewModel(item.Source, position: 1);
+        SimpleTopicSearchText = null;
         SimplePage = LibraryManagementSimplePage.Topics;
+
+        await ReloadSimpleTopicsPagedAsync(cancellationToken);
     }
 
     [RelayCommand]
-    private void OpenSimpleTopic(LibraryManagementOrderItemViewModel? item)
+    private async Task OpenSimpleTopicAsync(
+        LibraryManagementOrderItemViewModel? item,
+        CancellationToken cancellationToken)
     {
         if (item is null)
         {
@@ -755,9 +793,10 @@ public sealed partial class LibraryManagementViewModel(
 
         SimpleMaterialSearchText = null;
         SimpleMaterialFilter = LibraryManagementMaterialFilter.All;
-        ResetSimpleMaterialPage();
         SelectedTopic = item;
         SimplePage = LibraryManagementSimplePage.Materials;
+
+        await ReloadSimpleMaterialsPagedAsync(cancellationToken);
     }
 
     [RelayCommand]
@@ -931,6 +970,12 @@ public sealed partial class LibraryManagementViewModel(
                                      ?? FindSection(item?.Id)
                                      ?? FindSection(SelectedSection?.Id);
 
+        if (section is null && (item?.Id ?? SelectedSection?.Id) is Guid sectionId)
+        {
+            await EnsureOrderLibraryLoadedAsync(cancellationToken);
+            section = FindSection(sectionId);
+        }
+
         if (section is null)
         {
             return;
@@ -957,6 +1002,12 @@ public sealed partial class LibraryManagementViewModel(
     {
         LibraryTopicDto? topic = item?.Topic ?? FindTopic(item?.Id);
 
+        if (topic is null && item is not null)
+        {
+            await EnsureOrderLibraryLoadedAsync(cancellationToken);
+            topic = FindTopic(item.Id);
+        }
+
         if (topic is null)
         {
             return;
@@ -981,6 +1032,12 @@ public sealed partial class LibraryManagementViewModel(
         CancellationToken cancellationToken)
     {
         LibraryTopicDto? topic = item?.Topic ?? FindTopic(item?.Id);
+
+        if (topic is null && item is not null)
+        {
+            await EnsureOrderLibraryLoadedAsync(cancellationToken);
+            topic = FindTopic(item.Id);
+        }
 
         if (topic is null)
         {
@@ -1060,13 +1117,13 @@ public sealed partial class LibraryManagementViewModel(
             {
                 await ReloadSimpleSectionsCoreAsync(cancellationToken);
             }
-            else if (savedTarget == LibraryOrderTarget.Topics)
+            else if (savedTarget == LibraryOrderTarget.Topics && IsSimpleTopicsPage)
             {
-                ApplySimpleTopicFilterAndSort();
+                await ReloadSimpleTopicsPagedAsync(cancellationToken);
             }
-            else if (savedTarget == LibraryOrderTarget.Materials)
+            else if (savedTarget == LibraryOrderTarget.Materials && IsSimpleMaterialsPage)
             {
-                ApplySimpleMaterialFilterAndSort();
+                await ReloadSimpleMaterialsPagedAsync(cancellationToken);
             }
 
             wasSaved = true;
@@ -1113,8 +1170,7 @@ public sealed partial class LibraryManagementViewModel(
             _viewCancellationToken,
             cancellationToken);
 
-        await LoadSimpleSectionsPageAsync(
-            _simpleSectionLoadVersion,
+        await LoadNextSimpleSectionWindowAsync(
             linkedCancellationTokenSource.Token);
     }
 
@@ -1241,7 +1297,14 @@ public sealed partial class LibraryManagementViewModel(
             _ = SaveSimpleTopicSortAsync(section.Id, value.Sort);
         }
 
-        ApplySimpleTopicFilterAndSort();
+        if (IsSimpleTopicsPage && SelectedSection is not null)
+        {
+            _ = ReloadSimpleTopicsPagedAsync(_viewCancellationToken);
+        }
+        else
+        {
+            ApplySimpleTopicFilterAndSort();
+        }
     }
 
     partial void OnSimpleMaterialSearchTextChanged(string? value)
@@ -1264,14 +1327,18 @@ public sealed partial class LibraryManagementViewModel(
             _ = SaveSimpleMaterialSortAsync(topic.Id, value.Sort);
         }
 
-        ResetSimpleMaterialPage();
-        ApplySimpleMaterialFilterAndSort();
+        if (IsSimpleMaterialsPage && SelectedTopic is not null)
+        {
+            _ = ReloadSimpleMaterialsPagedAsync(_viewCancellationToken);
+        }
     }
 
     partial void OnSimpleMaterialFilterChanged(LibraryManagementMaterialFilter value)
     {
-        ResetSimpleMaterialPage();
-        ApplySimpleMaterialFilterAndSort();
+        if (IsSimpleMaterialsPage && SelectedTopic is not null)
+        {
+            _ = ReloadSimpleMaterialsPagedAsync(_viewCancellationToken);
+        }
     }
 
     partial void OnSelectedSectionChanged(LibraryManagementOrderItemViewModel? value)
@@ -1279,7 +1346,7 @@ public sealed partial class LibraryManagementViewModel(
         OnPropertyChanged(nameof(SelectedPath));
         ApplyTopicSortForSection(value?.Id);
 
-        if (!_isLoaded || _suppressSelectionReload)
+        if (!_isLoaded || _suppressSelectionReload || !IsOrderMode)
         {
             return;
         }
@@ -1292,7 +1359,7 @@ public sealed partial class LibraryManagementViewModel(
         OnPropertyChanged(nameof(SelectedPath));
         ApplyMaterialSortForTopic(value?.Id);
 
-        if (!_isLoaded || _suppressSelectionReload)
+        if (!_isLoaded || _suppressSelectionReload || !IsOrderMode)
         {
             return;
         }
@@ -1326,152 +1393,50 @@ public sealed partial class LibraryManagementViewModel(
     {
         return _isSimpleSectionsLoaded &&
                IsSimpleSectionsPage &&
-               SimpleSectionsHasMore &&
+               _simpleSectionWindow.HasNext &&
                !IsSimpleSectionsLoading &&
                !IsSimpleSectionsLoadingNextPage &&
                !HasError &&
                !HasSimpleSectionsNextPageError;
     }
 
-    private async Task LoadNextSimpleSectionPageWithLinkedCancellationAsync(
+    private Task LoadNextSimpleSectionPageWithLinkedCancellationAsync(
         CancellationToken cancellationToken)
     {
-        using var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
-            _viewCancellationToken,
-            cancellationToken);
-
-        await LoadSimpleSectionsPageAsync(
-            _simpleSectionLoadVersion,
-            linkedCancellationTokenSource.Token);
+        return LoadNextSimpleSectionWindowAsync(cancellationToken);
     }
 
     private async Task ReloadSimpleSectionsCoreAsync(CancellationToken cancellationToken)
     {
-        int loadVersion = Interlocked.Increment(ref _simpleSectionLoadVersion);
-
-        _simpleSectionNextOffset = 0;
-        SimpleSectionsHasMore = true;
+        int loadVersion = ResetSimpleSectionPagingState(cancellationToken);
+        IsSimpleSectionsLoading = true;
         ErrorMessage = null;
-        SimpleSectionsNextPageErrorMessage = null;
-        SimpleSectionsTotalCount = 0;
-
-        SimpleSections.Clear();
-        SimpleSectionRows.Clear();
-        SimpleCompactSectionRows.Clear();
-
-        NotifySimpleSectionsStateChanged();
-        await LoadSimpleSectionsPageAsync(loadVersion, cancellationToken);
-    }
-
-    private async Task LoadSimpleSectionsPageAsync(
-        int loadVersion,
-        CancellationToken cancellationToken)
-    {
-        if (loadVersion != _simpleSectionLoadVersion ||
-            _simpleSectionLoadingVersion == loadVersion ||
-            !SimpleSectionsHasMore ||
-            cancellationToken.IsCancellationRequested)
-        {
-            return;
-        }
-
-        _simpleSectionLoadingVersion = loadVersion;
-        bool isInitialPage = _simpleSectionNextOffset == 0;
-
-        if (isInitialPage)
-        {
-            IsSimpleSectionsLoading = true;
-            ErrorMessage = null;
-        }
-        else
-        {
-            IsSimpleSectionsLoadingNextPage = true;
-            SimpleSectionsNextPageErrorMessage = null;
-        }
 
         try
         {
-            var query = new GetLibraryManagementSectionsPageQuery(
-                SearchText,
-                SelectedSimpleSectionSortOption.Sort,
-                _simpleSectionNextOffset,
-                SimpleSectionPageSize);
+            LibraryManagementSectionsPageDto? page = await GetSimpleSectionPageAsync(
+                offset: 0,
+                loadVersion,
+                _simpleSectionContextCancellation!.Token,
+                reportFailure: true);
 
-            var result = await queryDispatcher.SendAsync<
-                GetLibraryManagementSectionsPageQuery,
-                LibraryManagementSectionsPageDto>(
-                query,
-                cancellationToken);
-
-            if (loadVersion != _simpleSectionLoadVersion || cancellationToken.IsCancellationRequested)
+            if (page is null || loadVersion != _simpleSectionLoadVersion)
             {
                 return;
             }
 
-            if (result.IsFailure)
-            {
-                string message = result.Error.FirstOrDefault()?.Message
-                                 ?? "Не удалось загрузить разделы";
-
-                if (isInitialPage)
-                {
-                    ErrorMessage = message;
-                }
-                else
-                {
-                    SimpleSectionsNextPageErrorMessage = message;
-                }
-
-                return;
-            }
-
-            foreach (LibrarySectionOverviewDto section in result.Value.Items)
-            {
-                var sectionViewModel = new LibraryManagementSectionViewModel(section);
-                SimpleSections.Add(sectionViewModel);
-                AddSimpleSectionToRows(sectionViewModel);
-            }
-
-            _simpleSectionNextOffset = result.Value.NextOffset;
-            SimpleSectionsHasMore = result.Value.HasMore;
-            SimpleSectionsTotalCount = result.Value.TotalCount;
-            NotifySimpleSectionsStateChanged();
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            // View/search request was cancelled.
-        }
-        catch (Exception exception)
-        {
-            logger.LogError(exception, "Не удалось загрузить страницу разделов управления");
-
-            if (loadVersion != _simpleSectionLoadVersion)
-            {
-                return;
-            }
-
-            if (isInitialPage)
-            {
-                ErrorMessage = "Не удалось загрузить разделы";
-            }
-            else
-            {
-                SimpleSectionsNextPageErrorMessage = "Не удалось загрузить следующую порцию разделов";
-            }
+            ApplySectionPageTotals(page);
+            _simpleSectionWindow.ShowPage(0, page.Items, PageWindowInsert.Append);
+            RebuildSimpleSectionWindow();
+            SyncSimpleSectionPagingProperties();
+            PrefetchSectionPages(loadVersion);
         }
         finally
         {
-            if (_simpleSectionLoadingVersion == loadVersion)
-            {
-                _simpleSectionLoadingVersion = null;
-            }
-
             if (loadVersion == _simpleSectionLoadVersion)
             {
                 IsSimpleSectionsLoading = false;
-                IsSimpleSectionsLoadingNextPage = false;
-                LoadNextSimpleSectionPageCommand.NotifyCanExecuteChanged();
-                NotifySimpleSectionsStateChanged();
+                SyncSimpleSectionPagingProperties();
             }
         }
     }
@@ -1868,9 +1833,29 @@ public sealed partial class LibraryManagementViewModel(
     {
         await ReloadSimpleSectionsCoreAsync(cancellationToken);
 
-        if (_isLoaded || IsOrderMode || SimplePage != LibraryManagementSimplePage.Sections)
+        if (IsOrderMode)
         {
             await ReloadOrderLibraryAsync(cancellationToken);
+            return;
+        }
+
+        // The full tree is an admin/order cache. A mutation invalidates it, but normal
+        // browsing must not eagerly rebuild it.
+        _isLoaded = false;
+        _library.Clear();
+        Sections.Clear();
+        Topics.Clear();
+        Materials.Clear();
+
+        switch (SimplePage)
+        {
+            case LibraryManagementSimplePage.Topics when SelectedSection is not null:
+                await ReloadSimpleTopicsPagedAsync(cancellationToken);
+                break;
+
+            case LibraryManagementSimplePage.Materials when SelectedTopic is not null:
+                await ReloadSimpleMaterialsPagedAsync(cancellationToken);
+                break;
         }
     }
 
@@ -2410,9 +2395,11 @@ public sealed partial class LibraryManagementViewModel(
         {
             await Task.Delay(SearchDelay, _viewCancellationToken);
 
-            if (searchVersion == Volatile.Read(ref _simpleTopicSearchVersion))
+            if (searchVersion == Volatile.Read(ref _simpleTopicSearchVersion) &&
+                IsSimpleTopicsPage &&
+                SelectedSection is not null)
             {
-                ApplySimpleTopicFilterAndSort();
+                await ReloadSimpleTopicsPagedAsync(_viewCancellationToken);
             }
         }
         catch (OperationCanceledException) when (_viewCancellationToken.IsCancellationRequested)
@@ -2495,10 +2482,11 @@ public sealed partial class LibraryManagementViewModel(
         {
             await Task.Delay(SearchDelay, _viewCancellationToken);
 
-            if (searchVersion == Volatile.Read(ref _simpleMaterialSearchVersion))
+            if (searchVersion == Volatile.Read(ref _simpleMaterialSearchVersion) &&
+                IsSimpleMaterialsPage &&
+                SelectedTopic is not null)
             {
-                ResetSimpleMaterialPage();
-                ApplySimpleMaterialFilterAndSort();
+                await ReloadSimpleMaterialsPagedAsync(_viewCancellationToken);
             }
         }
         catch (OperationCanceledException) when (_viewCancellationToken.IsCancellationRequested)
@@ -2607,25 +2595,15 @@ public sealed partial class LibraryManagementViewModel(
     }
 
     [RelayCommand(CanExecute = nameof(CanLoadNextSimpleMaterialPage))]
-    private void LoadNextSimpleMaterialPage()
+    private Task LoadNextSimpleMaterialPageAsync(CancellationToken cancellationToken)
     {
-        if (!CanLoadNextSimpleMaterialPage())
-        {
-            return;
-        }
-
-        _simpleMaterialVisibleCount =
-            Math.Min(
-                _simpleMaterialVisibleCount +
-                SimpleMaterialPageSize,
-                _simpleMaterialsFilteredTotalCount);
-
-        ApplySimpleMaterialFilterAndSort();
+        return LoadNextSimpleMaterialWindowAsync(cancellationToken);
     }
 
     private bool CanLoadNextSimpleMaterialPage() =>
         IsSimpleMaterialsPage &&
         !IsContextLoading &&
+        !_isSimpleMaterialsLoadingNextPage &&
         SimpleMaterialsHasMore;
 
     private ObservableCollection<LibraryManagementOrderItemViewModel> GetOrderCollection(
@@ -2736,6 +2714,11 @@ public sealed partial class LibraryManagementViewModel(
         OnPropertyChanged(nameof(IsSimpleSectionsEmpty));
         OnPropertyChanged(nameof(HasNoSimpleSectionSearchResults));
         OnPropertyChanged(nameof(SimpleSectionsShownCountText));
+        OnPropertyChanged(nameof(SimpleSectionsHasPrevious));
+        OnPropertyChanged(nameof(SimpleSectionWindowStartOffset));
+        OnPropertyChanged(nameof(SimpleSectionWindowEndOffset));
+        OnPropertyChanged(nameof(SimpleSectionCurrentPageOffset));
+        OnPropertyChanged(nameof(SimpleSectionCachedPageCount));
         LoadNextSimpleSectionPageCommand.NotifyCanExecuteChanged();
     }
 
@@ -2746,6 +2729,14 @@ public sealed partial class LibraryManagementViewModel(
         OnPropertyChanged(nameof(IsSimpleTopicsEmpty));
         OnPropertyChanged(nameof(HasNoSimpleTopicSearchResults));
         OnPropertyChanged(nameof(SimpleTopicsShownCountText));
+        OnPropertyChanged(nameof(SimpleTopicsHasMore));
+        OnPropertyChanged(nameof(SimpleTopicsHasPrevious));
+        OnPropertyChanged(nameof(SimpleTopicsTotalCount));
+        OnPropertyChanged(nameof(SimpleTopicWindowStartOffset));
+        OnPropertyChanged(nameof(SimpleTopicWindowEndOffset));
+        OnPropertyChanged(nameof(SimpleTopicCurrentPageOffset));
+        OnPropertyChanged(nameof(SimpleTopicCachedPageCount));
+        LoadNextSimpleTopicPageCommand.NotifyCanExecuteChanged();
     }
 
     private void NotifySimpleMaterialsStateChanged()
@@ -2756,7 +2747,12 @@ public sealed partial class LibraryManagementViewModel(
         OnPropertyChanged(nameof(HasNoSimpleMaterialResults));
         OnPropertyChanged(nameof(SimpleMaterialsShownCountText));
         OnPropertyChanged(nameof(SimpleMaterialsHasMore));
+        OnPropertyChanged(nameof(SimpleMaterialsHasPrevious));
+        OnPropertyChanged(nameof(SimpleMaterialWindowStartOffset));
+        OnPropertyChanged(nameof(SimpleMaterialWindowEndOffset));
+        OnPropertyChanged(nameof(SimpleMaterialCachedPageCount));
         LoadNextSimpleMaterialPageCommand.NotifyCanExecuteChanged();
+        LoadPreviousSimpleMaterialPageCommand.NotifyCanExecuteChanged();
     }
 
     private void NotifyCollectionStateChanged()
@@ -2770,7 +2766,9 @@ public sealed partial class LibraryManagementViewModel(
         OnPropertyChanged(nameof(HasSimpleMaterialSource));
         OnPropertyChanged(nameof(SimpleMaterialsShownCountText));
         OnPropertyChanged(nameof(SimpleMaterialsHasMore));
+        OnPropertyChanged(nameof(SimpleMaterialsHasPrevious));
         LoadNextSimpleMaterialPageCommand.NotifyCanExecuteChanged();
+        LoadPreviousSimpleMaterialPageCommand.NotifyCanExecuteChanged();
         OnPropertyChanged(nameof(SelectedPath));
     }
 }

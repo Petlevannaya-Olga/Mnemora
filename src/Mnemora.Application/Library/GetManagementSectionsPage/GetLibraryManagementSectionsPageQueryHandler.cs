@@ -22,6 +22,12 @@ public sealed class GetLibraryManagementSectionsPageQueryHandler(
     {
         try
         {
+            int offset = Math.Max(0, request.Offset);
+            int pageSize = Math.Clamp(
+                request.PageSize,
+                1,
+                LibraryPagingDefaults.MaxQueryPageSize);
+
             IQueryable<Section> sectionsQuery = readDbContext.SectionsRead;
             string? search = request.Search?.Trim();
 
@@ -103,53 +109,70 @@ public sealed class GetLibraryManagementSectionsPageQueryHandler(
             };
 
             var loadedRows = await orderedRows
-                .Skip(request.Offset)
-                .Take(request.PageSize + 1)
+                .Skip(offset)
+                .Take(pageSize + 1)
                 .ToListAsync(cancellationToken);
 
-            bool hasMore = loadedRows.Count > request.PageSize;
-            var pageRows = loadedRows.Take(request.PageSize).ToArray();
+            bool hasMore = loadedRows.Count > pageSize;
+            var pageRows = loadedRows.Take(pageSize).ToArray();
             var sectionIds = pageRows.Select(row => row.Section.Id).ToArray();
 
-            var topics = sectionIds.Length == 0
-                ? []
-                : await readDbContext.TopicsRead
-                    .Where(topic => sectionIds.Contains(topic.SectionId))
-                    .ToListAsync(cancellationToken);
+            Dictionary<SectionId, int> topicsCountBySection =
+                sectionIds.Length == 0
+                    ? []
+                    : await readDbContext.TopicsRead
+                        .Where(topic => sectionIds.Contains(topic.SectionId))
+                        .GroupBy(topic => topic.SectionId)
+                        .Select(group => new
+                        {
+                            SectionId = group.Key,
+                            Count = group.Count(),
+                        })
+                        .ToDictionaryAsync(
+                            row => row.SectionId,
+                            row => row.Count,
+                            cancellationToken);
 
-            var topicIds = topics.Select(topic => topic.Id).ToArray();
+            Dictionary<SectionId, int> articlesCountBySection =
+                sectionIds.Length == 0
+                    ? []
+                    : await (
+                        from article in readDbContext.MaterialsRead.OfType<Article>()
+                        join topic in readDbContext.TopicsRead
+                            on article.TopicId equals topic.Id
+                        where sectionIds.Contains(topic.SectionId)
+                        group article by topic.SectionId
+                        into grouped
+                        select new
+                        {
+                            SectionId = grouped.Key,
+                            Count = grouped.Count(),
+                        })
+                        .ToDictionaryAsync(
+                            row => row.SectionId,
+                            row => row.Count,
+                            cancellationToken);
 
-            var articleTopicIds = topicIds.Length == 0
-                ? []
-                : await readDbContext.MaterialsRead
-                    .OfType<Article>()
-                    .Where(article => topicIds.Contains(article.TopicId))
-                    .Select(article => article.TopicId)
-                    .ToListAsync(cancellationToken);
-
-            var questionTopicIds = topicIds.Length == 0
-                ? []
-                : await readDbContext.MaterialsRead
-                    .OfType<Question>()
-                    .Where(question => topicIds.Contains(question.TopicId))
-                    .Select(question => question.TopicId)
-                    .ToListAsync(cancellationToken);
-
-            var sectionIdByTopicId = topics.ToDictionary(
-                topic => topic.Id,
-                topic => topic.SectionId);
-
-            var topicsCountBySection = topics
-                .GroupBy(topic => topic.SectionId)
-                .ToDictionary(group => group.Key, group => group.Count());
-
-            var articlesCountBySection = articleTopicIds
-                .GroupBy(topicId => sectionIdByTopicId[topicId])
-                .ToDictionary(group => group.Key, group => group.Count());
-
-            var questionsCountBySection = questionTopicIds
-                .GroupBy(topicId => sectionIdByTopicId[topicId])
-                .ToDictionary(group => group.Key, group => group.Count());
+            Dictionary<SectionId, int> questionsCountBySection =
+                sectionIds.Length == 0
+                    ? []
+                    : await (
+                        from question in readDbContext.MaterialsRead.OfType<Question>()
+                        join topic in readDbContext.TopicsRead
+                            on question.TopicId equals topic.Id
+                        where sectionIds.Contains(topic.SectionId) &&
+                              question.ArticleId == null
+                        group question by topic.SectionId
+                        into grouped
+                        select new
+                        {
+                            SectionId = grouped.Key,
+                            Count = grouped.Count(),
+                        })
+                        .ToDictionaryAsync(
+                            row => row.SectionId,
+                            row => row.Count,
+                            cancellationToken);
 
             var items = pageRows
                 .Select(row =>
@@ -175,7 +198,7 @@ public sealed class GetLibraryManagementSectionsPageQueryHandler(
 
             var result = new LibraryManagementSectionsPageDto(
                 items,
-                request.Offset + items.Length,
+                offset + items.Length,
                 hasMore,
                 totalCount);
 

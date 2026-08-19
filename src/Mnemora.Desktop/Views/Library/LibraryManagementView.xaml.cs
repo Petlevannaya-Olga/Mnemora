@@ -53,66 +53,273 @@ public partial class LibraryManagementView : UserControl
         CancelLoading();
     }
 
-    private void SectionsScroll_OnScrollChanged(
+    private async void SectionsScroll_OnScrollChanged(
         object sender,
         ScrollChangedEventArgs e)
     {
-        if (e.ExtentHeight <= 0 || e.ViewportHeight <= 0)
+        if (e.ExtentHeight <= 0 || e.ViewportHeight <= 0 ||
+            DataContext is not LibraryManagementViewModel viewModel)
         {
             return;
         }
 
+        viewModel.UpdateSimpleSectionViewport(
+            GetLogicalEntityOffset(
+                sender,
+                e.VerticalOffset,
+                viewModel.IsSimpleTilesView ? 3 : 4,
+                viewModel.SimpleSectionWindowStartOffset == 0));
+
+        double threshold = Math.Max(2d, e.ViewportHeight * 0.5d);
+        bool isNearTop = e.VerticalOffset <= threshold;
         double remainingDistance =
             e.ExtentHeight - e.VerticalOffset - e.ViewportHeight;
+        bool isNearBottom = remainingDistance <= threshold;
 
-        double loadingThreshold =
-            Math.Max(2d, e.ViewportHeight * 0.5d);
+        if (isNearTop && viewModel.SimpleSectionsHasPrevious)
+        {
+            Guid? anchorId = viewModel.SimpleSections.FirstOrDefault()?.Id;
 
-        if (remainingDistance > loadingThreshold)
+            await viewModel.LoadPreviousSimpleSectionWindowAsync(
+                _loadCancellationTokenSource?.Token ?? CancellationToken.None);
+
+            if (anchorId is Guid id)
+            {
+                ScrollSectionAnchorIntoView(sender, viewModel, id);
+            }
+
+            return;
+        }
+
+        if (!isNearBottom ||
+            !viewModel.LoadNextSimpleSectionPageCommand.CanExecute(null))
         {
             return;
         }
 
-        if (DataContext is LibraryManagementViewModel viewModel &&
-            viewModel.LoadNextSimpleSectionPageCommand.CanExecute(null))
+        Guid? bottomAnchorId = viewModel.SimpleSections.LastOrDefault()?.Id;
+
+        await viewModel.LoadNextSimpleSectionWindowAsync(
+            _loadCancellationTokenSource?.Token ?? CancellationToken.None);
+
+        if (bottomAnchorId is Guid bottomId)
         {
-            viewModel.LoadNextSimpleSectionPageCommand.Execute(null);
+            ScrollSectionAnchorIntoView(sender, viewModel, bottomId);
         }
     }
 
-    private void MaterialsScroll_OnScrollChanged(
+    private async void TopicsScroll_OnScrollChanged(
         object sender,
         ScrollChangedEventArgs e)
     {
-        if (e.ExtentHeight <= 0 ||
-            e.ViewportHeight <= 0)
+        if (e.ExtentHeight <= 0 || e.ViewportHeight <= 0 ||
+            DataContext is not LibraryManagementViewModel viewModel)
         {
             return;
         }
 
+        viewModel.UpdateSimpleTopicViewport(
+            GetLogicalEntityOffset(
+                sender,
+                e.VerticalOffset,
+                viewModel.IsSimpleTilesView ? 3 : 4,
+                viewModel.SimpleTopicWindowStartOffset == 0));
+
+        double threshold = Math.Max(2d, e.ViewportHeight * 0.5d);
+        bool isNearTop = e.VerticalOffset <= threshold;
         double remainingDistance =
-            e.ExtentHeight -
-            e.VerticalOffset -
-            e.ViewportHeight;
+            e.ExtentHeight - e.VerticalOffset - e.ViewportHeight;
+        bool isNearBottom = remainingDistance <= threshold;
 
-        double loadingThreshold =
-            Math.Max(
-                2d,
-                e.ViewportHeight * 0.5d);
+        if (isNearTop && viewModel.SimpleTopicsHasPrevious)
+        {
+            Guid? anchorId = viewModel.SimpleTopics.FirstOrDefault()?.Id;
 
-        if (remainingDistance >
-            loadingThreshold)
+            await viewModel.LoadPreviousSimpleTopicWindowAsync(
+                _loadCancellationTokenSource?.Token ?? CancellationToken.None);
+
+            if (anchorId is Guid id)
+            {
+                ScrollTopicAnchorIntoView(sender, viewModel, id);
+            }
+
+            return;
+        }
+
+        if (!isNearBottom ||
+            !viewModel.LoadNextSimpleTopicPageCommand.CanExecute(null))
         {
             return;
         }
 
-        if (DataContext
-                is LibraryManagementViewModel viewModel &&
-            viewModel.LoadNextSimpleMaterialPageCommand
-                .CanExecute(null))
+        Guid? bottomAnchorId = viewModel.SimpleTopics.LastOrDefault()?.Id;
+
+        await viewModel.LoadNextSimpleTopicWindowAsync(
+            _loadCancellationTokenSource?.Token ?? CancellationToken.None);
+
+        if (bottomAnchorId is Guid bottomId)
         {
-            viewModel.LoadNextSimpleMaterialPageCommand
-                .Execute(null);
+            ScrollTopicAnchorIntoView(sender, viewModel, bottomId);
+        }
+    }
+
+    private static double GetLogicalEntityOffset(
+        object sender,
+        double verticalOffset,
+        int itemsPerRow,
+        bool firstRowContainsCreateTile)
+    {
+        if (sender is DataGrid)
+        {
+            return verticalOffset;
+        }
+
+        int rowIndex = Math.Max(0, (int)Math.Floor(verticalOffset));
+        int itemIndex = rowIndex * Math.Max(1, itemsPerRow);
+
+        if (firstRowContainsCreateTile && rowIndex > 0)
+        {
+            itemIndex--;
+        }
+
+        return Math.Max(0, itemIndex);
+    }
+
+    private static void ScrollSectionAnchorIntoView(
+        object sender,
+        LibraryManagementViewModel viewModel,
+        Guid anchorId)
+    {
+        if (sender is DataGrid grid)
+        {
+            LibraryManagementSectionViewModel? item =
+                viewModel.SimpleSections.FirstOrDefault(section => section.Id == anchorId);
+
+            if (item is not null)
+            {
+                grid.ScrollIntoView(item);
+            }
+
+            return;
+        }
+
+        if (sender is ListBox listBox)
+        {
+            IEnumerable<LibraryManagementSectionRowViewModel> rows =
+                ReferenceEquals(listBox.ItemsSource, viewModel.SimpleCompactSectionRows)
+                    ? viewModel.SimpleCompactSectionRows
+                    : viewModel.SimpleSectionRows;
+
+            LibraryManagementSectionRowViewModel? row = rows.FirstOrDefault(
+                candidate => candidate.Sections.Any(section => section.Id == anchorId));
+
+            if (row is not null)
+            {
+                listBox.ScrollIntoView(row);
+            }
+        }
+    }
+
+    private static void ScrollTopicAnchorIntoView(
+        object sender,
+        LibraryManagementViewModel viewModel,
+        Guid anchorId)
+    {
+        if (sender is DataGrid grid)
+        {
+            LibraryManagementOrderItemViewModel? item =
+                viewModel.SimpleTopics.FirstOrDefault(topic => topic.Id == anchorId);
+
+            if (item is not null)
+            {
+                grid.ScrollIntoView(item);
+            }
+
+            return;
+        }
+
+        if (sender is ListBox listBox)
+        {
+            IEnumerable<LibraryManagementTopicRowViewModel> rows =
+                ReferenceEquals(listBox.ItemsSource, viewModel.SimpleCompactTopicRows)
+                    ? viewModel.SimpleCompactTopicRows
+                    : viewModel.SimpleTopicRows;
+
+            LibraryManagementTopicRowViewModel? row = rows.FirstOrDefault(
+                candidate => candidate.Topics.Any(topic => topic.Id == anchorId));
+
+            if (row is not null)
+            {
+                listBox.ScrollIntoView(row);
+            }
+        }
+    }
+
+    private async void MaterialsScroll_OnScrollChanged(
+        object sender,
+        ScrollChangedEventArgs e)
+    {
+        if (e.ExtentHeight <= 0 || e.ViewportHeight <= 0 ||
+            DataContext is not LibraryManagementViewModel viewModel)
+        {
+            return;
+        }
+
+        // With CanContentScroll=True DataGrid reports logical item offsets,
+        // so the footer can show the current 30-item database range rather
+        // than the whole 7-page in-memory window.
+        viewModel.UpdateSimpleMaterialViewport(e.VerticalOffset);
+
+        double threshold = Math.Max(2d, e.ViewportHeight * 0.5d);
+        bool isNearTop = e.VerticalOffset <= threshold;
+        double remainingDistance =
+            e.ExtentHeight - e.VerticalOffset - e.ViewportHeight;
+        bool isNearBottom = remainingDistance <= threshold;
+
+        // Once old pages have been trimmed, reaching the top materializes the
+        // previous database page again. The anchor keeps the user's position
+        // stable after rows are prepended.
+        if (isNearTop && viewModel.SimpleMaterialsHasPrevious)
+        {
+            Guid? anchorId = viewModel.SimpleMaterials.FirstOrDefault()?.Id;
+
+            await viewModel.LoadPreviousSimpleMaterialWindowAsync(
+                _loadCancellationTokenSource?.Token ?? CancellationToken.None);
+
+            if (sender is DataGrid grid && anchorId is Guid anchorMaterialId)
+            {
+                LibraryManagementOrderItemViewModel? anchor =
+                    viewModel.SimpleMaterials.FirstOrDefault(material => material.Id == anchorMaterialId);
+
+                if (anchor is not null)
+                {
+                    grid.ScrollIntoView(anchor);
+                }
+            }
+
+            return;
+        }
+
+        if (!isNearBottom ||
+            !viewModel.LoadNextSimpleMaterialPageCommand.CanExecute(null))
+        {
+            return;
+        }
+
+        Guid? bottomAnchorId = viewModel.SimpleMaterials.LastOrDefault()?.Id;
+
+        await viewModel.LoadNextSimpleMaterialWindowAsync(
+            _loadCancellationTokenSource?.Token ?? CancellationToken.None);
+
+        if (sender is DataGrid dataGrid && bottomAnchorId is Guid bottomAnchorMaterialId)
+        {
+            LibraryManagementOrderItemViewModel? bottomAnchor =
+                viewModel.SimpleMaterials.FirstOrDefault(material => material.Id == bottomAnchorMaterialId);
+
+            if (bottomAnchor is not null)
+            {
+                dataGrid.ScrollIntoView(bottomAnchor);
+            }
         }
     }
 

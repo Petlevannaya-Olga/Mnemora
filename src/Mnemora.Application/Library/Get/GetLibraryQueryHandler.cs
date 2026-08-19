@@ -73,7 +73,8 @@ public sealed class GetLibraryQueryHandler(
                             topic.Name.Value,
                             topic.Color.ToString(),
                             topic.Icon.ToString(),
-                            topic.CreatedAt)
+                            topic.CreatedAt,
+                            topic.UpdatedAt)
                         {
                             Materials = materialsByTopic.GetValueOrDefault(topic.Id.Value, [])
                         })

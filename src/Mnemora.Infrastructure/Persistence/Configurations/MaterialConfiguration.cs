@@ -35,6 +35,7 @@ public sealed class MaterialConfiguration
                 value => MaterialTitle.Create(value).Value)
             .HasColumnName("title")
             .HasMaxLength(MaterialTitle.MaxLength)
+            .UseCollation(SqliteCollations.UnicodeNoCase)
             .IsRequired();
 
         builder.Property(material => material.Difficulty)
@@ -79,8 +80,20 @@ public sealed class MaterialConfiguration
         builder.HasIndex(material => material.TopicId)
             .HasDatabaseName("ix_materials_topic_id");
 
-        builder.HasIndex(material => new { material.TopicId, material.DisplayOrder })
-            .HasDatabaseName("ix_materials_topic_id_display_order");
+        builder.HasIndex(nameof(Material.TopicId), "type")
+            .HasDatabaseName("ix_materials_topic_id_type");
+
+        builder.HasIndex(material => new { material.TopicId, material.DisplayOrder, material.Id })
+            .HasDatabaseName("ix_materials_topic_id_display_order_id");
+
+        builder.HasIndex(material => new { material.TopicId, material.UpdatedAt, material.Id })
+            .HasDatabaseName("ix_materials_topic_id_updated_at_id");
+
+        builder.HasIndex(material => new { material.TopicId, material.CreatedAt, material.Id })
+            .HasDatabaseName("ix_materials_topic_id_created_at_id");
+
+        builder.HasIndex(material => new { material.TopicId, material.Title, material.Id })
+            .HasDatabaseName("ix_materials_topic_id_title_id");
     }
 
     private static void ConfigureDiscriminator(
