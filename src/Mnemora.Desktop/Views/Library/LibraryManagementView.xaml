@@ -1855,7 +1855,7 @@
                     VerticalAlignment="Center"
                     IndicatorLength="200"
                     IndicatorThickness="6"
-                    Message="Обновляем разделы..."
+                    Message="Загружаем разделы..."
                     Visibility="{Binding IsSimpleSectionsPaging, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
                 <StackPanel HorizontalAlignment="Center"
@@ -2514,7 +2514,7 @@
                     VerticalAlignment="Center"
                     IndicatorLength="200"
                     IndicatorThickness="6"
-                    Message="Обновляем темы..."
+                    Message="Загружаем темы..."
                     Visibility="{Binding IsSimpleTopicsPaging, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
                 <Button Height="42"
@@ -2892,7 +2892,7 @@
                     VerticalAlignment="Center"
                     IndicatorLength="200"
                     IndicatorThickness="6"
-                    Message="Обновляем материалы..."
+                    Message="Загружаем материалы..."
                     Visibility="{Binding IsSimpleMaterialsPaging, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
                 <Button Height="44"

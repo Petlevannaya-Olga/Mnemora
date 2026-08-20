@@ -1008,7 +1008,7 @@
                         VerticalAlignment="Center"
                         IndicatorLength="200"
                         IndicatorThickness="6"
-                        Message="Загружаем следующие темы..."
+                        Message="Загружаем темы..."
                         Visibility="{Binding IsLoadingNextPage, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
                     <StackPanel
