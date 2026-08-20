@@ -15,13 +15,20 @@ public sealed class LocalAppDataCleanupService(IMnemoraLocalPathProvider pathPro
         int deletedCount = 0;
         int skippedCount = 0;
 
-        CleanupDirectory(pathProvider.TempPath, ref deletedCount, ref skippedCount, cancellationToken);
-        CleanupDirectory(pathProvider.StagingPath, ref deletedCount, ref skippedCount, cancellationToken);
+        CleanupTempDirectory(
+            pathProvider.TempPath,
+            ref deletedCount,
+            ref skippedCount,
+            cancellationToken);
 
         return new LocalAppDataCleanupReport(deletedCount, skippedCount);
     }
 
-    private void CleanupDirectory(string directoryPath, ref int deletedCount, ref int skippedCount, CancellationToken cancellationToken)
+    private void CleanupTempDirectory(
+        string directoryPath,
+        ref int deletedCount,
+        ref int skippedCount,
+        CancellationToken cancellationToken)
     {
         if (!Directory.Exists(directoryPath))
         {
@@ -33,12 +40,19 @@ public sealed class LocalAppDataCleanupService(IMnemoraLocalPathProvider pathPro
         {
             entries = Directory.GetFileSystemEntries(directoryPath);
         }
+        catch (DirectoryNotFoundException)
+        {
+            // Каталог уже удалён параллельно — очищать больше нечего.
+            return;
+        }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
             skippedCount++;
             logger.LogWarning(exception, "Не удалось прочитать временный каталог Mnemora {DirectoryPath}", directoryPath);
             return;
         }
+
+        bool hasSkippedEntries = false;
 
         foreach (string entry in entries)
         {
@@ -59,9 +73,34 @@ public sealed class LocalAppDataCleanupService(IMnemoraLocalPathProvider pathPro
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
             {
+                hasSkippedEntries = true;
                 skippedCount++;
                 logger.LogWarning(exception, "Не удалось удалить временный объект Mnemora {EntryPath}", entry);
             }
+        }
+
+        if (hasSkippedEntries)
+        {
+            return;
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        try
+        {
+            Directory.Delete(directoryPath, recursive: false);
+        }
+        catch (DirectoryNotFoundException)
+        {
+            // Каталог уже удалён параллельно — требуемое состояние достигнуто.
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            skippedCount++;
+            logger.LogWarning(
+                exception,
+                "Не удалось удалить временный каталог Mnemora {DirectoryPath}",
+                directoryPath);
         }
     }
 }

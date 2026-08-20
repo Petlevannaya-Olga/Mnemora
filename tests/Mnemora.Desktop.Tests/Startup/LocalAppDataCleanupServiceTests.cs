@@ -25,7 +25,7 @@ public sealed class LocalAppDataCleanupServiceTests : IDisposable
         var service = new LocalAppDataCleanupService(paths, NullLogger<LocalAppDataCleanupService>.Instance);
         LocalAppDataCleanupReport report = await service.CleanupAsync();
 
-        Assert.Empty(Directory.GetFileSystemEntries(paths.TempPath));
+        Assert.False(Directory.Exists(paths.TempPath));
         Assert.Empty(Directory.GetFileSystemEntries(paths.StagingPath));
         Assert.True(File.Exists(keepPath));
         Assert.Equal(2, report.DeletedCount);

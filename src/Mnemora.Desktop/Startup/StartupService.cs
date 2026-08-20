@@ -25,7 +25,7 @@ public sealed class StartupService(ISettingsService settingsService, OnboardingS
 
         await ReportProgressAsync(
             progress,
-            new StartupProgress(20, "Очищаем временные данные", "Проверяем Temp и Staging в LocalAppData"),
+            new StartupProgress(20, "Очищаем временные данные", "Проверяем Temp в LocalAppData"),
             cancellationToken);
         LocalAppDataCleanupReport cleanupReport = await cleanupService.CleanupAsync(cancellationToken);
 

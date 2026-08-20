@@ -4,5 +4,4 @@ public interface IMnemoraLocalPathProvider
 {
     string RootPath { get; }
     string TempPath { get; }
-    string StagingPath { get; }
 }
