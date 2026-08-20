@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using Mnemora.Application.Library.Order;
 using Mnemora.Desktop.Dialogs;
 using Mnemora.Desktop.ViewModels.Library;
@@ -16,6 +17,9 @@ namespace Mnemora.Desktop.Views.Library;
 public partial class LibraryManagementView : UserControl
 {
     private CancellationTokenSource? _loadCancellationTokenSource;
+    private bool _isSectionsScrollPageLoadRunning;
+    private bool _isTopicsScrollPageLoadRunning;
+    private bool _isMaterialsScrollPageLoadRunning;
 
     public LibraryManagementView()
     {
@@ -57,8 +61,16 @@ public partial class LibraryManagementView : UserControl
         object sender,
         ScrollChangedEventArgs e)
     {
-        if (e.ExtentHeight <= 0 || e.ViewportHeight <= 0 ||
-            DataContext is not LibraryManagementViewModel viewModel)
+        if (DataContext is not LibraryManagementViewModel viewModel)
+        {
+            return;
+        }
+
+        ScrollViewer? scrollViewer = ResolveScrollViewer(sender, e);
+
+        if (scrollViewer is null ||
+            scrollViewer.ExtentHeight <= 0 ||
+            scrollViewer.ViewportHeight <= 0)
         {
             return;
         }
@@ -66,45 +78,86 @@ public partial class LibraryManagementView : UserControl
         viewModel.UpdateSimpleSectionViewport(
             GetLogicalEntityOffset(
                 sender,
-                e.VerticalOffset,
+                scrollViewer.VerticalOffset,
                 viewModel.IsSimpleTilesView ? 3 : 4,
                 viewModel.SimpleSectionWindowStartOffset == 0));
 
-        double threshold = Math.Max(2d, e.ViewportHeight * 0.5d);
-        bool isNearTop = e.VerticalOffset <= threshold;
-        double remainingDistance =
-            e.ExtentHeight - e.VerticalOffset - e.ViewportHeight;
-        bool isNearBottom = remainingDistance <= threshold;
-
-        if (isNearTop && viewModel.SimpleSectionsHasPrevious)
+        if (_isSectionsScrollPageLoadRunning ||
+            (!IsNearTop(scrollViewer) && !IsNearBottom(scrollViewer)))
         {
-            Guid? anchorId = viewModel.SimpleSections.FirstOrDefault()?.Id;
+            return;
+        }
 
-            await viewModel.LoadPreviousSimpleSectionWindowAsync(
-                _loadCancellationTokenSource?.Token ?? CancellationToken.None);
+        _isSectionsScrollPageLoadRunning = true;
+        CancellationToken cancellationToken =
+            _loadCancellationTokenSource?.Token ?? CancellationToken.None;
+        bool loadPreviousPage =
+            IsNearTop(scrollViewer) && viewModel.SimpleSectionsHasPrevious;
 
-            if (anchorId is Guid id)
+        try
+        {
+            while (IsLoaded &&
+                   ReferenceEquals(DataContext, viewModel) &&
+                   IsNearTop(scrollViewer) &&
+                   viewModel.SimpleSectionsHasPrevious)
             {
-                ScrollSectionAnchorIntoView(sender, viewModel, id);
+                int startOffsetBeforeLoading = viewModel.SimpleSectionWindowStartOffset;
+                int endOffsetBeforeLoading = viewModel.SimpleSectionWindowEndOffset;
+                Guid? anchorId = viewModel.SimpleSections.FirstOrDefault()?.Id;
+
+                await viewModel.LoadPreviousSimpleSectionWindowAsync(cancellationToken);
+
+                if (anchorId is Guid id)
+                {
+                    ScrollSectionAnchorIntoView(sender, viewModel, id);
+                }
+
+                await WaitForScrollLayoutAsync();
+
+                if (startOffsetBeforeLoading == viewModel.SimpleSectionWindowStartOffset &&
+                    endOffsetBeforeLoading == viewModel.SimpleSectionWindowEndOffset)
+                {
+                    break;
+                }
             }
 
-            return;
+            if (loadPreviousPage)
+            {
+                return;
+            }
+
+            while (IsLoaded &&
+                   ReferenceEquals(DataContext, viewModel) &&
+                   IsNearBottom(scrollViewer) &&
+                   viewModel.LoadNextSimpleSectionPageCommand.CanExecute(null))
+            {
+                int startOffsetBeforeLoading = viewModel.SimpleSectionWindowStartOffset;
+                int endOffsetBeforeLoading = viewModel.SimpleSectionWindowEndOffset;
+                Guid? anchorId = viewModel.SimpleSections.LastOrDefault()?.Id;
+
+                await viewModel.LoadNextSimpleSectionWindowAsync(cancellationToken);
+
+                if (anchorId is Guid id)
+                {
+                    ScrollSectionAnchorIntoView(sender, viewModel, id);
+                }
+
+                await WaitForScrollLayoutAsync();
+
+                if (startOffsetBeforeLoading == viewModel.SimpleSectionWindowStartOffset &&
+                    endOffsetBeforeLoading == viewModel.SimpleSectionWindowEndOffset)
+                {
+                    break;
+                }
+            }
         }
-
-        if (!isNearBottom ||
-            !viewModel.LoadNextSimpleSectionPageCommand.CanExecute(null))
+        catch (OperationCanceledException)
         {
-            return;
+            // Обычная отмена при уходе со страницы.
         }
-
-        Guid? bottomAnchorId = viewModel.SimpleSections.LastOrDefault()?.Id;
-
-        await viewModel.LoadNextSimpleSectionWindowAsync(
-            _loadCancellationTokenSource?.Token ?? CancellationToken.None);
-
-        if (bottomAnchorId is Guid bottomId)
+        finally
         {
-            ScrollSectionAnchorIntoView(sender, viewModel, bottomId);
+            _isSectionsScrollPageLoadRunning = false;
         }
     }
 
@@ -112,8 +165,16 @@ public partial class LibraryManagementView : UserControl
         object sender,
         ScrollChangedEventArgs e)
     {
-        if (e.ExtentHeight <= 0 || e.ViewportHeight <= 0 ||
-            DataContext is not LibraryManagementViewModel viewModel)
+        if (DataContext is not LibraryManagementViewModel viewModel)
+        {
+            return;
+        }
+
+        ScrollViewer? scrollViewer = ResolveScrollViewer(sender, e);
+
+        if (scrollViewer is null ||
+            scrollViewer.ExtentHeight <= 0 ||
+            scrollViewer.ViewportHeight <= 0)
         {
             return;
         }
@@ -121,45 +182,86 @@ public partial class LibraryManagementView : UserControl
         viewModel.UpdateSimpleTopicViewport(
             GetLogicalEntityOffset(
                 sender,
-                e.VerticalOffset,
+                scrollViewer.VerticalOffset,
                 viewModel.IsSimpleTilesView ? 3 : 4,
                 viewModel.SimpleTopicWindowStartOffset == 0));
 
-        double threshold = Math.Max(2d, e.ViewportHeight * 0.5d);
-        bool isNearTop = e.VerticalOffset <= threshold;
-        double remainingDistance =
-            e.ExtentHeight - e.VerticalOffset - e.ViewportHeight;
-        bool isNearBottom = remainingDistance <= threshold;
-
-        if (isNearTop && viewModel.SimpleTopicsHasPrevious)
+        if (_isTopicsScrollPageLoadRunning ||
+            (!IsNearTop(scrollViewer) && !IsNearBottom(scrollViewer)))
         {
-            Guid? anchorId = viewModel.SimpleTopics.FirstOrDefault()?.Id;
+            return;
+        }
 
-            await viewModel.LoadPreviousSimpleTopicWindowAsync(
-                _loadCancellationTokenSource?.Token ?? CancellationToken.None);
+        _isTopicsScrollPageLoadRunning = true;
+        CancellationToken cancellationToken =
+            _loadCancellationTokenSource?.Token ?? CancellationToken.None;
+        bool loadPreviousPage =
+            IsNearTop(scrollViewer) && viewModel.SimpleTopicsHasPrevious;
 
-            if (anchorId is Guid id)
+        try
+        {
+            while (IsLoaded &&
+                   ReferenceEquals(DataContext, viewModel) &&
+                   IsNearTop(scrollViewer) &&
+                   viewModel.SimpleTopicsHasPrevious)
             {
-                ScrollTopicAnchorIntoView(sender, viewModel, id);
+                int startOffsetBeforeLoading = viewModel.SimpleTopicWindowStartOffset;
+                int endOffsetBeforeLoading = viewModel.SimpleTopicWindowEndOffset;
+                Guid? anchorId = viewModel.SimpleTopics.FirstOrDefault()?.Id;
+
+                await viewModel.LoadPreviousSimpleTopicWindowAsync(cancellationToken);
+
+                if (anchorId is Guid id)
+                {
+                    ScrollTopicAnchorIntoView(sender, viewModel, id);
+                }
+
+                await WaitForScrollLayoutAsync();
+
+                if (startOffsetBeforeLoading == viewModel.SimpleTopicWindowStartOffset &&
+                    endOffsetBeforeLoading == viewModel.SimpleTopicWindowEndOffset)
+                {
+                    break;
+                }
             }
 
-            return;
+            if (loadPreviousPage)
+            {
+                return;
+            }
+
+            while (IsLoaded &&
+                   ReferenceEquals(DataContext, viewModel) &&
+                   IsNearBottom(scrollViewer) &&
+                   viewModel.LoadNextSimpleTopicPageCommand.CanExecute(null))
+            {
+                int startOffsetBeforeLoading = viewModel.SimpleTopicWindowStartOffset;
+                int endOffsetBeforeLoading = viewModel.SimpleTopicWindowEndOffset;
+                Guid? anchorId = viewModel.SimpleTopics.LastOrDefault()?.Id;
+
+                await viewModel.LoadNextSimpleTopicWindowAsync(cancellationToken);
+
+                if (anchorId is Guid id)
+                {
+                    ScrollTopicAnchorIntoView(sender, viewModel, id);
+                }
+
+                await WaitForScrollLayoutAsync();
+
+                if (startOffsetBeforeLoading == viewModel.SimpleTopicWindowStartOffset &&
+                    endOffsetBeforeLoading == viewModel.SimpleTopicWindowEndOffset)
+                {
+                    break;
+                }
+            }
         }
-
-        if (!isNearBottom ||
-            !viewModel.LoadNextSimpleTopicPageCommand.CanExecute(null))
+        catch (OperationCanceledException)
         {
-            return;
+            // Обычная отмена при уходе со страницы.
         }
-
-        Guid? bottomAnchorId = viewModel.SimpleTopics.LastOrDefault()?.Id;
-
-        await viewModel.LoadNextSimpleTopicWindowAsync(
-            _loadCancellationTokenSource?.Token ?? CancellationToken.None);
-
-        if (bottomAnchorId is Guid bottomId)
+        finally
         {
-            ScrollTopicAnchorIntoView(sender, viewModel, bottomId);
+            _isTopicsScrollPageLoadRunning = false;
         }
     }
 
@@ -259,8 +361,16 @@ public partial class LibraryManagementView : UserControl
         object sender,
         ScrollChangedEventArgs e)
     {
-        if (e.ExtentHeight <= 0 || e.ViewportHeight <= 0 ||
-            DataContext is not LibraryManagementViewModel viewModel)
+        if (DataContext is not LibraryManagementViewModel viewModel)
+        {
+            return;
+        }
+
+        ScrollViewer? scrollViewer = ResolveScrollViewer(sender, e);
+
+        if (scrollViewer is null ||
+            scrollViewer.ExtentHeight <= 0 ||
+            scrollViewer.ViewportHeight <= 0)
         {
             return;
         }
@@ -268,58 +378,84 @@ public partial class LibraryManagementView : UserControl
         // With CanContentScroll=True DataGrid reports logical item offsets,
         // so the footer can show the current 30-item database range rather
         // than the whole 7-page in-memory window.
-        viewModel.UpdateSimpleMaterialViewport(e.VerticalOffset);
+        viewModel.UpdateSimpleMaterialViewport(scrollViewer.VerticalOffset);
 
-        double threshold = Math.Max(2d, e.ViewportHeight * 0.5d);
-        bool isNearTop = e.VerticalOffset <= threshold;
-        double remainingDistance =
-            e.ExtentHeight - e.VerticalOffset - e.ViewportHeight;
-        bool isNearBottom = remainingDistance <= threshold;
-
-        // Once old pages have been trimmed, reaching the top materializes the
-        // previous database page again. The anchor keeps the user's position
-        // stable after rows are prepended.
-        if (isNearTop && viewModel.SimpleMaterialsHasPrevious)
+        if (_isMaterialsScrollPageLoadRunning ||
+            (!IsNearTop(scrollViewer) && !IsNearBottom(scrollViewer)))
         {
-            Guid? anchorId = viewModel.SimpleMaterials.FirstOrDefault()?.Id;
+            return;
+        }
 
-            await viewModel.LoadPreviousSimpleMaterialWindowAsync(
-                _loadCancellationTokenSource?.Token ?? CancellationToken.None);
+        _isMaterialsScrollPageLoadRunning = true;
+        CancellationToken cancellationToken =
+            _loadCancellationTokenSource?.Token ?? CancellationToken.None;
+        bool loadPreviousPage =
+            IsNearTop(scrollViewer) && viewModel.SimpleMaterialsHasPrevious;
 
-            if (sender is DataGrid grid && anchorId is Guid anchorMaterialId)
+        try
+        {
+            while (IsLoaded &&
+                   ReferenceEquals(DataContext, viewModel) &&
+                   IsNearTop(scrollViewer) &&
+                   viewModel.SimpleMaterialsHasPrevious)
             {
-                LibraryManagementOrderItemViewModel? anchor =
-                    viewModel.SimpleMaterials.FirstOrDefault(material => material.Id == anchorMaterialId);
+                int startOffsetBeforeLoading = viewModel.SimpleMaterialWindowStartOffset;
+                int endOffsetBeforeLoading = viewModel.SimpleMaterialWindowEndOffset;
+                Guid? anchorId = viewModel.SimpleMaterials.FirstOrDefault()?.Id;
 
-                if (anchor is not null)
+                await viewModel.LoadPreviousSimpleMaterialWindowAsync(cancellationToken);
+
+                if (anchorId is Guid id)
                 {
-                    grid.ScrollIntoView(anchor);
+                    ScrollMaterialAnchorIntoView(sender, viewModel, id);
+                }
+
+                await WaitForScrollLayoutAsync();
+
+                if (startOffsetBeforeLoading == viewModel.SimpleMaterialWindowStartOffset &&
+                    endOffsetBeforeLoading == viewModel.SimpleMaterialWindowEndOffset)
+                {
+                    break;
                 }
             }
 
-            return;
-        }
-
-        if (!isNearBottom ||
-            !viewModel.LoadNextSimpleMaterialPageCommand.CanExecute(null))
-        {
-            return;
-        }
-
-        Guid? bottomAnchorId = viewModel.SimpleMaterials.LastOrDefault()?.Id;
-
-        await viewModel.LoadNextSimpleMaterialWindowAsync(
-            _loadCancellationTokenSource?.Token ?? CancellationToken.None);
-
-        if (sender is DataGrid dataGrid && bottomAnchorId is Guid bottomAnchorMaterialId)
-        {
-            LibraryManagementOrderItemViewModel? bottomAnchor =
-                viewModel.SimpleMaterials.FirstOrDefault(material => material.Id == bottomAnchorMaterialId);
-
-            if (bottomAnchor is not null)
+            if (loadPreviousPage)
             {
-                dataGrid.ScrollIntoView(bottomAnchor);
+                return;
             }
+
+            while (IsLoaded &&
+                   ReferenceEquals(DataContext, viewModel) &&
+                   IsNearBottom(scrollViewer) &&
+                   viewModel.LoadNextSimpleMaterialPageCommand.CanExecute(null))
+            {
+                int startOffsetBeforeLoading = viewModel.SimpleMaterialWindowStartOffset;
+                int endOffsetBeforeLoading = viewModel.SimpleMaterialWindowEndOffset;
+                Guid? anchorId = viewModel.SimpleMaterials.LastOrDefault()?.Id;
+
+                await viewModel.LoadNextSimpleMaterialWindowAsync(cancellationToken);
+
+                if (anchorId is Guid id)
+                {
+                    ScrollMaterialAnchorIntoView(sender, viewModel, id);
+                }
+
+                await WaitForScrollLayoutAsync();
+
+                if (startOffsetBeforeLoading == viewModel.SimpleMaterialWindowStartOffset &&
+                    endOffsetBeforeLoading == viewModel.SimpleMaterialWindowEndOffset)
+                {
+                    break;
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Обычная отмена при уходе со страницы.
+        }
+        finally
+        {
+            _isMaterialsScrollPageLoadRunning = false;
         }
     }
 
@@ -489,6 +625,89 @@ public partial class LibraryManagementView : UserControl
             when (cancellationToken.IsCancellationRequested)
         {
             // View was unloaded while the order dialog was being prepared/saved.
+        }
+    }
+
+    private static ScrollViewer? ResolveScrollViewer(
+        object sender,
+        ScrollChangedEventArgs e)
+    {
+        if (e.OriginalSource is ScrollViewer scrollViewer)
+        {
+            return scrollViewer;
+        }
+
+        return sender is DependencyObject dependencyObject
+            ? FindVisualChild<ScrollViewer>(dependencyObject)
+            : null;
+    }
+
+    private static T? FindVisualChild<T>(DependencyObject parent)
+        where T : DependencyObject
+    {
+        int childrenCount = VisualTreeHelper.GetChildrenCount(parent);
+
+        for (int index = 0; index < childrenCount; index++)
+        {
+            DependencyObject child = VisualTreeHelper.GetChild(parent, index);
+
+            if (child is T result)
+            {
+                return result;
+            }
+
+            T? nestedResult = FindVisualChild<T>(child);
+
+            if (nestedResult is not null)
+            {
+                return nestedResult;
+            }
+        }
+
+        return null;
+    }
+
+    private static bool IsNearTop(ScrollViewer scrollViewer)
+    {
+        double threshold = Math.Max(2d, scrollViewer.ViewportHeight * 0.5d);
+        return scrollViewer.VerticalOffset <= threshold;
+    }
+
+    private static bool IsNearBottom(ScrollViewer scrollViewer)
+    {
+        double remainingDistance = Math.Max(
+            0d,
+            scrollViewer.ExtentHeight -
+            scrollViewer.VerticalOffset -
+            scrollViewer.ViewportHeight);
+
+        double threshold = Math.Max(2d, scrollViewer.ViewportHeight * 0.5d);
+        return remainingDistance <= threshold;
+    }
+
+    private async Task WaitForScrollLayoutAsync()
+    {
+        await Dispatcher.InvokeAsync(
+            static () => { },
+            DispatcherPriority.Background);
+    }
+
+    private static void ScrollMaterialAnchorIntoView(
+        object sender,
+        LibraryManagementViewModel viewModel,
+        Guid anchorId)
+    {
+        if (sender is not DataGrid grid)
+        {
+            return;
+        }
+
+        LibraryManagementOrderItemViewModel? anchor =
+            viewModel.SimpleMaterials.FirstOrDefault(material => material.Id == anchorId);
+
+        if (anchor is not null)
+        {
+            grid.ScrollIntoView(anchor);
         }
     }
 
