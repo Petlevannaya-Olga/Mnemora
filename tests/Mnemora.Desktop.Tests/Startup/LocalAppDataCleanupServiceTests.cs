@@ -10,25 +10,31 @@ public sealed class LocalAppDataCleanupServiceTests : IDisposable
     private readonly string _root = Path.Combine(Path.GetTempPath(), "Mnemora.Tests", Guid.NewGuid().ToString("N"));
 
     [Fact]
-    public async Task CleanupAsync_DeletesOnlyTempAndStagingContents()
+    public async Task CleanupAsync_DeletesTempDirectory_AndKeepsOtherRootContents()
     {
         var paths = new TestPathProvider(_root);
+
         Directory.CreateDirectory(paths.TempPath);
-        Directory.CreateDirectory(paths.StagingPath);
-        Directory.CreateDirectory(Path.Combine(paths.RootPath, "Keep"));
-        Directory.CreateDirectory(Path.Combine(paths.StagingPath, "nested"));
-        await File.WriteAllTextAsync(Path.Combine(paths.TempPath, "temp.txt"), "temp");
-        await File.WriteAllTextAsync(Path.Combine(paths.StagingPath, "nested", "stage.txt"), "stage");
-        string keepPath = Path.Combine(paths.RootPath, "Keep", "keep.txt");
+
+        string keepDirectoryPath = Path.Combine(paths.RootPath, "Keep");
+        Directory.CreateDirectory(keepDirectoryPath);
+
+        await File.WriteAllTextAsync(
+            Path.Combine(paths.TempPath, "temp.txt"),
+            "temp");
+
+        string keepPath = Path.Combine(keepDirectoryPath, "keep.txt");
         await File.WriteAllTextAsync(keepPath, "keep");
 
-        var service = new LocalAppDataCleanupService(paths, NullLogger<LocalAppDataCleanupService>.Instance);
+        var service = new LocalAppDataCleanupService(
+            paths,
+            NullLogger<LocalAppDataCleanupService>.Instance);
+
         LocalAppDataCleanupReport report = await service.CleanupAsync();
 
         Assert.False(Directory.Exists(paths.TempPath));
-        Assert.Empty(Directory.GetFileSystemEntries(paths.StagingPath));
         Assert.True(File.Exists(keepPath));
-        Assert.Equal(2, report.DeletedCount);
+        Assert.Equal(1, report.DeletedCount);
         Assert.Equal(0, report.SkippedCount);
     }
 
