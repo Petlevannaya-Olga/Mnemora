@@ -1,0 +1,73 @@
+﻿<UserControl
+    x:Class="Mnemora.Desktop.Controls.Loading.LibraryCardsSkeleton"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:loading="clr-namespace:Mnemora.Desktop.Controls.Loading"
+    IsHitTestVisible="False">
+
+    <UserControl.Resources>
+        <ControlTemplate x:Key="CardSkeletonTemplate" TargetType="Control">
+            <Border
+                Height="176"
+                Margin="0,0,16,16"
+                Padding="20"
+                Background="{DynamicResource Mnemora.Brush.Surface}"
+                BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                BorderThickness="1"
+                CornerRadius="16">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <loading:SkeletonBlock Width="48" Height="48" CornerRadius="12" />
+
+                        <StackPanel Grid.Column="1" Margin="14,5,0,0">
+                            <loading:SkeletonBlock Width="150" Height="16" HorizontalAlignment="Left" />
+                            <loading:SkeletonBlock Width="96" Height="11" Margin="0,9,0,0" HorizontalAlignment="Left" />
+                        </StackPanel>
+                    </Grid>
+
+                    <loading:SkeletonBlock
+                        Grid.Row="1"
+                        Width="118"
+                        Height="12"
+                        Margin="0,18,0,0"
+                        HorizontalAlignment="Left" />
+
+                    <StackPanel Grid.Row="3">
+                        <loading:SkeletonBlock Width="170" Height="10" HorizontalAlignment="Left" />
+                        <loading:SkeletonBlock Width="128" Height="10" Margin="0,9,0,0" HorizontalAlignment="Left" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </ControlTemplate>
+    </UserControl.Resources>
+
+    <Grid VerticalAlignment="Top">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <loading:SkeletonBlock Width="132" Height="25" HorizontalAlignment="Left" />
+
+        <UniformGrid Grid.Row="1" Margin="0,18,0,0" Columns="3">
+            <Control Template="{StaticResource CardSkeletonTemplate}" />
+            <Control Template="{StaticResource CardSkeletonTemplate}" />
+            <Control Template="{StaticResource CardSkeletonTemplate}" />
+            <Control Template="{StaticResource CardSkeletonTemplate}" />
+            <Control Template="{StaticResource CardSkeletonTemplate}" />
+            <Control Template="{StaticResource CardSkeletonTemplate}" />
+        </UniformGrid>
+    </Grid>
+</UserControl>

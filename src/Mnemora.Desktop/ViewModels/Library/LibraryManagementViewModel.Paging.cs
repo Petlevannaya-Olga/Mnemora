@@ -61,6 +61,10 @@ public sealed partial class LibraryManagementViewModel
         _simpleSectionWindow.HasPrevious &&
         !_isSimpleSectionsLoadingPreviousPage;
 
+    public bool IsSimpleSectionsPaging =>
+        IsSimpleSectionsLoadingNextPage ||
+        _isSimpleSectionsLoadingPreviousPage;
+
     public bool IsSimpleSectionsLoadingPreviousPage => _isSimpleSectionsLoadingPreviousPage;
     public int SimpleSectionWindowStartOffset => _simpleSectionWindow.WindowStartOffset;
     public int SimpleSectionWindowEndOffset => _simpleSectionWindow.WindowEndOffset;
@@ -78,6 +82,9 @@ public sealed partial class LibraryManagementViewModel
 
     public bool IsSimpleTopicsLoadingNextPage => _isSimpleTopicsLoadingNextPage;
     public bool IsSimpleTopicsLoadingPreviousPage => _isSimpleTopicsLoadingPreviousPage;
+    public bool IsSimpleTopicsPaging =>
+        _isSimpleTopicsLoadingNextPage ||
+        _isSimpleTopicsLoadingPreviousPage;
     public int SimpleTopicsTotalCount => _simpleTopicsTotalCount;
     public int SimpleTopicWindowStartOffset => _simpleTopicWindow.WindowStartOffset;
     public int SimpleTopicWindowEndOffset => _simpleTopicWindow.WindowEndOffset;
@@ -88,6 +95,12 @@ public sealed partial class LibraryManagementViewModel
     public bool SimpleMaterialsHasPrevious =>
         _simpleMaterialWindowStartOffset > 0 &&
         !_isSimpleMaterialsLoadingPreviousPage;
+
+    public bool IsSimpleMaterialsLoadingNextPage => _isSimpleMaterialsLoadingNextPage;
+    public bool IsSimpleMaterialsLoadingPreviousPage => _isSimpleMaterialsLoadingPreviousPage;
+    public bool IsSimpleMaterialsPaging =>
+        _isSimpleMaterialsLoadingNextPage ||
+        _isSimpleMaterialsLoadingPreviousPage;
 
     public int SimpleMaterialWindowStartOffset => _simpleMaterialWindowStartOffset;
     public int SimpleMaterialWindowEndOffset => _simpleMaterialWindowEndOffset;

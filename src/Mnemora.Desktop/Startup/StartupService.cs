@@ -13,14 +13,20 @@ public sealed class StartupService(ISettingsService settingsService, OnboardingS
     {
         ArgumentNullException.ThrowIfNull(progress);
 
-        progress.Report(new StartupProgress(5, "Загружаем настройки", "Подготавливаем конфигурацию Mnemora"));
+        await ReportProgressAsync(
+            progress,
+            new StartupProgress(5, "Загружаем настройки", "Подготавливаем конфигурацию Mnemora"),
+            cancellationToken);
         await LoadSettingsAsync(cancellationToken);
 
         bool wasOnboardingCompleted = onboardingState.IsOnboardingCompleted;
         bool storageIsConfigured = wasOnboardingCompleted && !string.IsNullOrWhiteSpace(onboardingState.StoragePath);
         bool editorIsConfigured = HasEditorConfiguration();
 
-        progress.Report(new StartupProgress(20, "Очищаем временные данные", "Проверяем Temp и Staging в LocalAppData"));
+        await ReportProgressAsync(
+            progress,
+            new StartupProgress(20, "Очищаем временные данные", "Проверяем Temp и Staging в LocalAppData"),
+            cancellationToken);
         LocalAppDataCleanupReport cleanupReport = await cleanupService.CleanupAsync(cancellationToken);
 
         if (cleanupReport.SkippedCount > 0)
@@ -28,7 +34,15 @@ public sealed class StartupService(ISettingsService settingsService, OnboardingS
             logger.LogWarning("При очистке временных данных Mnemora пропущено объектов: {SkippedCount}", cleanupReport.SkippedCount);
         }
 
-        progress.Report(new StartupProgress(40, "Проверяем хранилище", storageIsConfigured ? onboardingState.StoragePath : "Хранилище будет настроено в онбординге"));
+        await ReportProgressAsync(
+            progress,
+            new StartupProgress(
+                40,
+                "Проверяем хранилище",
+                storageIsConfigured
+                    ? onboardingState.StoragePath
+                    : "Хранилище будет настроено в онбординге"),
+            cancellationToken);
 
         if (storageIsConfigured)
         {
@@ -37,8 +51,11 @@ public sealed class StartupService(ISettingsService settingsService, OnboardingS
                 return StartupResult.Failure($"Папка хранилища не найдена: {onboardingState.StoragePath}");
             }
 
-            progress.Report(new StartupProgress(65, "Инициализируем базу данных", "Проверяем SQLite и миграции"));
-            var databaseResult = await databaseInitializer.InitializeAsync();
+            await ReportProgressAsync(
+                progress,
+                new StartupProgress(65, "Инициализируем базу данных", "Проверяем SQLite и миграции"),
+                cancellationToken);
+            var databaseResult = await databaseInitializer.InitializeAsync(cancellationToken);
 
             if (databaseResult.IsFailure)
             {
@@ -46,12 +63,33 @@ public sealed class StartupService(ISettingsService settingsService, OnboardingS
             }
         }
 
-        progress.Report(new StartupProgress(90, "Подготавливаем приложение", "Завершаем запуск"));
-        await Task.Yield();
-        cancellationToken.ThrowIfCancellationRequested();
+        await ReportProgressAsync(
+            progress,
+            new StartupProgress(90, "Подготавливаем приложение", "Завершаем запуск"),
+            cancellationToken);
 
-        progress.Report(new StartupProgress(100, "Готово", cleanupReport.SkippedCount == 0 ? "Mnemora готова к работе" : $"Mnemora готова к работе. Не удалось удалить временных объектов: {cleanupReport.SkippedCount}"));
+        await ReportProgressAsync(
+            progress,
+            new StartupProgress(
+                100,
+                "Готово",
+                cleanupReport.SkippedCount == 0
+                    ? "Mnemora готова к работе"
+                    : $"Mnemora готова к работе. Не удалось удалить временных объектов: {cleanupReport.SkippedCount}"),
+            cancellationToken);
         return StartupResult.Success(wasOnboardingCompleted, storageIsConfigured, editorIsConfigured);
+    }
+
+    private static async Task ReportProgressAsync(
+        IProgress<StartupProgress> progress,
+        StartupProgress state,
+        CancellationToken cancellationToken)
+    {
+        progress.Report(state);
+
+        // Даже быстрый этап должен попасть хотя бы в один кадр WPF.
+        // Небольшая уступка UI-потоку предотвращает скачок сразу к финалу.
+        await Task.Delay(70, cancellationToken);
     }
 
     private async Task LoadSettingsAsync(CancellationToken cancellationToken)

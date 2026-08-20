@@ -1,6 +1,7 @@
 <Window x:Class="Mnemora.Desktop.Views.Startup.StartupWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:loading="clr-namespace:Mnemora.Desktop.Controls.Loading"
         Title="Mnemora"
         Width="620"
         Height="360"
@@ -43,26 +44,18 @@
                                TextAlignment="Center"
                                TextWrapping="Wrap" />
 
-                    <TextBlock Margin="0,8,0,0"
-                               HorizontalAlignment="Center"
-                               FontSize="13"
-                               Foreground="#AEBBD1"
-                               Text="{Binding Details}"
-                               TextAlignment="Center"
-                               TextWrapping="Wrap" />
-
-                    <ProgressBar Height="6"
-                                 Margin="0,26,0,0"
-                                 Maximum="100"
-                                 Value="{Binding Progress, Mode=OneWay}"
-                                 Background="#203656"
-                                 Foreground="#16CDB7" />
-
-                    <TextBlock Margin="0,10,0,0"
-                               HorizontalAlignment="Right"
-                               FontSize="12"
-                               Foreground="#8FA0BB"
-                               Text="{Binding Progress, StringFormat={}{0}%}" />
+                    <loading:LoadingIndicator
+                        Margin="0,30,0,0"
+                        IndicatorLength="440"
+                        IndicatorThickness="10"
+                        IsIndeterminate="False"
+                        Maximum="100"
+                        Message="{Binding Details}"
+                        MessageForeground="#AEBBD1"
+                        PercentageForeground="#16CDB7"
+                        ShowPercentage="True"
+                        TrackBrush="#263C60"
+                        Value="{Binding Progress, Mode=OneWay}" />
                 </StackPanel>
 
                 <Border Padding="18"

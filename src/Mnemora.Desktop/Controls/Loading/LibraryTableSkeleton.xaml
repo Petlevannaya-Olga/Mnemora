@@ -1,0 +1,71 @@
+﻿<UserControl
+    x:Class="Mnemora.Desktop.Controls.Loading.LibraryTableSkeleton"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:loading="clr-namespace:Mnemora.Desktop.Controls.Loading"
+    IsHitTestVisible="False">
+
+    <UserControl.Resources>
+        <ControlTemplate x:Key="TableRowSkeletonTemplate" TargetType="Control">
+            <Grid Height="66">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2.1*" />
+                    <ColumnDefinition Width="1.25*" />
+                    <ColumnDefinition Width="1*" />
+                    <ColumnDefinition Width="0.75*" />
+                </Grid.ColumnDefinitions>
+
+                <Border
+                    Grid.ColumnSpan="4"
+                    BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                    BorderThickness="0,0,0,1" />
+
+                <StackPanel Margin="18,0" VerticalAlignment="Center" Orientation="Horizontal">
+                    <loading:SkeletonBlock Width="38" Height="38" CornerRadius="10" />
+                    <loading:SkeletonBlock Width="150" Height="13" Margin="12,0,0,0" />
+                </StackPanel>
+
+                <loading:SkeletonBlock Grid.Column="1" Width="112" Height="12" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                <loading:SkeletonBlock Grid.Column="2" Width="84" Height="12" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                <loading:SkeletonBlock Grid.Column="3" Width="68" Height="12" HorizontalAlignment="Left" VerticalAlignment="Center" />
+            </Grid>
+        </ControlTemplate>
+    </UserControl.Resources>
+
+    <Border
+        Background="{DynamicResource Mnemora.Brush.Surface}"
+        BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+        BorderThickness="1"
+        ClipToBounds="True"
+        CornerRadius="14">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="48" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Grid Background="#F6F8FC">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2.1*" />
+                    <ColumnDefinition Width="1.25*" />
+                    <ColumnDefinition Width="1*" />
+                    <ColumnDefinition Width="0.75*" />
+                </Grid.ColumnDefinitions>
+
+                <loading:SkeletonBlock Width="92" Height="11" Margin="18,0" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                <loading:SkeletonBlock Grid.Column="1" Width="72" Height="11" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                <loading:SkeletonBlock Grid.Column="2" Width="82" Height="11" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                <loading:SkeletonBlock Grid.Column="3" Width="58" Height="11" HorizontalAlignment="Left" VerticalAlignment="Center" />
+            </Grid>
+
+            <StackPanel Grid.Row="1">
+                <Control Template="{StaticResource TableRowSkeletonTemplate}" />
+                <Control Template="{StaticResource TableRowSkeletonTemplate}" />
+                <Control Template="{StaticResource TableRowSkeletonTemplate}" />
+                <Control Template="{StaticResource TableRowSkeletonTemplate}" />
+                <Control Template="{StaticResource TableRowSkeletonTemplate}" />
+                <Control Template="{StaticResource TableRowSkeletonTemplate}" />
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

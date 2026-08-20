@@ -208,6 +208,7 @@ public sealed partial class LibraryManagementViewModel(
     private bool _isSimpleSectionsLoading;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSimpleSectionsPaging))]
     [NotifyCanExecuteChangedFor(nameof(LoadNextSimpleSectionPageCommand))]
     private bool _isSimpleSectionsLoadingNextPage;
 
@@ -2714,6 +2715,7 @@ public sealed partial class LibraryManagementViewModel(
         OnPropertyChanged(nameof(HasNoSimpleSectionSearchResults));
         OnPropertyChanged(nameof(SimpleSectionsShownCountText));
         OnPropertyChanged(nameof(SimpleSectionsHasPrevious));
+        OnPropertyChanged(nameof(IsSimpleSectionsPaging));
         OnPropertyChanged(nameof(SimpleSectionWindowStartOffset));
         OnPropertyChanged(nameof(SimpleSectionWindowEndOffset));
         OnPropertyChanged(nameof(SimpleSectionCurrentPageOffset));
@@ -2730,6 +2732,7 @@ public sealed partial class LibraryManagementViewModel(
         OnPropertyChanged(nameof(SimpleTopicsShownCountText));
         OnPropertyChanged(nameof(SimpleTopicsHasMore));
         OnPropertyChanged(nameof(SimpleTopicsHasPrevious));
+        OnPropertyChanged(nameof(IsSimpleTopicsPaging));
         OnPropertyChanged(nameof(SimpleTopicsTotalCount));
         OnPropertyChanged(nameof(SimpleTopicWindowStartOffset));
         OnPropertyChanged(nameof(SimpleTopicWindowEndOffset));
@@ -2747,6 +2750,9 @@ public sealed partial class LibraryManagementViewModel(
         OnPropertyChanged(nameof(SimpleMaterialsShownCountText));
         OnPropertyChanged(nameof(SimpleMaterialsHasMore));
         OnPropertyChanged(nameof(SimpleMaterialsHasPrevious));
+        OnPropertyChanged(nameof(IsSimpleMaterialsLoadingNextPage));
+        OnPropertyChanged(nameof(IsSimpleMaterialsLoadingPreviousPage));
+        OnPropertyChanged(nameof(IsSimpleMaterialsPaging));
         OnPropertyChanged(nameof(SimpleMaterialWindowStartOffset));
         OnPropertyChanged(nameof(SimpleMaterialWindowEndOffset));
         OnPropertyChanged(nameof(SimpleMaterialCachedPageCount));
