@@ -12,4 +12,8 @@
       <PackageReference Include="Scrutor" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Home\" />
+    </ItemGroup>
+
 </Project>

@@ -1,8 +1,7 @@
-﻿using System.Collections.ObjectModel;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.IO;
 using CommunityToolkit.Mvvm.Input;
-using Mnemora.Application.Library.Get;
+using Mnemora.Application.Home.GetLibrarySummary;
 using Mnemora.Application.Queries;
 using Mnemora.Contracts;
 using Mnemora.Contracts.Library;
@@ -28,6 +27,9 @@ public sealed partial class HomeViewModel : ViewModelBase
     private string? _storageErrorMessage;
     private string? _libraryErrorMessage;
     private bool _isLoading;
+    private int _sectionsCount;
+    private int _topicsCount;
+    private HomeSuggestedSectionDto? _suggestedSection;
 
     public HomeViewModel(
         OnboardingState onboardingState,
@@ -57,14 +59,11 @@ public sealed partial class HomeViewModel : ViewModelBase
             : onboardingState.StoragePath.Trim();
     }
 
-    public ObservableCollection<LibrarySectionDto> Sections { get; } = [];
-
     public bool HasTopics =>
         HasSections && TopicsCount > 0;
 
-    public LibrarySectionDto? SuggestedSection =>
-        Sections.FirstOrDefault(section => section.Topics.Count == 0)
-        ?? Sections.FirstOrDefault();
+    public HomeSuggestedSectionDto? SuggestedSection =>
+        _suggestedSection;
 
     public string Greeting { get; }
 
@@ -105,21 +104,17 @@ public sealed partial class HomeViewModel : ViewModelBase
         !string.IsNullOrWhiteSpace(LibraryErrorMessage);
 
     public bool IsLibraryEmpty =>
-        !IsLoading && !HasLibraryError && Sections.Count == 0;
+        !IsLoading && !HasLibraryError && SectionsCount == 0;
 
     public bool HasSections =>
-        !IsLoading && !HasLibraryError && Sections.Count > 0;
+        !IsLoading && !HasLibraryError && SectionsCount > 0;
 
     public bool HasSectionsWithoutTopics =>
         HasSections && TopicsCount == 0;
 
-    public int SectionsCount => Sections.Count;
+    public int SectionsCount => _sectionsCount;
 
-    public int TopicsCount =>
-        Sections.Sum(section => section.Topics.Count);
-
-    public LibrarySectionDto? FirstSection =>
-        Sections.FirstOrDefault();
+    public int TopicsCount => _topicsCount;
 
     public string SectionsSummary =>
         $"{SectionsCount} {DeclensionGenerator.Generate(
@@ -172,11 +167,11 @@ public sealed partial class HomeViewModel : ViewModelBase
 
         try
         {
-            var query = new GetLibraryQuery();
+            var query = new GetHomeLibrarySummaryQuery();
 
             var result = await _queryDispatcher.SendAsync<
-                GetLibraryQuery,
-                IReadOnlyList<LibrarySectionDto>>(
+                GetHomeLibrarySummaryQuery,
+                HomeLibrarySummaryDto>(
                 query,
                 cancellationToken);
 
@@ -195,12 +190,9 @@ public sealed partial class HomeViewModel : ViewModelBase
                 return;
             }
 
-            Sections.Clear();
-
-            foreach (var section in result.Value)
-            {
-                Sections.Add(section);
-            }
+            _sectionsCount = result.Value.SectionsCount;
+            _topicsCount = result.Value.TopicsCount;
+            _suggestedSection = result.Value.SuggestedSection;
 
             NotifyLibraryStateChanged();
         }
@@ -315,7 +307,6 @@ public sealed partial class HomeViewModel : ViewModelBase
         OnPropertyChanged(nameof(HasTopics));
         OnPropertyChanged(nameof(SectionsCount));
         OnPropertyChanged(nameof(TopicsCount));
-        OnPropertyChanged(nameof(FirstSection));
         OnPropertyChanged(nameof(SuggestedSection));
         OnPropertyChanged(nameof(SectionsSummary));
     }

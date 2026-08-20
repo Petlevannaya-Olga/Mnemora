@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mnemora.Application;
@@ -34,7 +35,7 @@ public partial class App : System.Windows.Application
 {
     private ServiceProvider? _serviceProvider;
 
-    protected override void OnStartup(StartupEventArgs e)
+    protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
@@ -52,6 +53,19 @@ public partial class App : System.Windows.Application
             Shutdown();
             return;
         }
+
+        var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
+        var mainWindowViewModel = _serviceProvider.GetRequiredService<MainWindowViewModel>();
+
+        MainWindow = mainWindow;
+        ShutdownMode = ShutdownMode.OnMainWindowClose;
+        mainWindow.Show();
+
+        // Даём WPF отрисовать лёгкий скелетон до создания AppShellView
+        // и первой страницы приложения.
+        await mainWindow.Dispatcher.InvokeAsync(
+            static () => { },
+            DispatcherPriority.ApplicationIdle);
 
         var onboardingState = _serviceProvider.GetRequiredService<OnboardingState>();
         var navigationService = _serviceProvider.GetRequiredService<INavigationService>();
@@ -72,10 +86,13 @@ public partial class App : System.Windows.Application
             navigationService.NavigateTo<WelcomeViewModel>();
         }
 
-        var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
-        MainWindow = mainWindow;
-        ShutdownMode = ShutdownMode.OnMainWindowClose;
-        mainWindow.Show();
+        // CurrentViewModel уже назначена. Ждём первый layout/render её шаблона,
+        // после чего открываем готовый интерфейс под скелетоном.
+        await mainWindow.Dispatcher.InvokeAsync(
+            static () => { },
+            DispatcherPriority.ContextIdle);
+
+        mainWindowViewModel.CompleteInitialization();
     }
 
     protected override void OnExit(ExitEventArgs e)
