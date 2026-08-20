@@ -891,13 +891,12 @@
                 <!-- Диапазон текущей страницы -->
 
                 <Grid Grid.Row="2" MinHeight="52">
-                    <TextBlock
-                        HorizontalAlignment="Center"
+                    <StackPanel
+                        HorizontalAlignment="Left"
                         VerticalAlignment="Center"
-                        Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                        Text="{Binding SectionsShownCountText}">
-                        <TextBlock.Style>
-                            <Style TargetType="TextBlock">
+                        Orientation="Horizontal">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
                                 <Setter Property="Visibility" Value="Visible" />
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding HasNextPageError}" Value="True">
@@ -905,11 +904,25 @@
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
+                        </StackPanel.Style>
+
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                            Text="{Binding SectionsShownCountText}" />
+
+                        <ProgressBar
+                            Width="96"
+                            Height="4"
+                            Margin="16,0,0,0"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource Mnemora.Brush.Primary}"
+                            IsIndeterminate="True"
+                            Visibility="{Binding IsLoadingNextPage, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    </StackPanel>
 
                     <StackPanel
-                        HorizontalAlignment="Center"
+                        HorizontalAlignment="Left"
                         VerticalAlignment="Center"
                         Orientation="Horizontal"
                         Visibility="{Binding HasNextPageError, Converter={StaticResource BooleanToVisibilityConverter}}">

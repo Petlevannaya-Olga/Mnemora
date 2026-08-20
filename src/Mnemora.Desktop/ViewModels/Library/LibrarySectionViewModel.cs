@@ -76,12 +76,21 @@ public sealed partial class LibrarySectionViewModel(
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsEmpty))]
     [NotifyPropertyChangedFor(nameof(HasNoSearchResults))]
+    [NotifyPropertyChangedFor(nameof(TopicsShownCountText))]
     private string? _searchText;
 
     [ObservableProperty]
     private LibraryTopicSortOption _selectedSortOption = new(
         "Последняя активность",
         LibraryTopicSort.RecentActivity);
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(TopicsShownCountText))]
+    private int _totalCount;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(TopicsShownCountText))]
+    private int _currentPageOffset;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsTableView))]
@@ -96,6 +105,24 @@ public sealed partial class LibrarySectionViewModel(
     public bool HasError => !string.IsNullOrWhiteSpace(ErrorMessage);
 
     public bool HasNextPageError => !string.IsNullOrWhiteSpace(NextPageErrorMessage);
+
+    public string TopicsShownCountText
+    {
+        get
+        {
+            int visibleCount = Math.Min(
+                PageSize,
+                Math.Max(0, TotalCount - CurrentPageOffset));
+
+            return LibraryRangeTextFormatter.FormatEntity(
+                "Темы",
+                "Темы не найдены",
+                CurrentPageOffset,
+                visibleCount,
+                TotalCount,
+                !string.IsNullOrWhiteSpace(SearchText));
+        }
+    }
 
     public bool IsTableView => ViewMode == LibraryTopicsViewMode.Table;
 
@@ -253,6 +280,8 @@ public sealed partial class LibrarySectionViewModel(
         int loadVersion = Interlocked.Increment(ref _loadVersion);
 
         _nextOffset = 0;
+        CurrentPageOffset = 0;
+        TotalCount = 0;
         HasMore = true;
         ErrorMessage = null;
         NextPageErrorMessage = null;
@@ -293,11 +322,13 @@ public sealed partial class LibrarySectionViewModel(
 
         try
         {
+            int requestedOffset = _nextOffset;
+
             var query = new GetLibraryTopicsPageQuery(
                 _sectionId,
                 SearchText,
                 SelectedSortOption.Sort,
-                _nextOffset,
+                requestedOffset,
                 PageSize);
 
             var result = await queryDispatcher.SendAsync<
@@ -340,6 +371,8 @@ public sealed partial class LibrarySectionViewModel(
 
             _nextOffset = result.Value.NextOffset;
             HasMore = result.Value.HasMore;
+            CurrentPageOffset = requestedOffset;
+            TotalCount = result.Value.TotalCount;
 
             NotifyCollectionStateChanged();
         }

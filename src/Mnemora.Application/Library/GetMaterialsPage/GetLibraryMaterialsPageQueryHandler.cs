@@ -69,6 +69,8 @@ public sealed class GetLibraryMaterialsPageQueryHandler(
                         search));
             }
 
+            int totalCount = await materialsQuery.CountAsync(cancellationToken);
+
             var orderedMaterials = request.Sort switch
             {
                 LibraryMaterialSort.RecentlyUpdated => materialsQuery
@@ -125,7 +127,8 @@ public sealed class GetLibraryMaterialsPageQueryHandler(
                 topicDto,
                 items,
                 request.Offset + items.Length,
-                hasMore);
+                hasMore,
+                totalCount);
 
             return Result.Success<LibraryMaterialsPageDto, Errors>(result);
         }

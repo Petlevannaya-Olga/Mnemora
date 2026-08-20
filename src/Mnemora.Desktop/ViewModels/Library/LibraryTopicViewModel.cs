@@ -102,6 +102,7 @@ public sealed partial class LibraryTopicViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsEmpty))]
     [NotifyPropertyChangedFor(nameof(HasNoSearchResults))]
+    [NotifyPropertyChangedFor(nameof(MaterialsShownCountText))]
     private string? _searchText;
 
     [ObservableProperty]
@@ -110,6 +111,14 @@ public sealed partial class LibraryTopicViewModel : ViewModelBase
     [ObservableProperty]
     private LibraryMaterialSortOption _selectedSortOption;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(MaterialsShownCountText))]
+    private int _totalCount;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(MaterialsShownCountText))]
+    private int _currentPageOffset;
+
     public string TopicTitle => Topic?.Name ?? "Тема";
 
     public bool HasMaterials => Materials.Count > 0;
@@ -117,6 +126,22 @@ public sealed partial class LibraryTopicViewModel : ViewModelBase
     public bool HasError => !string.IsNullOrWhiteSpace(ErrorMessage);
 
     public bool HasNextPageError => !string.IsNullOrWhiteSpace(NextPageErrorMessage);
+
+    public string MaterialsShownCountText
+    {
+        get
+        {
+            int visibleCount = Math.Min(
+                PageSize,
+                Math.Max(0, TotalCount - CurrentPageOffset));
+
+            return LibraryRangeTextFormatter.Format(
+                CurrentPageOffset,
+                visibleCount,
+                TotalCount,
+                !string.IsNullOrWhiteSpace(SearchText));
+        }
+    }
 
     public bool IsEmpty =>
         !IsLoading &&
@@ -285,6 +310,8 @@ public sealed partial class LibraryTopicViewModel : ViewModelBase
         int loadVersion = Interlocked.Increment(ref _loadVersion);
 
         _nextOffset = 0;
+        CurrentPageOffset = 0;
+        TotalCount = 0;
         HasMore = true;
         ErrorMessage = null;
         NextPageErrorMessage = null;
@@ -322,12 +349,14 @@ public sealed partial class LibraryTopicViewModel : ViewModelBase
 
         try
         {
+            int requestedOffset = _nextOffset;
+
             var query = new GetLibraryMaterialsPageQuery(
                 _topicId,
                 SearchText,
                 SelectedFilterOption.Filter,
                 SelectedSortOption.Sort,
-                _nextOffset,
+                requestedOffset,
                 PageSize);
 
             var result = await _queryDispatcher.SendAsync<
@@ -367,6 +396,8 @@ public sealed partial class LibraryTopicViewModel : ViewModelBase
 
             _nextOffset = result.Value.NextOffset;
             HasMore = result.Value.HasMore;
+            CurrentPageOffset = requestedOffset;
+            TotalCount = result.Value.TotalCount;
 
             NotifyCollectionStateChanged();
         }

@@ -4,4 +4,5 @@ public sealed record LibraryTopicsPageDto(
     LibrarySectionHeaderDto Section,
     IReadOnlyList<LibraryTopicOverviewDto> Items,
     int NextOffset,
-    bool HasMore);
+    bool HasMore,
+    int TotalCount = 0);

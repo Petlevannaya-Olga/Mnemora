@@ -54,6 +54,8 @@ public sealed class GetLibraryTopicsPageQueryHandler(
                         search));
             }
 
+            int totalCount = await topicsQuery.CountAsync(cancellationToken);
+
             var topicActivities = topicsQuery.Select(topic => new
             {
                 TopicId = topic.Id,
@@ -171,7 +173,8 @@ public sealed class GetLibraryTopicsPageQueryHandler(
                 sectionDto,
                 items,
                 request.Offset + items.Length,
-                hasMore);
+                hasMore,
+                totalCount);
 
             return Result.Success<LibraryTopicsPageDto, Errors>(result);
         }
