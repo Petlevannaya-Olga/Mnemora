@@ -47,10 +47,16 @@ public partial class LibraryOverviewView : UserControl
 
     private void SectionsScroll_OnScrollChanged(object sender, ScrollChangedEventArgs e)
     {
-        if (e.ExtentHeight <= 0 || e.ViewportHeight <= 0)
+        if (e.ExtentHeight <= 0 ||
+            e.ViewportHeight <= 0 ||
+            DataContext is not LibraryOverviewViewModel viewModel)
         {
             return;
         }
+
+        int itemsPerRow = viewModel.IsTilesView ? 3 : 5;
+        viewModel.UpdateViewport(
+            GetLogicalEntityOffset(sender, e.VerticalOffset, itemsPerRow));
 
         double remainingDistance = e.ExtentHeight - e.VerticalOffset - e.ViewportHeight;
         double loadingThreshold = Math.Max(2, e.ViewportHeight * 0.5);
@@ -60,11 +66,24 @@ public partial class LibraryOverviewView : UserControl
             return;
         }
 
-        if (DataContext is LibraryOverviewViewModel viewModel &&
-            viewModel.LoadNextPageCommand.CanExecute(null))
+        if (viewModel.LoadNextPageCommand.CanExecute(null))
         {
             viewModel.LoadNextPageCommand.Execute(null);
         }
+    }
+
+    private static double GetLogicalEntityOffset(
+        object sender,
+        double verticalOffset,
+        int itemsPerRow)
+    {
+        if (sender is DataGrid)
+        {
+            return verticalOffset;
+        }
+
+        int rowIndex = Math.Max(0, (int)Math.Floor(verticalOffset));
+        return rowIndex * Math.Max(1, itemsPerRow);
     }
 
     private void CancelLoading()

@@ -888,27 +888,25 @@
                     </DataGrid>
                 </Border>
 
-                <!-- Догрузка -->
+                <!-- Диапазон текущей страницы -->
 
                 <Grid Grid.Row="2" MinHeight="52">
-                    <StackPanel
+                    <TextBlock
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Orientation="Horizontal"
-                        Visibility="{Binding IsLoadingNextPage, Converter={StaticResource BooleanToVisibilityConverter}}">
-
-                        <ProgressBar
-                            Width="120"
-                            Height="4"
-                            Foreground="{DynamicResource Mnemora.Brush.Primary}"
-                            IsIndeterminate="True" />
-
-                        <TextBlock
-                            Margin="14,0,0,0"
-                            VerticalAlignment="Center"
-                            Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                            Text="Загружаем ещё..." />
-                    </StackPanel>
+                        Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                        Text="{Binding SectionsShownCountText}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Visible" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasNextPageError}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
 
                     <StackPanel
                         HorizontalAlignment="Center"

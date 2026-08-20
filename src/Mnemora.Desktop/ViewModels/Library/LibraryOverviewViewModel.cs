@@ -14,7 +14,7 @@ namespace Mnemora.Desktop.ViewModels.Library;
 
 public sealed partial class LibraryOverviewViewModel : ViewModelBase
 {
-    private const int PageSize = 30;
+    private const int PageSize = LibraryPagingDefaults.PageSize;
     private static readonly TimeSpan SearchDelay = TimeSpan.FromMilliseconds(350);
 
     private readonly IQueryDispatcher _queryDispatcher;
@@ -91,6 +91,14 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
     [ObservableProperty] private LibrarySectionSortOption _selectedSortOption;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SectionsShownCountText))]
+    private int _totalCount;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SectionsShownCountText))]
+    private int _currentPageOffset;
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsTableView))]
     [NotifyPropertyChangedFor(nameof(IsTilesView))]
     [NotifyPropertyChangedFor(nameof(IsCompactTilesView))]
@@ -119,6 +127,24 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
     public bool IsTilesView => OverviewViewMode == LibraryOverviewViewMode.Tiles;
 
     public bool IsCompactTilesView => OverviewViewMode == LibraryOverviewViewMode.CompactTiles;
+
+    public string SectionsShownCountText
+    {
+        get
+        {
+            int visibleCount = Math.Min(
+                PageSize,
+                Math.Max(0, TotalCount - CurrentPageOffset));
+
+            return LibraryRangeTextFormatter.FormatEntity(
+                "Разделы",
+                "Разделы не найдены",
+                CurrentPageOffset,
+                visibleCount,
+                TotalCount,
+                !string.IsNullOrWhiteSpace(SearchText));
+        }
+    }
 
     public async Task LoadAsync(CancellationToken cancellationToken = default)
     {
@@ -231,6 +257,8 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
         int loadVersion = Interlocked.Increment(ref _loadVersion);
 
         _nextOffset = 0;
+        CurrentPageOffset = 0;
+        TotalCount = 0;
         HasMore = true;
         ErrorMessage = null;
         NextPageErrorMessage = null;
@@ -315,6 +343,7 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
 
             _nextOffset = result.Value.NextOffset;
             HasMore = result.Value.HasMore;
+            TotalCount = result.Value.TotalCount;
 
             NotifyCollectionStateChanged();
         }
@@ -377,6 +406,22 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
         }
 
         row.Add(section);
+    }
+
+    public void UpdateViewport(double logicalItemOffset)
+    {
+        int pageOffset = LibraryRangeTextFormatter.GetPageStartOffset(
+            windowStartOffset: 0,
+            verticalOffset: logicalItemOffset,
+            pageSize: PageSize);
+
+        if (TotalCount > 0)
+        {
+            int lastPageOffset = (TotalCount - 1) / PageSize * PageSize;
+            pageOffset = Math.Min(pageOffset, lastPageOffset);
+        }
+
+        CurrentPageOffset = pageOffset;
     }
 
     private async Task ReloadAfterSearchDelayAsync(int searchVersion)

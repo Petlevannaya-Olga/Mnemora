@@ -1429,7 +1429,6 @@ public sealed partial class LibraryManagementViewModel(
             _simpleSectionWindow.ShowPage(0, page.Items, PageWindowInsert.Append);
             RebuildSimpleSectionWindow();
             SyncSimpleSectionPagingProperties();
-            PrefetchSectionPages(loadVersion);
         }
         finally
         {

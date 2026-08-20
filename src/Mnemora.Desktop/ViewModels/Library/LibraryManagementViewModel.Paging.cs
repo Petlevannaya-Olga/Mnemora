@@ -135,7 +135,6 @@ public sealed partial class LibraryManagementViewModel
             _simpleSectionWindow.ShowPage(offset, page.Items, PageWindowInsert.Append);
             RebuildSimpleSectionWindow();
             SyncSimpleSectionPagingProperties();
-            PrefetchSectionPages(loadVersion);
         }
         finally
         {
@@ -420,42 +419,6 @@ public sealed partial class LibraryManagementViewModel
         }
     }
 
-    private void PrefetchSectionPages(int loadVersion)
-    {
-        if (loadVersion != _simpleSectionLoadVersion)
-        {
-            return;
-        }
-
-        foreach (int offset in _simpleSectionWindow.GetPrefetchOffsets(2))
-        {
-            _ = PrefetchSectionPageSafelyAsync(offset, loadVersion);
-        }
-    }
-
-    private async Task PrefetchSectionPageSafelyAsync(int offset, int loadVersion)
-    {
-        try
-        {
-            CancellationToken cancellationToken = _simpleSectionContextCancellation?.Token
-                                                  ?? _viewCancellationToken;
-
-            await GetSimpleSectionPageAsync(
-                offset,
-                loadVersion,
-                cancellationToken,
-                reportFailure: false);
-        }
-        catch (OperationCanceledException)
-        {
-            // Search/sort/view context changed.
-        }
-        catch (Exception exception)
-        {
-            logger.LogDebug(exception, "Не удалось предварительно загрузить страницу разделов {Offset}", offset);
-        }
-    }
-
     private void SyncSimpleSectionPagingProperties()
     {
         SimpleSectionsHasMore = _simpleSectionWindow.HasNext;
@@ -509,7 +472,6 @@ public sealed partial class LibraryManagementViewModel
             _simpleTopicWindow.ShowPage(0, page.Items, PageWindowInsert.Append);
             RebuildSimpleTopicWindow();
             NotifySimpleTopicsStateChanged();
-            PrefetchTopicPages(loadVersion);
         }
         finally
         {
@@ -561,7 +523,6 @@ public sealed partial class LibraryManagementViewModel
             _simpleTopicWindow.ShowPage(offset, page.Items, PageWindowInsert.Append);
             RebuildSimpleTopicWindow();
             NotifySimpleTopicsStateChanged();
-            PrefetchTopicPages(loadVersion);
         }
         finally
         {
@@ -880,42 +841,6 @@ public sealed partial class LibraryManagementViewModel
         }
     }
 
-    private void PrefetchTopicPages(int loadVersion)
-    {
-        if (loadVersion != _simpleTopicLoadVersion || SelectedSection is null)
-        {
-            return;
-        }
-
-        foreach (int offset in _simpleTopicWindow.GetPrefetchOffsets(2))
-        {
-            _ = PrefetchTopicPageSafelyAsync(offset, loadVersion);
-        }
-    }
-
-    private async Task PrefetchTopicPageSafelyAsync(int offset, int loadVersion)
-    {
-        try
-        {
-            CancellationToken cancellationToken = _simpleTopicContextCancellation?.Token
-                                                  ?? _viewCancellationToken;
-
-            await GetSimpleTopicPageAsync(
-                offset,
-                loadVersion,
-                cancellationToken,
-                reportFailure: false);
-        }
-        catch (OperationCanceledException)
-        {
-            // Context changed or view closed.
-        }
-        catch (Exception exception)
-        {
-            logger.LogDebug(exception, "Не удалось предварительно загрузить страницу тем {Offset}", offset);
-        }
-    }
-
     public void UpdateSimpleTopicViewport(double logicalItemOffset)
     {
         if (!_simpleTopicWindow.UpdateViewport(logicalItemOffset))
@@ -957,8 +882,6 @@ public sealed partial class LibraryManagementViewModel
             RebuildSimpleMaterialWindow();
             SelectedMaterial = SimpleMaterials.FirstOrDefault();
             NotifySimpleMaterialsStateChanged();
-
-            PrefetchMaterialPages(loadVersion);
         }
         finally
         {
@@ -1010,7 +933,6 @@ public sealed partial class LibraryManagementViewModel
             TrimVisibleMaterialPagesFromStart();
             RebuildSimpleMaterialWindow();
             NotifySimpleMaterialsStateChanged();
-            PrefetchMaterialPages(loadVersion);
         }
         finally
         {
@@ -1329,49 +1251,6 @@ public sealed partial class LibraryManagementViewModel
 
         _simpleMaterialWindowStartOffset = firstOffset ?? 0;
         _simpleMaterialWindowEndOffset = endOffset;
-    }
-
-    private void PrefetchMaterialPages(int loadVersion)
-    {
-        if (loadVersion != _simpleMaterialLoadVersion ||
-            SelectedTopic is null ||
-            _simpleMaterialWindowEndOffset >= _simpleMaterialsFilteredTotalCount)
-        {
-            return;
-        }
-
-        int firstOffset = _simpleMaterialWindowEndOffset;
-        _ = PrefetchMaterialPageSafelyAsync(firstOffset, loadVersion);
-
-        int secondOffset = firstOffset + SimpleMaterialPageSize;
-        if (secondOffset < _simpleMaterialsFilteredTotalCount)
-        {
-            _ = PrefetchMaterialPageSafelyAsync(secondOffset, loadVersion);
-        }
-    }
-
-    private async Task PrefetchMaterialPageSafelyAsync(int offset, int loadVersion)
-    {
-        try
-        {
-            CancellationToken cancellationToken = _simpleMaterialContextCancellation?.Token
-                                                  ?? _viewCancellationToken;
-
-            await GetSimpleMaterialPageAsync(
-                offset,
-                loadVersion,
-                cancellationToken,
-                reportFailure: false);
-        }
-        catch (OperationCanceledException)
-        {
-            // Context changed or view closed.
-        }
-        catch (Exception exception)
-        {
-            // Prefetch is opportunistic and must never break the current window.
-            logger.LogDebug(exception, "Не удалось предварительно загрузить страницу материалов {Offset}", offset);
-        }
     }
 
     public void UpdateSimpleMaterialViewport(double verticalOffset)
