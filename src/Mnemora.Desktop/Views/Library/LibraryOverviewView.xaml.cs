@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using Mnemora.Desktop.ViewModels.Library;
 
 namespace Mnemora.Desktop.Views.Library;
@@ -12,6 +13,7 @@ namespace Mnemora.Desktop.Views.Library;
 public partial class LibraryOverviewView : UserControl
 {
     private CancellationTokenSource? _loadCancellationTokenSource;
+    private bool _isScrollPageLoadRunning;
 
     public LibraryOverviewView()
     {
@@ -45,7 +47,7 @@ public partial class LibraryOverviewView : UserControl
         CancelLoading();
     }
 
-    private void SectionsScroll_OnScrollChanged(object sender, ScrollChangedEventArgs e)
+    private async void SectionsScroll_OnScrollChanged(object sender, ScrollChangedEventArgs e)
     {
         if (e.ExtentHeight <= 0 ||
             e.ViewportHeight <= 0 ||
@@ -58,18 +60,107 @@ public partial class LibraryOverviewView : UserControl
         viewModel.UpdateViewport(
             GetLogicalEntityOffset(sender, e.VerticalOffset, itemsPerRow));
 
-        double remainingDistance = e.ExtentHeight - e.VerticalOffset - e.ViewportHeight;
-        double loadingThreshold = Math.Max(2, e.ViewportHeight * 0.5);
-
-        if (remainingDistance > loadingThreshold)
+        if (_isScrollPageLoadRunning)
         {
             return;
         }
 
-        if (viewModel.LoadNextPageCommand.CanExecute(null))
+        ScrollViewer? scrollViewer = ResolveScrollViewer(sender, e);
+
+        if (scrollViewer is null || !IsNearBottom(scrollViewer))
         {
-            viewModel.LoadNextPageCommand.Execute(null);
+            return;
         }
+
+        _isScrollPageLoadRunning = true;
+
+        try
+        {
+            while (IsLoaded &&
+                   ReferenceEquals(DataContext, viewModel) &&
+                   IsNearBottom(scrollViewer) &&
+                   viewModel.LoadNextPageCommand.CanExecute(null))
+            {
+                int sectionsCountBeforeLoading = viewModel.Sections.Count;
+                await viewModel.LoadNextPageCommand.ExecuteAsync(null);
+
+                // Ждём перерасчёта диапазона прокрутки после добавления разделов.
+                // Затем повторно проверяем низ, чтобы не потерять ScrollChanged,
+                // пришедший во время выполнения команды.
+                await Dispatcher.InvokeAsync(
+                    static () => { },
+                    DispatcherPriority.Background);
+
+                if (viewModel.Sections.Count == sectionsCountBeforeLoading)
+                {
+                    break;
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Обычная отмена при уходе со страницы или перезапуске фильтра.
+        }
+        finally
+        {
+            _isScrollPageLoadRunning = false;
+        }
+    }
+
+    private static bool IsNearBottom(ScrollViewer scrollViewer)
+    {
+        if (scrollViewer.ExtentHeight <= 0 || scrollViewer.ViewportHeight <= 0)
+        {
+            return false;
+        }
+
+        double remainingDistance = Math.Max(
+            0,
+            scrollViewer.ExtentHeight -
+            scrollViewer.VerticalOffset -
+            scrollViewer.ViewportHeight);
+
+        double loadingThreshold = Math.Max(2, scrollViewer.ViewportHeight * 0.5);
+        return remainingDistance <= loadingThreshold;
+    }
+
+    private static ScrollViewer? ResolveScrollViewer(
+        object sender,
+        ScrollChangedEventArgs e)
+    {
+        if (e.OriginalSource is ScrollViewer scrollViewer)
+        {
+            return scrollViewer;
+        }
+
+        return sender is DependencyObject dependencyObject
+            ? FindVisualChild<ScrollViewer>(dependencyObject)
+            : null;
+    }
+
+    private static T? FindVisualChild<T>(DependencyObject parent)
+        where T : DependencyObject
+    {
+        int childrenCount = VisualTreeHelper.GetChildrenCount(parent);
+
+        for (int index = 0; index < childrenCount; index++)
+        {
+            DependencyObject child = VisualTreeHelper.GetChild(parent, index);
+
+            if (child is T result)
+            {
+                return result;
+            }
+
+            T? nestedResult = FindVisualChild<T>(child);
+
+            if (nestedResult is not null)
+            {
+                return nestedResult;
+            }
+        }
+
+        return null;
     }
 
     private static double GetLogicalEntityOffset(
