@@ -36,6 +36,17 @@
 
             <Grid Grid.Row="1" Margin="0,26,0,22">
                 <StackPanel VerticalAlignment="Center">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Visible" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasError}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+
                     <TextBlock HorizontalAlignment="Center"
                                FontSize="20"
                                FontWeight="SemiBold"
@@ -58,11 +69,15 @@
                         Value="{Binding Progress, Mode=OneWay}" />
                 </StackPanel>
 
-                <Border Padding="18"
-                        Background="#241D2B45"
-                        BorderBrush="#5C6B8D"
+                <Border Padding="24,20"
+                        MaxWidth="500"
+                        MinHeight="118"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Background="#B5162A4C"
+                        BorderBrush="#40577A"
                         BorderThickness="1"
-                        CornerRadius="12">
+                        CornerRadius="14">
                     <Border.Style>
                         <Style TargetType="Border">
                             <Setter Property="Visibility" Value="Collapsed" />
@@ -75,22 +90,44 @@
                     </Border.Style>
 
                     <StackPanel>
-                        <TextBlock FontSize="14"
+                        <Border Width="34"
+                                Height="34"
+                                HorizontalAlignment="Center"
+                                Background="#24FFB4A8"
+                                BorderBrush="#D9897C"
+                                BorderThickness="1"
+                                CornerRadius="17">
+                            <TextBlock HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       FontSize="18"
+                                       FontWeight="Bold"
+                                       Foreground="#FFD0C8"
+                                       Text="!" />
+                        </Border>
+
+                        <TextBlock Margin="0,12,0,0"
+                                   FontSize="15"
                                    FontWeight="SemiBold"
-                                   Foreground="#FFCFD6"
-                                   Text="Запуск не завершён" />
+                                   Foreground="#F2F5FA"
+                                   Text="{Binding ErrorMessage}"
+                                   TextAlignment="Center"
+                                   TextWrapping="Wrap" />
+
                         <TextBlock Margin="0,7,0,0"
                                    FontSize="12"
-                                   Foreground="#D9E0EC"
-                                   Text="{Binding ErrorMessage}"
+                                   Foreground="#AEBBD1"
+                                   Text="Повторите проверку или измените настройки приложения."
+                                   TextAlignment="Center"
                                    TextWrapping="Wrap" />
                     </StackPanel>
                 </Border>
             </Grid>
 
-            <Grid Grid.Row="2">
-                <Grid.Style>
-                    <Style TargetType="Grid">
+            <StackPanel Grid.Row="2"
+                        HorizontalAlignment="Center"
+                        Orientation="Horizontal">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
                         <Setter Property="Visibility" Value="Collapsed" />
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding HasError}" Value="True">
@@ -98,34 +135,37 @@
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
-                </Grid.Style>
+                </StackPanel.Style>
 
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="12" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-
-                <Button Grid.Column="0"
+                <Button Width="92"
                         Height="42"
                         Command="{Binding CloseCommand}"
-                        Content="Закрыть Mnemora"
+                        Content="Закрыть"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Foreground="#AEBBD1"
+                        Cursor="Hand" />
+
+                <Button Width="138"
+                        Height="42"
+                        Margin="10,0,0,0"
+                        Command="{Binding RetryCommand}"
+                        Content="Повторить"
                         Background="Transparent"
                         BorderBrush="#536681"
                         BorderThickness="1"
                         Foreground="#DCE4F1"
                         Cursor="Hand" />
 
-                <Button Grid.Column="2"
+                <Button Width="232"
                         Height="42"
-                        Command="{Binding RetryCommand}"
-                        Content="Попробовать снова"
-                        Background="#16CDB7"
-                        BorderThickness="0"
-                        Foreground="#061735"
-                        FontWeight="SemiBold"
-                        Cursor="Hand" />
-            </Grid>
+                        Margin="12,0,0,0"
+                        Padding="18,0"
+                        FontSize="16"
+                        Command="{Binding OpenOnboardingCommand}"
+                        Content="Изменить настройки"
+                        Style="{StaticResource Mnemora.PrimaryButton}" />
+            </StackPanel>
         </Grid>
     </Border>
 </Window>

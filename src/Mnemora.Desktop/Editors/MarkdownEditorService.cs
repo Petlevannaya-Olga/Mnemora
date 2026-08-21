@@ -13,6 +13,17 @@ public sealed class MarkdownEditorService(
     private const string EditorCheckFileName =
         "mnemora-editor-check.md";
 
+    private const string MaterialsDirectoryName =
+        "materials";
+
+    // Техническая папка временных файлов, не хранилище
+    // пользовательских материалов со статусом Draft.
+    private const string DraftsDirectoryName =
+        "_drafts";
+
+    private const string EditorCheckDirectoryName =
+        "editor-check";
+
     private const string VisualStudioCodeDownloadUrl =
         "https://code.visualstudio.com/download";
 
@@ -136,6 +147,57 @@ public sealed class MarkdownEditorService(
         }
     }
 
+    public MarkdownEditorConfigurationValidationResult
+        ValidateConfiguration(
+            MarkdownEditorType? editor,
+            string? visualStudioCodePath,
+            string? obsidianVaultPath)
+    {
+        if (editor is null)
+        {
+            return new MarkdownEditorConfigurationValidationResult(
+                false,
+                "Markdown-редактор не выбран.");
+        }
+
+        if (editor == MarkdownEditorType.VisualStudioCode)
+        {
+            return IsValidVisualStudioCodePath(
+                visualStudioCodePath)
+                ? new MarkdownEditorConfigurationValidationResult(
+                    true,
+                    "Visual Studio Code готов к работе.")
+                : new MarkdownEditorConfigurationValidationResult(
+                    false,
+                    "Visual Studio Code не найден. Проверьте путь к Code.exe.");
+        }
+
+        if (!IsValidObsidianVault(obsidianVaultPath))
+        {
+            return new MarkdownEditorConfigurationValidationResult(
+                false,
+                "Vault Obsidian не найден. Откройте папку Mnemora в Obsidian и повторите проверку.");
+        }
+
+        if (!IsObsidianInstalled())
+        {
+            return new MarkdownEditorConfigurationValidationResult(
+                false,
+                "Obsidian не найден. Установите приложение и повторите проверку.");
+        }
+
+        if (!IsObsidianUriRegistered())
+        {
+            return new MarkdownEditorConfigurationValidationResult(
+                false,
+                "Протокол obsidian:// не зарегистрирован. Запустите Obsidian и повторите проверку.");
+        }
+
+        return new MarkdownEditorConfigurationValidationResult(
+            true,
+            "Obsidian готов к работе.");
+    }
+
     public async Task<MarkdownEditorLaunchResult> CheckAsync(
         MarkdownEditorType editor,
         string? visualStudioCodePath,
@@ -144,20 +206,18 @@ public sealed class MarkdownEditorService(
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (editor == MarkdownEditorType.VisualStudioCode &&
-            !IsValidVisualStudioCodePath(visualStudioCodePath))
-        {
-            return new MarkdownEditorLaunchResult(
-                false,
-                "Visual Studio Code не найден. Укажите путь к Code.exe.");
-        }
+        MarkdownEditorConfigurationValidationResult
+            validationResult =
+                ValidateConfiguration(
+                    editor,
+                    visualStudioCodePath,
+                    obsidianVaultPath);
 
-        if (editor == MarkdownEditorType.Obsidian &&
-            !IsObsidianInstalled())
+        if (!validationResult.IsValid)
         {
             return new MarkdownEditorLaunchResult(
                 false,
-                "Obsidian не найден. Установите приложение и повторите поиск.");
+                validationResult.Message);
         }
 
         try
@@ -358,8 +418,14 @@ public sealed class MarkdownEditorService(
                 "Файл находится вне выбранного Vault Obsidian.");
         }
 
+        // Obsidian URI ожидает глобальный путь с URI-разделителями.
+        // Оставленные Windows-разделители могут открыть Vault,
+        // но не сам Markdown-файл.
+        string uriPath =
+            filePath.Replace('\\', '/');
+
         string uri =
-            $"obsidian://open?path={Uri.EscapeDataString(filePath)}";
+            $"obsidian://open?path={Uri.EscapeDataString(uriPath)}";
 
         Process.Start(new ProcessStartInfo(uri)
         {
@@ -406,7 +472,9 @@ public sealed class MarkdownEditorService(
 
         string directory = Path.Combine(
             Path.GetFullPath(obsidianVaultPath!),
-            ".mnemora-temp");
+            MaterialsDirectoryName,
+            DraftsDirectoryName,
+            EditorCheckDirectoryName);
 
         Directory.CreateDirectory(directory);
 

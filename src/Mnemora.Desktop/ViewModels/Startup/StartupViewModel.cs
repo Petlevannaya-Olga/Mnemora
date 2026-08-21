@@ -42,6 +42,7 @@ public sealed partial class StartupViewModel(IStartupService startupService) : V
             }
 
             OnPropertyChanged(nameof(CanRetry));
+            OpenOnboardingCommand.NotifyCanExecuteChanged();
         }
     }
 
@@ -57,6 +58,7 @@ public sealed partial class StartupViewModel(IStartupService startupService) : V
 
             OnPropertyChanged(nameof(HasError));
             OnPropertyChanged(nameof(CanRetry));
+            OpenOnboardingCommand.NotifyCanExecuteChanged();
         }
     }
 
@@ -65,6 +67,7 @@ public sealed partial class StartupViewModel(IStartupService startupService) : V
     public StartupResult? Result { get; private set; }
 
     public event EventHandler? StartupSucceeded;
+    public event EventHandler? OnboardingRequested;
     public event EventHandler? CloseRequested;
 
     public async Task RunAsync()
@@ -119,6 +122,14 @@ public sealed partial class StartupViewModel(IStartupService startupService) : V
     private Task RetryAsync()
     {
         return CanRetry ? RunAsync() : Task.CompletedTask;
+    }
+
+    [RelayCommand(CanExecute = nameof(CanRetry))]
+    private void OpenOnboarding()
+    {
+        OnboardingRequested?.Invoke(
+            this,
+            EventArgs.Empty);
     }
 
     [RelayCommand]

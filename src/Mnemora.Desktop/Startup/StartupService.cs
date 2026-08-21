@@ -2,12 +2,23 @@ using System.IO;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Mnemora.Application.Database;
+using Mnemora.Desktop.Editors;
 using Mnemora.Desktop.Settings;
+using Mnemora.Desktop.Storage;
 using Mnemora.Desktop.ViewModels.Onboarding;
 
 namespace Mnemora.Desktop.Startup;
 
-public sealed class StartupService(ISettingsService settingsService, OnboardingState onboardingState, IDatabaseInitializer databaseInitializer, ILocalAppDataCleanupService cleanupService, ILogger<StartupService> logger) : IStartupService
+public sealed class StartupService(
+    ISettingsService settingsService,
+    OnboardingState onboardingState,
+    IDatabaseInitializer databaseInitializer,
+    ILocalAppDataCleanupService localCleanupService,
+    IStorageTemporaryFilesCleanupService storageCleanupService,
+    IStorageValidationService storageValidationService,
+    IMarkdownEditorService markdownEditorService,
+    ILogger<StartupService> logger)
+    : IStartupService
 {
     public async Task<StartupResult> InitializeAsync(IProgress<StartupProgress> progress, CancellationToken cancellationToken = default)
     {
@@ -20,36 +31,66 @@ public sealed class StartupService(ISettingsService settingsService, OnboardingS
         await LoadSettingsAsync(cancellationToken);
 
         bool wasOnboardingCompleted = onboardingState.IsOnboardingCompleted;
-        bool storageIsConfigured = wasOnboardingCompleted && !string.IsNullOrWhiteSpace(onboardingState.StoragePath);
-        bool editorIsConfigured = HasEditorConfiguration();
+        bool storageIsConfigured = false;
+        bool editorIsConfigured = false;
 
         await ReportProgressAsync(
             progress,
-            new StartupProgress(20, "Очищаем временные данные", "Проверяем Temp в LocalAppData"),
+            new StartupProgress(20, "Очищаем временные данные", "Проверяем временные каталоги Mnemora"),
             cancellationToken);
-        LocalAppDataCleanupReport cleanupReport = await cleanupService.CleanupAsync(cancellationToken);
+        LocalAppDataCleanupReport localCleanupReport =
+            await localCleanupService.CleanupAsync(
+                cancellationToken);
 
-        if (cleanupReport.SkippedCount > 0)
-        {
-            logger.LogWarning("При очистке временных данных Mnemora пропущено объектов: {SkippedCount}", cleanupReport.SkippedCount);
-        }
+        int skippedTemporaryFiles =
+            localCleanupReport.SkippedCount;
 
         await ReportProgressAsync(
             progress,
             new StartupProgress(
                 40,
                 "Проверяем хранилище",
-                storageIsConfigured
-                    ? onboardingState.StoragePath
+                wasOnboardingCompleted
+                    ? onboardingState.StoragePath ??
+                      "Путь к хранилищу не указан"
                     : "Хранилище будет настроено в онбординге"),
             cancellationToken);
 
-        if (storageIsConfigured)
+        if (wasOnboardingCompleted)
         {
-            if (!Directory.Exists(onboardingState.StoragePath))
+            StorageValidationResult storageValidationResult =
+                storageValidationService.ValidateConfigured(
+                    onboardingState.StoragePath);
+
+            if (!storageValidationResult.IsValid)
             {
-                return StartupResult.Failure($"Папка хранилища не найдена: {onboardingState.StoragePath}");
+                return StartupResult.Failure(
+                    storageValidationResult.ErrorMessage ??
+                    "Хранилище Mnemora недоступно.");
             }
+
+            onboardingState.StoragePath =
+                storageValidationResult.NormalizedPath;
+
+            storageIsConfigured = true;
+
+            MarkdownEditorConfigurationValidationResult
+                editorValidationResult =
+                    markdownEditorService.ValidateConfiguration(
+                        onboardingState.MarkdownEditor,
+                        onboardingState.VisualStudioCodePath,
+                        onboardingState.ObsidianVaultPath);
+
+            editorIsConfigured =
+                editorValidationResult.IsValid;
+
+            StorageTemporaryFilesCleanupReport storageCleanupReport =
+                await storageCleanupService.CleanupAsync(
+                    onboardingState.StoragePath,
+                    cancellationToken);
+
+            skippedTemporaryFiles +=
+                storageCleanupReport.SkippedCount;
 
             await ReportProgressAsync(
                 progress,
@@ -63,6 +104,13 @@ public sealed class StartupService(ISettingsService settingsService, OnboardingS
             }
         }
 
+        if (skippedTemporaryFiles > 0)
+        {
+            logger.LogWarning(
+                "При очистке временных данных Mnemora пропущено объектов: {SkippedCount}",
+                skippedTemporaryFiles);
+        }
+
         await ReportProgressAsync(
             progress,
             new StartupProgress(90, "Подготавливаем приложение", "Завершаем запуск"),
@@ -73,9 +121,9 @@ public sealed class StartupService(ISettingsService settingsService, OnboardingS
             new StartupProgress(
                 100,
                 "Готово",
-                cleanupReport.SkippedCount == 0
+                skippedTemporaryFiles == 0
                     ? "Mnemora готова к работе"
-                    : $"Mnemora готова к работе. Не удалось удалить временных объектов: {cleanupReport.SkippedCount}"),
+                    : $"Mnemora готова к работе. Не удалось удалить временных объектов: {skippedTemporaryFiles}"),
             cancellationToken);
         return StartupResult.Success(wasOnboardingCompleted, storageIsConfigured, editorIsConfigured);
     }
@@ -111,16 +159,6 @@ public sealed class StartupService(ISettingsService settingsService, OnboardingS
             logger.LogWarning(exception, "Не удалось загрузить настройки Mnemora. Будет открыт онбординг.");
             ResetOnboardingState();
         }
-    }
-
-    private bool HasEditorConfiguration()
-    {
-        return onboardingState.MarkdownEditor switch
-        {
-            MarkdownEditorType.VisualStudioCode => !string.IsNullOrWhiteSpace(onboardingState.VisualStudioCodePath),
-            MarkdownEditorType.Obsidian => !string.IsNullOrWhiteSpace(onboardingState.ObsidianVaultPath),
-            _ => false,
-        };
     }
 
     private void ResetOnboardingState()

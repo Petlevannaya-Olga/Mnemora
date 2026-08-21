@@ -526,7 +526,7 @@
                                                 <DataTrigger Binding="{Binding IsStorageInvalid}"
                                                              Value="True">
                                                     <Setter Property="Text"
-                                                            Value="Папка должна быть пустой или содержать прежнее хранилище Mnemora." />
+                                                            Value="{Binding ValidationMessage}" />
                                                     <Setter Property="Foreground"
                                                             Value="#D53E4F" />
                                                 </DataTrigger>

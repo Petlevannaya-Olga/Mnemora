@@ -11,6 +11,11 @@ public interface IMarkdownEditorService
     MarkdownEditorLaunchResult OpenDownloadPage(
         MarkdownEditorType editor);
 
+    MarkdownEditorConfigurationValidationResult ValidateConfiguration(
+        MarkdownEditorType? editor,
+        string? visualStudioCodePath,
+        string? obsidianVaultPath);
+
     Task<MarkdownEditorLaunchResult> CheckAsync(
         MarkdownEditorType editor,
         string? visualStudioCodePath,

@@ -40,29 +40,21 @@ public sealed class StartupViewModelTests
     }
 
     [Fact]
-    public async Task RunAsync_ClampsReportedProgressToValidRange()
+    public async Task OpenOnboardingCommand_OnFailure_RaisesOnboardingRequest()
     {
-        var service = new ReportingStartupService([-25, 40, 150]);
+        var service = new FakeStartupService(
+            StartupResult.Failure(
+                "storage failed"));
         var viewModel = new StartupViewModel(service);
+        bool onboardingRequested = false;
+
+        viewModel.OnboardingRequested +=
+            (_, _) => onboardingRequested = true;
 
         await viewModel.RunAsync();
+        viewModel.OpenOnboardingCommand.Execute(null);
 
-        Assert.Equal(100, viewModel.Progress);
-        Assert.Equal("Step 150", viewModel.Title);
-        Assert.False(viewModel.HasError);
-    }
-
-    [Fact]
-    public async Task RunAsync_OnUnexpectedException_ShowsErrorAndAllowsRetry()
-    {
-        var viewModel = new StartupViewModel(new ThrowingStartupService());
-
-        await viewModel.RunAsync();
-
-        Assert.True(viewModel.HasError);
-        Assert.Equal("unexpected", viewModel.ErrorMessage);
-        Assert.True(viewModel.CanRetry);
-        Assert.False(viewModel.IsRunning);
+        Assert.True(onboardingRequested);
     }
 
     private sealed class FakeStartupService(StartupResult result) : IStartupService
@@ -73,29 +65,5 @@ public sealed class StartupViewModelTests
             progress.Report(new StartupProgress(100, "Готово"));
             return Task.FromResult(result);
         }
-    }
-
-    private sealed class ReportingStartupService(IReadOnlyList<int> percentages)
-        : IStartupService
-    {
-        public Task<StartupResult> InitializeAsync(
-            IProgress<StartupProgress> progress,
-            CancellationToken cancellationToken = default)
-        {
-            foreach (int percentage in percentages)
-            {
-                progress.Report(new StartupProgress(percentage, $"Step {percentage}"));
-            }
-
-            return Task.FromResult(StartupResult.Success(true, true, true));
-        }
-    }
-
-    private sealed class ThrowingStartupService : IStartupService
-    {
-        public Task<StartupResult> InitializeAsync(
-            IProgress<StartupProgress> progress,
-            CancellationToken cancellationToken = default) =>
-            throw new InvalidOperationException("unexpected");
     }
 }

@@ -22,6 +22,8 @@ public sealed class MnemoraDbContextDesignTimeFactory : IDesignTimeDbContextFact
     private static Result<MnemoraDbContext, Error> CreateDbContextResult()
     {
         var storagePath = Path.Combine(Path.GetTempPath(), "Mnemora", "DesignTime");
+        Directory.CreateDirectory(storagePath);
+
         var connectionStringResult = DatabasePathProvider.CreateConnectionString(storagePath);
 
         if (connectionStringResult.IsFailure) return connectionStringResult.Error;

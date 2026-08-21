@@ -75,6 +75,14 @@ public static class DatabasePathProvider
                 nameof(storagePath));
         }
 
+        if (!Directory.Exists(normalizedStoragePath))
+        {
+            return CommonErrors.Validation(
+                "storage.path.not.found",
+                "Папка хранилища не найдена.",
+                nameof(storagePath));
+        }
+
         return normalizedStoragePath;
     }
 

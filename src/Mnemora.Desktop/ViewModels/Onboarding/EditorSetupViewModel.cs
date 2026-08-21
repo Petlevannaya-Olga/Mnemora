@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using Mnemora.Desktop.Editors;
 using Mnemora.Desktop.Navigation;
 using Mnemora.Desktop.Settings;
+using Mnemora.Desktop.Startup;
 using Mnemora.Desktop.Storage;
 using Mnemora.Desktop.ViewModels.Common;
 
@@ -14,6 +15,8 @@ public sealed partial class EditorSetupViewModel : ViewModelBase
     private readonly IFolderPickerService _folderPickerService;
     private readonly IMarkdownEditorService _markdownEditorService;
     private readonly ISettingsService _settingsService;
+    private readonly IStorageTemporaryFilesCleanupService
+        _storageCleanupService;
     private readonly INavigationService _navigationService;
     private readonly OnboardingState _onboardingState;
 
@@ -34,12 +37,14 @@ public sealed partial class EditorSetupViewModel : ViewModelBase
         IFolderPickerService folderPickerService,
         IMarkdownEditorService markdownEditorService,
         ISettingsService settingsService,
+        IStorageTemporaryFilesCleanupService storageCleanupService,
         INavigationService navigationService,
         OnboardingState onboardingState)
     {
         _folderPickerService = folderPickerService;
         _markdownEditorService = markdownEditorService;
         _settingsService = settingsService;
+        _storageCleanupService = storageCleanupService;
         _navigationService = navigationService;
         _onboardingState = onboardingState;
 
@@ -414,8 +419,25 @@ public sealed partial class EditorSetupViewModel : ViewModelBase
 
     private bool CanCheckConfiguration()
     {
-        return !IsChecking &&
-               IsConfigurationReady();
+        if (IsChecking)
+        {
+            return false;
+        }
+
+        return SelectedEditor switch
+        {
+            MarkdownEditorType.VisualStudioCode =>
+                IsVisualStudioCodeConfigurationReady(),
+
+            // Проверка должна быть доступна до появления .obsidian:
+            // пользователь сначала подключает папку Mnemora как Vault,
+            // а затем повторным нажатием запускает фактическую проверку.
+            MarkdownEditorType.Obsidian =>
+                IsObsidianInstalled &&
+                IsExistingDirectory(ObsidianVaultPath),
+
+            _ => false,
+        };
     }
 
     [RelayCommand(CanExecute = nameof(CanCheckConfiguration))]
@@ -498,6 +520,10 @@ public sealed partial class EditorSetupViewModel : ViewModelBase
                 SelectedEditor,
                 VisualStudioCodePath,
                 ObsidianVaultPath,
+                cancellationToken);
+
+            await _storageCleanupService.CleanupAsync(
+                StoragePath,
                 cancellationToken);
 
             _navigationService
@@ -700,10 +726,9 @@ public sealed partial class EditorSetupViewModel : ViewModelBase
                              ObsidianVaultPath))
                 {
                     ConfigurationTitle =
-                        "Подключите папку Mnemora к Obsidian";
+                        "Проверьте подключение";
                     ConfigurationMessage =
-                        "Откройте указанную папку в Obsidian через «Открыть папку как Vault», " +
-                        "затем нажмите «Найти снова»";
+                        "Mnemora создаст тестовый Markdown-файл и попробует открыть его в Obsidian";
                 }
                 else
                 {
@@ -782,6 +807,29 @@ public sealed partial class EditorSetupViewModel : ViewModelBase
                        Path.Combine(
                            fullPath,
                            ".obsidian"));
+        }
+        catch (Exception exception)
+            when (exception is ArgumentException
+                      or NotSupportedException
+                      or PathTooLongException
+                      or UnauthorizedAccessException)
+        {
+            return false;
+        }
+    }
+
+    private static bool IsExistingDirectory(
+        string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return false;
+        }
+
+        try
+        {
+            return Directory.Exists(
+                Path.GetFullPath(path));
         }
         catch (Exception exception)
             when (exception is ArgumentException

@@ -48,7 +48,7 @@ public partial class App : System.Windows.Application
         bool? startupDialogResult = startupWindow.ShowDialog();
         StartupResult? startupResult = startupWindow.ViewModel.Result;
 
-        if (startupDialogResult != true || startupResult is not { IsSuccess: true })
+        if (startupDialogResult != true)
         {
             Shutdown();
             return;
@@ -56,25 +56,59 @@ public partial class App : System.Windows.Application
 
         var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
         var mainWindowViewModel = _serviceProvider.GetRequiredService<MainWindowViewModel>();
-
-        MainWindow = mainWindow;
-        ShutdownMode = ShutdownMode.OnMainWindowClose;
-        mainWindow.Show();
-
-        // Даём WPF отрисовать лёгкий скелетон до создания AppShellView
-        // и первой страницы приложения.
-        await mainWindow.Dispatcher.InvokeAsync(
-            static () => { },
-            DispatcherPriority.ApplicationIdle);
-
         var onboardingState = _serviceProvider.GetRequiredService<OnboardingState>();
         var navigationService = _serviceProvider.GetRequiredService<INavigationService>();
 
+        MainWindow = mainWindow;
+        ShutdownMode = ShutdownMode.OnMainWindowClose;
+
+        if (startupWindow.OpenOnboardingRequested)
+        {
+            onboardingState.IsOnboardingCompleted = false;
+            onboardingState.IsMarkdownEditorVerified = false;
+
+            if (string.IsNullOrWhiteSpace(
+                    onboardingState.UserName))
+            {
+                navigationService.NavigateTo<WelcomeViewModel>();
+            }
+            else
+            {
+                navigationService.NavigateTo<StorageSetupViewModel>();
+            }
+
+            mainWindowViewModel.CompleteInitialization();
+            mainWindow.Show();
+            return;
+        }
+
+        if (startupResult is not { IsSuccess: true })
+        {
+            Shutdown();
+            return;
+        }
+
         if (startupResult.StorageIsConfigured && startupResult.EditorIsConfigured)
         {
+            mainWindow.Show();
+
+            // Для основного приложения сначала показываем лёгкий скелетон,
+            // пока создаются оболочка и первая страница.
+            await mainWindow.Dispatcher.InvokeAsync(
+                static () => { },
+                DispatcherPriority.ApplicationIdle);
+
             navigationService.NavigateTo<AppShellViewModel>();
+
+            await mainWindow.Dispatcher.InvokeAsync(
+                static () => { },
+                DispatcherPriority.ContextIdle);
+
+            mainWindowViewModel.CompleteInitialization();
+            return;
         }
-        else if (startupResult.StorageIsConfigured && startupResult.WasOnboardingCompleted)
+
+        if (startupResult.StorageIsConfigured && startupResult.WasOnboardingCompleted)
         {
             onboardingState.IsOnboardingCompleted = false;
             onboardingState.IsMarkdownEditorVerified = false;
@@ -86,13 +120,10 @@ public partial class App : System.Windows.Application
             navigationService.NavigateTo<WelcomeViewModel>();
         }
 
-        // CurrentViewModel уже назначена. Ждём первый layout/render её шаблона,
-        // после чего открываем готовый интерфейс под скелетоном.
-        await mainWindow.Dispatcher.InvokeAsync(
-            static () => { },
-            DispatcherPriority.ContextIdle);
-
+        // Онбординг подготавливаем до показа MainWindow, чтобы между стартовым
+        // окном и первым экраном настройки не появлялась оболочка приложения.
         mainWindowViewModel.CompleteInitialization();
+        mainWindow.Show();
     }
 
     protected override void OnExit(ExitEventArgs e)
@@ -113,6 +144,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<ISettingsService, JsonSettingsService>();
         services.AddSingleton<IMarkdownEditorService, MarkdownEditorService>();
         services.AddSingleton<IStoragePathProvider, StoragePathProvider>();
+        services.AddSingleton<IStorageValidationService, StorageValidationService>();
         services.AddSingleton(TimeProvider.System);
 
         services.AddInfrastructure();
@@ -131,6 +163,7 @@ public partial class App : System.Windows.Application
 
         services.AddSingleton<IMnemoraLocalPathProvider, MnemoraLocalPathProvider>();
         services.AddSingleton<ILocalAppDataCleanupService, LocalAppDataCleanupService>();
+        services.AddSingleton<IStorageTemporaryFilesCleanupService, StorageTemporaryFilesCleanupService>();
         services.AddSingleton<IStartupService, StartupService>();
         services.AddTransient<StartupViewModel>();
         services.AddTransient<StartupWindow>();

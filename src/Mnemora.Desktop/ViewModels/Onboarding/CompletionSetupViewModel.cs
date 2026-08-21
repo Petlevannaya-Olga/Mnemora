@@ -3,9 +3,11 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.Input;
 using Mnemora.Application.Database;
+using Mnemora.Desktop.Editors;
 using Mnemora.Desktop.Navigation;
 using Mnemora.Desktop.Security;
 using Mnemora.Desktop.Settings;
+using Mnemora.Desktop.Storage;
 using Mnemora.Desktop.ViewModels.Common;
 using Mnemora.Desktop.ViewModels.Shell;
 
@@ -16,7 +18,9 @@ public sealed partial class CompletionSetupViewModel(
     OnboardingState onboardingState,
     IApiKeyStore apiKeyStore,
     ISettingsService settingsService,
-    IDatabaseInitializer databaseInitializer) : ViewModelBase
+    IDatabaseInitializer databaseInitializer,
+    IStorageValidationService storageValidationService,
+    IMarkdownEditorService markdownEditorService) : ViewModelBase
 {
     private bool _isCompleting;
     private string? _completionErrorMessage;
@@ -82,10 +86,21 @@ public sealed partial class CompletionSetupViewModel(
 
         try
         {
-            if (onboardingState.MarkdownEditor is null)
+            if (string.IsNullOrWhiteSpace(
+                    onboardingState.UserName))
             {
                 CompletionErrorMessage =
-                    "Markdown-редактор не настроен. Вернитесь к шагу редактора и завершите проверку.";
+                    "Имя пользователя не указано. Вернитесь к первому шагу настройки.";
+                return;
+            }
+
+            if (!ValidateStorage())
+            {
+                return;
+            }
+
+            if (!ValidateEditor())
+            {
                 return;
             }
 
@@ -101,6 +116,14 @@ public sealed partial class CompletionSetupViewModel(
             {
                 if (!cancellationToken.IsCancellationRequested) CompletionErrorMessage = databaseResult.Error.Message;
 
+                return;
+            }
+
+            // Повторная проверка закрывает случай, когда папки удалили
+            // во время инициализации базы данных.
+            if (!ValidateStorage() ||
+                !ValidateEditor())
+            {
                 return;
             }
 
@@ -128,5 +151,56 @@ public sealed partial class CompletionSetupViewModel(
         {
             IsCompleting = false;
         }
+    }
+
+    private bool ValidateStorage()
+    {
+        StorageValidationResult result =
+            storageValidationService.ValidateConfigured(
+                onboardingState.StoragePath);
+
+        if (result.IsValid)
+        {
+            onboardingState.StoragePath =
+                result.NormalizedPath;
+
+            return true;
+        }
+
+        CompletionErrorMessage =
+            result.ErrorMessage ??
+            "Хранилище Mnemora недоступно. Вернитесь к шагу выбора папки.";
+
+        return false;
+    }
+
+    private bool ValidateEditor()
+    {
+        if (!onboardingState.IsMarkdownEditorVerified)
+        {
+            CompletionErrorMessage =
+                "Markdown-редактор не проверен. Вернитесь к шагу редактора и повторите проверку.";
+
+            return false;
+        }
+
+        MarkdownEditorConfigurationValidationResult result =
+            markdownEditorService.ValidateConfiguration(
+                onboardingState.MarkdownEditor,
+                onboardingState.VisualStudioCodePath,
+                onboardingState.ObsidianVaultPath);
+
+        if (result.IsValid)
+        {
+            return true;
+        }
+
+        onboardingState.IsMarkdownEditorVerified =
+            false;
+
+        CompletionErrorMessage =
+            result.Message;
+
+        return false;
     }
 }

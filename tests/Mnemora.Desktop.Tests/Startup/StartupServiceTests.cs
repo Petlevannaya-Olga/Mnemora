@@ -2,8 +2,10 @@ using System.IO;
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Mnemora.Application.Database;
+using Mnemora.Desktop.Editors;
 using Mnemora.Desktop.Settings;
 using Mnemora.Desktop.Startup;
+using Mnemora.Desktop.Storage;
 using Mnemora.Desktop.ViewModels.Onboarding;
 using Mnemora.Shared;
 using Xunit;
@@ -41,6 +43,12 @@ public sealed class StartupServiceTests : IDisposable
     public async Task InitializeAsync_WithConfiguredStorage_InitializesDatabase()
     {
         Directory.CreateDirectory(_storagePath);
+        await File.WriteAllTextAsync(
+            Path.Combine(
+                _storagePath,
+                ".mnemora"),
+            "{\"formatVersion\":1}");
+
         var settings = new AppSettings
         {
             StoragePath = _storagePath,
@@ -93,6 +101,44 @@ public sealed class StartupServiceTests : IDisposable
             progress.Values.Select(value => value.Percent));
     }
 
+    [Fact]
+    public async Task InitializeAsync_WhenEditorConfigurationWasDeleted_RequiresEditorSetup()
+    {
+        Directory.CreateDirectory(_storagePath);
+        await File.WriteAllTextAsync(
+            Path.Combine(
+                _storagePath,
+                ".mnemora"),
+            "{\"formatVersion\":1}");
+
+        var settings = new AppSettings
+        {
+            StoragePath = _storagePath,
+            MarkdownEditor = MarkdownEditorType.Obsidian,
+            ObsidianVaultPath = _storagePath,
+            IsOnboardingCompleted = true,
+        };
+        var database = new RecordingDatabaseInitializer();
+        var progress = new RecordingProgress();
+        var service = CreateService(
+            settings,
+            database,
+            new StubCleanupService(
+                new LocalAppDataCleanupReport(0, 0)),
+            new MarkdownEditorConfigurationValidationResult(
+                false,
+                "Vault Obsidian не найден."));
+
+        StartupResult result =
+            await service.InitializeAsync(progress);
+
+        Assert.True(result.IsSuccess);
+        Assert.True(result.WasOnboardingCompleted);
+        Assert.True(result.StorageIsConfigured);
+        Assert.False(result.EditorIsConfigured);
+        Assert.Equal(1, database.CallCount);
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_storagePath))
@@ -104,12 +150,21 @@ public sealed class StartupServiceTests : IDisposable
     private static StartupService CreateService(
         AppSettings settings,
         RecordingDatabaseInitializer database,
-        ILocalAppDataCleanupService cleanup) =>
+        ILocalAppDataCleanupService cleanup,
+        MarkdownEditorConfigurationValidationResult?
+            editorValidationResult = null) =>
         new(
             new StubSettingsService(settings),
             new OnboardingState(),
             database,
             cleanup,
+            new StubStorageCleanupService(),
+            new StorageValidationService(),
+            new StubMarkdownEditorService(
+                editorValidationResult ??
+                new MarkdownEditorConfigurationValidationResult(
+                    true,
+                    string.Empty)),
             NullLogger<StartupService>.Instance);
 
     private sealed class RecordingProgress : IProgress<StartupProgress>
@@ -137,6 +192,56 @@ public sealed class StartupServiceTests : IDisposable
         public Task<LocalAppDataCleanupReport> CleanupAsync(
             CancellationToken cancellationToken = default) =>
             Task.FromResult(report);
+    }
+
+    private sealed class StubStorageCleanupService
+        : IStorageTemporaryFilesCleanupService
+    {
+        public Task<StorageTemporaryFilesCleanupReport> CleanupAsync(
+            string? storagePath,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(
+                new StorageTemporaryFilesCleanupReport(0, 0));
+    }
+
+    private sealed class StubMarkdownEditorService(
+        MarkdownEditorConfigurationValidationResult validationResult)
+        : IMarkdownEditorService
+    {
+        public string? FindVisualStudioCodeExecutable() =>
+            null;
+
+        public bool IsObsidianInstalled() =>
+            false;
+
+        public MarkdownEditorLaunchResult OpenDownloadPage(
+            MarkdownEditorType editor) =>
+            new(true, string.Empty);
+
+        public MarkdownEditorConfigurationValidationResult
+            ValidateConfiguration(
+                MarkdownEditorType? editor,
+                string? visualStudioCodePath,
+                string? obsidianVaultPath) =>
+            validationResult;
+
+        public Task<MarkdownEditorLaunchResult> CheckAsync(
+            MarkdownEditorType editor,
+            string? visualStudioCodePath,
+            string? obsidianVaultPath,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(
+                new MarkdownEditorLaunchResult(
+                    true,
+                    string.Empty));
+
+        public Task<MarkdownEditorLaunchResult> OpenAsync(
+            string filePath,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(
+                new MarkdownEditorLaunchResult(
+                    true,
+                    string.Empty));
     }
 
     private sealed class StubSettingsService(AppSettings settings)
