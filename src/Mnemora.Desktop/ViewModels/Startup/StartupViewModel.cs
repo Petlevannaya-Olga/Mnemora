@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.Input;
 using Mnemora.Desktop.Startup;
+using Mnemora.Desktop.Storage;
 using Mnemora.Desktop.ViewModels.Common;
 
 namespace Mnemora.Desktop.ViewModels.Startup;
@@ -42,6 +43,10 @@ public sealed partial class StartupViewModel(IStartupService startupService) : V
             }
 
             OnPropertyChanged(nameof(CanRetry));
+            OnPropertyChanged(nameof(CanRepairStorage));
+            OnPropertyChanged(nameof(ErrorHint));
+            OnPropertyChanged(nameof(ErrorActionText));
+            OnPropertyChanged(nameof(ErrorActionButtonWidth));
             OpenOnboardingCommand.NotifyCanExecuteChanged();
         }
     }
@@ -58,19 +63,49 @@ public sealed partial class StartupViewModel(IStartupService startupService) : V
 
             OnPropertyChanged(nameof(HasError));
             OnPropertyChanged(nameof(CanRetry));
+            OnPropertyChanged(nameof(CanRepairStorage));
+            OnPropertyChanged(nameof(ErrorHint));
+            OnPropertyChanged(nameof(ErrorActionText));
+            OnPropertyChanged(nameof(ErrorActionButtonWidth));
             OpenOnboardingCommand.NotifyCanExecuteChanged();
         }
     }
 
     public bool HasError => !string.IsNullOrWhiteSpace(ErrorMessage);
     public bool CanRetry => HasError && !IsRunning;
+    public bool CanRepairStorage =>
+        CanRetry &&
+        Result?.CanRepairStorage == true;
+
+    public string ErrorHint => CanRepairStorage
+        ? "Материалы не будут изменены. Можно восстановить служебные настройки."
+        : Result?.StorageFailureKind ==
+          StorageValidationFailureKind.StorageVersionIsNewer
+            ? "Обновите Mnemora или выберите другое хранилище."
+            : "Повторите проверку или измените настройки приложения.";
+
+    public string ErrorActionText =>
+        CanRepairStorage
+            ? "Восстановить"
+            : "Повторить";
+
+    public double ErrorActionButtonWidth =>
+        CanRepairStorage
+            ? 190
+            : 138;
+
     public StartupResult? Result { get; private set; }
 
     public event EventHandler? StartupSucceeded;
     public event EventHandler? OnboardingRequested;
     public event EventHandler? CloseRequested;
 
-    public async Task RunAsync()
+    public Task RunAsync() =>
+        RunCoreAsync(
+            repairStorage: false);
+
+    private async Task RunCoreAsync(
+        bool repairStorage)
     {
         if (IsRunning)
         {
@@ -81,16 +116,29 @@ public sealed partial class StartupViewModel(IStartupService startupService) : V
         _cancellationTokenSource = new CancellationTokenSource();
         ErrorMessage = null;
         Result = null;
+        NotifyErrorActionChanged();
         Progress = 0;
-        Title = "Запускаем Mnemora";
-        Details = "Подготавливаем приложение";
+        Title = repairStorage
+            ? "Восстанавливаем хранилище"
+            : "Запускаем Mnemora";
+        Details = repairStorage
+            ? "Материалы не будут изменены"
+            : "Подготавливаем приложение";
         IsRunning = true;
 
         try
         {
             var progress = new InlineProgress<StartupProgress>(ApplyProgress);
-            StartupResult result = await startupService.InitializeAsync(progress, _cancellationTokenSource.Token);
+            StartupResult result = repairStorage
+                ? await startupService.RepairStorageAsync(
+                    progress,
+                    _cancellationTokenSource.Token)
+                : await startupService.InitializeAsync(
+                    progress,
+                    _cancellationTokenSource.Token);
+
             Result = result;
+            NotifyErrorActionChanged();
 
             if (!result.IsSuccess)
             {
@@ -121,7 +169,9 @@ public sealed partial class StartupViewModel(IStartupService startupService) : V
     [RelayCommand]
     private Task RetryAsync()
     {
-        return CanRetry ? RunAsync() : Task.CompletedTask;
+        return CanRetry
+            ? RunCoreAsync(CanRepairStorage)
+            : Task.CompletedTask;
     }
 
     [RelayCommand(CanExecute = nameof(CanRetry))]
@@ -144,6 +194,14 @@ public sealed partial class StartupViewModel(IStartupService startupService) : V
         Progress = Math.Clamp(progress.Percent, 0, 100);
         Title = progress.Title;
         Details = progress.Details;
+    }
+
+    private void NotifyErrorActionChanged()
+    {
+        OnPropertyChanged(nameof(CanRepairStorage));
+        OnPropertyChanged(nameof(ErrorHint));
+        OnPropertyChanged(nameof(ErrorActionText));
+        OnPropertyChanged(nameof(ErrorActionButtonWidth));
     }
 
     private sealed class InlineProgress<T>(Action<T> report) : IProgress<T>

@@ -116,7 +116,7 @@
                         <TextBlock Margin="0,7,0,0"
                                    FontSize="12"
                                    Foreground="#AEBBD1"
-                                   Text="Повторите проверку или измените настройки приложения."
+                                   Text="{Binding ErrorHint}"
                                    TextAlignment="Center"
                                    TextWrapping="Wrap" />
                     </StackPanel>
@@ -146,11 +146,11 @@
                         Foreground="#AEBBD1"
                         Cursor="Hand" />
 
-                <Button Width="138"
+                <Button Width="{Binding ErrorActionButtonWidth}"
                         Height="42"
                         Margin="10,0,0,0"
                         Command="{Binding RetryCommand}"
-                        Content="Повторить"
+                        Content="{Binding ErrorActionText}"
                         Background="Transparent"
                         BorderBrush="#536681"
                         BorderThickness="1"

@@ -24,6 +24,7 @@ public sealed partial class CompletionSetupViewModel(
 {
     private bool _isCompleting;
     private string? _completionErrorMessage;
+    private CompletionIssue _completionIssue;
 
     public bool IsCompleting
     {
@@ -34,6 +35,7 @@ public sealed partial class CompletionSetupViewModel(
 
             BackCommand.NotifyCanExecuteChanged();
             OpenMnemoraCommand.NotifyCanExecuteChanged();
+            OnPropertyChanged(nameof(PrimaryActionText));
         }
     }
 
@@ -45,6 +47,9 @@ public sealed partial class CompletionSetupViewModel(
             if (!SetProperty(ref _completionErrorMessage, value)) return;
 
             OnPropertyChanged(nameof(HasCompletionError));
+            OnPropertyChanged(nameof(CompletionTitle));
+            OnPropertyChanged(nameof(CompletionSubtitle));
+            OnPropertyChanged(nameof(PrimaryActionText));
         }
     }
 
@@ -52,7 +57,59 @@ public sealed partial class CompletionSetupViewModel(
 
     public string UserName => onboardingState.UserName?.Trim() ?? string.Empty;
 
-    public string StorageStatus => "Папка для материалов выбрана";
+    public string CompletionTitle =>
+        HasCompletionError
+            ? "Проверьте настройки"
+            : $"Всё готово, {UserName}!";
+
+    public string CompletionSubtitle =>
+        CompletionErrorMessage ??
+        "Mnemora настроена и готова к работе";
+
+    public bool HasProfileError =>
+        _completionIssue == CompletionIssue.Profile;
+
+    public bool HasStorageError =>
+        _completionIssue is
+            CompletionIssue.Storage or
+            CompletionIssue.StorageRepairable or
+            CompletionIssue.StorageVersionUnsupported;
+
+    public bool CanRepairStorage =>
+        _completionIssue ==
+        CompletionIssue.StorageRepairable;
+
+    public bool HasEditorError =>
+        _completionIssue == CompletionIssue.Editor;
+
+    public bool HasAiError =>
+        _completionIssue == CompletionIssue.Ai;
+
+    public string BackButtonText => _completionIssue switch
+    {
+        CompletionIssue.Profile => "Изменить профиль",
+        CompletionIssue.Storage or
+            CompletionIssue.StorageRepairable or
+            CompletionIssue.StorageVersionUnsupported =>
+            "Изменить хранилище",
+        CompletionIssue.Editor => "Настроить редактор",
+        CompletionIssue.Ai => "Настроить ИИ",
+        _ => "Назад",
+    };
+
+    public string PrimaryActionText =>
+        IsCompleting
+            ? "Проверяем..."
+            : CanRepairStorage
+                ? "Восстановить хранилище"
+            : HasCompletionError
+                ? "Повторить"
+                : "Открыть Mnemora";
+
+    public string StorageStatus =>
+        string.IsNullOrWhiteSpace(onboardingState.StoragePath)
+            ? "Не выбрано"
+            : onboardingState.StoragePath.Trim();
 
     public bool IsEditorConfigured =>
         onboardingState.MarkdownEditor is not null;
@@ -75,26 +132,59 @@ public sealed partial class CompletionSetupViewModel(
     [RelayCommand(CanExecute = nameof(CanInteract))]
     private void Back()
     {
-        navigationService.NavigateTo<AiSetupViewModel>();
+        switch (_completionIssue)
+        {
+            case CompletionIssue.Profile:
+                navigationService.NavigateTo<ProfileSetupViewModel>();
+                break;
+
+            case CompletionIssue.Storage:
+            case CompletionIssue.StorageRepairable:
+            case CompletionIssue.StorageVersionUnsupported:
+                navigationService.NavigateTo<StorageSetupViewModel>();
+                break;
+
+            case CompletionIssue.Editor:
+                navigationService.NavigateTo<EditorSetupViewModel>();
+                break;
+
+            default:
+                navigationService.NavigateTo<AiSetupViewModel>();
+                break;
+        }
     }
 
     [RelayCommand(CanExecute = nameof(CanInteract))]
     private async Task OpenMnemoraAsync(CancellationToken cancellationToken)
     {
+        bool shouldRepairStorage =
+            CanRepairStorage;
+
         IsCompleting = true;
-        CompletionErrorMessage = null;
+        SetCompletionError(
+            null,
+            CompletionIssue.None);
 
         try
         {
             if (string.IsNullOrWhiteSpace(
                     onboardingState.UserName))
             {
-                CompletionErrorMessage =
-                    "Имя пользователя не указано. Вернитесь к первому шагу настройки.";
+                SetCompletionError(
+                    "Имя пользователя не указано. Вернитесь к шагу профиля.",
+                    CompletionIssue.Profile);
                 return;
             }
 
-            if (!ValidateStorage())
+            if (shouldRepairStorage &&
+                !await TryRepairStorageAsync(
+                    cancellationToken))
+            {
+                return;
+            }
+
+            if (!await ValidateStorageAsync(
+                    cancellationToken))
             {
                 return;
             }
@@ -106,7 +196,9 @@ public sealed partial class CompletionSetupViewModel(
 
             if (onboardingState.IsAiConfigured && string.IsNullOrWhiteSpace(onboardingState.PendingApiKey))
             {
-                CompletionErrorMessage = "Не найден проверенный API-ключ. Вернитесь на предыдущий шаг и проверьте подключение.";
+                SetCompletionError(
+                    "Не найден проверенный API-ключ. Вернитесь к шагу ИИ и проверьте подключение.",
+                    CompletionIssue.Ai);
                 return;
             }
 
@@ -114,14 +206,20 @@ public sealed partial class CompletionSetupViewModel(
 
             if (databaseResult.IsFailure)
             {
-                if (!cancellationToken.IsCancellationRequested) CompletionErrorMessage = databaseResult.Error.Message;
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    SetCompletionError(
+                        databaseResult.Error.Message,
+                        CompletionIssue.General);
+                }
 
                 return;
             }
 
             // Повторная проверка закрывает случай, когда папки удалили
             // во время инициализации базы данных.
-            if (!ValidateStorage() ||
+            if (!await ValidateStorageAsync(
+                    cancellationToken) ||
                 !ValidateEditor())
             {
                 return;
@@ -145,7 +243,9 @@ public sealed partial class CompletionSetupViewModel(
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or CryptographicException or NotSupportedException or JsonException)
         {
-            CompletionErrorMessage = "Не удалось завершить настройку. Проверьте доступ к файлам и попробуйте ещё раз.";
+            SetCompletionError(
+                "Не удалось завершить настройку. Проверьте доступ к файлам и попробуйте ещё раз.",
+                CompletionIssue.General);
         }
         finally
         {
@@ -153,11 +253,37 @@ public sealed partial class CompletionSetupViewModel(
         }
     }
 
-    private bool ValidateStorage()
+    private void SetCompletionError(
+        string? message,
+        CompletionIssue issue)
+    {
+        bool issueChanged =
+            _completionIssue != issue;
+
+        _completionIssue = issue;
+        CompletionErrorMessage = message;
+
+        if (!issueChanged)
+        {
+            return;
+        }
+
+        OnPropertyChanged(nameof(HasProfileError));
+        OnPropertyChanged(nameof(HasStorageError));
+        OnPropertyChanged(nameof(CanRepairStorage));
+        OnPropertyChanged(nameof(HasEditorError));
+        OnPropertyChanged(nameof(HasAiError));
+        OnPropertyChanged(nameof(BackButtonText));
+        OnPropertyChanged(nameof(PrimaryActionText));
+    }
+
+    private async Task<bool> TryRepairStorageAsync(
+        CancellationToken cancellationToken)
     {
         StorageValidationResult result =
-            storageValidationService.ValidateConfigured(
-                onboardingState.StoragePath);
+            await storageValidationService.RepairAsync(
+                onboardingState.StoragePath,
+                cancellationToken);
 
         if (result.IsValid)
         {
@@ -167,19 +293,61 @@ public sealed partial class CompletionSetupViewModel(
             return true;
         }
 
-        CompletionErrorMessage =
-            result.ErrorMessage ??
-            "Хранилище Mnemora недоступно. Вернитесь к шагу выбора папки.";
+        SetStorageError(result);
+        return false;
+    }
+
+    private async Task<bool> ValidateStorageAsync(
+        CancellationToken cancellationToken)
+    {
+        StorageValidationResult result =
+            await storageValidationService.PrepareAsync(
+                onboardingState.StoragePath,
+                cancellationToken);
+
+        if (result.IsValid)
+        {
+            onboardingState.StoragePath =
+                result.NormalizedPath;
+
+            return true;
+        }
+
+        SetStorageError(result);
 
         return false;
+    }
+
+    private void SetStorageError(
+        StorageValidationResult result)
+    {
+        CompletionIssue issue =
+            result.FailureKind switch
+            {
+                StorageValidationFailureKind.MarkerMissing or
+                    StorageValidationFailureKind.MarkerCorrupted =>
+                    CompletionIssue.StorageRepairable,
+
+                StorageValidationFailureKind.StorageVersionIsNewer or
+                    StorageValidationFailureKind.StorageVersionUnsupported =>
+                    CompletionIssue.StorageVersionUnsupported,
+
+                _ => CompletionIssue.Storage,
+            };
+
+        SetCompletionError(
+            result.ErrorMessage ??
+            "Хранилище Mnemora недоступно.",
+            issue);
     }
 
     private bool ValidateEditor()
     {
         if (!onboardingState.IsMarkdownEditorVerified)
         {
-            CompletionErrorMessage =
-                "Markdown-редактор не проверен. Вернитесь к шагу редактора и повторите проверку.";
+            SetCompletionError(
+                "Markdown-редактор не проверен. Вернитесь к шагу редактора и повторите проверку.",
+                CompletionIssue.Editor);
 
             return false;
         }
@@ -198,9 +366,22 @@ public sealed partial class CompletionSetupViewModel(
         onboardingState.IsMarkdownEditorVerified =
             false;
 
-        CompletionErrorMessage =
-            result.Message;
+        SetCompletionError(
+            result.Message,
+            CompletionIssue.Editor);
 
         return false;
+    }
+
+    private enum CompletionIssue
+    {
+        None,
+        Profile,
+        Storage,
+        StorageRepairable,
+        StorageVersionUnsupported,
+        Editor,
+        Ai,
+        General,
     }
 }

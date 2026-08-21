@@ -59,14 +59,16 @@ public sealed class StartupService(
         if (wasOnboardingCompleted)
         {
             StorageValidationResult storageValidationResult =
-                storageValidationService.ValidateConfigured(
-                    onboardingState.StoragePath);
+                await storageValidationService.PrepareAsync(
+                    onboardingState.StoragePath,
+                    cancellationToken);
 
             if (!storageValidationResult.IsValid)
             {
                 return StartupResult.Failure(
                     storageValidationResult.ErrorMessage ??
-                    "Хранилище Mnemora недоступно.");
+                    "Хранилище Mnemora недоступно.",
+                    storageValidationResult.FailureKind);
             }
 
             onboardingState.StoragePath =
@@ -126,6 +128,41 @@ public sealed class StartupService(
                     : $"Mnemora готова к работе. Не удалось удалить временных объектов: {skippedTemporaryFiles}"),
             cancellationToken);
         return StartupResult.Success(wasOnboardingCompleted, storageIsConfigured, editorIsConfigured);
+    }
+
+    public async Task<StartupResult> RepairStorageAsync(
+        IProgress<StartupProgress> progress,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(progress);
+
+        await ReportProgressAsync(
+            progress,
+            new StartupProgress(
+                10,
+                "Восстанавливаем хранилище",
+                "Проверяем служебные настройки"),
+            cancellationToken);
+
+        StorageValidationResult repairResult =
+            await storageValidationService.RepairAsync(
+                onboardingState.StoragePath,
+                cancellationToken);
+
+        if (!repairResult.IsValid)
+        {
+            return StartupResult.Failure(
+                repairResult.ErrorMessage ??
+                "Не удалось восстановить хранилище Mnemora.",
+                repairResult.FailureKind);
+        }
+
+        onboardingState.StoragePath =
+            repairResult.NormalizedPath;
+
+        return await InitializeAsync(
+            progress,
+            cancellationToken);
     }
 
     private static async Task ReportProgressAsync(

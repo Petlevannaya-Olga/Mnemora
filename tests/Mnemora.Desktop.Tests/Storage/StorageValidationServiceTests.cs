@@ -1,4 +1,5 @@
 using System.IO;
+using Mnemora.Desktop.Startup;
 using Mnemora.Desktop.Storage;
 using Xunit;
 
@@ -12,8 +13,19 @@ public sealed class StorageValidationServiceTests
         "Mnemora.Tests",
         Guid.NewGuid().ToString("N"));
 
-    private readonly StorageValidationService _service =
-        new();
+    private readonly string _localRootPath = Path.Combine(
+        Path.GetTempPath(),
+        "Mnemora.Tests.Local",
+        Guid.NewGuid().ToString("N"));
+
+    private readonly StorageValidationService _service;
+
+    public StorageValidationServiceTests()
+    {
+        _service = new StorageValidationService(
+            new TestPathProvider(
+                _localRootPath));
+    }
 
     [Fact]
     public async Task PrepareAsync_ForEmptyDirectory_CreatesValidMarker()
@@ -68,7 +80,10 @@ public sealed class StorageValidationServiceTests
                 _storagePath);
 
         Assert.False(result.IsValid);
-        Assert.Contains(
+        Assert.Equal(
+            StorageValidationFailureKind.MarkerMissing,
+            result.FailureKind);
+        Assert.DoesNotContain(
             ".mnemora",
             result.ErrorMessage,
             StringComparison.OrdinalIgnoreCase);
@@ -89,9 +104,16 @@ public sealed class StorageValidationServiceTests
                 _storagePath);
 
         Assert.False(result.IsValid);
-        Assert.Contains(
-            "повреждён",
-            result.ErrorMessage,
+        Assert.Equal(
+            StorageValidationFailureKind.MarkerCorrupted,
+            result.FailureKind);
+        string errorMessage =
+            Assert.IsType<string>(result.ErrorMessage);
+
+        Assert.NotEmpty(errorMessage);
+        Assert.DoesNotContain(
+            ".mnemora",
+            errorMessage,
             StringComparison.OrdinalIgnoreCase);
     }
 
@@ -110,8 +132,11 @@ public sealed class StorageValidationServiceTests
                 _storagePath);
 
         Assert.False(result.IsValid);
+        Assert.Equal(
+            StorageValidationFailureKind.StorageVersionIsNewer,
+            result.FailureKind);
         Assert.Contains(
-            "неподдерживаемую версию",
+            "более новой версии",
             result.ErrorMessage,
             StringComparison.OrdinalIgnoreCase);
     }
@@ -131,10 +156,169 @@ public sealed class StorageValidationServiceTests
                 _storagePath);
 
         Assert.False(result.IsValid);
-        Assert.Contains(
-            ".mnemora",
-            result.ErrorMessage,
-            StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(
+            StorageValidationFailureKind.MarkerMissing,
+            result.FailureKind);
+    }
+
+    [Fact]
+    public async Task PrepareAsync_ForNonEmptyForeignDirectory_DoesNotCreateMarker()
+    {
+        Directory.CreateDirectory(_storagePath);
+        await File.WriteAllTextAsync(
+            Path.Combine(
+                _storagePath,
+                "foreign.txt"),
+            "foreign");
+
+        StorageValidationResult result =
+            await _service.PrepareAsync(
+                _storagePath);
+
+        Assert.False(result.IsValid);
+        Assert.False(
+            File.Exists(
+                Path.Combine(
+                    _storagePath,
+                    ".mnemora")));
+        Assert.Equal(
+            StorageValidationFailureKind.MarkerMissing,
+            result.FailureKind);
+    }
+
+    [Theory]
+    [InlineData("not-json")]
+    [InlineData("{\"formatVersion\":999}")]
+    public async Task PrepareAsync_WhenStorageHasNoData_RecreatesInvalidMarker(
+        string markerContent)
+    {
+        Directory.CreateDirectory(_storagePath);
+        string markerPath = Path.Combine(
+            _storagePath,
+            ".mnemora");
+
+        await File.WriteAllTextAsync(
+            markerPath,
+            markerContent);
+
+        StorageValidationResult result =
+            await _service.PrepareAsync(
+                _storagePath);
+
+        Assert.True(result.IsValid);
+        Assert.Equal(
+            "{\"formatVersion\":1}",
+            await File.ReadAllTextAsync(
+                markerPath));
+    }
+
+    [Fact]
+    public async Task PrepareAsync_WhenNonEmptyStorageMarkerIsCorrupted_OffersRepairWithoutOverwritingMarker()
+    {
+        Directory.CreateDirectory(_storagePath);
+        string markerPath = Path.Combine(
+            _storagePath,
+            ".mnemora");
+
+        await File.WriteAllTextAsync(
+            markerPath,
+            "not-json");
+        await File.WriteAllTextAsync(
+            Path.Combine(
+                _storagePath,
+                "material.md"),
+            "material");
+
+        StorageValidationResult result =
+            await _service.PrepareAsync(
+                _storagePath);
+
+        Assert.False(result.IsValid);
+        Assert.Equal(
+            StorageValidationFailureKind.MarkerCorrupted,
+            result.FailureKind);
+        Assert.Equal(
+            "not-json",
+            await File.ReadAllTextAsync(
+                markerPath));
+    }
+
+    [Fact]
+    public async Task RepairAsync_WhenNonEmptyStorageMarkerIsCorrupted_BacksUpAndRecreatesMarker()
+    {
+        Directory.CreateDirectory(_storagePath);
+        string markerPath = Path.Combine(
+            _storagePath,
+            ".mnemora");
+
+        await File.WriteAllTextAsync(
+            markerPath,
+            "not-json");
+        await File.WriteAllTextAsync(
+            Path.Combine(
+                _storagePath,
+                "material.md"),
+            "material");
+
+        StorageValidationResult result =
+            await _service.RepairAsync(
+                _storagePath);
+
+        Assert.True(result.IsValid);
+        Assert.Equal(
+            "{\"formatVersion\":1}",
+            await File.ReadAllTextAsync(
+                markerPath));
+
+        string backupPath = Assert.Single(
+            Directory.GetFiles(
+                Path.Combine(
+                    _localRootPath,
+                    "Recovery")));
+
+        Assert.Equal(
+            "not-json",
+            await File.ReadAllTextAsync(
+                backupPath));
+    }
+
+    [Fact]
+    public async Task RepairAsync_WhenNonEmptyStorageVersionIsNewer_DoesNotDowngradeMarker()
+    {
+        Directory.CreateDirectory(_storagePath);
+        string markerPath = Path.Combine(
+            _storagePath,
+            ".mnemora");
+
+        const string markerContent =
+            "{\"formatVersion\":999}";
+
+        await File.WriteAllTextAsync(
+            markerPath,
+            markerContent);
+        await File.WriteAllTextAsync(
+            Path.Combine(
+                _storagePath,
+                "material.md"),
+            "material");
+
+        StorageValidationResult result =
+            await _service.RepairAsync(
+                _storagePath);
+
+        Assert.False(result.IsValid);
+        Assert.Equal(
+            StorageValidationFailureKind.StorageVersionIsNewer,
+            result.FailureKind);
+        Assert.Equal(
+            markerContent,
+            await File.ReadAllTextAsync(
+                markerPath));
+        Assert.False(
+            Directory.Exists(
+                Path.Combine(
+                    _localRootPath,
+                    "Recovery")));
     }
 
     public void Dispose()
@@ -145,5 +329,23 @@ public sealed class StorageValidationServiceTests
                 _storagePath,
                 recursive: true);
         }
+
+        if (Directory.Exists(_localRootPath))
+        {
+            Directory.Delete(
+                _localRootPath,
+                recursive: true);
+        }
+    }
+
+    private sealed class TestPathProvider(
+        string rootPath)
+        : IMnemoraLocalPathProvider
+    {
+        public string RootPath => rootPath;
+
+        public string TempPath => Path.Combine(
+            RootPath,
+            "Temp");
     }
 }

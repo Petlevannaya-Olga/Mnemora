@@ -38,6 +38,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="ButtonBorder"
+                                Padding="{TemplateBinding Padding}"
                                 Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
@@ -334,15 +335,44 @@
                                   HorizontalAlignment="Center">
 
                                 <Ellipse Fill="{StaticResource Mnemora.Brush.SurfaceMuted}"
-                                         Stroke="{StaticResource Mnemora.Brush.BrandGradient}"
-                                         StrokeThickness="3" />
+                                         StrokeThickness="3">
+                                    <Ellipse.Style>
+                                        <Style TargetType="Ellipse">
+                                            <Setter Property="Stroke"
+                                                    Value="{StaticResource Mnemora.Brush.BrandGradient}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasCompletionError}"
+                                                             Value="True">
+                                                    <Setter Property="Stroke"
+                                                            Value="#E57373" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Ellipse.Style>
+                                </Ellipse>
 
-                                <materialDesign:PackIcon Kind="BookOpenPageVariantOutline"
-                                                         Width="38"
+                                <materialDesign:PackIcon Width="38"
                                                          Height="38"
-                                                         Foreground="{StaticResource Mnemora.Brush.BrandGradient}"
                                                          HorizontalAlignment="Center"
-                                                         VerticalAlignment="Center" />
+                                                         VerticalAlignment="Center">
+                                    <materialDesign:PackIcon.Style>
+                                        <Style TargetType="{x:Type materialDesign:PackIcon}">
+                                            <Setter Property="Kind"
+                                                    Value="BookOpenPageVariantOutline" />
+                                            <Setter Property="Foreground"
+                                                    Value="{StaticResource Mnemora.Brush.BrandGradient}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasCompletionError}"
+                                                             Value="True">
+                                                    <Setter Property="Kind"
+                                                            Value="AlertCircleOutline" />
+                                                    <Setter Property="Foreground"
+                                                            Value="#C62828" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </materialDesign:PackIcon.Style>
+                                </materialDesign:PackIcon>
                             </Grid>
 
                             <!-- Заголовок -->
@@ -350,19 +380,33 @@
                             <StackPanel Grid.Row="1"
                                         Margin="0,20,0,12">
 
-                                <TextBlock
-                                    Text="{Binding UserName,
-                                            StringFormat='Всё готово, {0}!'}"
+                                <TextBlock Text="{Binding CompletionTitle}"
                                     Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
                                     FontSize="27"
                                     FontWeight="Bold"
                                     TextAlignment="Center" />
 
-                                <TextBlock Text="Mnemora настроена и готова к работе"
+                                <TextBlock Text="{Binding CompletionSubtitle}"
                                            Margin="0,4,0,0"
-                                           Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
                                            FontSize="16"
-                                           TextAlignment="Center" />
+                                           TextAlignment="Center"
+                                           TextWrapping="Wrap">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground"
+                                                    Value="{StaticResource Mnemora.Brush.TextSecondary}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasCompletionError}"
+                                                             Value="True">
+                                                    <Setter Property="Foreground"
+                                                            Value="#A52222" />
+                                                    <Setter Property="FontWeight"
+                                                            Value="SemiBold" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
                             </StackPanel>
 
                             <TextBlock Grid.Row="2"
@@ -410,12 +454,28 @@
                                                    VerticalAlignment="Center" />
 
                                         <materialDesign:PackIcon Grid.Column="3"
-                                                                 Kind="CheckCircleOutline"
                                                                  Width="25"
                                                                  Height="25"
-                                                                 Foreground="#12B84F"
                                                                  HorizontalAlignment="Right"
-                                                                 VerticalAlignment="Center" />
+                                                                 VerticalAlignment="Center">
+                                            <materialDesign:PackIcon.Style>
+                                                <Style TargetType="{x:Type materialDesign:PackIcon}">
+                                                    <Setter Property="Kind"
+                                                            Value="CheckCircleOutline" />
+                                                    <Setter Property="Foreground"
+                                                            Value="#12B84F" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasProfileError}"
+                                                                     Value="True">
+                                                            <Setter Property="Kind"
+                                                                    Value="CloseCircleOutline" />
+                                                            <Setter Property="Foreground"
+                                                                    Value="#C62828" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </materialDesign:PackIcon.Style>
+                                        </materialDesign:PackIcon>
                                     </Grid>
 
                                 </Border>
@@ -452,15 +512,40 @@
                                                    Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
                                                    FontSize="14"
                                                    TextTrimming="CharacterEllipsis"
-                                                   VerticalAlignment="Center" />
+                                                   VerticalAlignment="Center">
+                                            <TextBlock.ToolTip>
+                                                <ToolTip MaxWidth="560"
+                                                         Padding="12,8">
+                                                    <TextBlock Text="{Binding PlacementTarget.DataContext.StorageStatus, RelativeSource={RelativeSource AncestorType={x:Type ToolTip}}}"
+                                                               Width="520"
+                                                               TextWrapping="Wrap" />
+                                                </ToolTip>
+                                            </TextBlock.ToolTip>
+                                        </TextBlock>
 
                                         <materialDesign:PackIcon Grid.Column="3"
-                                                                 Kind="CheckCircleOutline"
                                                                  Width="25"
                                                                  Height="25"
-                                                                 Foreground="#12B84F"
                                                                  HorizontalAlignment="Right"
-                                                                 VerticalAlignment="Center" />
+                                                                 VerticalAlignment="Center">
+                                            <materialDesign:PackIcon.Style>
+                                                <Style TargetType="{x:Type materialDesign:PackIcon}">
+                                                    <Setter Property="Kind"
+                                                            Value="CheckCircleOutline" />
+                                                    <Setter Property="Foreground"
+                                                            Value="#12B84F" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasStorageError}"
+                                                                     Value="True">
+                                                            <Setter Property="Kind"
+                                                                    Value="CloseCircleOutline" />
+                                                            <Setter Property="Foreground"
+                                                                    Value="#C62828" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </materialDesign:PackIcon.Style>
+                                        </materialDesign:PackIcon>
                                     </Grid>
 
                                 </Border>
@@ -517,6 +602,13 @@
                                                                     Value="CheckCircleOutline" />
                                                             <Setter Property="Foreground"
                                                                     Value="#12B84F" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding HasEditorError}"
+                                                                     Value="True">
+                                                            <Setter Property="Kind"
+                                                                    Value="CloseCircleOutline" />
+                                                            <Setter Property="Foreground"
+                                                                    Value="#C62828" />
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
@@ -581,6 +673,13 @@
                                                             <Setter Property="Foreground"
                                                                     Value="#12B84F" />
                                                         </DataTrigger>
+                                                        <DataTrigger Binding="{Binding HasAiError}"
+                                                                     Value="True">
+                                                            <Setter Property="Kind"
+                                                                    Value="CloseCircleOutline" />
+                                                            <Setter Property="Foreground"
+                                                                    Value="#C62828" />
+                                                        </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
                                             </materialDesign:PackIcon.Style>
@@ -593,6 +692,18 @@
 
                             <StackPanel Grid.Row="4"
                                         Margin="8,14,8,0">
+
+                                <StackPanel.Style>
+                                    <Style TargetType="StackPanel">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding HasCompletionError}"
+                                                         Value="True">
+                                                <Setter Property="Visibility"
+                                                        Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
 
                                 <StackPanel Orientation="Horizontal">
 
@@ -609,50 +720,6 @@
                                                VerticalAlignment="Center" />
 
                                 </StackPanel>
-
-                                <Border Margin="0,10,0,0"
-                                        Padding="12,10"
-                                        Background="#FFF1F1"
-                                        CornerRadius="8">
-
-                                    <Border.Style>
-                                        <Style TargetType="Border">
-                                            <Setter Property="Visibility"
-                                                    Value="Collapsed" />
-
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding HasCompletionError}"
-                                                             Value="True">
-                                                    <Setter Property="Visibility"
-                                                            Value="Visible" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Border.Style>
-
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-
-                                        <materialDesign:PackIcon Kind="AlertCircleOutline"
-                                                                 Width="20"
-                                                                 Height="20"
-                                                                 Foreground="#C62828"
-                                                                 VerticalAlignment="Top" />
-
-                                        <TextBlock Grid.Column="1"
-                                                   Text="{Binding CompletionErrorMessage}"
-                                                   Margin="10,0,0,0"
-                                                   Foreground="#A52222"
-                                                   FontSize="13"
-                                                   LineHeight="19"
-                                                   TextWrapping="Wrap"
-                                                   VerticalAlignment="Center" />
-                                    </Grid>
-
-                                </Border>
 
                             </StackPanel>
 
@@ -673,17 +740,48 @@
                                 </Grid.ColumnDefinitions>
 
                                 <Button Grid.Column="0"
-                                        Width="120"
-                                        Command="{Binding BackCommand}"
-                                        Style="{StaticResource OnboardingOutlineButtonStyle}">
+                                        Command="{Binding BackCommand}">
+
+                                    <Button.Style>
+                                        <Style TargetType="Button"
+                                               BasedOn="{StaticResource OnboardingOutlineButtonStyle}">
+                                            <Setter Property="MinWidth"
+                                                    Value="120" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasCompletionError}"
+                                                             Value="True">
+                                                    <Setter Property="MinWidth"
+                                                            Value="270" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
 
                                     <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="ArrowLeft"
-                                                                 Width="21"
+                                        <materialDesign:PackIcon Width="21"
                                                                  Height="21"
-                                                                 VerticalAlignment="Center" />
+                                                                 VerticalAlignment="Center">
+                                            <materialDesign:PackIcon.Style>
+                                                <Style TargetType="{x:Type materialDesign:PackIcon}">
+                                                    <Setter Property="Kind"
+                                                            Value="ArrowLeft" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasStorageError}"
+                                                                     Value="True">
+                                                            <Setter Property="Kind"
+                                                                    Value="FolderOutline" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding HasEditorError}"
+                                                                     Value="True">
+                                                            <Setter Property="Kind"
+                                                                    Value="FileDocumentOutline" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </materialDesign:PackIcon.Style>
+                                        </materialDesign:PackIcon>
 
-                                        <TextBlock Text="Назад"
+                                        <TextBlock Text="{Binding BackButtonText}"
                                                    Margin="10,0,0,0"
                                                    VerticalAlignment="Center" />
                                     </StackPanel>
@@ -695,22 +793,8 @@
 
                                     <StackPanel Orientation="Horizontal">
 
-                                        <TextBlock VerticalAlignment="Center">
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="Text"
-                                                            Value="Открыть Mnemora" />
-
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsCompleting}"
-                                                                     Value="True">
-                                                            <Setter Property="Text"
-                                                                    Value="Сохраняем..." />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </TextBlock.Style>
-                                        </TextBlock>
+                                        <TextBlock Text="{Binding PrimaryActionText}"
+                                                   VerticalAlignment="Center" />
 
                                         <materialDesign:PackIcon Width="21"
                                                                  Height="21"
@@ -723,6 +807,11 @@
                                                             Value="ArrowRight" />
 
                                                     <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasCompletionError}"
+                                                                     Value="True">
+                                                            <Setter Property="Kind"
+                                                                    Value="Refresh" />
+                                                        </DataTrigger>
                                                         <DataTrigger Binding="{Binding IsCompleting}"
                                                                      Value="True">
                                                             <Setter Property="Kind"

@@ -5,6 +5,7 @@ using Mnemora.Desktop.Editors;
 using Mnemora.Desktop.Navigation;
 using Mnemora.Desktop.Security;
 using Mnemora.Desktop.Settings;
+using Mnemora.Desktop.Startup;
 using Mnemora.Desktop.Storage;
 using Mnemora.Desktop.ViewModels.Common;
 using Mnemora.Desktop.ViewModels.Onboarding;
@@ -20,6 +21,11 @@ public sealed class CompletionSetupViewModelTests
     private readonly string _storagePath = Path.Combine(
         Path.GetTempPath(),
         "Mnemora.Tests",
+        Guid.NewGuid().ToString("N"));
+
+    private readonly string _localRootPath = Path.Combine(
+        Path.GetTempPath(),
+        "Mnemora.Tests.Local",
         Guid.NewGuid().ToString("N"));
 
     [Fact]
@@ -41,20 +47,39 @@ public sealed class CompletionSetupViewModelTests
             "не найдена",
             context.ViewModel.CompletionErrorMessage,
             StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(
+            "Проверьте настройки",
+            context.ViewModel.CompletionTitle);
+        Assert.Equal(
+            context.ViewModel.CompletionErrorMessage,
+            context.ViewModel.CompletionSubtitle);
+        Assert.True(context.ViewModel.HasStorageError);
+        Assert.False(context.ViewModel.HasEditorError);
+        Assert.Equal(
+            "Изменить хранилище",
+            context.ViewModel.BackButtonText);
+        Assert.Equal(
+            "Повторить",
+            context.ViewModel.PrimaryActionText);
         Assert.Equal(0, context.Database.CallCount);
         Assert.Equal(0, context.Settings.CompleteCallCount);
         Assert.False(context.State.IsOnboardingCompleted);
         Assert.Null(context.Navigation.LastViewModelType);
+
+        context.ViewModel.BackCommand.Execute(null);
+
+        Assert.Equal(
+            typeof(StorageSetupViewModel),
+            context.Navigation.LastViewModelType);
     }
 
     [Fact]
-    public async Task OpenMnemoraAsync_WhenStorageMarkerWasDeleted_DoesNotCompleteOnboarding()
+    public async Task OpenMnemoraAsync_AfterStorageWasRestored_ClearsErrorAndCompletesOnboarding()
     {
         await CreateValidStorageAsync();
-        File.Delete(
-            Path.Combine(
-                _storagePath,
-                ".mnemora"));
+        Directory.Delete(
+            _storagePath,
+            recursive: true);
 
         TestContext context =
             CreateContext();
@@ -63,16 +88,246 @@ public sealed class CompletionSetupViewModelTests
             .OpenMnemoraCommand
             .ExecuteAsync(null);
 
-        Assert.Contains(
+        Assert.True(context.ViewModel.HasStorageError);
+        Assert.Equal(
+            "Повторить",
+            context.ViewModel.PrimaryActionText);
+
+        await CreateValidStorageAsync();
+
+        await context.ViewModel
+            .OpenMnemoraCommand
+            .ExecuteAsync(null);
+
+        Assert.False(context.ViewModel.HasCompletionError);
+        Assert.False(context.ViewModel.HasStorageError);
+        Assert.Null(context.ViewModel.CompletionErrorMessage);
+        Assert.Equal(
+            "Открыть Mnemora",
+            context.ViewModel.PrimaryActionText);
+        Assert.Equal(1, context.Database.CallCount);
+        Assert.Equal(1, context.Settings.CompleteCallCount);
+        Assert.True(context.State.IsOnboardingCompleted);
+        Assert.Equal(
+            typeof(AppShellViewModel),
+            context.Navigation.LastViewModelType);
+    }
+
+    [Fact]
+    public async Task StorageStatus_ReturnsSelectedStoragePath()
+    {
+        await CreateValidStorageAsync();
+
+        TestContext context =
+            CreateContext();
+
+        Assert.Equal(
+            _storagePath,
+            context.ViewModel.StorageStatus);
+    }
+
+    [Fact]
+    public async Task OpenMnemoraAsync_WhenMarkerWasDeletedFromEmptyStorage_RecreatesMarkerAndCompletesOnboarding()
+    {
+        await CreateValidStorageAsync();
+        string markerPath = Path.Combine(
+            _storagePath,
+            ".mnemora");
+
+        File.Delete(markerPath);
+
+        TestContext context =
+            CreateContext();
+
+        await context.ViewModel
+            .OpenMnemoraCommand
+            .ExecuteAsync(null);
+
+        Assert.True(File.Exists(markerPath));
+        Assert.False(context.ViewModel.HasCompletionError);
+        Assert.Equal(1, context.Database.CallCount);
+        Assert.Equal(1, context.Settings.CompleteCallCount);
+        Assert.True(context.State.IsOnboardingCompleted);
+        Assert.Equal(
+            typeof(AppShellViewModel),
+            context.Navigation.LastViewModelType);
+    }
+
+    [Fact]
+    public async Task OpenMnemoraAsync_WhenNonEmptyDirectoryHasNoMarker_OffersRecoveryWithoutAdoptingAutomatically()
+    {
+        await CreateValidStorageAsync();
+        string markerPath = Path.Combine(
+            _storagePath,
+            ".mnemora");
+
+        File.Delete(markerPath);
+        await File.WriteAllTextAsync(
+            Path.Combine(
+                _storagePath,
+                "foreign.txt"),
+            "foreign");
+
+        TestContext context =
+            CreateContext();
+
+        await context.ViewModel
+            .OpenMnemoraCommand
+            .ExecuteAsync(null);
+
+        Assert.False(File.Exists(markerPath));
+        Assert.True(context.ViewModel.HasStorageError);
+        Assert.True(context.ViewModel.CanRepairStorage);
+        Assert.Equal(
+            "Восстановить хранилище",
+            context.ViewModel.PrimaryActionText);
+        Assert.DoesNotContain(
             ".mnemora",
             context.ViewModel.CompletionErrorMessage,
             StringComparison.OrdinalIgnoreCase);
         Assert.Equal(0, context.Database.CallCount);
         Assert.Equal(0, context.Settings.CompleteCallCount);
+        Assert.False(context.State.IsOnboardingCompleted);
+    }
+
+    [Theory]
+    [InlineData("not-json")]
+    [InlineData("{\"formatVersion\":999}")]
+    public async Task OpenMnemoraAsync_WhenEmptyStorageMarkerIsInvalid_RecreatesMarkerSilently(
+        string markerContent)
+    {
+        Directory.CreateDirectory(_storagePath);
+        string markerPath = Path.Combine(
+            _storagePath,
+            ".mnemora");
+
+        await File.WriteAllTextAsync(
+            markerPath,
+            markerContent);
+
+        TestContext context =
+            CreateContext();
+
+        await context.ViewModel
+            .OpenMnemoraCommand
+            .ExecuteAsync(null);
+
+        Assert.False(context.ViewModel.HasCompletionError);
+        Assert.Equal(
+            "{\"formatVersion\":1}",
+            await File.ReadAllTextAsync(
+                markerPath));
+        Assert.Equal(1, context.Database.CallCount);
+        Assert.Equal(1, context.Settings.CompleteCallCount);
+        Assert.Equal(
+            typeof(AppShellViewModel),
+            context.Navigation.LastViewModelType);
     }
 
     [Fact]
-    public async Task OpenMnemoraAsync_WhenEditorConfigurationWasDeleted_RequiresNewVerification()
+    public async Task OpenMnemoraAsync_WhenNonEmptyStorageMarkerIsCorrupted_RepairsOnlyAfterConfirmation()
+    {
+        Directory.CreateDirectory(_storagePath);
+        string markerPath = Path.Combine(
+            _storagePath,
+            ".mnemora");
+
+        await File.WriteAllTextAsync(
+            markerPath,
+            "not-json");
+        await File.WriteAllTextAsync(
+            Path.Combine(
+                _storagePath,
+                "material.md"),
+            "material");
+
+        TestContext context =
+            CreateContext();
+
+        await context.ViewModel
+            .OpenMnemoraCommand
+            .ExecuteAsync(null);
+
+        Assert.True(context.ViewModel.CanRepairStorage);
+        Assert.Equal(
+            "Восстановить хранилище",
+            context.ViewModel.PrimaryActionText);
+        Assert.Equal(
+            "not-json",
+            await File.ReadAllTextAsync(
+                markerPath));
+        Assert.Equal(0, context.Database.CallCount);
+
+        await context.ViewModel
+            .OpenMnemoraCommand
+            .ExecuteAsync(null);
+
+        Assert.False(context.ViewModel.HasCompletionError);
+        Assert.Equal(
+            "{\"formatVersion\":1}",
+            await File.ReadAllTextAsync(
+                markerPath));
+        Assert.Equal(1, context.Database.CallCount);
+        Assert.Equal(1, context.Settings.CompleteCallCount);
+        Assert.Equal(
+            typeof(AppShellViewModel),
+            context.Navigation.LastViewModelType);
+    }
+
+    [Fact]
+    public async Task OpenMnemoraAsync_WhenNonEmptyStorageVersionIsNewer_DoesNotOfferDowngrade()
+    {
+        Directory.CreateDirectory(_storagePath);
+        string markerPath = Path.Combine(
+            _storagePath,
+            ".mnemora");
+
+        const string markerContent =
+            "{\"formatVersion\":999}";
+
+        await File.WriteAllTextAsync(
+            markerPath,
+            markerContent);
+        await File.WriteAllTextAsync(
+            Path.Combine(
+                _storagePath,
+                "material.md"),
+            "material");
+
+        TestContext context =
+            CreateContext();
+
+        await context.ViewModel
+            .OpenMnemoraCommand
+            .ExecuteAsync(null);
+
+        Assert.True(context.ViewModel.HasStorageError);
+        Assert.False(context.ViewModel.CanRepairStorage);
+        Assert.Equal(
+            "Повторить",
+            context.ViewModel.PrimaryActionText);
+        Assert.Contains(
+            "более новой версии",
+            context.ViewModel.CompletionErrorMessage,
+            StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(
+            markerContent,
+            await File.ReadAllTextAsync(
+                markerPath));
+        Assert.Equal(0, context.Database.CallCount);
+        Assert.Equal(0, context.Settings.CompleteCallCount);
+    }
+
+    [Theory]
+    [InlineData(
+        MarkdownEditorType.VisualStudioCode,
+        "Visual Studio Code не найден. Проверьте путь к Code.exe.")]
+    [InlineData(
+        MarkdownEditorType.Obsidian,
+        "Obsidian не найден. Установите приложение и повторите проверку.")]
+    public async Task OpenMnemoraAsync_WhenEditorApplicationWasUninstalled_RequiresEditorSetup(
+        MarkdownEditorType editor,
+        string expectedMessage)
     {
         await CreateValidStorageAsync();
 
@@ -81,19 +336,34 @@ public sealed class CompletionSetupViewModelTests
                 editorValidationResult:
                     new MarkdownEditorConfigurationValidationResult(
                         false,
-                        "Редактор больше не найден."));
+                        expectedMessage),
+                editor: editor);
 
         await context.ViewModel
             .OpenMnemoraCommand
             .ExecuteAsync(null);
 
         Assert.Equal(
-            "Редактор больше не найден.",
+            expectedMessage,
             context.ViewModel.CompletionErrorMessage);
         Assert.False(
             context.State.IsMarkdownEditorVerified);
+        Assert.False(context.ViewModel.HasStorageError);
+        Assert.True(context.ViewModel.HasEditorError);
+        Assert.Equal(
+            "Настроить редактор",
+            context.ViewModel.BackButtonText);
+        Assert.Equal(
+            "Повторить",
+            context.ViewModel.PrimaryActionText);
         Assert.Equal(0, context.Database.CallCount);
         Assert.Equal(0, context.Settings.CompleteCallCount);
+
+        context.ViewModel.BackCommand.Execute(null);
+
+        Assert.Equal(
+            typeof(EditorSetupViewModel),
+            context.Navigation.LastViewModelType);
     }
 
     [Fact]
@@ -156,16 +426,27 @@ public sealed class CompletionSetupViewModelTests
     private TestContext CreateContext(
         MarkdownEditorConfigurationValidationResult?
             editorValidationResult = null,
-        Action? onDatabaseInitialize = null)
+        Action? onDatabaseInitialize = null,
+        MarkdownEditorType editor =
+            MarkdownEditorType.VisualStudioCode)
     {
         var state = new OnboardingState
         {
             UserName = "Ольга",
             StoragePath = _storagePath,
-            MarkdownEditor =
-                MarkdownEditorType.VisualStudioCode,
-            VisualStudioCodePath = "Code.exe",
-            IsVisualStudioCodeVerified = true,
+            MarkdownEditor = editor,
+            VisualStudioCodePath =
+                editor == MarkdownEditorType.VisualStudioCode
+                    ? "Code.exe"
+                    : null,
+            ObsidianVaultPath =
+                editor == MarkdownEditorType.Obsidian
+                    ? _storagePath
+                    : null,
+            IsVisualStudioCodeVerified =
+                editor == MarkdownEditorType.VisualStudioCode,
+            IsObsidianVerified =
+                editor == MarkdownEditorType.Obsidian,
         };
 
         var navigation =
@@ -185,7 +466,9 @@ public sealed class CompletionSetupViewModelTests
                 new StubApiKeyStore(),
                 settings,
                 database,
-                new StorageValidationService(),
+                new StorageValidationService(
+                    new TestPathProvider(
+                        _localRootPath)),
                 new StubMarkdownEditorService(
                     editorValidationResult ??
                     new MarkdownEditorConfigurationValidationResult(
@@ -208,6 +491,13 @@ public sealed class CompletionSetupViewModelTests
                 _storagePath,
                 recursive: true);
         }
+
+        if (Directory.Exists(_localRootPath))
+        {
+            Directory.Delete(
+                _localRootPath,
+                recursive: true);
+        }
     }
 
     private sealed record TestContext(
@@ -225,20 +515,29 @@ public sealed class CompletionSetupViewModelTests
         public ViewModelBase? CurrentViewModel =>
             null;
 
-        private EventHandler? _currentViewModelChanged;
-
-        public event EventHandler? CurrentViewModelChanged
-        {
-            add => _currentViewModelChanged += value;
-            remove => _currentViewModelChanged -= value;
-        }
+        public event EventHandler? CurrentViewModelChanged;
 
         public void NavigateTo<TViewModel>()
             where TViewModel : ViewModelBase
         {
-            LastViewModelType = typeof(TViewModel);
-            _currentViewModelChanged?.Invoke(this, EventArgs.Empty);
+            LastViewModelType =
+                typeof(TViewModel);
+
+            CurrentViewModelChanged?.Invoke(
+                this,
+                EventArgs.Empty);
         }
+    }
+
+    private sealed class TestPathProvider(
+        string rootPath)
+        : IMnemoraLocalPathProvider
+    {
+        public string RootPath => rootPath;
+
+        public string TempPath => Path.Combine(
+            RootPath,
+            "Temp");
     }
 
     private sealed class RecordingDatabaseInitializer(

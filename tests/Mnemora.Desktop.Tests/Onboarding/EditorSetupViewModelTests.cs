@@ -135,17 +135,14 @@ public sealed class EditorSetupViewModelTests : IDisposable
         public ViewModelBase? CurrentViewModel =>
             null;
 
-        private EventHandler? _currentViewModelChanged;
-
-        public event EventHandler? CurrentViewModelChanged
-        {
-            add => _currentViewModelChanged += value;
-            remove => _currentViewModelChanged -= value;
-        }
+        public event EventHandler? CurrentViewModelChanged;
 
         public void NavigateTo<TViewModel>()
             where TViewModel : ViewModelBase
         {
+            CurrentViewModelChanged?.Invoke(
+                this,
+                EventArgs.Empty);
         }
     }
 

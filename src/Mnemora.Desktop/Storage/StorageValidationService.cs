@@ -1,10 +1,12 @@
 using System.IO;
 using System.Security;
 using System.Text.Json;
+using Mnemora.Desktop.Startup;
 
 namespace Mnemora.Desktop.Storage;
 
-public sealed class StorageValidationService
+public sealed class StorageValidationService(
+    IMnemoraLocalPathProvider localPathProvider)
     : IStorageValidationService
 {
     private const string StorageMarkerFileName =
@@ -14,6 +16,17 @@ public sealed class StorageValidationService
 
     private const string StorageMarkerContent =
         "{\"formatVersion\":1}";
+
+    private const string ObsidianMetadataDirectoryName =
+        ".obsidian";
+
+    private const string RecoveryDirectoryName =
+        "Recovery";
+
+    public StorageValidationService()
+        : this(new MnemoraLocalPathProvider())
+    {
+    }
 
     public StorageValidationResult ValidateCandidate(
         string? storagePath)
@@ -98,16 +111,34 @@ public sealed class StorageValidationService
         string? storagePath,
         CancellationToken cancellationToken = default)
     {
-        StorageValidationResult candidateResult =
-            ValidateCandidate(storagePath);
+        StorageValidationResult pathResult =
+            ValidateExistingDirectory(storagePath);
 
-        if (!candidateResult.IsValid)
+        if (!pathResult.IsValid)
         {
-            return candidateResult;
+            return pathResult;
         }
 
         string normalizedPath =
-            candidateResult.NormalizedPath!;
+            pathResult.NormalizedPath!;
+
+        StorageValidationResult candidateResult =
+            ValidateCandidate(normalizedPath);
+
+        if (!candidateResult.IsValid)
+        {
+            if (IsMarkerFailure(
+                    candidateResult.FailureKind) &&
+                ContainsNoMnemoraData(
+                    normalizedPath))
+            {
+                return await WriteCurrentMarkerAsync(
+                    normalizedPath,
+                    cancellationToken);
+            }
+
+            return candidateResult;
+        }
 
         string markerPath = Path.Combine(
             normalizedPath,
@@ -115,30 +146,68 @@ public sealed class StorageValidationService
 
         if (!File.Exists(markerPath))
         {
-            try
-            {
-                await File.WriteAllTextAsync(
-                    markerPath,
-                    StorageMarkerContent,
-                    cancellationToken);
-            }
-            catch (OperationCanceledException)
-                when (cancellationToken.IsCancellationRequested)
-            {
-                throw;
-            }
-            catch (Exception exception)
-                when (exception is IOException
-                          or UnauthorizedAccessException
-                          or SecurityException
-                          or NotSupportedException)
-            {
-                return StorageValidationResult.Failure(
-                    "Не удалось создать файл маркера хранилища Mnemora.");
-            }
+            return await WriteCurrentMarkerAsync(
+                normalizedPath,
+                cancellationToken);
         }
 
         return ValidateConfigured(normalizedPath);
+    }
+
+    public async Task<StorageValidationResult> RepairAsync(
+        string? storagePath,
+        CancellationToken cancellationToken = default)
+    {
+        StorageValidationResult pathResult =
+            ValidateExistingDirectory(storagePath);
+
+        if (!pathResult.IsValid)
+        {
+            return pathResult;
+        }
+
+        string normalizedPath =
+            pathResult.NormalizedPath!;
+
+        StorageValidationResult markerResult =
+            ValidateMarker(normalizedPath);
+
+        if (markerResult.IsValid)
+        {
+            return markerResult;
+        }
+
+        if (markerResult.FailureKind is
+            StorageValidationFailureKind.StorageVersionIsNewer or
+            StorageValidationFailureKind.StorageVersionUnsupported)
+        {
+            return markerResult;
+        }
+
+        if (!IsRepairableMarkerFailure(
+                markerResult.FailureKind))
+        {
+            return markerResult;
+        }
+
+        string markerPath = Path.Combine(
+            normalizedPath,
+            StorageMarkerFileName);
+
+        if (File.Exists(markerPath))
+        {
+            StorageValidationResult backupResult =
+                BackupDamagedMarker(markerPath);
+
+            if (!backupResult.IsValid)
+            {
+                return backupResult;
+            }
+        }
+
+        return await WriteCurrentMarkerAsync(
+            normalizedPath,
+            cancellationToken);
     }
 
     private static StorageValidationResult ValidateExistingDirectory(
@@ -187,7 +256,8 @@ public sealed class StorageValidationService
         if (!File.Exists(markerPath))
         {
             return StorageValidationResult.Failure(
-                "Не найден файл .mnemora. Папка должна быть пустой или являться хранилищем Mnemora.");
+                "Служебные настройки хранилища отсутствуют.",
+                StorageValidationFailureKind.MarkerMissing);
         }
 
         try
@@ -201,32 +271,37 @@ public sealed class StorageValidationService
             JsonElement root =
                 document.RootElement;
 
-            bool isValid =
-                root.ValueKind == JsonValueKind.Object
-                &&
-                root.TryGetProperty(
+            if (root.ValueKind != JsonValueKind.Object ||
+                !root.TryGetProperty(
                     "formatVersion",
-                    out JsonElement versionElement)
-                &&
-                versionElement.ValueKind ==
-                JsonValueKind.Number
-                &&
-                versionElement.TryGetInt32(
-                    out int formatVersion)
-                &&
-                formatVersion ==
-                CurrentStorageFormatVersion;
+                    out JsonElement versionElement) ||
+                versionElement.ValueKind !=
+                JsonValueKind.Number ||
+                !versionElement.TryGetInt32(
+                    out int formatVersion))
+            {
+                return CorruptedMarkerFailure();
+            }
 
-            return isValid
-                ? StorageValidationResult.Success(
-                    storagePath)
+            if (formatVersion ==
+                CurrentStorageFormatVersion)
+            {
+                return StorageValidationResult.Success(
+                    storagePath);
+            }
+
+            return formatVersion >
+                   CurrentStorageFormatVersion
+                ? StorageValidationResult.Failure(
+                    "Хранилище создано в более новой версии Mnemora. Обновите приложение.",
+                    StorageValidationFailureKind.StorageVersionIsNewer)
                 : StorageValidationResult.Failure(
-                    "Файл .mnemora повреждён или имеет неподдерживаемую версию.");
+                    "Версия хранилища не поддерживается этой версией Mnemora.",
+                    StorageValidationFailureKind.StorageVersionUnsupported);
         }
         catch (JsonException)
         {
-            return StorageValidationResult.Failure(
-                "Файл .mnemora повреждён или имеет неподдерживаемую версию.");
+            return CorruptedMarkerFailure();
         }
         catch (Exception exception)
             when (exception is IOException
@@ -235,7 +310,151 @@ public sealed class StorageValidationService
                       or NotSupportedException)
         {
             return StorageValidationResult.Failure(
-                "Не удалось прочитать файл .mnemora.");
+                "Не удалось прочитать служебные настройки хранилища.");
+        }
+    }
+
+    private static StorageValidationResult CorruptedMarkerFailure() =>
+        StorageValidationResult.Failure(
+            "Не удалось проверить хранилище. Служебные настройки повреждены.",
+            StorageValidationFailureKind.MarkerCorrupted);
+
+    private static bool IsMarkerFailure(
+        StorageValidationFailureKind failureKind) =>
+        failureKind is
+            StorageValidationFailureKind.MarkerMissing or
+            StorageValidationFailureKind.MarkerCorrupted or
+            StorageValidationFailureKind.StorageVersionIsNewer or
+            StorageValidationFailureKind.StorageVersionUnsupported;
+
+    private static bool IsRepairableMarkerFailure(
+        StorageValidationFailureKind failureKind) =>
+        failureKind is
+            StorageValidationFailureKind.MarkerMissing or
+            StorageValidationFailureKind.MarkerCorrupted;
+
+    private static bool ContainsNoMnemoraData(
+        string storagePath)
+    {
+        try
+        {
+            return Directory
+                .EnumerateFileSystemEntries(
+                    storagePath)
+                .All(entry =>
+                {
+                    string name =
+                        Path.GetFileName(entry);
+
+                    return string.Equals(
+                               name,
+                               StorageMarkerFileName,
+                               StringComparison.OrdinalIgnoreCase) ||
+                           string.Equals(
+                               name,
+                               ObsidianMetadataDirectoryName,
+                               StringComparison.OrdinalIgnoreCase);
+                });
+        }
+        catch (Exception exception)
+            when (exception is IOException
+                      or UnauthorizedAccessException
+                      or SecurityException
+                      or NotSupportedException)
+        {
+            return false;
+        }
+    }
+
+    private StorageValidationResult BackupDamagedMarker(
+        string markerPath)
+    {
+        try
+        {
+            string recoveryPath = Path.Combine(
+                localPathProvider.RootPath,
+                RecoveryDirectoryName);
+
+            Directory.CreateDirectory(recoveryPath);
+
+            string backupPath = Path.Combine(
+                recoveryPath,
+                $"storage-marker-{DateTimeOffset.UtcNow:yyyyMMdd-HHmmssfff}-{Guid.NewGuid():N}.bak");
+
+            File.Copy(
+                markerPath,
+                backupPath,
+                overwrite: false);
+
+            return StorageValidationResult.Success(
+                Path.GetDirectoryName(markerPath)!);
+        }
+        catch (Exception exception)
+            when (exception is IOException
+                      or UnauthorizedAccessException
+                      or SecurityException
+                      or NotSupportedException)
+        {
+            return StorageValidationResult.Failure(
+                "Не удалось подготовить восстановление хранилища.");
+        }
+    }
+
+    private async Task<StorageValidationResult>
+        WriteCurrentMarkerAsync(
+            string storagePath,
+            CancellationToken cancellationToken)
+    {
+        string markerPath = Path.Combine(
+            storagePath,
+            StorageMarkerFileName);
+
+        string temporaryPath = Path.Combine(
+            storagePath,
+            $".mnemora-repair-{Guid.NewGuid():N}.tmp");
+
+        try
+        {
+            await File.WriteAllTextAsync(
+                temporaryPath,
+                StorageMarkerContent,
+                cancellationToken);
+
+            File.Move(
+                temporaryPath,
+                markerPath,
+                overwrite: true);
+
+            return ValidateConfigured(storagePath);
+        }
+        catch (OperationCanceledException)
+            when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+            when (exception is IOException
+                      or UnauthorizedAccessException
+                      or SecurityException
+                      or NotSupportedException)
+        {
+            return StorageValidationResult.Failure(
+                "Не удалось восстановить служебные настройки хранилища.");
+        }
+        finally
+        {
+            try
+            {
+                File.Delete(temporaryPath);
+            }
+            catch (Exception exception)
+                when (exception is IOException
+                          or UnauthorizedAccessException
+                          or SecurityException
+                          or NotSupportedException)
+            {
+                // Временный файл будет удалён при следующем запуске.
+            }
         }
     }
 
