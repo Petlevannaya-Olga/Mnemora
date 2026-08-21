@@ -7,4 +7,4 @@ public sealed record GetLibrarySectionsPageQuery(
     LibrarySectionSort Sort,
     int Offset,
     int PageSize)
-    : IQuery;
+    : IQueryValidation;

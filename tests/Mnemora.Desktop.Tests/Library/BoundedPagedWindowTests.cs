@@ -14,6 +14,18 @@ public sealed class BoundedPagedWindowTests
     }
 
     [Fact]
+    public void PageOperations_RejectMisalignedOffsets()
+    {
+        var window = new BoundedPagedWindow<int>(30, 7, 10);
+
+        Action store = () => window.StorePage(1, [1]);
+        Action read = () => window.TryGetCachedPage(31, out _);
+
+        store.Should().Throw<ArgumentException>();
+        read.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
     public void ForwardScrolling_ThroughFiveThousandPages_RemainsBounded()
     {
         var window = new BoundedPagedWindow<int>(30, 7, 10);
@@ -126,5 +138,18 @@ public sealed class BoundedPagedWindowTests
         window.WindowStartOffset.Should().Be(0);
         window.WindowEndOffset.Should().Be(0);
         window.CurrentPageOffset.Should().Be(0);
+    }
+
+    [Fact]
+    public void PartialLastPage_UsesActualItemCountForWindowEnd()
+    {
+        var window = new BoundedPagedWindow<int>(30, 7, 10);
+        window.SetTotalCount(31);
+        window.ShowPage(0, Enumerable.Range(0, 30).ToArray(), PageWindowInsert.Append);
+        window.ShowPage(30, [30], PageWindowInsert.Append);
+
+        window.WindowEndOffset.Should().Be(31);
+        window.HasNext.Should().BeFalse();
+        window.FlattenVisiblePages().Should().HaveCount(31);
     }
 }

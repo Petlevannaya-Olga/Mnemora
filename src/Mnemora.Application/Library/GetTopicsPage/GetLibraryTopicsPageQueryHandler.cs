@@ -117,29 +117,41 @@ public sealed class GetLibraryTopicsPageQueryHandler(
             var pageRows = loadedRows.Take(request.PageSize).ToArray();
             var topicIds = pageRows.Select(row => row.Topic.Id).ToArray();
 
-            var articleTopicIds = topicIds.Length == 0
-                ? []
-                : await readDbContext.MaterialsRead
-                    .OfType<Article>()
-                    .Where(article => topicIds.Contains(article.TopicId))
-                    .Select(article => article.TopicId)
-                    .ToListAsync(cancellationToken);
+            Dictionary<TopicId, int> articlesCountByTopic =
+                topicIds.Length == 0
+                    ? []
+                    : await readDbContext.MaterialsRead
+                        .OfType<Article>()
+                        .Where(article => topicIds.Contains(article.TopicId))
+                        .GroupBy(article => article.TopicId)
+                        .Select(group => new
+                        {
+                            TopicId = group.Key,
+                            Count = group.Count(),
+                        })
+                        .ToDictionaryAsync(
+                            row => row.TopicId,
+                            row => row.Count,
+                            cancellationToken);
 
-            var questionTopicIds = topicIds.Length == 0
-                ? []
-                : await readDbContext.MaterialsRead
-                    .OfType<Question>()
-                    .Where(question => topicIds.Contains(question.TopicId))
-                    .Select(question => question.TopicId)
-                    .ToListAsync(cancellationToken);
-
-            var articlesCountByTopic = articleTopicIds
-                .GroupBy(topicId => topicId)
-                .ToDictionary(group => group.Key, group => group.Count());
-
-            var questionsCountByTopic = questionTopicIds
-                .GroupBy(topicId => topicId)
-                .ToDictionary(group => group.Key, group => group.Count());
+            Dictionary<TopicId, int> questionsCountByTopic =
+                topicIds.Length == 0
+                    ? []
+                    : await readDbContext.MaterialsRead
+                        .OfType<Question>()
+                        .Where(question =>
+                            topicIds.Contains(question.TopicId) &&
+                            question.ArticleId == null)
+                        .GroupBy(question => question.TopicId)
+                        .Select(group => new
+                        {
+                            TopicId = group.Key,
+                            Count = group.Count(),
+                        })
+                        .ToDictionaryAsync(
+                            row => row.TopicId,
+                            row => row.Count,
+                            cancellationToken);
 
             var items = pageRows
                 .Select(row =>

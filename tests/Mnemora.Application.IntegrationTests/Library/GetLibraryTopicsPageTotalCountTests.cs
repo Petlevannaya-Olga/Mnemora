@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Mnemora.Application.Library.GetTopicsPage;
 using Mnemora.Contracts;
+using Mnemora.Domain.Materials;
 using Mnemora.Domain.Topics;
 using Xunit;
 
@@ -67,6 +68,51 @@ public sealed class GetLibraryTopicsPageTotalCountTests
         result.Value.Items[0].Name.Should().Be("EF Core");
         result.Value.TotalCount.Should().Be(1);
         result.Value.HasMore.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task TopicCounters_ExcludeQuestionsLinkedToArticles()
+    {
+        await using var db = await SqliteLibraryTestDatabase.CreateAsync();
+        (var section, var topic) = await db.CreateSectionAndTopicAsync();
+
+        Article article = db.CreateArticle(topic.Id, "Article");
+        Question standalone = db.CreateStandaloneQuestion(topic.Id, "Standalone question");
+        Question linked = db.CreateLinkedQuestion(article, "Linked question");
+        await db.AddMaterialsAsync(article, standalone, linked);
+
+        var sut = CreateHandler(db);
+        var result = await sut.Handle(Query(section.Id.Value));
+
+        result.IsSuccess.Should().BeTrue();
+        var item = result.Value.Items.Single();
+        item.ArticlesCount.Should().Be(1);
+        item.QuestionsCount.Should().Be(1);
+        item.MaterialsCount.Should().Be(2);
+    }
+
+    [Fact]
+    [Trait("Category", "LargeLoad")]
+    public async Task TopicCounters_50000Materials_AreAggregatedInDatabase()
+    {
+        await using var db = await SqliteLibraryTestDatabase.CreateAsync();
+        (var section, var topic) = await db.CreateSectionAndTopicAsync();
+        await db.AddMaterialsInBatchesAsync(
+            Enumerable.Range(0, 50_000)
+                .Select(index => (Material)db.CreateArticle(
+                    topic.Id,
+                    $"Article {index:D5}")));
+        db.CommandCounter.Reset();
+
+        var sut = CreateHandler(db);
+        var result = await sut.Handle(Query(section.Id.Value));
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Items.Should().ContainSingle();
+        result.Value.Items[0].ArticlesCount.Should().Be(50_000);
+        result.Value.Items[0].MaterialsCount.Should().Be(50_000);
+        db.CommandCounter.Count.Should().BeLessThanOrEqualTo(6);
+        db.Context.ChangeTracker.Entries().Should().BeEmpty();
     }
 
     private static GetLibraryTopicsPageQueryHandler CreateHandler(

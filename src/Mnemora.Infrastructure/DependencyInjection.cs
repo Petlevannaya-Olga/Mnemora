@@ -36,7 +36,6 @@ public static class DependencyInjection
         services.AddScoped<ILibraryOrderRepository, LibraryOrderRepository>();
 
         services.AddScoped<ITransactionManager, TransactionManager>();
-        services.AddScoped<ITransactionScope, TransactionScope>();
 
         services.AddSingleton<IMaterialContentStore, MarkdownMaterialContentStore>();
         services.AddTransient<IMaterialContentConsistencyService, MaterialContentConsistencyService>();

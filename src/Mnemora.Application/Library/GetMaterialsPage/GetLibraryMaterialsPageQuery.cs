@@ -9,4 +9,4 @@ public sealed record GetLibraryMaterialsPageQuery(
     LibraryMaterialSort Sort,
     int Offset,
     int PageSize)
-    : IQuery;
+    : IQueryValidation;

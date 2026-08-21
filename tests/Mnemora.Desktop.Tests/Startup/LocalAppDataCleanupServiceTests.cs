@@ -50,6 +50,26 @@ public sealed class LocalAppDataCleanupServiceTests : IDisposable
         Assert.Equal(0, report.SkippedCount);
     }
 
+    [Fact]
+    public async Task CleanupAsync_DeletesNestedTempContentsAndCountsTopLevelEntries()
+    {
+        var paths = new TestPathProvider(_root);
+        string nestedDirectory = Path.Combine(paths.TempPath, "nested");
+        Directory.CreateDirectory(nestedDirectory);
+        await File.WriteAllTextAsync(Path.Combine(paths.TempPath, "top.txt"), "top");
+        await File.WriteAllTextAsync(Path.Combine(nestedDirectory, "nested.txt"), "nested");
+
+        var service = new LocalAppDataCleanupService(
+            paths,
+            NullLogger<LocalAppDataCleanupService>.Instance);
+
+        LocalAppDataCleanupReport report = await service.CleanupAsync();
+
+        Assert.False(Directory.Exists(paths.TempPath));
+        Assert.Equal(2, report.DeletedCount);
+        Assert.Equal(0, report.SkippedCount);
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_root))
@@ -62,6 +82,5 @@ public sealed class LocalAppDataCleanupServiceTests : IDisposable
     {
         public string RootPath { get; } = rootPath;
         public string TempPath => Path.Combine(RootPath, "Temp");
-        public string StagingPath => Path.Combine(RootPath, "Staging");
     }
 }

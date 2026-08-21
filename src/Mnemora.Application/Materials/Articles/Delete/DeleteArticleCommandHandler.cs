@@ -57,14 +57,12 @@ public sealed class DeleteArticleCommandHandler(
 
         var questions = questionsResult.Value;
 
-        foreach (Question question in questions)
+        if (questions.Count > 0)
         {
-            var detachResult = question.DetachFromArticle();
-
-            if (detachResult.IsFailure)
-            {
-                return detachResult.Error.ToErrors();
-            }
+            return CommonErrors.Conflict(
+                "article.delete.has.questions",
+                "Нельзя удалить статью, пока к ней привязаны вопросы")
+                .ToErrors();
         }
 
         materialsRepository.Remove(article);
@@ -91,10 +89,9 @@ public sealed class DeleteArticleCommandHandler(
         }
 
         logger.LogInformation(
-            "Удалена статья {ArticleId} с названием {ArticleTitle}. Откреплено вопросов: {QuestionCount}",
+            "Удалена статья {ArticleId} с названием {ArticleTitle}",
             article.Id.Value,
-            article.Title.Value,
-            questions.Count);
+            article.Title.Value);
 
         return article.Id.Value;
     }

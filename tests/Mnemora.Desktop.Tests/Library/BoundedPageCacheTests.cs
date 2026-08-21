@@ -14,6 +14,18 @@ public sealed class BoundedPageCacheTests
     }
 
     [Fact]
+    public void Set_RejectsNegativeOffsetAndNullItems()
+    {
+        var cache = new BoundedPageCache<int>(3);
+
+        Action negativeOffset = () => cache.Set(-1, [1]);
+        Action nullItems = () => cache.Set(0, null!);
+
+        negativeOffset.Should().Throw<ArgumentOutOfRangeException>();
+        nullItems.Should().Throw<ArgumentNullException>();
+    }
+
+    [Fact]
     public void Set_NeverGrowsPastConfiguredPageLimit()
     {
         var cache = new BoundedPageCache<int>(10);

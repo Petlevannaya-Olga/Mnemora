@@ -65,6 +65,38 @@ public sealed class GetLibraryMaterialsPageTotalCountTests
         result.Value.HasMore.Should().BeFalse();
     }
 
+    [Fact]
+    public async Task LinkedQuestions_AreExcludedFromTopLevelPageAndTotals()
+    {
+        await using var db = await SqliteLibraryTestDatabase.CreateAsync();
+        (_, var topic) = await db.CreateSectionAndTopicAsync();
+
+        Article article = db.CreateArticle(topic.Id, "Article");
+        Question standalone = db.CreateStandaloneQuestion(topic.Id, "Standalone question");
+        Question linked = db.CreateLinkedQuestion(article, "Linked question");
+        await db.AddMaterialsAsync(article, standalone, linked);
+
+        var sut = CreateHandler(db);
+        var all = await sut.Handle(Query(topic.Id.Value, offset: 0));
+        var questions = await sut.Handle(new GetLibraryMaterialsPageQuery(
+            topic.Id.Value,
+            Search: null,
+            LibraryMaterialFilter.Questions,
+            LibraryMaterialSort.Name,
+            Offset: 0,
+            PageSize: 50));
+
+        all.IsSuccess.Should().BeTrue();
+        all.Value.Items.Select(item => item.Id)
+            .Should().BeEquivalentTo(new[] { article.Id.Value, standalone.Id.Value });
+        all.Value.TotalCount.Should().Be(2);
+
+        questions.IsSuccess.Should().BeTrue();
+        questions.Value.Items.Should().ContainSingle();
+        questions.Value.Items[0].Id.Should().Be(standalone.Id.Value);
+        questions.Value.TotalCount.Should().Be(1);
+    }
+
     private static GetLibraryMaterialsPageQueryHandler CreateHandler(
         SqliteLibraryTestDatabase db) =>
         new(db.Context, NullLogger<GetLibraryMaterialsPageQueryHandler>.Instance);

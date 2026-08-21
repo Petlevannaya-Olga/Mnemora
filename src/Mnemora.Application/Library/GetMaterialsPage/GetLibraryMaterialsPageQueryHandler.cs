@@ -50,7 +50,10 @@ public sealed class GetLibraryMaterialsPageQueryHandler(
             }
 
             IQueryable<Material> materialsQuery = readDbContext.MaterialsRead
-                .Where(material => material.TopicId == topicId);
+                .Where(material => material.TopicId == topicId)
+                .Where(material =>
+                    material is Article ||
+                    (material is Question && ((Question)material).ArticleId == null));
 
             materialsQuery = request.Filter switch
             {
