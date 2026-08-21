@@ -4,7 +4,7 @@
         xmlns:loading="clr-namespace:Mnemora.Desktop.Controls.Loading"
         Title="Mnemora"
         Width="620"
-        Height="360"
+        Height="400"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
@@ -34,7 +34,7 @@
                    Stretch="Uniform"
                    RenderOptions.BitmapScalingMode="HighQuality" />
 
-            <Grid Grid.Row="1" Margin="0,26,0,22">
+            <Grid Grid.Row="1" Margin="0,18,0,16">
                 <StackPanel VerticalAlignment="Center">
                     <StackPanel.Style>
                         <Style TargetType="StackPanel">

@@ -68,6 +68,90 @@ public sealed class StorageTemporaryFilesCleanupServiceTests
         Assert.Equal(0, report.SkippedCount);
     }
 
+    [Fact]
+    public async Task CleanupAsync_WhenMaterialsContainsOnlyDrafts_DeletesEmptyMaterialsDirectory()
+    {
+        string materialsDirectory = Path.Combine(
+            _storagePath,
+            "materials");
+
+        string editorCheckDirectory = Path.Combine(
+            materialsDirectory,
+            "_drafts",
+            "editor-check");
+
+        Directory.CreateDirectory(
+            editorCheckDirectory);
+
+        await File.WriteAllTextAsync(
+            Path.Combine(
+                editorCheckDirectory,
+                "mnemora-editor-check.md"),
+            "temporary");
+
+        var service =
+            new StorageTemporaryFilesCleanupService(
+                NullLogger<StorageTemporaryFilesCleanupService>.Instance);
+
+        StorageTemporaryFilesCleanupReport report =
+            await service.CleanupAsync(
+                _storagePath);
+
+        Assert.False(
+            Directory.Exists(materialsDirectory));
+        Assert.Equal(1, report.DeletedCount);
+        Assert.Equal(0, report.SkippedCount);
+    }
+
+    [Fact]
+    public async Task CleanupAsync_WhenMaterialsContainsAnotherDirectory_KeepsMaterialsDirectory()
+    {
+        string materialsDirectory = Path.Combine(
+            _storagePath,
+            "materials");
+
+        string editorCheckDirectory = Path.Combine(
+            materialsDirectory,
+            "_drafts",
+            "editor-check");
+
+        string userDirectory = Path.Combine(
+            materialsDirectory,
+            "articles");
+
+        Directory.CreateDirectory(
+            editorCheckDirectory);
+
+        Directory.CreateDirectory(
+            userDirectory);
+
+        await File.WriteAllTextAsync(
+            Path.Combine(
+                editorCheckDirectory,
+                "mnemora-editor-check.md"),
+            "temporary");
+
+        var service =
+            new StorageTemporaryFilesCleanupService(
+                NullLogger<StorageTemporaryFilesCleanupService>.Instance);
+
+        StorageTemporaryFilesCleanupReport report =
+            await service.CleanupAsync(
+                _storagePath);
+
+        Assert.True(
+            Directory.Exists(materialsDirectory));
+        Assert.True(
+            Directory.Exists(userDirectory));
+        Assert.False(
+            Directory.Exists(
+                Path.Combine(
+                    materialsDirectory,
+                    "_drafts")));
+        Assert.Equal(1, report.DeletedCount);
+        Assert.Equal(0, report.SkippedCount);
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]

@@ -60,18 +60,75 @@ public sealed class StorageTemporaryFilesCleanupService(
             return new StorageTemporaryFilesCleanupReport(0, 1);
         }
 
+        string materialsDirectory = Path.Combine(
+            rootPath,
+            MaterialsDirectoryName);
+
         CleanupDirectory(
             Path.Combine(
-                rootPath,
-                MaterialsDirectoryName,
+                materialsDirectory,
                 DraftsDirectoryName),
             ref deletedCount,
             ref skippedCount,
             cancellationToken);
 
+        DeleteDirectoryIfEmpty(
+            materialsDirectory,
+            ref skippedCount);
+
         return new StorageTemporaryFilesCleanupReport(
             deletedCount,
             skippedCount);
+    }
+
+    private void DeleteDirectoryIfEmpty(
+        string directoryPath,
+        ref int skippedCount)
+    {
+        if (!Directory.Exists(directoryPath))
+        {
+            return;
+        }
+
+        try
+        {
+            FileAttributes attributes =
+                File.GetAttributes(directoryPath);
+
+            // Не удаляем junction/symlink и не проверяем его содержимое:
+            // целевой каталог может находиться вне хранилища Mnemora.
+            if (attributes.HasFlag(
+                    FileAttributes.ReparsePoint))
+            {
+                return;
+            }
+
+            if (Directory.EnumerateFileSystemEntries(
+                    directoryPath).Any())
+            {
+                return;
+            }
+
+            Directory.Delete(
+                directoryPath,
+                recursive: false);
+        }
+        catch (DirectoryNotFoundException)
+        {
+            // Требуемое состояние уже достигнуто.
+        }
+        catch (Exception exception)
+            when (exception is IOException
+                      or UnauthorizedAccessException
+                      or SecurityException)
+        {
+            skippedCount++;
+
+            logger.LogWarning(
+                exception,
+                "Не удалось удалить пустой каталог материалов Mnemora {DirectoryPath}",
+                directoryPath);
+        }
     }
 
     private void CleanupDirectory(

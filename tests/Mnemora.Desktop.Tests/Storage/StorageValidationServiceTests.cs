@@ -107,8 +107,10 @@ public sealed class StorageValidationServiceTests
         Assert.Equal(
             StorageValidationFailureKind.MarkerCorrupted,
             result.FailureKind);
+
         string errorMessage =
-            Assert.IsType<string>(result.ErrorMessage);
+            Assert.IsType<string>(
+                result.ErrorMessage);
 
         Assert.NotEmpty(errorMessage);
         Assert.DoesNotContain(
@@ -280,6 +282,63 @@ public sealed class StorageValidationServiceTests
             "not-json",
             await File.ReadAllTextAsync(
                 backupPath));
+    }
+
+    [Fact]
+    public async Task RepairAsync_WhenBackupDirectoryCannotBeCreated_DoesNotOverwriteMarkerOrMaterial()
+    {
+        Directory.CreateDirectory(_storagePath);
+        Directory.CreateDirectory(_localRootPath);
+
+        string markerPath = Path.Combine(
+            _storagePath,
+            ".mnemora");
+
+        string materialPath = Path.Combine(
+            _storagePath,
+            "material.md");
+
+        string recoveryPath = Path.Combine(
+            _localRootPath,
+            "Recovery");
+
+        await File.WriteAllTextAsync(
+            markerPath,
+            "not-json");
+
+        await File.WriteAllTextAsync(
+            materialPath,
+            "material");
+
+        // Обычный файл блокирует создание каталога с тем же именем.
+        await File.WriteAllTextAsync(
+            recoveryPath,
+            "block");
+
+        StorageValidationResult result =
+            await _service.RepairAsync(
+                _storagePath);
+
+        Assert.False(result.IsValid);
+        Assert.Equal(
+            StorageValidationFailureKind.Other,
+            result.FailureKind);
+        Assert.Contains(
+            "подготовить восстановление",
+            result.ErrorMessage,
+            StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(
+            "not-json",
+            await File.ReadAllTextAsync(
+                markerPath));
+        Assert.Equal(
+            "material",
+            await File.ReadAllTextAsync(
+                materialPath));
+        Assert.True(
+            File.Exists(recoveryPath));
+        Assert.False(
+            Directory.Exists(recoveryPath));
     }
 
     [Fact]
