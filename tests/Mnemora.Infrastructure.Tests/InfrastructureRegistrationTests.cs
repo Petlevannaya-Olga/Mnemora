@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Mnemora.Application.Database;
+using Mnemora.Application.LibraryContainers;
 using Mnemora.Application.Materials.Content;
 using Xunit;
 
@@ -19,6 +20,7 @@ public sealed class InfrastructureRegistrationTests
 
         using IServiceScope scope = provider.CreateScope();
         Assert.NotNull(scope.ServiceProvider.GetRequiredService<ITransactionManager>());
+        Assert.NotNull(scope.ServiceProvider.GetRequiredService<ILibraryContainersRepository>());
         Assert.Null(scope.ServiceProvider.GetService<ITransactionScope>());
     }
 }

@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Mnemora.Application.Database;
 using Mnemora.Application.Home.GetLibrarySummary;
+using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Materials;
 using Mnemora.Domain.Sections;
 using Mnemora.Domain.Topics;
@@ -169,6 +170,9 @@ public sealed class GetHomeLibrarySummaryQueryHandlerTests
         IReadDbContext inner) : IReadDbContext
     {
         public IQueryable<Section> SectionsRead => inner.SectionsRead;
+
+        public IQueryable<LibraryContainer> LibraryContainersRead =>
+            inner.LibraryContainersRead;
 
         public IQueryable<Topic> TopicsRead => inner.TopicsRead;
 
