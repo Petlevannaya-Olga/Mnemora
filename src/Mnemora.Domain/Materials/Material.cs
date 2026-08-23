@@ -1,4 +1,5 @@
-﻿using CSharpFunctionalExtensions;
+using CSharpFunctionalExtensions;
+using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Topics;
 using Mnemora.Shared;
 
@@ -13,7 +14,12 @@ public abstract class Material
 
     public MaterialId Id { get; private set; } = null!;
 
+    // Переходное поле для старого Application. Удалим его после полного
+    // перевода запросов и команд с Topic на LibraryContainer.
     public TopicId TopicId { get; private set; } = null!;
+
+    // Новый источник расположения материала.
+    public LibraryContainerId ContainerId { get; private set; } = null!;
 
     public MaterialTitle Title { get; private set; } = null!;
 
@@ -58,6 +64,7 @@ public abstract class Material
 
         Id = MaterialId.New();
         TopicId = topicId;
+        ContainerId = LibraryContainerId.Create(topicId.Value).Value;
         Title = title;
         Difficulty = difficulty;
         Icon = icon;
@@ -212,25 +219,51 @@ public abstract class Material
         return UnitResult.Success<Error>();
     }
 
-    protected UnitResult<Error> ChangeTopic(TopicId? topicId)
+    protected UnitResult<Error> ChangeContainerCore(LibraryContainerId? containerId)
+    {
+        if (containerId is null)
+        {
+            return CommonErrors.IsRequired(nameof(containerId));
+        }
+
+        if (ContainerId == containerId)
+        {
+            return UnitResult.Success<Error>();
+        }
+
+        ContainerId = containerId;
+        Touch();
+
+        return UnitResult.Success<Error>();
+    }
+
+    protected UnitResult<Error> ChangeTopicCore(TopicId? topicId)
     {
         if (topicId is null)
         {
             return CommonErrors.IsRequired(nameof(topicId));
         }
 
-        if (TopicId == topicId)
+        LibraryContainerId containerId =
+            LibraryContainerId.Create(topicId.Value).Value;
+
+        if (TopicId == topicId &&
+            ContainerId == containerId)
         {
             return UnitResult.Success<Error>();
         }
 
+        // Старые команды ещё меняют Topic. Пока они существуют, считаем это
+        // перемещением в соответствующую папку первого уровня и синхронно
+        // обновляем новый источник расположения.
         TopicId = topicId;
+        ContainerId = containerId;
         Touch();
 
         return UnitResult.Success<Error>();
     }
 
-    protected UnitResult<Error> StartNewLearningRevision()
+    protected UnitResult<Error> StartNewLearningRevisionCore()
     {
         LearningRevision++;
         Touch();
@@ -315,31 +348,5 @@ public abstract class Material
     protected void Touch()
     {
         UpdatedAt = DateTime.UtcNow;
-    }
-
-    protected UnitResult<Error> ChangeTopicCore(TopicId? topicId)
-    {
-        if (topicId is null)
-        {
-            return CommonErrors.IsRequired(nameof(topicId));
-        }
-
-        if (TopicId == topicId)
-        {
-            return UnitResult.Success<Error>();
-        }
-
-        TopicId = topicId;
-        Touch();
-
-        return UnitResult.Success<Error>();
-    }
-
-    protected UnitResult<Error> StartNewLearningRevisionCore()
-    {
-        LearningRevision++;
-        Touch();
-
-        return UnitResult.Success<Error>();
     }
 }

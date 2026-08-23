@@ -1,5 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Materials;
 using Mnemora.Domain.Topics;
 
@@ -27,6 +28,13 @@ public sealed class MaterialConfiguration
                 id => id.Value,
                 value => TopicId.Create(value).Value)
             .HasColumnName("topic_id")
+            .IsRequired();
+
+        builder.Property(material => material.ContainerId)
+            .HasConversion(
+                id => id.Value,
+                value => LibraryContainerId.Create(value).Value)
+            .HasColumnName("container_id")
             .IsRequired();
 
         builder.Property(material => material.Title)
@@ -77,8 +85,31 @@ public sealed class MaterialConfiguration
             .HasForeignKey(material => material.TopicId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.HasOne<LibraryContainer>()
+            .WithMany()
+            .HasForeignKey(material => material.ContainerId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasIndex(material => material.TopicId)
             .HasDatabaseName("ix_materials_topic_id");
+
+        builder.HasIndex(material => material.ContainerId)
+            .HasDatabaseName("ix_materials_container_id");
+
+        builder.HasIndex(nameof(Material.ContainerId), "type")
+            .HasDatabaseName("ix_materials_container_id_type");
+
+        builder.HasIndex(material => new { material.ContainerId, material.DisplayOrder, material.Id })
+            .HasDatabaseName("ix_materials_container_id_display_order_id");
+
+        builder.HasIndex(material => new { material.ContainerId, material.UpdatedAt, material.Id })
+            .HasDatabaseName("ix_materials_container_id_updated_at_id");
+
+        builder.HasIndex(material => new { material.ContainerId, material.CreatedAt, material.Id })
+            .HasDatabaseName("ix_materials_container_id_created_at_id");
+
+        builder.HasIndex(material => new { material.ContainerId, material.Title, material.Id })
+            .HasDatabaseName("ix_materials_container_id_title_id");
 
         builder.HasIndex(nameof(Material.TopicId), "type")
             .HasDatabaseName("ix_materials_topic_id_type");

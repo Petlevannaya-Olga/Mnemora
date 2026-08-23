@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Mnemora.Infrastructure.Persistence;
 
@@ -10,9 +11,11 @@ using Mnemora.Infrastructure.Persistence;
 namespace Mnemora.Infrastructure.Migrations
 {
     [DbContext(typeof(MnemoraDbContext))]
-    partial class MnemoraDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260822085333_AddLibraryContainers")]
+    partial class AddLibraryContainers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.11");
@@ -101,10 +104,6 @@ namespace Mnemora.Infrastructure.Migrations
                         .HasColumnType("TEXT")
                         .HasColumnName("id");
 
-                    b.Property<Guid>("ContainerId")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("container_id");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT")
                         .HasColumnName("created_at");
@@ -150,29 +149,11 @@ namespace Mnemora.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ContainerId")
-                        .HasDatabaseName("ix_materials_container_id");
-
                     b.HasIndex("TopicId")
                         .HasDatabaseName("ix_materials_topic_id");
 
-                    b.HasIndex("ContainerId", "type")
-                        .HasDatabaseName("ix_materials_container_id_type");
-
                     b.HasIndex("TopicId", "type")
                         .HasDatabaseName("ix_materials_topic_id_type");
-
-                    b.HasIndex("ContainerId", "CreatedAt", "Id")
-                        .HasDatabaseName("ix_materials_container_id_created_at_id");
-
-                    b.HasIndex("ContainerId", "DisplayOrder", "Id")
-                        .HasDatabaseName("ix_materials_container_id_display_order_id");
-
-                    b.HasIndex("ContainerId", "Title", "Id")
-                        .HasDatabaseName("ix_materials_container_id_title_id");
-
-                    b.HasIndex("ContainerId", "UpdatedAt", "Id")
-                        .HasDatabaseName("ix_materials_container_id_updated_at_id");
 
                     b.HasIndex("TopicId", "CreatedAt", "Id")
                         .HasDatabaseName("ix_materials_topic_id_created_at_id");
@@ -340,12 +321,6 @@ namespace Mnemora.Infrastructure.Migrations
 
             modelBuilder.Entity("Mnemora.Domain.Materials.Material", b =>
                 {
-                    b.HasOne("Mnemora.Domain.LibraryContainers.LibraryContainer", null)
-                        .WithMany()
-                        .HasForeignKey("ContainerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("Mnemora.Domain.Topics.Topic", null)
                         .WithMany()
                         .HasForeignKey("TopicId")

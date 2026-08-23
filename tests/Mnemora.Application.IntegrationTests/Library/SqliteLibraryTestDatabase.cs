@@ -3,6 +3,7 @@ using System.Reflection;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Materials;
 using Mnemora.Domain.Sections;
 using Mnemora.Domain.Topics;
@@ -29,13 +30,14 @@ internal sealed class SqliteLibraryTestDatabase : IAsyncDisposable
     public MnemoraDbContext Context { get; }
     public CountingDbCommandInterceptor CommandCounter { get; }
 
-    public static async Task<SqliteLibraryTestDatabase> CreateAsync()
+    public static async Task<SqliteLibraryTestDatabase> CreateAsync(
+        CancellationToken cancellationToken = default)
     {
         var connection =
             new SqliteConnection(
                 "Data Source=:memory:;Cache=Shared");
 
-        await connection.OpenAsync();
+        await connection.OpenAsync(cancellationToken);
 
         // Register the same SQLite runtime extensions that production queries
         // rely on. The function/collation are connection-scoped in SQLite.
@@ -53,7 +55,7 @@ internal sealed class SqliteLibraryTestDatabase : IAsyncDisposable
 
         var context = new MnemoraDbContext(options);
 
-        await context.Database.EnsureCreatedAsync();
+        await context.Database.EnsureCreatedAsync(cancellationToken);
         commandCounter.Reset();
 
         return new SqliteLibraryTestDatabase(
@@ -64,12 +66,16 @@ internal sealed class SqliteLibraryTestDatabase : IAsyncDisposable
 
     public async Task<(Section Section, Topic Topic)> CreateSectionAndTopicAsync(
         string sectionName = "Section",
-        string topicName = "Topic")
+        string topicName = "Topic",
+        CancellationToken cancellationToken = default)
     {
         Section section = Section.Create(
             SectionName.Create(sectionName).Value,
             Enum.GetValues<SectionColor>()[0],
             Enum.GetValues<SectionIcon>()[0]);
+
+        LibraryContainer root =
+            LibraryContainer.CreateRoot(section.Id).Value;
 
         Topic topic = Topic.Create(
             section.Id,
@@ -77,10 +83,19 @@ internal sealed class SqliteLibraryTestDatabase : IAsyncDisposable
             Enum.GetValues<TopicColor>()[0],
             Enum.GetValues<TopicIcon>()[0]);
 
+        LibraryContainer folder =
+            LibraryContainer.CreateFolderWithId(
+                LibraryContainerId.Create(topic.Id.Value).Value,
+                root,
+                FolderName.Create(topic.Name.Value).Value,
+                Enum.Parse<FolderColor>(topic.Color.ToString()),
+                Enum.Parse<FolderIcon>(topic.Icon.ToString())).Value;
+
         Context.Sections.Add(section);
+        Context.LibraryContainers.AddRange(root, folder);
         Context.Topics.Add(topic);
 
-        await Context.SaveChangesAsync();
+        await Context.SaveChangesAsync(cancellationToken);
         Context.ChangeTracker.Clear();
         CommandCounter.Reset();
 

@@ -80,6 +80,7 @@ public sealed class LibraryContainer
     }
 
     private LibraryContainer(
+        LibraryContainerId id,
         LibraryContainer parent,
         FolderName name,
         FolderColor color,
@@ -87,7 +88,7 @@ public sealed class LibraryContainer
     {
         var now = DateTime.UtcNow;
 
-        Id = LibraryContainerId.New();
+        Id = id;
         SectionId = parent.SectionId;
         ParentId = parent.Id;
         Depth = parent.Depth + 1;
@@ -141,6 +142,57 @@ public sealed class LibraryContainer
         }
 
         return new LibraryContainer(
+            LibraryContainerId.New(),
+            parent,
+            name,
+            color,
+            icon);
+    }
+
+    /// <summary>
+    /// Переходная фабрика для синхронизации старой Topic-модели
+    /// с новой структурой LibraryContainer. После удаления Topic
+    /// этот метод также будет удалён.
+    /// </summary>
+    public static Result<LibraryContainer, Error> CreateFolderWithId(
+        LibraryContainerId? id,
+        LibraryContainer? parent,
+        FolderName? name,
+        FolderColor color,
+        FolderIcon icon)
+    {
+        if (id is null)
+        {
+            return CommonErrors.IsRequired(nameof(id));
+        }
+
+        if (parent is null)
+        {
+            return CommonErrors.IsRequired(nameof(parent));
+        }
+
+        if (name is null)
+        {
+            return CommonErrors.IsRequired(nameof(name));
+        }
+
+        if (!Enum.IsDefined(color))
+        {
+            return LibraryContainerErrors.FolderColorIsInvalid(nameof(color));
+        }
+
+        if (!Enum.IsDefined(icon))
+        {
+            return LibraryContainerErrors.FolderIconIsInvalid(nameof(icon));
+        }
+
+        if (parent.Depth >= MaxFolderDepth)
+        {
+            return LibraryContainerErrors.MaximumFolderDepthExceeded(MaxFolderDepth);
+        }
+
+        return new LibraryContainer(
+            id,
             parent,
             name,
             color,
