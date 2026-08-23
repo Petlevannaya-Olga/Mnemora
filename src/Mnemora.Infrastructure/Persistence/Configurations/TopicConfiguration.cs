@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Mnemora.Domain.Sections;
 using Mnemora.Domain.Topics;
@@ -69,6 +69,7 @@ public sealed class TopicConfiguration
         builder.Property(topic => topic.DisplayOrder)
             .HasColumnName("display_order")
             .HasDefaultValue(Topic.DefaultDisplayOrder)
+            .HasSentinel(Topic.DefaultDisplayOrder)
             .IsRequired();
 
         builder.HasIndex(topic => new { topic.SectionId, topic.Name })

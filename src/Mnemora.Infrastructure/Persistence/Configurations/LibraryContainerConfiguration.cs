@@ -89,6 +89,7 @@ public sealed class LibraryContainerConfiguration
 
         builder.Property(container => container.DisplayOrder)
             .HasDefaultValue(LibraryContainer.DefaultDisplayOrder)
+            .HasSentinel(LibraryContainer.DefaultDisplayOrder)
             .IsRequired()
             .HasColumnName("display_order");
 

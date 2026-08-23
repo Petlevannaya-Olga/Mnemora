@@ -74,6 +74,7 @@ public sealed class MaterialConfiguration
         builder.Property(material => material.DisplayOrder)
             .HasColumnName("display_order")
             .HasDefaultValue(Material.DefaultDisplayOrder)
+            .HasSentinel(Material.DefaultDisplayOrder)
             .IsRequired();
 
         ConfigureDiscriminator(builder);

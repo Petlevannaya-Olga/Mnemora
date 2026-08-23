@@ -64,6 +64,19 @@ internal sealed class SqliteLibraryTestDatabase : IAsyncDisposable
             commandCounter);
     }
 
+    public LibraryContainer AddSectionWithRoot(Section section)
+    {
+        ArgumentNullException.ThrowIfNull(section);
+
+        LibraryContainer root =
+            LibraryContainer.CreateRoot(section.Id).Value;
+
+        Context.Sections.Add(section);
+        Context.LibraryContainers.Add(root);
+
+        return root;
+    }
+
     public async Task<(Section Section, Topic Topic)> CreateSectionAndTopicAsync(
         string sectionName = "Section",
         string topicName = "Topic",

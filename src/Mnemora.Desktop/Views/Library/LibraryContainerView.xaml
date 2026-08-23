@@ -1,0 +1,897 @@
+<UserControl
+    x:Class="Mnemora.Desktop.Views.Library.LibraryContainerView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="clr-namespace:Mnemora.Desktop.Converters"
+    xmlns:loading="clr-namespace:Mnemora.Desktop.Controls.Loading"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    Loaded="LibraryContainerView_OnLoaded"
+    Unloaded="LibraryContainerView_OnUnloaded"
+    SnapsToDevicePixels="True"
+    TextOptions.TextFormattingMode="Display"
+    TextOptions.TextRenderingMode="ClearType"
+    UseLayoutRounding="True">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <converters:LibraryFolderColorConverter x:Key="LibraryFolderColorConverter" />
+        <converters:LibraryFolderIconConverter x:Key="LibraryFolderIconConverter" />
+
+        <Style x:Key="BreadcrumbButtonStyle" TargetType="Button">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.Secondary}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Opacity" Value="0.72" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="LibraryViewModeButtonStyle" TargetType="ToggleButton">
+            <Setter Property="Width" Value="48" />
+            <Setter Property="Height" Value="48" />
+            <Setter Property="Margin" Value="8,0,0,0" />
+            <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Border}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.TextSecondary}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border
+                            x:Name="ButtonBorder"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="9">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource Mnemora.Brush.SurfaceMuted}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Primary}" />
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="#E6FBF8" />
+                                <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.PrimaryDark}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="MaterialFilterButtonStyle" TargetType="ToggleButton">
+            <Setter Property="Height" Value="38" />
+            <Setter Property="MinWidth" Value="74" />
+            <Setter Property="Margin" Value="8,0,0,0" />
+            <Setter Property="Padding" Value="13,0" />
+            <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Border}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.TextPrimary}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border
+                            x:Name="ButtonBorder"
+                            Padding="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource Mnemora.Brush.SurfaceMuted}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Primary}" />
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="#E6FBF8" />
+                                <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.PrimaryDark}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CardButtonStyle" TargetType="Button">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <ContentPresenter
+                            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Opacity" Value="0.9" />
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Opacity" Value="0.72" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="LargeCardStyle" TargetType="Border">
+            <Setter Property="MinHeight" Value="138" />
+            <Setter Property="Margin" Value="0,0,14,14" />
+            <Setter Property="Padding" Value="18" />
+            <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Border}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="15" />
+        </Style>
+
+        <Style x:Key="CompactCardStyle" TargetType="Border">
+            <Setter Property="Height" Value="78" />
+            <Setter Property="Margin" Value="0,0,12,12" />
+            <Setter Property="Padding" Value="14" />
+            <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Border}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="13" />
+        </Style>
+
+        <Style x:Key="SectionHeaderTextStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.TextPrimary}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style x:Key="RangeTextStyle" TargetType="TextBlock">
+            <Setter Property="Margin" Value="12,0,0,0" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.TextSecondary}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style x:Key="TableColumnHeaderStyle" TargetType="DataGridColumnHeader">
+            <Setter Property="Height" Value="42" />
+            <Setter Property="Padding" Value="14,0" />
+            <Setter Property="Background" Value="#F6F8FC" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Border}" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.TextSecondary}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+        </Style>
+
+        <Style x:Key="TableRowStyle" TargetType="DataGridRow">
+            <Setter Property="MinHeight" Value="58" />
+            <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#F7FAFC" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="FolderTableRowStyle" BasedOn="{StaticResource TableRowStyle}" TargetType="DataGridRow">
+            <EventSetter Event="MouseLeftButtonUp" Handler="FolderTableRow_OnMouseLeftButtonUp" />
+        </Style>
+
+        <Style TargetType="DataGridCell">
+            <Setter Property="Padding" Value="14,0" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource Mnemora.Brush.SurfaceMuted}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Заголовок и breadcrumbs -->
+        <Grid Margin="32,22,32,18">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <StackPanel Orientation="Horizontal">
+                <Button Command="{Binding NavigateLibraryCommand}" Style="{StaticResource BreadcrumbButtonStyle}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Width="17" Height="17" Margin="0,0,5,0" VerticalAlignment="Center" Kind="HomeOutline" />
+                        <TextBlock VerticalAlignment="Center" FontSize="14" Text="Библиотека" />
+                    </StackPanel>
+                </Button>
+
+                <ItemsControl ItemsSource="{Binding Breadcrumbs}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="17"
+                                    Height="17"
+                                    Margin="7,0"
+                                    VerticalAlignment="Center"
+                                    Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                    Kind="ChevronRight" />
+
+                                <Grid VerticalAlignment="Center">
+                                    <Button
+                                        Command="{Binding DataContext.NavigateBreadcrumbCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                        CommandParameter="{Binding}">
+                                        <TextBlock FontSize="14" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                        <Button.Style>
+                                            <Style BasedOn="{StaticResource BreadcrumbButtonStyle}" TargetType="Button">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsCurrent}" Value="True">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        FontSize="14"
+                                        Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                        Text="{Binding Name}"
+                                        TextTrimming="CharacterEllipsis">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsCurrent}" Value="True">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+
+            <Grid Grid.Row="1" Margin="0,16,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Border
+                    Width="58"
+                    Height="58"
+                    Background="{Binding CurrentContainerColor, Converter={StaticResource LibraryFolderColorConverter}}"
+                    CornerRadius="14">
+                    <materialDesign:PackIcon
+                        Width="31"
+                        Height="31"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="White"
+                        Kind="{Binding CurrentContainerIcon, Converter={StaticResource LibraryFolderIconConverter}}" />
+                </Border>
+
+                <StackPanel Grid.Column="1" Margin="17,0,0,0" VerticalAlignment="Center">
+                    <TextBlock
+                        FontSize="30"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                        Text="{Binding ContainerTitle}"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        Margin="0,4,0,0"
+                        FontSize="15"
+                        Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                        Text="{Binding ContainerSubtitle}" />
+                </StackPanel>
+            </Grid>
+        </Grid>
+
+        <!-- Общая панель поиска, сортировки и вида -->
+        <Grid Grid.Row="1" Margin="32,0,32,18">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="20" />
+                <ColumnDefinition Width="220" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBox
+                Height="50"
+                VerticalContentAlignment="Center"
+                Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                materialDesign:HintAssist.Hint="Поиск в этой папке..."
+                Style="{StaticResource MaterialDesignOutlinedTextBox}" />
+
+            <ComboBox
+                Grid.Column="2"
+                Height="50"
+                VerticalContentAlignment="Center"
+                DisplayMemberPath="Name"
+                ItemsSource="{Binding SortOptions}"
+                SelectedItem="{Binding SelectedSortOption}"
+                materialDesign:HintAssist.Hint="Сортировка"
+                Style="{StaticResource MaterialDesignOutlinedComboBox}" />
+
+            <StackPanel Grid.Column="3" Orientation="Horizontal">
+                <ToggleButton
+                    Command="{Binding ShowTilesViewCommand}"
+                    IsChecked="{Binding IsTilesView, Mode=OneWay}"
+                    Style="{StaticResource LibraryViewModeButtonStyle}"
+                    ToolTip="Визуально">
+                    <materialDesign:PackIcon Width="23" Height="23" Kind="ViewGridOutline" />
+                </ToggleButton>
+                <ToggleButton
+                    Command="{Binding ShowCompactTilesViewCommand}"
+                    IsChecked="{Binding IsCompactTilesView, Mode=OneWay}"
+                    Style="{StaticResource LibraryViewModeButtonStyle}"
+                    ToolTip="Компактно">
+                    <materialDesign:PackIcon Width="23" Height="23" Kind="ViewModule" />
+                </ToggleButton>
+                <ToggleButton
+                    Command="{Binding ShowTableViewCommand}"
+                    IsChecked="{Binding IsTableView, Mode=OneWay}"
+                    Style="{StaticResource LibraryViewModeButtonStyle}"
+                    ToolTip="Таблица">
+                    <materialDesign:PackIcon Width="23" Height="23" Kind="FormatListBulleted" />
+                </ToggleButton>
+            </StackPanel>
+        </Grid>
+
+        <!-- Папки -->
+        <Grid Grid.Row="2" Margin="32,0,32,18">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Style="{StaticResource SectionHeaderTextStyle}" Text="Папки" />
+                <TextBlock Style="{StaticResource RangeTextStyle}" Text="{Binding FoldersShownCountText}" />
+            </StackPanel>
+
+            <Grid Grid.Row="1" Margin="0,10,0,0">
+                <loading:LoadingIndicator
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    IndicatorLength="260"
+                    IndicatorThickness="6"
+                    Message="Загружаем папки..."
+                    Visibility="{Binding IsLoadingFolders, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
+                <Border
+                    Padding="16"
+                    Background="{DynamicResource Mnemora.Brush.Surface}"
+                    BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Visibility="{Binding HasFoldersError, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <DockPanel>
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource Mnemora.Brush.Error}"
+                            Text="{Binding FoldersErrorMessage}" />
+                        <Button
+                            DockPanel.Dock="Right"
+                            Margin="16,0,0,0"
+                            Command="{Binding RetryFoldersCommand}"
+                            Content="Повторить"
+                            Style="{StaticResource MaterialDesignOutlinedButton}" />
+                    </DockPanel>
+                </Border>
+
+                <Border
+                    Padding="16"
+                    Background="{DynamicResource Mnemora.Brush.Surface}"
+                    BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Visibility="{Binding IsFoldersEmpty, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                        <materialDesign:PackIcon Width="20" Height="20" Margin="0,0,8,0" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Kind="FolderOutline" />
+                        <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="Папок здесь пока нет" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Крупные папки -->
+                <ScrollViewer
+                    MaxHeight="286"
+                    VerticalScrollBarVisibility="Auto"
+                    HorizontalScrollBarVisibility="Disabled"
+                    ScrollChanged="FoldersScroll_OnScrollChanged"
+                    Visibility="{Binding IsTilesView, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <ItemsControl ItemsSource="{Binding Folders}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="3" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button
+                                    Margin="0,0,14,0"
+                                    Command="{Binding DataContext.OpenFolderCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                    CommandParameter="{Binding}"
+                                    Style="{StaticResource CardButtonStyle}">
+                                    <Border Style="{StaticResource LargeCardStyle}">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="*" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+                                            <Border
+                                                Width="42"
+                                                Height="42"
+                                                HorizontalAlignment="Left"
+                                                Background="{Binding Color, Converter={StaticResource LibraryFolderColorConverter}}"
+                                                CornerRadius="11">
+                                                <materialDesign:PackIcon
+                                                    Width="23"
+                                                    Height="23"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Foreground="White"
+                                                    Kind="{Binding Icon, Converter={StaticResource LibraryFolderIconConverter}}" />
+                                            </Border>
+                                            <TextBlock
+                                                Grid.Row="1"
+                                                Margin="0,12,0,0"
+                                                FontSize="16"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                                Text="{Binding Name}"
+                                                TextTrimming="CharacterEllipsis" />
+                                            <TextBlock
+                                                Grid.Row="2"
+                                                Margin="0,8,0,0"
+                                                FontSize="12"
+                                                Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                Text="{Binding ContentsText}"
+                                                TextTrimming="CharacterEllipsis" />
+                                        </Grid>
+                                    </Border>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <!-- Компактные папки -->
+                <ScrollViewer
+                    MaxHeight="270"
+                    VerticalScrollBarVisibility="Auto"
+                    HorizontalScrollBarVisibility="Disabled"
+                    ScrollChanged="FoldersScroll_OnScrollChanged"
+                    Visibility="{Binding IsCompactTilesView, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <ItemsControl ItemsSource="{Binding Folders}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="4" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button
+                                    Margin="0,0,12,0"
+                                    Command="{Binding DataContext.OpenFolderCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                    CommandParameter="{Binding}"
+                                    Style="{StaticResource CardButtonStyle}">
+                                    <Border Style="{StaticResource CompactCardStyle}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Border
+                                                Width="40"
+                                                Height="40"
+                                                VerticalAlignment="Center"
+                                                Background="{Binding Color, Converter={StaticResource LibraryFolderColorConverter}}"
+                                                CornerRadius="10">
+                                                <materialDesign:PackIcon
+                                                    Width="21"
+                                                    Height="21"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Foreground="White"
+                                                    Kind="{Binding Icon, Converter={StaticResource LibraryFolderIconConverter}}" />
+                                            </Border>
+                                            <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                                                <TextBlock
+                                                    FontSize="14"
+                                                    FontWeight="SemiBold"
+                                                    Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                                    Text="{Binding Name}"
+                                                    TextTrimming="CharacterEllipsis" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    FontSize="11"
+                                                    Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                    Text="{Binding ContentsText}"
+                                                    TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <!-- Папки таблицей -->
+                <Border
+                    MaxHeight="278"
+                    Background="{DynamicResource Mnemora.Brush.Surface}"
+                    BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    ClipToBounds="True"
+                    Visibility="{Binding IsTableView, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <DataGrid
+                        ItemsSource="{Binding Folders}"
+                        AutoGenerateColumns="False"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        CanUserAddRows="False"
+                        CanUserDeleteRows="False"
+                        CanUserReorderColumns="False"
+                        CanUserResizeRows="False"
+                        CanUserSortColumns="False"
+                        ColumnHeaderStyle="{StaticResource TableColumnHeaderStyle}"
+                        GridLinesVisibility="None"
+                        HeadersVisibility="Column"
+                        IsReadOnly="True"
+                        RowHeaderWidth="0"
+                        RowStyle="{StaticResource FolderTableRowStyle}"
+                        ScrollViewer.ScrollChanged="FoldersScroll_OnScrollChanged"
+                        ScrollViewer.VerticalScrollBarVisibility="Auto"
+                        SelectionMode="Single"
+                        SelectionUnit="FullRow"
+                        VirtualizingPanel.IsVirtualizing="True"
+                        VirtualizingPanel.VirtualizationMode="Recycling">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="Папка" MinWidth="260" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Border
+                                                Width="34"
+                                                Height="34"
+                                                Background="{Binding Color, Converter={StaticResource LibraryFolderColorConverter}}"
+                                                CornerRadius="9">
+                                                <materialDesign:PackIcon
+                                                    Width="19"
+                                                    Height="19"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Foreground="White"
+                                                    Kind="{Binding Icon, Converter={StaticResource LibraryFolderIconConverter}}" />
+                                            </Border>
+                                            <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                                                <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="{Binding Name}" />
+                                                <TextBlock Margin="0,2,0,0" FontSize="11" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="{Binding ContentsText}" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Вложенные папки" Width="130" Binding="{Binding ChildFoldersCount}" />
+                            <DataGridTextColumn Header="Материалы" Width="110" Binding="{Binding MaterialsCount}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Border>
+
+                <loading:LoadingIndicator
+                    Margin="0,8,0,0"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Bottom"
+                    IndicatorLength="180"
+                    IndicatorThickness="5"
+                    Message="Загружаем ещё папки..."
+                    Visibility="{Binding IsLoadingNextFoldersPage, Converter={StaticResource BooleanToVisibilityConverter}}" />
+            </Grid>
+        </Grid>
+
+        <!-- Материалы -->
+        <Grid Grid.Row="3" Margin="32,0,32,26">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Style="{StaticResource SectionHeaderTextStyle}" Text="Материалы" />
+                    <TextBlock Style="{StaticResource RangeTextStyle}" Text="{Binding MaterialsShownCountText}" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <ToggleButton Command="{Binding SelectAllMaterialsCommand}" Content="Все" IsChecked="{Binding IsAllFilter, Mode=OneWay}" Style="{StaticResource MaterialFilterButtonStyle}" />
+                    <ToggleButton Command="{Binding SelectArticlesCommand}" Content="Статьи" IsChecked="{Binding IsArticlesFilter, Mode=OneWay}" Style="{StaticResource MaterialFilterButtonStyle}" />
+                    <ToggleButton Command="{Binding SelectQuestionsCommand}" Content="Вопросы" IsChecked="{Binding IsQuestionsFilter, Mode=OneWay}" Style="{StaticResource MaterialFilterButtonStyle}" />
+                </StackPanel>
+            </Grid>
+
+            <Grid Grid.Row="1" Margin="0,10,0,0">
+                <loading:LoadingIndicator
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    IndicatorLength="300"
+                    IndicatorThickness="7"
+                    Message="Загружаем материалы..."
+                    Visibility="{Binding IsLoadingMaterials, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
+                <Border
+                    Padding="18"
+                    Background="{DynamicResource Mnemora.Brush.Surface}"
+                    BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Visibility="{Binding HasMaterialsError, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <DockPanel>
+                        <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.Error}" Text="{Binding MaterialsErrorMessage}" />
+                        <Button DockPanel.Dock="Right" Margin="16,0,0,0" Command="{Binding RetryMaterialsCommand}" Content="Повторить" Style="{StaticResource MaterialDesignOutlinedButton}" />
+                    </DockPanel>
+                </Border>
+
+                <Border
+                    Padding="22"
+                    Background="{DynamicResource Mnemora.Brush.Surface}"
+                    BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Visibility="{Binding IsMaterialsEmpty, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                        <materialDesign:PackIcon Width="20" Height="20" Margin="0,0,8,0" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Kind="FileDocumentOutline" />
+                        <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="Материалов здесь пока нет" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Крупные материалы -->
+                <ScrollViewer
+                    VerticalScrollBarVisibility="Auto"
+                    HorizontalScrollBarVisibility="Disabled"
+                    ScrollChanged="MaterialsScroll_OnScrollChanged"
+                    Visibility="{Binding IsTilesView, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <ItemsControl ItemsSource="{Binding Materials}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="3" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource LargeCardStyle}">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="*" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Border Width="34" Height="34" Background="#F2EEFF" CornerRadius="9">
+                                                <materialDesign:PackIcon Width="19" Height="19" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.Secondary}">
+                                                    <materialDesign:PackIcon.Style>
+                                                        <Style TargetType="materialDesign:PackIcon">
+                                                            <Setter Property="Kind" Value="FileDocumentOutline" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsQuestion}" Value="True">
+                                                                    <Setter Property="Kind" Value="HelpCircleOutline" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </materialDesign:PackIcon.Style>
+                                                </materialDesign:PackIcon>
+                                            </Border>
+                                            <TextBlock Margin="9,0,0,0" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="{Binding TypeTitle}" />
+                                        </StackPanel>
+                                        <TextBlock Grid.Row="1" Margin="0,12,0,0" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="{Binding Title}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" />
+                                        <StackPanel Grid.Row="2" Margin="0,9,0,0" Orientation="Horizontal">
+                                            <TextBlock FontSize="12" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="{Binding DifficultyTitle}" />
+                                            <TextBlock Margin="8,0,0,0" FontSize="12" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="{Binding TagsText}" TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <!-- Компактные материалы -->
+                <ScrollViewer
+                    VerticalScrollBarVisibility="Auto"
+                    HorizontalScrollBarVisibility="Disabled"
+                    ScrollChanged="MaterialsScroll_OnScrollChanged"
+                    Visibility="{Binding IsCompactTilesView, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <ItemsControl ItemsSource="{Binding Materials}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="3" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource CompactCardStyle}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="38" Height="38" VerticalAlignment="Center" Background="#F2EEFF" CornerRadius="9">
+                                            <materialDesign:PackIcon Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.Secondary}">
+                                                <materialDesign:PackIcon.Style>
+                                                    <Style TargetType="materialDesign:PackIcon">
+                                                        <Setter Property="Kind" Value="FileDocumentOutline" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsQuestion}" Value="True">
+                                                                <Setter Property="Kind" Value="HelpCircleOutline" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </materialDesign:PackIcon.Style>
+                                            </materialDesign:PackIcon>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Margin="11,0,8,0" VerticalAlignment="Center">
+                                            <TextBlock FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Margin="0,3,0,0" FontSize="11" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="{Binding TypeTitle}" />
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="2" VerticalAlignment="Center" FontSize="11" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="{Binding DifficultyTitle}" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <!-- Материалы таблицей -->
+                <Border
+                    Background="{DynamicResource Mnemora.Brush.Surface}"
+                    BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    ClipToBounds="True"
+                    Visibility="{Binding IsTableView, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <DataGrid
+                        ItemsSource="{Binding Materials}"
+                        AutoGenerateColumns="False"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        CanUserAddRows="False"
+                        CanUserDeleteRows="False"
+                        CanUserReorderColumns="False"
+                        CanUserResizeRows="False"
+                        CanUserSortColumns="False"
+                        ColumnHeaderStyle="{StaticResource TableColumnHeaderStyle}"
+                        GridLinesVisibility="None"
+                        HeadersVisibility="Column"
+                        IsReadOnly="True"
+                        RowHeaderWidth="0"
+                        RowStyle="{StaticResource TableRowStyle}"
+                        ScrollViewer.ScrollChanged="MaterialsScroll_OnScrollChanged"
+                        ScrollViewer.VerticalScrollBarVisibility="Auto"
+                        SelectionMode="Single"
+                        SelectionUnit="FullRow"
+                        VirtualizingPanel.IsVirtualizing="True"
+                        VirtualizingPanel.VirtualizationMode="Recycling">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="Материал" MinWidth="280" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Width="20" Height="20" Margin="0,0,10,0" VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.Secondary}">
+                                                <materialDesign:PackIcon.Style>
+                                                    <Style TargetType="materialDesign:PackIcon">
+                                                        <Setter Property="Kind" Value="FileDocumentOutline" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsQuestion}" Value="True">
+                                                                <Setter Property="Kind" Value="HelpCircleOutline" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </materialDesign:PackIcon.Style>
+                                            </materialDesign:PackIcon>
+                                            <TextBlock VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Тип" Width="90" Binding="{Binding TypeTitle}" />
+                            <DataGridTextColumn Header="Сложность" Width="110" Binding="{Binding DifficultyTitle}" />
+                            <DataGridTextColumn Header="Теги" MinWidth="170" Width="*" Binding="{Binding TagsText}" />
+                            <DataGridTextColumn Header="Изменено" Width="120" Binding="{Binding UpdatedAtLocal, StringFormat={}{0:dd.MM.yyyy}}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Border>
+
+                <loading:LoadingIndicator
+                    Margin="0,8,0,0"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Bottom"
+                    IndicatorLength="190"
+                    IndicatorThickness="5"
+                    Message="Загружаем ещё материалы..."
+                    Visibility="{Binding IsLoadingNextMaterialsPage, Converter={StaticResource BooleanToVisibilityConverter}}" />
+            </Grid>
+        </Grid>
+
+        <!-- Фатальная ошибка metadata -->
+        <Border
+            Grid.RowSpan="4"
+            Panel.ZIndex="100"
+            Width="500"
+            Padding="28"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Background="{DynamicResource Mnemora.Brush.Surface}"
+            BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+            BorderThickness="1"
+            CornerRadius="16"
+            Visibility="{Binding HasError, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <StackPanel>
+                <materialDesign:PackIcon Width="36" Height="36" HorizontalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.Error}" Kind="AlertCircleOutline" />
+                <TextBlock Margin="0,12,0,0" HorizontalAlignment="Center" FontSize="17" FontWeight="SemiBold" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="Не удалось открыть папку" />
+                <TextBlock Margin="0,7,0,0" HorizontalAlignment="Center" TextAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="{Binding ErrorMessage}" TextWrapping="Wrap" />
+                <StackPanel Margin="0,18,0,0" HorizontalAlignment="Center" Orientation="Horizontal">
+                    <Button Command="{Binding ReloadCommand}" Content="Повторить" Style="{StaticResource MaterialDesignOutlinedButton}" />
+                    <Button Margin="10,0,0,0" Command="{Binding NavigateLibraryCommand}" Content="В библиотеку" Style="{StaticResource MaterialDesignFlatButton}" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <loading:LoadingIndicator
+            Grid.RowSpan="4"
+            Panel.ZIndex="90"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            IndicatorLength="360"
+            IndicatorThickness="8"
+            Message="Открываем папку..."
+            Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}" />
+    </Grid>
+</UserControl>

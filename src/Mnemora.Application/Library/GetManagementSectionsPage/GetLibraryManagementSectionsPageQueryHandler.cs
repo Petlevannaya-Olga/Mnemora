@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Mnemora.Application.Database;
 using Mnemora.Contracts;
 using Mnemora.Contracts.Library;
+using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Materials;
 using Mnemora.Domain.Sections;
 using Mnemora.Shared;
@@ -28,7 +29,9 @@ public sealed class GetLibraryManagementSectionsPageQueryHandler(
                 1,
                 LibraryPagingDefaults.MaxQueryPageSize);
 
-            IQueryable<Section> sectionsQuery = readDbContext.SectionsRead;
+            IQueryable<Section> sectionsQuery =
+                readDbContext.SectionsRead;
+
             string? search = request.Search?.Trim();
 
             if (!string.IsNullOrEmpty(search))
@@ -39,7 +42,8 @@ public sealed class GetLibraryManagementSectionsPageQueryHandler(
                         search));
             }
 
-            int totalCount = await sectionsQuery.CountAsync(cancellationToken);
+            int totalCount =
+                await sectionsQuery.CountAsync(cancellationToken);
 
             var sectionActivities = readDbContext.SectionsRead
                 .Select(section => new
@@ -48,24 +52,26 @@ public sealed class GetLibraryManagementSectionsPageQueryHandler(
                     ActivityAt = section.UpdatedAt,
                 });
 
-            var topicActivities = readDbContext.TopicsRead
-                .Select(topic => new
-                {
-                    SectionId = topic.SectionId,
-                    ActivityAt = topic.UpdatedAt,
-                });
+            var containerActivities =
+                readDbContext.LibraryContainersRead
+                    .Select(container => new
+                    {
+                        container.SectionId,
+                        ActivityAt = container.UpdatedAt,
+                    });
 
             var materialActivities =
                 from material in readDbContext.MaterialsRead
-                join topic in readDbContext.TopicsRead on material.TopicId equals topic.Id
+                join container in readDbContext.LibraryContainersRead
+                    on material.ContainerId equals container.Id
                 select new
                 {
-                    SectionId = topic.SectionId,
+                    container.SectionId,
                     ActivityAt = material.UpdatedAt,
                 };
 
             var lastActivities = sectionActivities
-                .Concat(topicActivities)
+                .Concat(containerActivities)
                 .Concat(materialActivities)
                 .GroupBy(activity => activity.SectionId)
                 .Select(group => new
@@ -76,7 +82,8 @@ public sealed class GetLibraryManagementSectionsPageQueryHandler(
 
             var sectionRows =
                 from section in sectionsQuery
-                join activity in lastActivities on section.Id equals activity.SectionId
+                join activity in lastActivities
+                    on section.Id equals activity.SectionId
                 select new
                 {
                     Section = section,
@@ -115,8 +122,41 @@ public sealed class GetLibraryManagementSectionsPageQueryHandler(
 
             bool hasMore = loadedRows.Count > pageSize;
             var pageRows = loadedRows.Take(pageSize).ToArray();
-            var sectionIds = pageRows.Select(row => row.Section.Id).ToArray();
+            SectionId[] sectionIds =
+                pageRows.Select(row => row.Section.Id).ToArray();
 
+            Dictionary<SectionId, LibraryContainerId>
+                rootIdsBySection =
+                    sectionIds.Length == 0
+                        ? []
+                        : await readDbContext.LibraryContainersRead
+                            .Where(container =>
+                                container.ParentId == null &&
+                                sectionIds.Contains(container.SectionId))
+                            .ToDictionaryAsync(
+                                container => container.SectionId,
+                                container => container.Id,
+                                cancellationToken);
+
+            Dictionary<SectionId, int> foldersCountBySection =
+                sectionIds.Length == 0
+                    ? []
+                    : await readDbContext.LibraryContainersRead
+                        .Where(container =>
+                            container.ParentId != null &&
+                            sectionIds.Contains(container.SectionId))
+                        .GroupBy(container => container.SectionId)
+                        .Select(group => new
+                        {
+                            SectionId = group.Key,
+                            Count = group.Count(),
+                        })
+                        .ToDictionaryAsync(
+                            row => row.SectionId,
+                            row => row.Count,
+                            cancellationToken);
+
+            // Временный legacy-счётчик нужен старому UI до перехода на folders.
             Dictionary<SectionId, int> topicsCountBySection =
                 sectionIds.Length == 0
                     ? []
@@ -138,10 +178,10 @@ public sealed class GetLibraryManagementSectionsPageQueryHandler(
                     ? []
                     : await (
                         from article in readDbContext.MaterialsRead.OfType<Article>()
-                        join topic in readDbContext.TopicsRead
-                            on article.TopicId equals topic.Id
-                        where sectionIds.Contains(topic.SectionId)
-                        group article by topic.SectionId
+                        join container in readDbContext.LibraryContainersRead
+                            on article.ContainerId equals container.Id
+                        where sectionIds.Contains(container.SectionId)
+                        group article by container.SectionId
                         into grouped
                         select new
                         {
@@ -158,11 +198,11 @@ public sealed class GetLibraryManagementSectionsPageQueryHandler(
                     ? []
                     : await (
                         from question in readDbContext.MaterialsRead.OfType<Question>()
-                        join topic in readDbContext.TopicsRead
-                            on question.TopicId equals topic.Id
-                        where sectionIds.Contains(topic.SectionId) &&
+                        join container in readDbContext.LibraryContainersRead
+                            on question.ContainerId equals container.Id
+                        where sectionIds.Contains(container.SectionId) &&
                               question.ArticleId == null
-                        group question by topic.SectionId
+                        group question by container.SectionId
                         into grouped
                         select new
                         {
@@ -174,21 +214,36 @@ public sealed class GetLibraryManagementSectionsPageQueryHandler(
                             row => row.Count,
                             cancellationToken);
 
-            var items = pageRows
+            LibrarySectionOverviewDto[] items = pageRows
                 .Select(row =>
                 {
-                    int topicsCount = topicsCountBySection.GetValueOrDefault(row.Section.Id);
-                    int articlesCount = articlesCountBySection.GetValueOrDefault(row.Section.Id);
-                    int questionsCount = questionsCountBySection.GetValueOrDefault(row.Section.Id);
+                    if (!rootIdsBySection.TryGetValue(
+                            row.Section.Id,
+                            out LibraryContainerId? rootId))
+                    {
+                        throw new InvalidOperationException(
+                            $"Для раздела '{row.Section.Id.Value}' не найден root-контейнер библиотеки.");
+                    }
+
+                    int foldersCount =
+                        foldersCountBySection.GetValueOrDefault(row.Section.Id);
+                    int topicsCount =
+                        topicsCountBySection.GetValueOrDefault(row.Section.Id);
+                    int articlesCount =
+                        articlesCountBySection.GetValueOrDefault(row.Section.Id);
+                    int questionsCount =
+                        questionsCountBySection.GetValueOrDefault(row.Section.Id);
 
                     return new LibrarySectionOverviewDto(
                         row.Section.Id.Value,
+                        rootId!.Value,
                         row.Section.Name.Value,
                         row.Section.Color.ToString(),
                         row.Section.Icon.ToString(),
                         row.Section.CreatedAt,
                         row.Section.UpdatedAt,
                         row.LastActivityAt,
+                        foldersCount,
                         topicsCount,
                         articlesCount + questionsCount,
                         articlesCount,
@@ -196,26 +251,33 @@ public sealed class GetLibraryManagementSectionsPageQueryHandler(
                 })
                 .ToArray();
 
-            var result = new LibraryManagementSectionsPageDto(
-                items,
-                offset + items.Length,
-                hasMore,
-                totalCount);
-
-            return Result.Success<LibraryManagementSectionsPageDto, Errors>(result);
+            return Result.Success<LibraryManagementSectionsPageDto, Errors>(
+                new LibraryManagementSectionsPageDto(
+                    items,
+                    offset + items.Length,
+                    hasMore,
+                    totalCount));
         }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException)
+            when (cancellationToken.IsCancellationRequested)
         {
-            logger.LogInformation("Получение страницы разделов управления было отменено");
+            logger.LogInformation(
+                "Получение страницы разделов управления было отменено");
+
             return CommonErrors.OperationCancelled(
-                "library.management.sections.page.cancelled").ToErrors();
+                    "library.management.sections.page.cancelled")
+                .ToErrors();
         }
         catch (Exception exception)
         {
-            logger.LogError(exception, "Не удалось получить страницу разделов управления");
+            logger.LogError(
+                exception,
+                "Не удалось получить страницу разделов управления");
+
             return CommonErrors.Db(
-                "library.management.sections.page.failed",
-                "Не удалось загрузить разделы").ToErrors();
+                    "library.management.sections.page.failed",
+                    "Не удалось загрузить разделы")
+                .ToErrors();
         }
     }
 }

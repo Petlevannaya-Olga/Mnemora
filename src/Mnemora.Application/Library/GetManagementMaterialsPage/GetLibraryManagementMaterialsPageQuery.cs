@@ -18,10 +18,14 @@ public enum LibraryManagementMaterialPageSort
 }
 
 public sealed record GetLibraryManagementMaterialsPageQuery(
-    Guid TopicId,
+    Guid ContainerId,
     string? Search,
     LibraryManagementMaterialPageFilter Filter,
     LibraryManagementMaterialPageSort Sort,
     int Offset,
     int PageSize)
-    : IQuery;
+    : IQuery
+{
+    // Переходный alias для старого UI-кода. Удалим вместе с Topic-моделью.
+    public Guid TopicId => ContainerId;
+}

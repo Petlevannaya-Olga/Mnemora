@@ -1,6 +1,6 @@
 ﻿using FluentValidation;
+using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Materials;
-using Mnemora.Domain.Topics;
 using Mnemora.Shared.Extensions;
 
 namespace Mnemora.Application.Library.GetMaterialsPage;
@@ -9,8 +9,8 @@ public sealed class GetLibraryMaterialsPageQueryValidator : AbstractValidator<Ge
 {
     public GetLibraryMaterialsPageQueryValidator()
     {
-        RuleFor(query => query.TopicId)
-            .MustBeValueObject(TopicId.Create);
+        RuleFor(query => query.ContainerId)
+            .MustBeValueObject(LibraryContainerId.Create);
 
         RuleFor(query => query.Search)
             .Must(search =>

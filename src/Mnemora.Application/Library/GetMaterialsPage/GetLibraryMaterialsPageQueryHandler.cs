@@ -1,11 +1,11 @@
-﻿using CSharpFunctionalExtensions;
+using CSharpFunctionalExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Mnemora.Application.Database;
 using Mnemora.Contracts;
 using Mnemora.Contracts.Library;
+using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Materials;
-using Mnemora.Domain.Topics;
 using Mnemora.Shared;
 using Mnemora.Shared.Abstractions;
 
@@ -20,37 +20,39 @@ public sealed class GetLibraryMaterialsPageQueryHandler(
         GetLibraryMaterialsPageQuery request,
         CancellationToken cancellationToken = default)
     {
-        var topicIdResult = TopicId.Create(request.TopicId);
+        var containerIdResult = LibraryContainerId.Create(request.ContainerId);
 
-        if (topicIdResult.IsFailure)
+        if (containerIdResult.IsFailure)
         {
-            return topicIdResult.Error.ToErrors();
+            return containerIdResult.Error.ToErrors();
         }
 
-        var topicId = topicIdResult.Value;
+        LibraryContainerId containerId = containerIdResult.Value;
 
         try
         {
-            var topicRow = await (
-                    from topic in readDbContext.TopicsRead
-                    join section in readDbContext.SectionsRead on topic.SectionId equals section.Id
-                    where topic.Id == topicId
+            var containerRow = await (
+                    from containerEntity in readDbContext.LibraryContainersRead
+                    join sectionEntity in readDbContext.SectionsRead
+                        on containerEntity.SectionId equals sectionEntity.Id
+                    where containerEntity.Id == containerId
                     select new
                     {
-                        Topic = topic,
-                        Section = section
+                        Container = containerEntity,
+                        Section = sectionEntity,
                     })
                 .SingleOrDefaultAsync(cancellationToken);
 
-            if (topicRow is null)
+            if (containerRow is null)
             {
                 return CommonErrors.NotFound(
-                    "library.topic.not.found",
-                    $"Тема с идентификатором '{request.TopicId}' не найдена").ToErrors();
+                    "library.container.not.found",
+                    $"Контейнер библиотеки с идентификатором '{request.ContainerId}' не найден")
+                    .ToErrors();
             }
 
             IQueryable<Material> materialsQuery = readDbContext.MaterialsRead
-                .Where(material => material.TopicId == topicId)
+                .Where(material => material.ContainerId == containerId)
                 .Where(material =>
                     material is Article ||
                     (material is Question && ((Question)material).ArticleId == null));
@@ -59,10 +61,10 @@ public sealed class GetLibraryMaterialsPageQueryHandler(
             {
                 LibraryMaterialFilter.Articles => materialsQuery.OfType<Article>(),
                 LibraryMaterialFilter.Questions => materialsQuery.OfType<Question>(),
-                _ => materialsQuery
+                _ => materialsQuery,
             };
 
-            var search = request.Search?.Trim();
+            string? search = request.Search?.Trim();
 
             if (!string.IsNullOrEmpty(search))
             {
@@ -100,7 +102,7 @@ public sealed class GetLibraryMaterialsPageQueryHandler(
 
                 _ => materialsQuery
                     .OrderBy(material => material.Title)
-                    .ThenBy(material => material.Id)
+                    .ThenBy(material => material.Id),
             };
 
             var loadedMaterials = await orderedMaterials
@@ -116,30 +118,63 @@ public sealed class GetLibraryMaterialsPageQueryHandler(
                 .Select(MapMaterial)
                 .ToArray();
 
-            var topicDto = new LibraryTopicHeaderDto(
-                topicRow.Topic.Id.Value,
-                topicRow.Section.Id.Value,
-                topicRow.Section.Name.Value,
-                topicRow.Topic.Name.Value,
-                topicRow.Topic.Color.ToString(),
-                topicRow.Topic.Icon.ToString(),
-                topicRow.Topic.CreatedAt,
-                topicRow.Topic.UpdatedAt);
+            LibraryContainer container = containerRow.Container;
+            var section = containerRow.Section;
+
+            string displayName = container.IsRoot
+                ? section.Name.Value
+                : container.Name!.Value;
+
+            string displayColor = container.IsRoot
+                ? section.Color.ToString()
+                : container.Color!.Value.ToString();
+
+            string displayIcon = container.IsRoot
+                ? section.Icon.ToString()
+                : container.Icon!.Value.ToString();
+
+            // Compatibility header for the current Desktop view model.
+            // Its values now describe the current container, not necessarily a legacy Topic.
+            var compatibilityTopicHeader = new LibraryTopicHeaderDto(
+                container.Id.Value,
+                section.Id.Value,
+                section.Name.Value,
+                displayName,
+                displayColor,
+                displayIcon,
+                container.CreatedAt,
+                container.UpdatedAt);
+
+            var containerHeader = new LibraryContainerHeaderDto(
+                container.Id.Value,
+                section.Id.Value,
+                section.Name.Value,
+                container.ParentId?.Value,
+                container.Depth,
+                displayName,
+                displayColor,
+                displayIcon,
+                container.CreatedAt,
+                container.UpdatedAt);
 
             var result = new LibraryMaterialsPageDto(
-                topicDto,
+                compatibilityTopicHeader,
                 items,
                 request.Offset + items.Length,
                 hasMore,
-                totalCount);
+                totalCount)
+            {
+                Container = containerHeader,
+            };
 
             return Result.Success<LibraryMaterialsPageDto, Errors>(result);
         }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException)
+            when (cancellationToken.IsCancellationRequested)
         {
             logger.LogInformation(
-                "Получение страницы материалов темы {TopicId} было отменено",
-                request.TopicId);
+                "Получение страницы материалов контейнера {ContainerId} было отменено",
+                request.ContainerId);
 
             return CommonErrors.OperationCancelled(
                 "library.materials.page.cancelled").ToErrors();
@@ -148,12 +183,12 @@ public sealed class GetLibraryMaterialsPageQueryHandler(
         {
             logger.LogError(
                 exception,
-                "Не удалось получить страницу материалов темы {TopicId}",
-                request.TopicId);
+                "Не удалось получить страницу материалов контейнера {ContainerId}",
+                request.ContainerId);
 
             return CommonErrors.Db(
                 "library.materials.page.failed",
-                "Не удалось загрузить материалы темы").ToErrors();
+                "Не удалось загрузить материалы").ToErrors();
         }
     }
 
@@ -181,6 +216,9 @@ public sealed class GetLibraryMaterialsPageQueryHandler(
             tags,
             articleId,
             material.CreatedAt,
-            material.UpdatedAt);
+            material.UpdatedAt)
+        {
+            ContainerId = material.ContainerId.Value,
+        };
     }
 }
