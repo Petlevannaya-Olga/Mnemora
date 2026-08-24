@@ -280,6 +280,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
         _viewCancellationToken = cancellationToken;
         _isLoaded = true;
 
+        _logger.LogInformation("Открываем контейнер библиотеки {ContainerId}", _containerId);
         await EnsureViewModeLoadedAsync(cancellationToken);
 
         if (!await LoadMetadataAndBreadcrumbsAsync(cancellationToken))
@@ -472,6 +473,10 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
             }
 
             Contents = result.Value;
+            _logger.LogInformation(
+                "Контейнер {ContainerId} найден: {MaterialsCount} материалов",
+                _containerId,
+                result.Value.MaterialsCount);
             await BuildBreadcrumbsAsync(result.Value.Container, cancellationToken);
             return true;
         }
@@ -721,6 +726,13 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
             MaterialsHasMore = result.Value.HasMore;
             MaterialsTotalCount = result.Value.TotalCount;
             MaterialsCurrentPageOffset = requestedOffset;
+
+            _logger.LogInformation(
+                "Материалы контейнера {ContainerId}: загружено {ItemsCount}, всего {TotalCount}, offset {Offset}",
+                _containerId,
+                result.Value.Items.Count,
+                result.Value.TotalCount,
+                requestedOffset);
         }
         catch (OperationCanceledException)
             when (cancellationToken.IsCancellationRequested)

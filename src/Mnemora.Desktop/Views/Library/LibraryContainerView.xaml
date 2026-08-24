@@ -5,6 +5,7 @@
     xmlns:converters="clr-namespace:Mnemora.Desktop.Converters"
     xmlns:loading="clr-namespace:Mnemora.Desktop.Controls.Loading"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    DataContextChanged="LibraryContainerView_OnDataContextChanged"
     Loaded="LibraryContainerView_OnLoaded"
     Unloaded="LibraryContainerView_OnUnloaded"
     SnapsToDevicePixels="True"

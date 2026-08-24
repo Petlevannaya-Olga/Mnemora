@@ -15,6 +15,7 @@ namespace Mnemora.Desktop.Views.Library;
 public partial class LibraryContainerView : UserControl
 {
     private CancellationTokenSource? _loadCancellationTokenSource;
+    private LibraryContainerViewModel? _loadedViewModel;
     private bool _isFoldersPageLoadRunning;
     private bool _isMaterialsPageLoadRunning;
 
@@ -23,11 +24,35 @@ public partial class LibraryContainerView : UserControl
         InitializeComponent();
     }
 
-    private async void LibraryContainerView_OnLoaded(
-        object sender,
-        RoutedEventArgs e)
+    private async void LibraryContainerView_OnLoaded(object sender, RoutedEventArgs e)
     {
+        await StartLoadIfReadyAsync();
+    }
+
+    private async void LibraryContainerView_OnDataContextChanged(
+        object sender,
+        DependencyPropertyChangedEventArgs e)
+    {
+        if (IsLoaded)
+            await StartLoadIfReadyAsync();
+    }
+
+    private void LibraryContainerView_OnUnloaded(object sender, RoutedEventArgs e)
+    {
+        _loadedViewModel = null;
         CancelLoading();
+    }
+
+    private async Task StartLoadIfReadyAsync()
+    {
+        if (DataContext is not LibraryContainerViewModel viewModel ||
+            ReferenceEquals(_loadedViewModel, viewModel) && _loadCancellationTokenSource is not null)
+        {
+            return;
+        }
+
+        CancelLoading();
+        _loadedViewModel = viewModel;
 
         var cancellationTokenSource = new CancellationTokenSource();
         CancellationToken cancellationToken = cancellationTokenSource.Token;
@@ -35,23 +60,12 @@ public partial class LibraryContainerView : UserControl
 
         try
         {
-            if (DataContext is LibraryContainerViewModel viewModel)
-            {
-                await viewModel.LoadAsync(cancellationToken);
-            }
+            await viewModel.LoadAsync(cancellationToken);
         }
-        catch (OperationCanceledException)
-            when (cancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            // Уход со страницы отменяет её запросы.
+            // Уход со страницы или смена DataContext отменяет загрузку.
         }
-    }
-
-    private void LibraryContainerView_OnUnloaded(
-        object sender,
-        RoutedEventArgs e)
-    {
-        CancelLoading();
     }
 
     private async void FoldersScroll_OnScrollChanged(
