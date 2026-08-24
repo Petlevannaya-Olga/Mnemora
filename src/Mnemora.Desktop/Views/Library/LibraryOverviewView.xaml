@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     x:Class="Mnemora.Desktop.Views.Library.LibraryOverviewView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -910,14 +910,14 @@
                             </DataGridTemplateColumn>
 
                             <DataGridTemplateColumn
-                                Header="Темы"
+                                Header="Папки"
                                 Width="90"
                                 HeaderStyle="{StaticResource SectionTableColumnHeaderStyle}">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center" Orientation="Horizontal">
                                             <materialDesign:PackIcon Kind="ViewGridOutline" Style="{StaticResource SectionCountIconStyle}" />
-                                            <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="{Binding TopicsCount}" />
+                                            <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="{Binding FoldersCount}" />
                                         </StackPanel>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>

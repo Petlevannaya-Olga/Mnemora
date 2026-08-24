@@ -6,6 +6,7 @@ using Mnemora.Application.Library.GetContainerContents;
 using Mnemora.Application.Library.GetFoldersPage;
 using Mnemora.Application.Library.GetMaterialsPage;
 using Mnemora.Application.Queries;
+using Mnemora.Contracts;
 using Mnemora.Contracts.Library;
 using Mnemora.Desktop.Navigation;
 using Mnemora.Desktop.Settings;

@@ -78,6 +78,11 @@ public sealed class GetLibraryMaterialsPageQueryHandler(
 
             var orderedMaterials = request.Sort switch
             {
+                LibraryMaterialSort.Custom => materialsQuery
+                    .OrderBy(material => material.DisplayOrder)
+                    .ThenBy(material => material.Title)
+                    .ThenBy(material => material.Id),
+
                 LibraryMaterialSort.RecentlyUpdated => materialsQuery
                     .OrderByDescending(material => material.UpdatedAt)
                     .ThenBy(material => material.Id),

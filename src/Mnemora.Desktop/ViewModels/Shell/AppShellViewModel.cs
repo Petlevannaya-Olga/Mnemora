@@ -69,7 +69,10 @@ public sealed partial class AppShellViewModel : ViewModelBase
 
     public bool IsLibrarySubmenuVisible => IsSidebarExpanded && IsLibraryMenuExpanded;
     public bool IsHomeSelected => CurrentPageViewModel is HomeViewModel;
-    public bool IsLibrarySelected => CurrentPageViewModel is LibraryOverviewViewModel or AllMaterialsViewModel or LibraryManagementViewModel;
+    public bool IsLibrarySelected => CurrentPageViewModel is LibraryOverviewViewModel
+        or LibraryContainerViewModel
+        or AllMaterialsViewModel
+        or LibraryManagementViewModel;
     public bool IsLibraryOverviewSelected => CurrentPageViewModel is LibraryOverviewViewModel;
     public bool IsAllMaterialsSelected => CurrentPageViewModel is AllMaterialsViewModel;
     public bool IsLibraryManagementSelected => CurrentPageViewModel is LibraryManagementViewModel;

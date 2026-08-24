@@ -1,7 +1,8 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
+using Mnemora.Application.Library.GetSectionRoot;
 using Mnemora.Application.Library.GetSectionsPage;
 using Mnemora.Application.Queries;
 using Mnemora.Contracts;
@@ -204,15 +205,35 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
     }
     
     [RelayCommand]
-    private void OpenSection(LibrarySectionCardViewModel? section)
+    private async Task OpenSectionAsync(
+        LibrarySectionCardViewModel? section,
+        CancellationToken cancellationToken)
     {
         if (section is null)
+            return;
+
+        var result = await _queryDispatcher.SendAsync<GetLibrarySectionRootQuery, Guid>(
+            new GetLibrarySectionRootQuery(section.Id),
+            cancellationToken);
+
+        if (result.IsFailure)
         {
+            ErrorMessage = result.Error.FirstOrDefault()?.Message
+                           ?? "Не удалось открыть раздел библиотеки";
             return;
         }
 
-        _pageNavigationService.NavigateTo<LibrarySectionViewModel>(
-            viewModel => viewModel.Initialize(section.Id));
+        if (result.Value != section.RootContainerId)
+        {
+            _logger.LogWarning(
+                "RootContainerId раздела {SectionId} изменился: DTO={DtoRootId}, DB={DbRootId}",
+                section.Id,
+                section.RootContainerId,
+                result.Value);
+        }
+
+        _pageNavigationService.NavigateTo<LibraryContainerViewModel>(
+            viewModel => viewModel.Initialize(result.Value));
     }
 
     partial void OnSearchTextChanged(string? value)

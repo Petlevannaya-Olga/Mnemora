@@ -136,7 +136,13 @@ public partial class App : System.Windows.Application
     {
         services.AddLogging(builder =>
         {
+            builder.AddSimpleConsole(options =>
+            {
+                options.SingleLine = true;
+                options.TimestampFormat = "HH:mm:ss ";
+            });
             builder.AddDebug();
+            builder.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
             builder.SetMinimumLevel(LogLevel.Information);
         });
 
@@ -174,6 +180,7 @@ public partial class App : System.Windows.Application
 
         services.AddTransient<LibraryTopicViewModel>();
         services.AddTransient<LibrarySectionViewModel>();
+        services.AddTransient<LibraryContainerViewModel>();
         services.AddTransient<AllMaterialsViewModel>();
         services.AddTransient<LibraryOverviewViewModel>();
         services.AddTransient<CreateMaterialViewModel>();

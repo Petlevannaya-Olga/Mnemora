@@ -11,6 +11,31 @@ namespace Mnemora.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            // Старые БД могли уже отметить AddLibraryContainers как применённую
+            // до появления backfill Topic -> folder в той миграции.
+            migrationBuilder.Sql(
+                """
+                INSERT OR IGNORE INTO library_containers
+                (
+                    id, section_id, parent_id, depth, name, color, icon,
+                    created_at, updated_at, display_order
+                )
+                SELECT
+                    topic.id, topic.section_id, root.id, 1, topic.name,
+                    topic.color, topic.icon, topic.created_at,
+                    topic.updated_at, topic.display_order
+                FROM topics AS topic
+                INNER JOIN library_containers AS root
+                    ON root.section_id = topic.section_id
+                   AND root.parent_id IS NULL
+                WHERE NOT EXISTS
+                (
+                    SELECT 1
+                    FROM library_containers AS existing
+                    WHERE existing.id = topic.id
+                );
+                """);
+
             // Сначала колонка nullable: у существующих строк ещё нет container_id.
             migrationBuilder.AddColumn<Guid>(
                 name: "container_id",

@@ -5,7 +5,9 @@ namespace Mnemora.Application.Library.GetFoldersPage;
 public enum LibraryFolderSort
 {
     Custom,
+    RecentlyUpdated,
     Name,
+    Newest,
 }
 
 public sealed record GetLibraryFoldersPageQuery(

@@ -76,8 +76,16 @@ public sealed class GetLibraryFoldersPageQueryHandler(
             IOrderedQueryable<LibraryContainer> orderedQuery =
                 request.Sort switch
                 {
+                    LibraryFolderSort.RecentlyUpdated => foldersQuery
+                        .OrderByDescending(folder => folder.UpdatedAt)
+                        .ThenBy(folder => folder.Id),
+
                     LibraryFolderSort.Name => foldersQuery
                         .OrderBy(folder => folder.Name)
+                        .ThenBy(folder => folder.Id),
+
+                    LibraryFolderSort.Newest => foldersQuery
+                        .OrderByDescending(folder => folder.CreatedAt)
                         .ThenBy(folder => folder.Id),
 
                     _ => foldersQuery
