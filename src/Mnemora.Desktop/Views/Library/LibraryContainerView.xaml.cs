@@ -3,7 +3,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Threading;
 using Mnemora.Desktop.ViewModels.Library;
 
 namespace Mnemora.Desktop.Views.Library;
@@ -68,19 +67,17 @@ public partial class LibraryContainerView : UserControl
         }
     }
 
-    private async void FoldersScroll_OnScrollChanged(
-        object sender,
-        ScrollChangedEventArgs e)
+    private async void FoldersScroll_OnScrollChanged(object sender, ScrollChangedEventArgs e)
     {
-        if (_isFoldersPageLoadRunning ||
+        if (_isFoldersPageLoadRunning || e.VerticalChange <= 0 ||
             DataContext is not LibraryContainerViewModel viewModel)
         {
             return;
         }
 
         ScrollViewer? scrollViewer = ResolveScrollViewer(sender, e);
-
-        if (scrollViewer is null || !IsNearBottom(scrollViewer))
+        if (scrollViewer is null || !IsNearBottom(scrollViewer) ||
+            !viewModel.LoadNextFoldersPageCommand.CanExecute(null))
         {
             return;
         }
@@ -89,23 +86,7 @@ public partial class LibraryContainerView : UserControl
 
         try
         {
-            while (IsLoaded &&
-                   ReferenceEquals(DataContext, viewModel) &&
-                   IsNearBottom(scrollViewer) &&
-                   viewModel.LoadNextFoldersPageCommand.CanExecute(null))
-            {
-                int countBefore = viewModel.Folders.Count;
-                await viewModel.LoadNextFoldersPageCommand.ExecuteAsync(null);
-
-                await Dispatcher.InvokeAsync(
-                    static () => { },
-                    DispatcherPriority.Background);
-
-                if (viewModel.Folders.Count == countBefore)
-                {
-                    break;
-                }
-            }
+            await viewModel.LoadNextFoldersPageCommand.ExecuteAsync(null);
         }
         catch (OperationCanceledException)
         {
@@ -117,19 +98,17 @@ public partial class LibraryContainerView : UserControl
         }
     }
 
-    private async void MaterialsScroll_OnScrollChanged(
-        object sender,
-        ScrollChangedEventArgs e)
+    private async void MaterialsScroll_OnScrollChanged(object sender, ScrollChangedEventArgs e)
     {
-        if (_isMaterialsPageLoadRunning ||
+        if (_isMaterialsPageLoadRunning || e.VerticalChange <= 0 ||
             DataContext is not LibraryContainerViewModel viewModel)
         {
             return;
         }
 
         ScrollViewer? scrollViewer = ResolveScrollViewer(sender, e);
-
-        if (scrollViewer is null || !IsNearBottom(scrollViewer))
+        if (scrollViewer is null || !IsNearBottom(scrollViewer) ||
+            !viewModel.LoadNextMaterialsPageCommand.CanExecute(null))
         {
             return;
         }
@@ -138,23 +117,7 @@ public partial class LibraryContainerView : UserControl
 
         try
         {
-            while (IsLoaded &&
-                   ReferenceEquals(DataContext, viewModel) &&
-                   IsNearBottom(scrollViewer) &&
-                   viewModel.LoadNextMaterialsPageCommand.CanExecute(null))
-            {
-                int countBefore = viewModel.Materials.Count;
-                await viewModel.LoadNextMaterialsPageCommand.ExecuteAsync(null);
-
-                await Dispatcher.InvokeAsync(
-                    static () => { },
-                    DispatcherPriority.Background);
-
-                if (viewModel.Materials.Count == countBefore)
-                {
-                    break;
-                }
-            }
+            await viewModel.LoadNextMaterialsPageCommand.ExecuteAsync(null);
         }
         catch (OperationCanceledException)
         {

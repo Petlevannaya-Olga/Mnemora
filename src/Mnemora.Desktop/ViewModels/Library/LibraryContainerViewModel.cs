@@ -91,6 +91,11 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(IsRoot))]
     [NotifyPropertyChangedFor(nameof(CurrentContainerColor))]
     [NotifyPropertyChangedFor(nameof(CurrentContainerIcon))]
+    [NotifyPropertyChangedFor(nameof(HasFolderContent))]
+    [NotifyPropertyChangedFor(nameof(HasMaterialContent))]
+    [NotifyPropertyChangedFor(nameof(HasAnyContent))]
+    [NotifyPropertyChangedFor(nameof(IsContainerEmpty))]
+    [NotifyPropertyChangedFor(nameof(EmptyStateTitle))]
     private LibraryContainerContentsDto? _contents;
 
     [ObservableProperty]
@@ -140,6 +145,8 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(IsMaterialsEmpty))]
     [NotifyPropertyChangedFor(nameof(FoldersShownCountText))]
     [NotifyPropertyChangedFor(nameof(MaterialsShownCountText))]
+    [NotifyPropertyChangedFor(nameof(FoldersEmptyMessage))]
+    [NotifyPropertyChangedFor(nameof(MaterialsEmptyMessage))]
     private string? _searchText;
 
     [ObservableProperty]
@@ -173,10 +180,27 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
     public string ContainerTitle =>
         Contents?.Container.Name ?? "Библиотека";
 
-    public string ContainerSubtitle =>
-        Contents?.Container.IsRoot == true
-            ? "Папки и материалы раздела"
-            : "Папки и материалы";
+    public string ContainerSubtitle
+    {
+        get
+        {
+            if (Contents is null)
+                return "Папки и материалы";
+
+            if (!HasAnyContent)
+                return IsRoot ? "Раздел пока пуст" : "Папка пока пуста";
+
+            string content = (HasFolderContent, HasMaterialContent) switch
+            {
+                (true, true) => "Папки и материалы",
+                (true, false) => "Папки",
+                (false, true) => "Материалы",
+                _ => string.Empty,
+            };
+
+            return IsRoot ? $"{content} раздела" : content;
+        }
+    }
 
     public bool IsRoot =>
         Contents?.Container.IsRoot == true;
@@ -193,6 +217,11 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
     public bool HasMaterialsError => !string.IsNullOrWhiteSpace(MaterialsErrorMessage);
     public bool HasFolders => Folders.Count > 0;
     public bool HasMaterials => Materials.Count > 0;
+    public bool HasFolderContent => Contents?.FoldersCount > 0;
+    public bool HasMaterialContent => Contents?.MaterialsCount > 0;
+    public bool HasAnyContent => HasFolderContent || HasMaterialContent;
+    public bool IsContainerEmpty => Contents is not null && !HasAnyContent;
+    public string EmptyStateTitle => IsRoot ? "В разделе пока ничего нет" : "В этой папке пока ничего нет";
 
     public bool IsFoldersEmpty =>
         !IsLoadingFolders &&
@@ -203,6 +232,28 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
         !IsLoadingMaterials &&
         !HasMaterialsError &&
         !HasMaterials;
+
+    public string FoldersEmptyMessage =>
+        string.IsNullOrWhiteSpace(SearchText)
+            ? "Папки не найдены"
+            : "По запросу папки не найдены";
+
+    public string MaterialsEmptyMessage
+    {
+        get
+        {
+            bool hasSearch = !string.IsNullOrWhiteSpace(SearchText);
+            bool hasFilter = !IsAllFilter;
+
+            return (hasSearch, hasFilter) switch
+            {
+                (true, true) => "По запросу и выбранному фильтру ничего не найдено",
+                (true, false) => "По запросу ничего не найдено",
+                (false, true) => "По выбранному фильтру ничего не найдено",
+                _ => "Материалы не найдены",
+            };
+        }
+    }
 
     public bool IsAllFilter =>
         SelectedFilterOption.Filter == LibraryMaterialFilter.All;
@@ -288,9 +339,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
             return;
         }
 
-        await Task.WhenAll(
-            ReloadFoldersAsync(cancellationToken),
-            ReloadMaterialsAsync(cancellationToken));
+        await ReloadAvailableContentAsync(cancellationToken);
     }
 
     [RelayCommand]
@@ -352,9 +401,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
             return;
         }
 
-        await Task.WhenAll(
-            ReloadFoldersAsync(token),
-            ReloadMaterialsAsync(token));
+        await ReloadAvailableContentAsync(token);
     }
 
     [RelayCommand(CanExecute = nameof(CanLoadNextFoldersPage))]
@@ -436,8 +483,9 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsAllFilter));
         OnPropertyChanged(nameof(IsArticlesFilter));
         OnPropertyChanged(nameof(IsQuestionsFilter));
+        OnPropertyChanged(nameof(MaterialsEmptyMessage));
 
-        if (_isLoaded)
+        if (_isLoaded && HasMaterialContent)
         {
             _ = ReloadMaterialsFromSelectionChangeAsync();
         }
@@ -474,8 +522,9 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
 
             Contents = result.Value;
             _logger.LogInformation(
-                "Контейнер {ContainerId} найден: {MaterialsCount} материалов",
+                "Контейнер {ContainerId} найден: {FoldersCount} папок, {MaterialsCount} материалов",
                 _containerId,
+                result.Value.FoldersCount,
                 result.Value.MaterialsCount);
             await BuildBreadcrumbsAsync(result.Value.Container, cancellationToken);
             return true;
@@ -542,6 +591,46 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
                     item.Depth,
                     item.Id == current.Id));
         }
+    }
+
+    private async Task ReloadAvailableContentAsync(CancellationToken cancellationToken)
+    {
+        if (!HasFolderContent)
+            ResetFolders();
+        if (!HasMaterialContent)
+            ResetMaterials();
+
+        Task foldersTask = HasFolderContent ? ReloadFoldersAsync(cancellationToken) : Task.CompletedTask;
+        Task materialsTask = HasMaterialContent ? ReloadMaterialsAsync(cancellationToken) : Task.CompletedTask;
+        await Task.WhenAll(foldersTask, materialsTask);
+    }
+
+    private void ResetFolders()
+    {
+        Interlocked.Increment(ref _foldersLoadVersion);
+        _foldersNextOffset = 0;
+        FoldersCurrentPageOffset = 0;
+        FoldersTotalCount = 0;
+        FoldersHasMore = false;
+        IsLoadingFolders = false;
+        IsLoadingNextFoldersPage = false;
+        FoldersErrorMessage = null;
+        Folders.Clear();
+        NotifyFolderStateChanged();
+    }
+
+    private void ResetMaterials()
+    {
+        Interlocked.Increment(ref _materialsLoadVersion);
+        _materialsNextOffset = 0;
+        MaterialsCurrentPageOffset = 0;
+        MaterialsTotalCount = 0;
+        MaterialsHasMore = false;
+        IsLoadingMaterials = false;
+        IsLoadingNextMaterialsPage = false;
+        MaterialsErrorMessage = null;
+        Materials.Clear();
+        NotifyMaterialStateChanged();
     }
 
     private async Task ReloadFoldersAsync(CancellationToken cancellationToken)
@@ -810,9 +899,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
 
             if (searchVersion == Volatile.Read(ref _searchVersion))
             {
-                await Task.WhenAll(
-                    ReloadFoldersAsync(_viewCancellationToken),
-                    ReloadMaterialsAsync(_viewCancellationToken));
+                await ReloadAvailableContentAsync(_viewCancellationToken);
             }
         }
         catch (OperationCanceledException)
@@ -826,9 +913,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
     {
         try
         {
-            await Task.WhenAll(
-                ReloadFoldersAsync(_viewCancellationToken),
-                ReloadMaterialsAsync(_viewCancellationToken));
+            await ReloadAvailableContentAsync(_viewCancellationToken);
         }
         catch (OperationCanceledException)
             when (_viewCancellationToken.IsCancellationRequested)
