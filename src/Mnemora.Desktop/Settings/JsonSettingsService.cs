@@ -115,20 +115,12 @@ public sealed class JsonSettingsService :
     {
         ThrowIfDisposed();
 
-        string? normalizedVisualStudioCodePath =
-            NormalizeOptionalPath(visualStudioCodePath);
-
-        string? normalizedObsidianVaultPath =
-            NormalizeOptionalPath(obsidianVaultPath);
-
         return UpdateAsync(
             settings =>
             {
                 settings.MarkdownEditor = editor;
-                settings.VisualStudioCodePath =
-                    normalizedVisualStudioCodePath;
-                settings.ObsidianVaultPath =
-                    normalizedObsidianVaultPath;
+                settings.VisualStudioCodePath = visualStudioCodePath;
+                settings.ObsidianVaultPath = obsidianVaultPath;
             },
             cancellationToken);
     }
@@ -196,6 +188,26 @@ public sealed class JsonSettingsService :
 
         return UpdateAsync(
             settings => settings.LibraryTopicsViewMode = viewMode,
+            cancellationToken);
+    }
+
+    public Task SaveLibraryTilesPerRowAsync(
+        int? tilesPerRow,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+
+        if (tilesPerRow is not null &&
+            (tilesPerRow.Value < 2 || tilesPerRow.Value > 7))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(tilesPerRow),
+                tilesPerRow,
+                "Количество плиток в строке должно быть от 2 до 7 или null для автоматического режима.");
+        }
+
+        return UpdateAsync(
+            settings => settings.LibraryTilesPerRow = tilesPerRow,
             cancellationToken);
     }
 
@@ -352,17 +364,6 @@ public sealed class JsonSettingsService :
             _ = TryDeleteFile(
                 temporaryPath);
         }
-    }
-
-    private static string? NormalizeOptionalPath(
-        string? path)
-    {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return null;
-        }
-
-        return Path.GetFullPath(path.Trim());
     }
 
     private static bool TryDeleteFile(

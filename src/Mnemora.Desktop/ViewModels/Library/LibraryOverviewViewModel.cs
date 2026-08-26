@@ -103,7 +103,19 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(IsTableView))]
     [NotifyPropertyChangedFor(nameof(IsTilesView))]
     [NotifyPropertyChangedFor(nameof(IsCompactTilesView))]
+    [NotifyPropertyChangedFor(nameof(IsTilesPerRowSelectorVisible))]
     private LibraryOverviewViewMode _overviewViewMode = LibraryOverviewViewMode.Tiles;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DesiredTilesPerRow))]
+    private LibraryTilesPerRowOption _selectedTilesPerRowOption =
+        LibraryTilesPerRowOptions.Auto;
+
+    [ObservableProperty]
+    private int _actualTilesPerRow = 3;
+
+    [ObservableProperty]
+    private int _actualCompactTilesPerRow = 5;
 
     public bool HasSections => Sections.Count > 0;
 
@@ -128,6 +140,14 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
     public bool IsTilesView => OverviewViewMode == LibraryOverviewViewMode.Tiles;
 
     public bool IsCompactTilesView => OverviewViewMode == LibraryOverviewViewMode.CompactTiles;
+
+    public bool IsTilesPerRowSelectorVisible => !IsTableView;
+
+    public IReadOnlyList<LibraryTilesPerRowOption> TilesPerRowOptions =>
+        LibraryTilesPerRowOptions.All;
+
+    public int DesiredTilesPerRow =>
+        SelectedTilesPerRowOption.Value ?? 0;
 
     public string SectionsShownCountText
     {
@@ -251,6 +271,31 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
         if (_isLoaded)
         {
             _ = ReloadAfterSortChangedAsync();
+        }
+    }
+
+    partial void OnSelectedTilesPerRowOptionChanged(
+        LibraryTilesPerRowOption value)
+    {
+        if (_isViewModeLoaded)
+        {
+            _ = SaveTilesPerRowAsync(value.Value);
+        }
+    }
+
+    partial void OnActualTilesPerRowChanged(int value)
+    {
+        if (value > 0)
+        {
+            RebuildRows(SectionRows, value);
+        }
+    }
+
+    partial void OnActualCompactTilesPerRowChanged(int value)
+    {
+        if (value > 0)
+        {
+            RebuildRows(CompactSectionRows, value);
         }
     }
 
@@ -409,8 +454,28 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
 
     private void AddToSectionRows(LibrarySectionCardViewModel section)
     {
-        AddToRows(SectionRows, section, 3);
-        AddToRows(CompactSectionRows, section, 5);
+        AddToRows(SectionRows, section, Math.Max(1, ActualTilesPerRow));
+        AddToRows(CompactSectionRows, section, Math.Max(1, ActualCompactTilesPerRow));
+    }
+
+    private static void RebuildRows(
+        ObservableCollection<LibrarySectionRowViewModel> rows,
+        int capacity,
+        IEnumerable<LibrarySectionCardViewModel> sections)
+    {
+        rows.Clear();
+
+        foreach (var section in sections)
+        {
+            AddToRows(rows, section, capacity);
+        }
+    }
+
+    private void RebuildRows(
+        ObservableCollection<LibrarySectionRowViewModel> rows,
+        int capacity)
+    {
+        RebuildRows(rows, Math.Max(1, capacity), Sections);
     }
 
     private static void AddToRows(
@@ -486,6 +551,9 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
             var settings = await _settingsService.LoadAsync(cancellationToken);
 
             OverviewViewMode = settings.LibraryOverviewViewMode;
+            SelectedTilesPerRowOption =
+                LibraryTilesPerRowOptions.Resolve(
+                    settings.LibraryTilesPerRow);
             _isViewModeLoaded = true;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -526,6 +594,28 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
                 exception,
                 "Не удалось сохранить режим просмотра разделов {ViewMode}",
                 overviewViewMode);
+        }
+    }
+
+    private async Task SaveTilesPerRowAsync(int? tilesPerRow)
+    {
+        try
+        {
+            await _settingsService.SaveLibraryTilesPerRowAsync(
+                tilesPerRow,
+                _viewCancellationToken);
+        }
+        catch (OperationCanceledException)
+            when (_viewCancellationToken.IsCancellationRequested)
+        {
+            // Закрытие страницы.
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(
+                exception,
+                "Не удалось сохранить количество плиток в строке {TilesPerRow}",
+                tilesPerRow);
         }
     }
 

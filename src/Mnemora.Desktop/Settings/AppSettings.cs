@@ -79,6 +79,9 @@ public sealed class AppSettings
 
     public LibraryTopicsViewMode LibraryTopicsViewMode { get; set; } = LibraryTopicsViewMode.CompactTiles;
 
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public int? LibraryTilesPerRow { get; set; }
+
     public LibraryManagementSortMode LibraryManagementSectionSort { get; set; } = LibraryManagementSortMode.Custom;
 
     public Dictionary<Guid, LibraryManagementSortMode> LibraryManagementTopicSortBySection { get; set; } = [];

@@ -18,7 +18,8 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
 {
     private const int FolderPageSize = LibraryPagingDefaults.PageSize;
     private const int MaterialPageSize = 50;
-    private static readonly TimeSpan SearchDelay = TimeSpan.FromMilliseconds(350);
+    private static readonly TimeSpan SearchDelay =
+        TimeSpan.FromMilliseconds(350);
 
     private readonly IQueryDispatcher _queryDispatcher;
     private readonly IPageNavigationService _pageNavigationService;
@@ -174,7 +175,13 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(IsTableView))]
     [NotifyPropertyChangedFor(nameof(IsTilesView))]
     [NotifyPropertyChangedFor(nameof(IsCompactTilesView))]
+    [NotifyPropertyChangedFor(nameof(IsTilesPerRowSelectorVisible))]
     private LibraryTopicsViewMode _viewMode = LibraryTopicsViewMode.CompactTiles;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DesiredTilesPerRow))]
+    private LibraryTilesPerRowOption _selectedTilesPerRowOption =
+        LibraryTilesPerRowOptions.Auto;
 
     public string ContainerTitle =>
         Contents?.Container.Name ?? "Библиотека";
@@ -266,6 +273,14 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
     public bool IsTableView => ViewMode == LibraryTopicsViewMode.Table;
     public bool IsTilesView => ViewMode == LibraryTopicsViewMode.Tiles;
     public bool IsCompactTilesView => ViewMode == LibraryTopicsViewMode.CompactTiles;
+
+    public bool IsTilesPerRowSelectorVisible => !IsTableView;
+
+    public IReadOnlyList<LibraryTilesPerRowOption> TilesPerRowOptions =>
+        LibraryTilesPerRowOptions.All;
+
+    public int DesiredTilesPerRow =>
+        SelectedTilesPerRowOption.Value ?? 0;
 
     public string FoldersShownCountText
     {
@@ -495,6 +510,15 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
         if (_isLoaded)
         {
             _ = ReloadCollectionsFromSelectionChangeAsync();
+        }
+    }
+
+    partial void OnSelectedTilesPerRowOptionChanged(
+        LibraryTilesPerRowOption value)
+    {
+        if (_isViewModeLoaded)
+        {
+            _ = SaveTilesPerRowAsync(value.Value);
         }
     }
 
@@ -954,6 +978,9 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
                 await _settingsService.LoadAsync(cancellationToken);
 
             ViewMode = settings.LibraryTopicsViewMode;
+            SelectedTilesPerRowOption =
+                LibraryTilesPerRowOptions.Resolve(
+                    settings.LibraryTilesPerRow);
             _isViewModeLoaded = true;
         }
         catch (OperationCanceledException)
@@ -1000,6 +1027,28 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
                 exception,
                 "Не удалось сохранить режим просмотра содержимого библиотеки {ViewMode}",
                 viewMode);
+        }
+    }
+
+    private async Task SaveTilesPerRowAsync(int? tilesPerRow)
+    {
+        try
+        {
+            await _settingsService.SaveLibraryTilesPerRowAsync(
+                tilesPerRow,
+                _viewCancellationToken);
+        }
+        catch (OperationCanceledException)
+            when (_viewCancellationToken.IsCancellationRequested)
+        {
+            // Закрытие страницы.
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(
+                exception,
+                "Не удалось сохранить количество плиток в строке {TilesPerRow}",
+                tilesPerRow);
         }
     }
 

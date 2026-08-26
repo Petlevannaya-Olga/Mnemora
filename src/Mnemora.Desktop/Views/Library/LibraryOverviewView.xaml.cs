@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -56,7 +56,12 @@ public partial class LibraryOverviewView : UserControl
             return;
         }
 
-        int itemsPerRow = viewModel.IsTilesView ? 3 : 5;
+        int itemsPerRow = viewModel.IsTilesView
+            ? viewModel.ActualTilesPerRow
+            : viewModel.IsCompactTilesView
+                ? viewModel.ActualCompactTilesPerRow
+                : 1;
+
         viewModel.UpdateViewport(
             GetLogicalEntityOffset(sender, e.VerticalOffset, itemsPerRow));
 

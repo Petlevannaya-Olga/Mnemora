@@ -436,6 +436,19 @@
                     ToolTip="Таблица">
                     <materialDesign:PackIcon Width="24" Height="24" Kind="FormatListBulleted" />
                 </ToggleButton>
+
+                <ComboBox
+                    Width="108"
+                    Height="52"
+                    Margin="10,0,0,0"
+                    VerticalContentAlignment="Center"
+                    DisplayMemberPath="Name"
+                    ItemsSource="{Binding TilesPerRowOptions}"
+                    SelectedItem="{Binding SelectedTilesPerRowOption, Mode=TwoWay}"
+                    Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                    ToolTip="Максимальное количество плиток в строке. «Авто» подбирает количество по ширине окна."
+                    Visibility="{Binding IsTilesPerRowSelectorVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
+                    materialDesign:HintAssist.Hint="Колонки" />
             </StackPanel>
         </Grid>
 
@@ -617,7 +630,11 @@
                             <ItemsControl ItemsSource="{Binding Sections}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
-                                        <UniformGrid Columns="3" />
+                                        <UniformGrid
+                                            libraryBehaviors:ResponsiveUniformGridBehavior.ActualColumns="{Binding DataContext.ActualTilesPerRow, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}, Mode=OneWayToSource}"
+                                            libraryBehaviors:ResponsiveUniformGridBehavior.DesiredColumns="{Binding DataContext.DesiredTilesPerRow, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                            libraryBehaviors:ResponsiveUniformGridBehavior.MinimumItemWidth="300"
+                                            libraryBehaviors:ResponsiveUniformGridBehavior.MaximumColumns="5" />
                                     </ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
 
@@ -768,7 +785,11 @@
                             <ItemsControl ItemsSource="{Binding Sections}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
-                                        <UniformGrid Columns="5" />
+                                        <UniformGrid
+                                            libraryBehaviors:ResponsiveUniformGridBehavior.ActualColumns="{Binding DataContext.ActualCompactTilesPerRow, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}, Mode=OneWayToSource}"
+                                            libraryBehaviors:ResponsiveUniformGridBehavior.DesiredColumns="{Binding DataContext.DesiredTilesPerRow, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                            libraryBehaviors:ResponsiveUniformGridBehavior.MinimumItemWidth="220"
+                                            libraryBehaviors:ResponsiveUniformGridBehavior.MaximumColumns="7" />
                                     </ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
 

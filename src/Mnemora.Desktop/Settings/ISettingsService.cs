@@ -38,6 +38,11 @@ public interface ISettingsService
         LibraryTopicsViewMode viewMode,
         CancellationToken cancellationToken = default);
 
+    Task SaveLibraryTilesPerRowAsync(
+        int? tilesPerRow,
+        CancellationToken cancellationToken = default) =>
+        Task.CompletedTask;
+
     Task SaveLibraryManagementSectionSortAsync(
         LibraryManagementSortMode sortMode,
         CancellationToken cancellationToken = default);
