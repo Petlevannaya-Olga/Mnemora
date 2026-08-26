@@ -1,4 +1,5 @@
 <UserControl
+    xmlns:libraryBehaviors="clr-namespace:Mnemora.Desktop.Views.Library"
     x:Class="Mnemora.Desktop.Views.Library.LibraryContainerView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -122,6 +123,9 @@
             <Setter Property="VerticalContentAlignment" Value="Stretch" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="IsTabStop" Value="False" />
+            <Setter Property="libraryBehaviors:SuppressBringIntoViewBehavior.IsEnabled" Value="True" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
