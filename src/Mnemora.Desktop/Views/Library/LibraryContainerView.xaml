@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     xmlns:libraryBehaviors="clr-namespace:Mnemora.Desktop.Views.Library"
     x:Class="Mnemora.Desktop.Views.Library.LibraryContainerView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"

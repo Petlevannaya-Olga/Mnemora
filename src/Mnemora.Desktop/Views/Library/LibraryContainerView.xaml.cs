@@ -1,4 +1,4 @@
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -66,6 +66,7 @@ public partial class LibraryContainerView : UserControl
             // Уход со страницы или смена DataContext отменяет загрузку.
         }
     }
+
 
     private async void FoldersScroll_OnScrollChanged(object sender, ScrollChangedEventArgs e)
     {

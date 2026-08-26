@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
@@ -549,7 +549,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
                 _containerId,
                 result.Value.FoldersCount,
                 result.Value.MaterialsCount);
-            await BuildBreadcrumbsAsync(result.Value.Container, cancellationToken);
+            await BuildBreadcrumbsAsync(result.Value, cancellationToken);
             return true;
         }
         catch (OperationCanceledException)
@@ -574,12 +574,12 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
     }
 
     private async Task BuildBreadcrumbsAsync(
-        LibraryContainerHeaderDto current,
+        LibraryContainerContentsDto current,
         CancellationToken cancellationToken)
     {
-        var path = new List<LibraryContainerHeaderDto> { current };
-        var visited = new HashSet<Guid> { current.Id };
-        Guid? parentId = current.ParentId;
+        var path = new List<LibraryContainerContentsDto> { current };
+        var visited = new HashSet<Guid> { current.Container.Id };
+        Guid? parentId = current.Container.ParentId;
 
         while (parentId is { } id && visited.Add(id))
         {
@@ -597,22 +597,24 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
                 break;
             }
 
-            LibraryContainerHeaderDto parent = result.Value.Container;
+            LibraryContainerContentsDto parent = result.Value;
             path.Add(parent);
-            parentId = parent.ParentId;
+            parentId = parent.Container.ParentId;
         }
 
         path.Reverse();
         Breadcrumbs.Clear();
 
-        foreach (LibraryContainerHeaderDto item in path)
+        foreach (LibraryContainerContentsDto pathItem in path)
         {
+            LibraryContainerHeaderDto item = pathItem.Container;
+
             Breadcrumbs.Add(
                 new LibraryBreadcrumbItemViewModel(
                     item.Id,
                     item.Name,
                     item.Depth,
-                    item.Id == current.Id));
+                    item.Id == current.Container.Id));
         }
     }
 
