@@ -18,6 +18,9 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
 {
     private const int FolderPageSize = LibraryPagingDefaults.PageSize;
     private const int MaterialPageSize = 50;
+    private const double DefaultFoldersPaneRatio = 1d / 3d;
+    private const double MinFoldersPaneRatio = 0.1;
+    private const double MaxFoldersPaneRatio = 0.9;
     private static readonly TimeSpan SearchDelay =
         TimeSpan.FromMilliseconds(350);
 
@@ -182,6 +185,9 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(DesiredTilesPerRow))]
     private LibraryTilesPerRowOption _selectedTilesPerRowOption =
         LibraryTilesPerRowOptions.Auto;
+
+    [ObservableProperty]
+    private double _foldersPaneRatio = DefaultFoldersPaneRatio;
 
     public string ContainerTitle =>
         Contents?.Container.Name ?? "Библиотека";
@@ -983,6 +989,8 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
             SelectedTilesPerRowOption =
                 LibraryTilesPerRowOptions.Resolve(
                     settings.LibraryTilesPerRow);
+            FoldersPaneRatio = NormalizeFoldersPaneRatio(
+                settings.LibraryContainerFoldersPaneRatio);
             _isViewModeLoaded = true;
         }
         catch (OperationCanceledException)
@@ -997,6 +1005,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
                 "Не удалось загрузить режим просмотра содержимого библиотеки");
 
             ViewMode = LibraryTopicsViewMode.CompactTiles;
+            FoldersPaneRatio = DefaultFoldersPaneRatio;
             _isViewModeLoaded = true;
         }
     }
@@ -1052,6 +1061,50 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
                 "Не удалось сохранить количество плиток в строке {TilesPerRow}",
                 tilesPerRow);
         }
+    }
+
+    public async Task SaveFoldersPaneRatioAsync(double foldersPaneRatio)
+    {
+        double normalizedRatio = NormalizeFoldersPaneRatio(foldersPaneRatio);
+
+        if (Math.Abs(FoldersPaneRatio - normalizedRatio) < 0.001)
+        {
+            return;
+        }
+
+        FoldersPaneRatio = normalizedRatio;
+
+        try
+        {
+            await _settingsService.SaveLibraryContainerFoldersPaneRatioAsync(
+                normalizedRatio,
+                _viewCancellationToken);
+        }
+        catch (OperationCanceledException)
+            when (_viewCancellationToken.IsCancellationRequested)
+        {
+            // Закрытие страницы.
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(
+                exception,
+                "Не удалось сохранить положение разделителя папок и материалов {FoldersPaneRatio}",
+                normalizedRatio);
+        }
+    }
+
+    private static double NormalizeFoldersPaneRatio(double foldersPaneRatio)
+    {
+        if (!double.IsFinite(foldersPaneRatio))
+        {
+            return DefaultFoldersPaneRatio;
+        }
+
+        return Math.Clamp(
+            foldersPaneRatio,
+            MinFoldersPaneRatio,
+            MaxFoldersPaneRatio);
     }
 
     private void NotifyFolderStateChanged()

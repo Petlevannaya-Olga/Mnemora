@@ -208,6 +208,118 @@
             <EventSetter Event="MouseLeftButtonUp" Handler="FolderTableRow_OnMouseLeftButtonUp" />
         </Style>
 
+        <Style x:Key="MaterialTableColumnHeaderStyle" TargetType="DataGridColumnHeader">
+            <Setter Property="Height" Value="46" />
+            <Setter Property="Padding" Value="14,0" />
+            <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.SurfaceMuted}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Border}" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.TextPrimary}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+        </Style>
+
+        <Style x:Key="MaterialTableRowStyle" TargetType="DataGridRow">
+            <Setter Property="MinHeight" Value="66" />
+            <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridRow">
+                        <Grid>
+                            <Border
+                                x:Name="RowBackground"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                                BorderThickness="0,0,0,1" />
+
+                            <Border
+                                x:Name="SelectionIndicator"
+                                Width="4"
+                                Margin="0,8,0,8"
+                                HorizontalAlignment="Left"
+                                Background="{DynamicResource Mnemora.Brush.Primary}"
+                                CornerRadius="0,3,3,0"
+                                Visibility="Collapsed" />
+
+                            <DataGridCellsPresenter />
+                        </Grid>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="RowBackground" Property="Background" Value="#F3F6FC" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="RowBackground" Property="Background" Value="#E6FBF8" />
+                                <Setter TargetName="SelectionIndicator" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="MaterialTableCellStyle" TargetType="DataGridCell">
+            <Setter Property="Padding" Value="14,9" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="Transparent" />
+                    <Setter Property="BorderThickness" Value="0" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="MaterialTableTextStyle" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.TextSecondary}" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+
+        <Style x:Key="MaterialDifficultyBadgeStyle" TargetType="Border">
+            <Setter Property="Padding" Value="10,4" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Background" Value="#EAF8F0" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsMedium}" Value="True">
+                    <Setter Property="Background" Value="#FFF6DC" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsHard}" Value="True">
+                    <Setter Property="Background" Value="#FDEBEC" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="MaterialDifficultyDotStyle" TargetType="Ellipse">
+            <Setter Property="Fill" Value="#26976A" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsMedium}" Value="True">
+                    <Setter Property="Fill" Value="#C98200" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsHard}" Value="True">
+                    <Setter Property="Fill" Value="#D94A4A" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="MaterialDifficultyTextStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#267A59" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsMedium}" Value="True">
+                    <Setter Property="Foreground" Value="#996400" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsHard}" Value="True">
+                    <Setter Property="Foreground" Value="#B7353B" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
         <Style TargetType="DataGridCell">
             <Setter Property="Padding" Value="14,0" />
             <Setter Property="BorderThickness" Value="0" />
@@ -331,13 +443,15 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition x:Name="FoldersPaneRow" Height="*" MinHeight="140" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
+            <RowDefinition x:Name="MaterialsPaneRow" Height="2*" MinHeight="200" />
         </Grid.RowDefinitions>
 
         <!-- Заголовок и breadcrumbs -->
         <Grid Margin="32,22,32,18">
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
@@ -441,6 +555,11 @@
                         Text="{Binding ContainerSubtitle}" />
                 </StackPanel>
             </Grid>
+
+            <Border Grid.Row="2"
+                    Height="1"
+                    Margin="0,22,0,0"
+                    Background="{DynamicResource Mnemora.Brush.Border}" />
         </Grid>
 
         <!-- Общая панель поиска, сортировки и вида -->
@@ -508,14 +627,13 @@
         </Grid>
 
         <!-- Папки -->
-        <Grid Grid.Row="2" Margin="32,0,32,18" Visibility="{Binding HasFolderContent, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <Grid Grid.Row="2" Margin="32,0,32,12" Visibility="{Binding HasFolderContent, Converter={StaticResource BooleanToVisibilityConverter}}">
             <Grid.Style>
                 <Style TargetType="Grid">
-                    <Setter Property="Grid.RowSpan" Value="2" />
+                    <Setter Property="Grid.RowSpan" Value="3" />
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding HasMaterialContent}" Value="True">
                             <Setter Property="Grid.RowSpan" Value="1" />
-                            <Setter Property="MaxHeight" Value="330" />
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>
@@ -533,8 +651,9 @@
 
             <Grid Grid.Row="1" Margin="0,10,0,0">
                 <loading:LoadingIndicator
+                    Margin="0,28,0,0"
                     HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
+                    VerticalAlignment="Top"
                     IndicatorLength="260"
                     IndicatorThickness="6"
                     Message="Загружаем папки..."
@@ -779,8 +898,63 @@
             </Grid>
         </Grid>
 
+        <!-- Разделитель между папками и материалами -->
+        <GridSplitter
+            Grid.Row="3"
+            Height="8"
+            Margin="32,0,32,0"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Center"
+            Cursor="SizeNS"
+            DragCompleted="FoldersMaterialsSplitter_OnDragCompleted"
+            ResizeBehavior="PreviousAndNext"
+            ResizeDirection="Rows"
+            ShowsPreview="True">
+            <GridSplitter.Style>
+                <Style TargetType="GridSplitter">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Border}" />
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="GridSplitter">
+                                <Border
+                                    Height="2"
+                                    VerticalAlignment="Center"
+                                    Background="{TemplateBinding Background}"
+                                    CornerRadius="1" />
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                    <Style.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Primary}" />
+                        </Trigger>
+                        <MultiDataTrigger>
+                            <MultiDataTrigger.Conditions>
+                                <Condition Binding="{Binding HasFolderContent}" Value="True" />
+                                <Condition Binding="{Binding HasMaterialContent}" Value="True" />
+                            </MultiDataTrigger.Conditions>
+                            <Setter Property="Visibility" Value="Visible" />
+                        </MultiDataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </GridSplitter.Style>
+        </GridSplitter>
+
         <!-- Материалы -->
-        <Grid Grid.Row="3" Margin="32,0,32,26" Visibility="{Binding HasMaterialContent, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <Grid Margin="32,0,32,26" Visibility="{Binding HasMaterialContent, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Setter Property="Grid.Row" Value="4" />
+                    <Setter Property="Grid.RowSpan" Value="1" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding HasFolderContent}" Value="False">
+                            <Setter Property="Grid.Row" Value="2" />
+                            <Setter Property="Grid.RowSpan" Value="3" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
@@ -806,8 +980,9 @@
 
             <Grid Grid.Row="1" Margin="0,10,0,0">
                 <loading:LoadingIndicator
+                    Margin="0,28,0,0"
                     HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
+                    VerticalAlignment="Top"
                     IndicatorLength="300"
                     IndicatorThickness="7"
                     Message="Загружаем материалы..."
@@ -839,111 +1014,6 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Крупные материалы -->
-                <ScrollViewer
-                    VerticalScrollBarVisibility="Auto"
-                    HorizontalScrollBarVisibility="Disabled"
-                    VerticalContentAlignment="Top"
-                    ScrollChanged="MaterialsScroll_OnScrollChanged"
-                    Visibility="{Binding IsTilesView, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <ItemsControl VerticalAlignment="Top" ItemsSource="{Binding Materials}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <UniformGrid
-                                    libraryBehaviors:ResponsiveUniformGridBehavior.DesiredColumns="{Binding DataContext.DesiredTilesPerRow, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
-                                    libraryBehaviors:ResponsiveUniformGridBehavior.MinimumItemWidth="300"
-                                    libraryBehaviors:ResponsiveUniformGridBehavior.MaximumColumns="5" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border Style="{StaticResource LargeCardStyle}">
-                                    <Grid>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="*" />
-                                            <RowDefinition Height="Auto" />
-                                        </Grid.RowDefinitions>
-                                        <StackPanel Orientation="Horizontal">
-                                            <Border Width="34" Height="34" Background="#F2EEFF" CornerRadius="9">
-                                                <materialDesign:PackIcon Width="19" Height="19" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.Secondary}">
-                                                    <materialDesign:PackIcon.Style>
-                                                        <Style TargetType="materialDesign:PackIcon">
-                                                            <Setter Property="Kind" Value="FileDocumentOutline" />
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding IsQuestion}" Value="True">
-                                                                    <Setter Property="Kind" Value="HelpCircleOutline" />
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </materialDesign:PackIcon.Style>
-                                                </materialDesign:PackIcon>
-                                            </Border>
-                                            <TextBlock Margin="9,0,0,0" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="{Binding TypeTitle}" />
-                                        </StackPanel>
-                                        <TextBlock Grid.Row="1" Margin="0,12,0,0" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="{Binding Title}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" />
-                                        <StackPanel Grid.Row="2" Margin="0,9,0,0" Orientation="Horizontal">
-                                            <TextBlock FontSize="12" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="{Binding DifficultyTitle}" />
-                                            <TextBlock Margin="8,0,0,0" FontSize="12" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="{Binding TagsText}" TextTrimming="CharacterEllipsis" />
-                                        </StackPanel>
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
-
-                <!-- Компактные материалы -->
-                <ScrollViewer
-                    VerticalScrollBarVisibility="Auto"
-                    HorizontalScrollBarVisibility="Disabled"
-                    VerticalContentAlignment="Top"
-                    ScrollChanged="MaterialsScroll_OnScrollChanged"
-                    Visibility="{Binding IsCompactTilesView, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <ItemsControl VerticalAlignment="Top" ItemsSource="{Binding Materials}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <UniformGrid
-                                    libraryBehaviors:ResponsiveUniformGridBehavior.DesiredColumns="{Binding DataContext.DesiredTilesPerRow, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
-                                    libraryBehaviors:ResponsiveUniformGridBehavior.MinimumItemWidth="220"
-                                    libraryBehaviors:ResponsiveUniformGridBehavior.MaximumColumns="7" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border Style="{StaticResource CompactCardStyle}">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
-                                        <Border Width="38" Height="38" VerticalAlignment="Center" Background="#F2EEFF" CornerRadius="9">
-                                            <materialDesign:PackIcon Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.Secondary}">
-                                                <materialDesign:PackIcon.Style>
-                                                    <Style TargetType="materialDesign:PackIcon">
-                                                        <Setter Property="Kind" Value="FileDocumentOutline" />
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding IsQuestion}" Value="True">
-                                                                <Setter Property="Kind" Value="HelpCircleOutline" />
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </materialDesign:PackIcon.Style>
-                                            </materialDesign:PackIcon>
-                                        </Border>
-                                        <StackPanel Grid.Column="1" Margin="11,0,8,0" VerticalAlignment="Center">
-                                            <TextBlock FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
-                                            <TextBlock Margin="0,3,0,0" FontSize="11" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="{Binding TypeTitle}" />
-                                        </StackPanel>
-                                        <TextBlock Grid.Column="2" VerticalAlignment="Center" FontSize="11" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="{Binding DifficultyTitle}" />
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
-
                 <!-- Материалы таблицей -->
                 <Border
                     Background="{DynamicResource Mnemora.Brush.Surface}"
@@ -951,7 +1021,7 @@
                     BorderThickness="1"
                     CornerRadius="12"
                     ClipToBounds="True"
-                    Visibility="{Binding IsTableView, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    Visibility="{Binding HasMaterials, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <DataGrid
                         ItemsSource="{Binding Materials}"
                         AutoGenerateColumns="False"
@@ -962,12 +1032,17 @@
                         CanUserReorderColumns="False"
                         CanUserResizeRows="False"
                         CanUserSortColumns="False"
-                        ColumnHeaderStyle="{StaticResource TableColumnHeaderStyle}"
+                        CellStyle="{StaticResource MaterialTableCellStyle}"
+                        ColumnHeaderStyle="{StaticResource MaterialTableColumnHeaderStyle}"
+                        EnableColumnVirtualization="True"
+                        EnableRowVirtualization="True"
                         GridLinesVisibility="None"
                         HeadersVisibility="Column"
                         IsReadOnly="True"
                         RowHeaderWidth="0"
-                        RowStyle="{StaticResource TableRowStyle}"
+                        RowStyle="{StaticResource MaterialTableRowStyle}"
+                        ScrollViewer.CanContentScroll="True"
+                        ScrollViewer.HorizontalScrollBarVisibility="Auto"
                         ScrollViewer.ScrollChanged="MaterialsScroll_OnScrollChanged"
                         ScrollViewer.VerticalScrollBarVisibility="Auto"
                         SelectionMode="Single"
@@ -975,31 +1050,150 @@
                         VirtualizingPanel.IsVirtualizing="True"
                         VirtualizingPanel.VirtualizationMode="Recycling">
                         <DataGrid.Columns>
-                            <DataGridTemplateColumn Header="Материал" MinWidth="280" Width="*">
+                            <DataGridTemplateColumn Header="Материал" MinWidth="240" Width="*">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <StackPanel Orientation="Horizontal">
-                                            <materialDesign:PackIcon Width="20" Height="20" Margin="0,0,10,0" VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.Secondary}">
-                                                <materialDesign:PackIcon.Style>
-                                                    <Style TargetType="materialDesign:PackIcon">
-                                                        <Setter Property="Kind" Value="FileDocumentOutline" />
+                                        <Grid Margin="8,0,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <Border Width="40" Height="40" CornerRadius="10">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="#F0ECFF" />
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding IsQuestion}" Value="True">
-                                                                <Setter Property="Kind" Value="HelpCircleOutline" />
+                                                                <Setter Property="Background" Value="#E6FBF8" />
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
-                                                </materialDesign:PackIcon.Style>
-                                            </materialDesign:PackIcon>
-                                            <TextBlock VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                                                </Border.Style>
+
+                                                <materialDesign:PackIcon
+                                                    Width="22"
+                                                    Height="22"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center">
+                                                    <materialDesign:PackIcon.Style>
+                                                        <Style TargetType="{x:Type materialDesign:PackIcon}">
+                                                            <Setter Property="Kind" Value="FileDocumentOutline" />
+                                                            <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.Secondary}" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsQuestion}" Value="True">
+                                                                    <Setter Property="Kind" Value="HelpCircleOutline" />
+                                                                    <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.PrimaryDark}" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </materialDesign:PackIcon.Style>
+                                                </materialDesign:PackIcon>
+                                            </Border>
+
+                                            <StackPanel Grid.Column="1" Margin="13,0,0,0" VerticalAlignment="Center">
+                                                <TextBlock
+                                                    FontSize="14"
+                                                    FontWeight="SemiBold"
+                                                    Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                                    Text="{Binding Title}"
+                                                    TextTrimming="CharacterEllipsis" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    FontSize="12"
+                                                    Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                    Text="{Binding TypeTitle}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="Теги" MinWidth="150" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Width="17"
+                                                Height="17"
+                                                Margin="0,0,7,0"
+                                                Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                Kind="TagOutline" />
+                                            <TextBlock
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                Text="{Binding TagsText}"
+                                                TextTrimming="CharacterEllipsis" />
                                         </StackPanel>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="Тип" Width="90" Binding="{Binding TypeTitle}" />
-                            <DataGridTextColumn Header="Сложность" Width="110" Binding="{Binding DifficultyTitle}" />
-                            <DataGridTextColumn Header="Теги" MinWidth="170" Width="*" Binding="{Binding TagsText}" />
-                            <DataGridTextColumn Header="Изменено" Width="120" Binding="{Binding UpdatedAtLocal, StringFormat={}{0:dd.MM.yyyy}}" />
+
+                            <DataGridTemplateColumn Header="Сложность" Width="115">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource MaterialDifficultyBadgeStyle}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <Ellipse
+                                                    Width="7"
+                                                    Height="7"
+                                                    Margin="0,0,7,0"
+                                                    VerticalAlignment="Center"
+                                                    Style="{StaticResource MaterialDifficultyDotStyle}" />
+                                                <TextBlock
+                                                    VerticalAlignment="Center"
+                                                    FontSize="12"
+                                                    FontWeight="SemiBold"
+                                                    Text="{Binding DifficultyTitle}"
+                                                    Style="{StaticResource MaterialDifficultyTextStyle}" />
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="Баллы" Width="145">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Width="18"
+                                                Height="18"
+                                                Foreground="{DynamicResource Mnemora.Brush.Secondary}"
+                                                Kind="StarOutline"
+                                                ToolTip="За изучение" />
+                                            <TextBlock
+                                                Margin="5,0,13,0"
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                                Text="{Binding StudyPoints}" />
+                                            <materialDesign:PackIcon
+                                                Width="18"
+                                                Height="18"
+                                                Foreground="{DynamicResource Mnemora.Brush.PrimaryDark}"
+                                                Kind="Refresh"
+                                                ToolTip="За повторение" />
+                                            <TextBlock
+                                                Margin="5,0,0,0"
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                                Text="{Binding ReviewPoints}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTextColumn
+                                Header="Создан"
+                                Width="105"
+                                Binding="{Binding CreatedAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
+                                ElementStyle="{StaticResource MaterialTableTextStyle}" />
+
+                            <DataGridTextColumn
+                                Header="Изменён"
+                                Width="105"
+                                Binding="{Binding UpdatedAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
+                                ElementStyle="{StaticResource MaterialTableTextStyle}" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </Border>
@@ -1018,7 +1212,7 @@
         <!-- Пустой контейнер -->
         <Border
             Grid.Row="2"
-            Grid.RowSpan="2"
+            Grid.RowSpan="3"
             Margin="32,12,32,32"
             Padding="36"
             HorizontalAlignment="Stretch"
@@ -1037,7 +1231,7 @@
 
         <!-- Фатальная ошибка metadata -->
         <Border
-            Grid.RowSpan="4"
+            Grid.RowSpan="5"
             Panel.ZIndex="100"
             Width="500"
             Padding="28"
@@ -1060,7 +1254,7 @@
         </Border>
 
         <loading:LoadingIndicator
-            Grid.RowSpan="4"
+            Grid.RowSpan="5"
             Panel.ZIndex="90"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"

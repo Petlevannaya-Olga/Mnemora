@@ -82,6 +82,8 @@ public sealed class AppSettings
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public int? LibraryTilesPerRow { get; set; }
 
+    public double LibraryContainerFoldersPaneRatio { get; set; } = 1d / 3d;
+
     public LibraryManagementSortMode LibraryManagementSectionSort { get; set; } = LibraryManagementSortMode.Custom;
 
     public Dictionary<Guid, LibraryManagementSortMode> LibraryManagementTopicSortBySection { get; set; } = [];

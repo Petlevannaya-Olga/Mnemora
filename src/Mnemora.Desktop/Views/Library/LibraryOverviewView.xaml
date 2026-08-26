@@ -385,6 +385,10 @@
                 Margin="0,6,0,0"
                 Style="{StaticResource Mnemora.Description}"
                 Text="Разделы базы знаний" />
+
+            <Border Height="1"
+                    Margin="0,22,0,0"
+                    Background="{DynamicResource Mnemora.Brush.Border}" />
         </StackPanel>
 
         <Grid Grid.Row="1" Margin="32,0,32,24">

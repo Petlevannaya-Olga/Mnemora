@@ -211,6 +211,26 @@ public sealed class JsonSettingsService :
             cancellationToken);
     }
 
+    public Task SaveLibraryContainerFoldersPaneRatioAsync(
+        double foldersPaneRatio,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+
+        if (!double.IsFinite(foldersPaneRatio) ||
+            foldersPaneRatio is < 0.1 or > 0.9)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(foldersPaneRatio),
+                foldersPaneRatio,
+                "Доля области папок должна быть от 0.1 до 0.9.");
+        }
+
+        return UpdateAsync(
+            settings => settings.LibraryContainerFoldersPaneRatio = foldersPaneRatio,
+            cancellationToken);
+    }
+
     public Task SaveLibraryManagementSectionSortAsync(
         LibraryManagementSortMode sortMode,
         CancellationToken cancellationToken = default)

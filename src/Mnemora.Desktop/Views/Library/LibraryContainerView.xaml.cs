@@ -1,8 +1,10 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using Mnemora.Desktop.ViewModels.Library;
 
 namespace Mnemora.Desktop.Views.Library;
@@ -60,6 +62,7 @@ public partial class LibraryContainerView : UserControl
         try
         {
             await viewModel.LoadAsync(cancellationToken);
+            ApplyFoldersMaterialsSplit(viewModel);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -70,15 +73,14 @@ public partial class LibraryContainerView : UserControl
 
     private async void FoldersScroll_OnScrollChanged(object sender, ScrollChangedEventArgs e)
     {
-        if (_isFoldersPageLoadRunning || e.VerticalChange <= 0 ||
+        if (_isFoldersPageLoadRunning ||
             DataContext is not LibraryContainerViewModel viewModel)
         {
             return;
         }
 
         ScrollViewer? scrollViewer = ResolveScrollViewer(sender, e);
-        if (scrollViewer is null || !IsNearBottom(scrollViewer) ||
-            !viewModel.LoadNextFoldersPageCommand.CanExecute(null))
+        if (scrollViewer is null || !IsNearBottom(scrollViewer))
         {
             return;
         }
@@ -87,7 +89,26 @@ public partial class LibraryContainerView : UserControl
 
         try
         {
-            await viewModel.LoadNextFoldersPageCommand.ExecuteAsync(null);
+            while (IsLoaded &&
+                   ReferenceEquals(DataContext, viewModel) &&
+                   IsNearBottom(scrollViewer) &&
+                   viewModel.LoadNextFoldersPageCommand.CanExecute(null))
+            {
+                int foldersCountBeforeLoading = viewModel.Folders.Count;
+                await viewModel.LoadNextFoldersPageCommand.ExecuteAsync(null);
+
+                // Коллекция уже обновлена, но ScrollViewer пересчитывает ExtentHeight
+                // на следующем проходе привязки и разметки. После него повторно
+                // проверяем низ, чтобы не потерять ScrollChanged во время загрузки.
+                await Dispatcher.InvokeAsync(
+                    static () => { },
+                    DispatcherPriority.Background);
+
+                if (viewModel.Folders.Count == foldersCountBeforeLoading)
+                {
+                    break;
+                }
+            }
         }
         catch (OperationCanceledException)
         {
@@ -101,15 +122,14 @@ public partial class LibraryContainerView : UserControl
 
     private async void MaterialsScroll_OnScrollChanged(object sender, ScrollChangedEventArgs e)
     {
-        if (_isMaterialsPageLoadRunning || e.VerticalChange <= 0 ||
+        if (_isMaterialsPageLoadRunning ||
             DataContext is not LibraryContainerViewModel viewModel)
         {
             return;
         }
 
         ScrollViewer? scrollViewer = ResolveScrollViewer(sender, e);
-        if (scrollViewer is null || !IsNearBottom(scrollViewer) ||
-            !viewModel.LoadNextMaterialsPageCommand.CanExecute(null))
+        if (scrollViewer is null || !IsNearBottom(scrollViewer))
         {
             return;
         }
@@ -118,7 +138,26 @@ public partial class LibraryContainerView : UserControl
 
         try
         {
-            await viewModel.LoadNextMaterialsPageCommand.ExecuteAsync(null);
+            while (IsLoaded &&
+                   ReferenceEquals(DataContext, viewModel) &&
+                   IsNearBottom(scrollViewer) &&
+                   viewModel.LoadNextMaterialsPageCommand.CanExecute(null))
+            {
+                int materialsCountBeforeLoading = viewModel.Materials.Count;
+                await viewModel.LoadNextMaterialsPageCommand.ExecuteAsync(null);
+
+                // После добавления строк DataGrid обновляет диапазон прокрутки
+                // асинхронно. Ждём layout и ещё раз проверяем нижнюю границу,
+                // чтобы продолжить загрузку без движения вверх-вниз.
+                await Dispatcher.InvokeAsync(
+                    static () => { },
+                    DispatcherPriority.Background);
+
+                if (viewModel.Materials.Count == materialsCountBeforeLoading)
+                {
+                    break;
+                }
+            }
         }
         catch (OperationCanceledException)
         {
@@ -128,6 +167,60 @@ public partial class LibraryContainerView : UserControl
         {
             _isMaterialsPageLoadRunning = false;
         }
+    }
+
+    private async void FoldersMaterialsSplitter_OnDragCompleted(
+        object sender,
+        DragCompletedEventArgs e)
+    {
+        if (DataContext is not LibraryContainerViewModel viewModel ||
+            !viewModel.HasFolderContent ||
+            !viewModel.HasMaterialContent)
+        {
+            return;
+        }
+
+        double panesHeight =
+            FoldersPaneRow.ActualHeight +
+            MaterialsPaneRow.ActualHeight;
+
+        if (panesHeight <= 0)
+        {
+            return;
+        }
+
+        double foldersPaneRatio =
+            FoldersPaneRow.ActualHeight /
+            panesHeight;
+
+        await viewModel.SaveFoldersPaneRatioAsync(
+            foldersPaneRatio);
+    }
+
+    private void ApplyFoldersMaterialsSplit(
+        LibraryContainerViewModel viewModel)
+    {
+        if (!viewModel.HasFolderContent ||
+            !viewModel.HasMaterialContent)
+        {
+            return;
+        }
+
+        double foldersPaneRatio =
+            Math.Clamp(
+                viewModel.FoldersPaneRatio,
+                0.1,
+                0.9);
+
+        FoldersPaneRow.Height =
+            new GridLength(
+                foldersPaneRatio,
+                GridUnitType.Star);
+
+        MaterialsPaneRow.Height =
+            new GridLength(
+                1d - foldersPaneRatio,
+                GridUnitType.Star);
     }
 
     private void FolderTableRow_OnMouseLeftButtonUp(
