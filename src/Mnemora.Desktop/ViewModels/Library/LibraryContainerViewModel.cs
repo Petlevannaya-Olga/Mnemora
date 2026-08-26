@@ -18,8 +18,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
 {
     private const int FolderPageSize = LibraryPagingDefaults.PageSize;
     private const int MaterialPageSize = 50;
-    private static readonly TimeSpan SearchDelay =
-        TimeSpan.FromMilliseconds(350);
+    private static readonly TimeSpan SearchDelay = TimeSpan.FromMilliseconds(350);
 
     private readonly IQueryDispatcher _queryDispatcher;
     private readonly IPageNavigationService _pageNavigationService;

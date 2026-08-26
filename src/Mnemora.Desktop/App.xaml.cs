@@ -48,7 +48,7 @@ public partial class App : System.Windows.Application
         bool? startupDialogResult = startupWindow.ShowDialog();
         StartupResult? startupResult = startupWindow.ViewModel.Result;
 
-        if (startupDialogResult != true)
+        if (startupDialogResult != true || startupResult is not { IsSuccess: true })
         {
             Shutdown();
             return;
@@ -62,32 +62,6 @@ public partial class App : System.Windows.Application
         MainWindow = mainWindow;
         ShutdownMode = ShutdownMode.OnMainWindowClose;
 
-        if (startupWindow.OpenOnboardingRequested)
-        {
-            onboardingState.IsOnboardingCompleted = false;
-            onboardingState.IsMarkdownEditorVerified = false;
-
-            if (string.IsNullOrWhiteSpace(
-                    onboardingState.UserName))
-            {
-                navigationService.NavigateTo<WelcomeViewModel>();
-            }
-            else
-            {
-                navigationService.NavigateTo<StorageSetupViewModel>();
-            }
-
-            mainWindowViewModel.CompleteInitialization();
-            mainWindow.Show();
-            return;
-        }
-
-        if (startupResult is not { IsSuccess: true })
-        {
-            Shutdown();
-            return;
-        }
-
         if (startupResult.StorageIsConfigured && startupResult.EditorIsConfigured)
         {
             mainWindow.Show();
@@ -97,6 +71,31 @@ public partial class App : System.Windows.Application
             await mainWindow.Dispatcher.InvokeAsync(
                 static () => { },
                 DispatcherPriority.ApplicationIdle);
+
+#if DEBUG
+            if (IsStressLibraryMode(e.Args))
+            {
+                var logger = _serviceProvider.GetRequiredService<ILogger<App>>();
+                logger.LogInformation("Stress library seed started");
+
+                try
+                {
+                    await SeedStressLibraryAsync(_serviceProvider);
+                    logger.LogInformation("Stress library seed completed");
+                }
+                catch (Exception exception)
+                {
+                    logger.LogError(exception, "Stress library seed failed");
+                    MessageBox.Show(
+                        exception.Message,
+                        "Mnemora — stress library",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                    Shutdown();
+                    return;
+                }
+            }
+#endif
 
             navigationService.NavigateTo<AppShellViewModel>();
 
@@ -132,6 +131,28 @@ public partial class App : System.Windows.Application
         base.OnExit(e);
     }
 
+    private static bool IsStressLibraryMode(IReadOnlyCollection<string> args)
+    {
+#if DEBUG
+        return args.Any(argument =>
+            string.Equals(
+                argument,
+                "--stress-library",
+                StringComparison.OrdinalIgnoreCase));
+#else
+        return false;
+#endif
+    }
+
+#if DEBUG
+    private static async Task SeedStressLibraryAsync(IServiceProvider serviceProvider)
+    {
+        await using var scope = serviceProvider.CreateAsyncScope();
+        var stressSeeder = scope.ServiceProvider.GetRequiredService<LibraryStressDataSeeder>();
+        await stressSeeder.SeedAsync(CancellationToken.None);
+    }
+#endif
+
     private static void ConfigureServices(IServiceCollection services)
     {
         services.AddLogging(builder =>
@@ -150,7 +171,6 @@ public partial class App : System.Windows.Application
         services.AddSingleton<ISettingsService, JsonSettingsService>();
         services.AddSingleton<IMarkdownEditorService, MarkdownEditorService>();
         services.AddSingleton<IStoragePathProvider, StoragePathProvider>();
-        services.AddSingleton<IStorageValidationService, StorageValidationService>();
         services.AddSingleton(TimeProvider.System);
 
         services.AddInfrastructure();
@@ -170,6 +190,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IMnemoraLocalPathProvider, MnemoraLocalPathProvider>();
         services.AddSingleton<ILocalAppDataCleanupService, LocalAppDataCleanupService>();
         services.AddSingleton<IStorageTemporaryFilesCleanupService, StorageTemporaryFilesCleanupService>();
+        services.AddSingleton<IStorageValidationService, StorageValidationService>();
         services.AddSingleton<IStartupService, StartupService>();
         services.AddTransient<StartupViewModel>();
         services.AddTransient<StartupWindow>();
