@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     xmlns:libraryBehaviors="clr-namespace:Mnemora.Desktop.Views.Library"
     x:Class="Mnemora.Desktop.Views.Library.LibraryContainerView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -209,13 +209,29 @@
 
         <Style x:Key="MaterialTableColumnHeaderStyle" TargetType="DataGridColumnHeader">
             <Setter Property="Height" Value="46" />
-            <Setter Property="Padding" Value="14,0" />
+            <Setter Property="Padding" Value="16,0" />
             <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.SurfaceMuted}" />
             <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Border}" />
             <Setter Property="BorderThickness" Value="0,0,0,1" />
             <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.TextPrimary}" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridColumnHeader">
+                        <Border
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter
+                                Margin="{TemplateBinding Padding}"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                RecognizesAccessKey="True" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style x:Key="MaterialTableRowStyle" TargetType="DataGridRow">
@@ -274,11 +290,27 @@
         </Style>
 
         <Style x:Key="MaterialTableCellStyle" TargetType="DataGridCell">
-            <Setter Property="Padding" Value="14,9" />
+            <Setter Property="Padding" Value="16,9" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridCell">
+                        <Border
+                            Padding="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter
+                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
             <Style.Triggers>
                 <Trigger Property="IsSelected" Value="True">
                     <Setter Property="Background" Value="Transparent" />
@@ -334,7 +366,7 @@
         </Style>
 
         <Style TargetType="DataGridCell">
-            <Setter Property="Padding" Value="14,0" />
+            <Setter Property="Padding" Value="16,0" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
@@ -1064,7 +1096,7 @@
                             <DataGridTemplateColumn Header="Папка" MinWidth="260" Width="*">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Grid Margin="8,0,0,0">
+                                        <Grid Margin="10,0,0,0">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="*" />
@@ -1358,7 +1390,7 @@
                             <DataGridTemplateColumn Header="Материал" MinWidth="240" Width="*">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Grid Margin="8,0,0,0">
+                                        <Grid Margin="10,0,0,0">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="*" />
@@ -1693,7 +1725,7 @@
                             <DataGridTemplateColumn Header="Название" MinWidth="280" Width="2*">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Grid Margin="8,0,0,0">
+                                        <Grid Margin="10,0,0,0">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="*" />
