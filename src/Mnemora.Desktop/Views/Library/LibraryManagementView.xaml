@@ -20,6 +20,7 @@
         <converters:SectionColorConverter x:Key="SectionColorConverter" />
         <converters:SectionIconConverter x:Key="SectionIconConverter" />
         <converters:TopicColorConverter x:Key="TopicColorConverter" />
+        <converters:LibraryRangeCounterTextConverter x:Key="LibraryRangeCounterTextConverter" />
 
         <Style x:Key="ManagementCardStyle" TargetType="Border">
             <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
@@ -1312,10 +1313,13 @@
                     Background="{DynamicResource Mnemora.Brush.Border}" />
         </StackPanel>
 
-        <!-- Панель управления разделами: в режиме управления используем только таблицу. -->
-        <Grid Grid.Row="1" Margin="32,22,32,24">
-            <Grid.Style>
-                <Style TargetType="Grid">
+        <!-- Панель управления разделами: тот же полноширинный toolbar, что в обзоре. -->
+        <Border Grid.Row="1"
+                Margin="0,0,0,10"
+                Padding="32,16"
+                Background="{DynamicResource Mnemora.Brush.ToolbarSurface}">
+            <Border.Style>
+                <Style TargetType="Border">
                     <Setter Property="Visibility" Value="Collapsed" />
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding IsSimpleSectionsPage}" Value="True">
@@ -1323,66 +1327,70 @@
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>
-            </Grid.Style>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="24" />
-                <ColumnDefinition Width="220" />
-                <ColumnDefinition Width="24" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="12" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
+            </Border.Style>
 
-            <TextBox Height="52"
-                     VerticalContentAlignment="Center"
-                     Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                     materialDesign:HintAssist.Hint="Поиск по названию раздела..."
-                     Style="{StaticResource MaterialDesignOutlinedTextBox}" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="24" />
+                    <ColumnDefinition Width="220" />
+                    <ColumnDefinition Width="24" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
 
-            <ComboBox Grid.Column="2"
-                      Height="52"
-                      VerticalContentAlignment="Center"
-                      DisplayMemberPath="Name"
-                      ItemsSource="{Binding SimpleSectionSortOptions}"
-                      SelectedItem="{Binding SelectedSimpleSectionSortOption, Mode=TwoWay}"
-                      materialDesign:HintAssist.Hint="Сортировка"
-                      Style="{StaticResource MaterialDesignOutlinedComboBox}" />
+                <TextBox Height="52"
+                         VerticalContentAlignment="Center"
+                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                         materialDesign:HintAssist.Hint="Поиск по названию раздела..."
+                         materialDesign:TextFieldAssist.HasClearButton="True"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}" />
 
-            <Button Grid.Column="4"
-                    Height="44"
-                    MinWidth="190"
-                    VerticalAlignment="Center"
-                    Click="ConfigureSectionsOrder_OnClick"
-                    Style="{StaticResource Mnemora.SecondaryButton}"
-                    Visibility="{Binding HasSimpleSections, Converter={StaticResource BooleanToVisibilityConverter}}">
-                <StackPanel Orientation="Horizontal">
-                    <materialDesign:PackIcon Width="18"
-                                             Height="18"
-                                             VerticalAlignment="Center"
-                                             Kind="SwapVertical" />
-                    <TextBlock Margin="8,0,0,0"
-                               VerticalAlignment="Center"
-                               Text="Настроить порядок" />
-                </StackPanel>
-            </Button>
+                <ComboBox Grid.Column="2"
+                          Height="52"
+                          VerticalContentAlignment="Center"
+                          DisplayMemberPath="Name"
+                          ItemsSource="{Binding SimpleSectionSortOptions}"
+                          SelectedItem="{Binding SelectedSimpleSectionSortOption, Mode=TwoWay}"
+                          materialDesign:HintAssist.Hint="Сортировка"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}" />
 
-            <Button Grid.Column="6"
-                    Height="44"
-                    MinWidth="160"
-                    VerticalAlignment="Center"
-                    Command="{Binding AddSectionCommand}"
-                    Style="{StaticResource Mnemora.PrimaryButton}">
-                <StackPanel Orientation="Horizontal">
-                    <materialDesign:PackIcon Width="18" Height="18" Kind="Plus" />
-                    <TextBlock Margin="8,0,0,0" Text="Создать раздел" />
-                </StackPanel>
-            </Button>
-        </Grid>
+                <Button Grid.Column="4"
+                        Height="44"
+                        MinWidth="190"
+                        VerticalAlignment="Center"
+                        Click="ConfigureSectionsOrder_OnClick"
+                        Style="{StaticResource Mnemora.SecondaryButton}"
+                        Visibility="{Binding HasSimpleSections, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Width="18"
+                                                 Height="18"
+                                                 VerticalAlignment="Center"
+                                                 Kind="SwapVertical" />
+                        <TextBlock Margin="8,0,0,0"
+                                   VerticalAlignment="Center"
+                                   Text="Настроить порядок" />
+                    </StackPanel>
+                </Button>
+
+                <Button Grid.Column="6"
+                        Height="44"
+                        MinWidth="160"
+                        VerticalAlignment="Center"
+                        Command="{Binding AddSectionCommand}"
+                        Style="{StaticResource Mnemora.PrimaryButton}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Width="18" Height="18" Kind="Plus" />
+                        <TextBlock Margin="8,0,0,0" Text="Создать раздел" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
 
         <!-- ПРОСТОЙ РЕЖИМ: разделы -->
         <Grid Grid.Row="2"
-              Margin="32,0,32,28"
+              Margin="32,8,32,28"
               Visibility="{Binding IsSimpleSectionsPage, Converter={StaticResource BooleanToVisibilityConverter}}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -1409,7 +1417,7 @@
                     FontWeight="Normal"
                     Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
                     Opacity="0.68"
-                    Text="{Binding SimpleSectionsShownCountText}" />
+                    Text="{Binding SimpleSectionsShownCountText, Converter={StaticResource LibraryRangeCounterTextConverter}}" />
             </StackPanel>
 
             <Grid Grid.Row="1">
@@ -1815,6 +1823,7 @@
                          VerticalContentAlignment="Center"
                          Text="{Binding SimpleTopicSearchText, UpdateSourceTrigger=PropertyChanged}"
                          materialDesign:HintAssist.Hint="Поиск по названию темы..."
+                         materialDesign:TextFieldAssist.HasClearButton="True"
                          Style="{StaticResource MaterialDesignOutlinedTextBox}" />
 
                 <ComboBox Grid.Column="2"
@@ -2460,6 +2469,7 @@
                          VerticalContentAlignment="Center"
                          Text="{Binding SimpleMaterialSearchText, UpdateSourceTrigger=PropertyChanged}"
                          materialDesign:HintAssist.Hint="Поиск по материалам..."
+                         materialDesign:TextFieldAssist.HasClearButton="True"
                          Style="{StaticResource MaterialDesignOutlinedTextBox}" />
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal">
