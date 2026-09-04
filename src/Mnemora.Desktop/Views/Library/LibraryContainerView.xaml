@@ -338,6 +338,175 @@
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         </Style>
+        <!-- Плитки материалов: те же режимы, что и у папок -->
+        <DataTemplate x:Key="MaterialLargeTileTemplate">
+            <Border Style="{StaticResource LargeCardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Border Width="42" Height="42" HorizontalAlignment="Left" CornerRadius="11">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Background" Value="#F0ECFF" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsQuestion}" Value="True">
+                                        <Setter Property="Background" Value="#E6FBF8" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <materialDesign:PackIcon Width="23" Height="23" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <materialDesign:PackIcon.Style>
+                                <Style TargetType="{x:Type materialDesign:PackIcon}">
+                                    <Setter Property="Kind" Value="FileDocumentOutline" />
+                                    <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.Secondary}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsQuestion}" Value="True">
+                                            <Setter Property="Kind" Value="HelpCircleOutline" />
+                                            <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.PrimaryDark}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </materialDesign:PackIcon.Style>
+                        </materialDesign:PackIcon>
+                    </Border>
+                    <StackPanel Grid.Row="1" Margin="0,12,0,0">
+                        <TextBlock FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Margin="0,3,0,0" FontSize="12" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="{Binding TypeTitle}" />
+                    </StackPanel>
+                    <TextBlock Grid.Row="2" Margin="0,8,0,0" FontSize="12" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="{Binding TagsText}" TextTrimming="CharacterEllipsis" />
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="MaterialCompactTileTemplate">
+            <Border Style="{StaticResource CompactCardStyle}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Width="40" Height="40" VerticalAlignment="Center" CornerRadius="10">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Background" Value="#F0ECFF" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsQuestion}" Value="True">
+                                        <Setter Property="Background" Value="#E6FBF8" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <materialDesign:PackIcon Width="21" Height="21" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <materialDesign:PackIcon.Style>
+                                <Style TargetType="{x:Type materialDesign:PackIcon}">
+                                    <Setter Property="Kind" Value="FileDocumentOutline" />
+                                    <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.Secondary}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsQuestion}" Value="True">
+                                            <Setter Property="Kind" Value="HelpCircleOutline" />
+                                            <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.PrimaryDark}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </materialDesign:PackIcon.Style>
+                        </materialDesign:PackIcon>
+                    </Border>
+                    <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                        <TextBlock FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Margin="0,3,0,0" FontSize="11" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="{Binding TypeTitle}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!-- Смешанные плитки: папки всегда идут первыми, порядок задаёт MixedContent -->
+        <DataTemplate x:Key="MixedLargeTileTemplate">
+            <Grid>
+                <Button
+                    Command="{Binding DataContext.OpenFolderCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                    CommandParameter="{Binding Folder}"
+                    Style="{StaticResource CardButtonStyle}"
+                    Visibility="{Binding IsFolder, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Border Style="{StaticResource LargeCardStyle}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Border Width="42" Height="42" HorizontalAlignment="Left" Background="{Binding FolderColor, Converter={StaticResource LibraryFolderColorConverter}}" CornerRadius="11">
+                                <materialDesign:PackIcon Width="23" Height="23" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" Kind="{Binding FolderIcon, Converter={StaticResource LibraryFolderIconConverter}}" />
+                            </Border>
+                            <TextBlock Grid.Row="1" Margin="0,12,0,0" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Grid.Row="2" Margin="0,8,0,0" FontSize="12" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="{Binding DetailsText}" TextTrimming="CharacterEllipsis" />
+                        </Grid>
+                    </Border>
+                </Button>
+                <Border Style="{StaticResource LargeCardStyle}" Visibility="{Binding IsMaterial, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Border Width="42" Height="42" HorizontalAlignment="Left" CornerRadius="11">
+                            <Border.Style><Style TargetType="Border"><Setter Property="Background" Value="#F0ECFF" /><Style.Triggers><DataTrigger Binding="{Binding IsQuestion}" Value="True"><Setter Property="Background" Value="#E6FBF8" /></DataTrigger></Style.Triggers></Style></Border.Style>
+                            <materialDesign:PackIcon Width="23" Height="23" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <materialDesign:PackIcon.Style><Style TargetType="{x:Type materialDesign:PackIcon}"><Setter Property="Kind" Value="FileDocumentOutline" /><Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.Secondary}" /><Style.Triggers><DataTrigger Binding="{Binding IsQuestion}" Value="True"><Setter Property="Kind" Value="HelpCircleOutline" /><Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.PrimaryDark}" /></DataTrigger></Style.Triggers></Style></materialDesign:PackIcon.Style>
+                            </materialDesign:PackIcon>
+                        </Border>
+                        <StackPanel Grid.Row="1" Margin="0,12,0,0">
+                            <TextBlock FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Margin="0,3,0,0" FontSize="12" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="{Binding TypeTitle}" />
+                        </StackPanel>
+                        <TextBlock Grid.Row="2" Margin="0,8,0,0" FontSize="12" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="{Binding DetailsText}" TextTrimming="CharacterEllipsis" />
+                    </Grid>
+                </Border>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="MixedCompactTileTemplate">
+            <Grid>
+                <Button
+                    Command="{Binding DataContext.OpenFolderCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                    CommandParameter="{Binding Folder}"
+                    Style="{StaticResource CardButtonStyle}"
+                    Visibility="{Binding IsFolder, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Border Style="{StaticResource CompactCardStyle}">
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                            <Border Width="40" Height="40" VerticalAlignment="Center" Background="{Binding FolderColor, Converter={StaticResource LibraryFolderColorConverter}}" CornerRadius="10">
+                                <materialDesign:PackIcon Width="21" Height="21" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" Kind="{Binding FolderIcon, Converter={StaticResource LibraryFolderIconConverter}}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                                <TextBlock FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Margin="0,3,0,0" FontSize="11" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="{Binding DetailsText}" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Button>
+                <Border Style="{StaticResource CompactCardStyle}" Visibility="{Binding IsMaterial, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                        <Border Width="40" Height="40" VerticalAlignment="Center" CornerRadius="10">
+                            <Border.Style><Style TargetType="Border"><Setter Property="Background" Value="#F0ECFF" /><Style.Triggers><DataTrigger Binding="{Binding IsQuestion}" Value="True"><Setter Property="Background" Value="#E6FBF8" /></DataTrigger></Style.Triggers></Style></Border.Style>
+                            <materialDesign:PackIcon Width="21" Height="21" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <materialDesign:PackIcon.Style><Style TargetType="{x:Type materialDesign:PackIcon}"><Setter Property="Kind" Value="FileDocumentOutline" /><Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.Secondary}" /><Style.Triggers><DataTrigger Binding="{Binding IsQuestion}" Value="True"><Setter Property="Kind" Value="HelpCircleOutline" /><Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.PrimaryDark}" /></DataTrigger></Style.Triggers></Style></materialDesign:PackIcon.Style>
+                            </materialDesign:PackIcon>
+                        </Border>
+                        <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                            <TextBlock FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Margin="0,3,0,0" FontSize="11" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="{Binding TypeTitle}" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+        </DataTemplate>
+
         <Style x:Key="LibraryScrollBarPageButtonStyle" TargetType="{x:Type RepeatButton}">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
@@ -603,7 +772,7 @@
             <StackPanel
                 Grid.Column="3"
                 Orientation="Horizontal"
-                Visibility="{Binding IsFoldersOnly, Converter={StaticResource BooleanToVisibilityConverter}}">
+                Visibility="{Binding HasAnyContent, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <ToggleButton
                     Command="{Binding ShowTilesViewCommand}"
                     IsChecked="{Binding IsTilesView, Mode=OneWay}"
@@ -1072,13 +1241,64 @@
                 </Border>
 
                 <!-- Материалы таблицей -->
+                <!-- Материалы крупными плитками -->
+                <ScrollViewer
+                    VerticalScrollBarVisibility="Auto"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalContentAlignment="Top"
+                    ScrollChanged="MaterialsScroll_OnScrollChanged"
+                    Visibility="{Binding IsTilesView, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <ItemsControl VerticalAlignment="Top" ItemsSource="{Binding Materials}" ItemTemplate="{StaticResource MaterialLargeTileTemplate}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid
+                                    libraryBehaviors:ResponsiveUniformGridBehavior.DesiredColumns="{Binding DataContext.DesiredTilesPerRow, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                    libraryBehaviors:ResponsiveUniformGridBehavior.MinimumItemWidth="300"
+                                    libraryBehaviors:ResponsiveUniformGridBehavior.MaximumColumns="5" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <!-- Материалы компактными плитками -->
+                <ScrollViewer
+                    VerticalScrollBarVisibility="Auto"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalContentAlignment="Top"
+                    ScrollChanged="MaterialsScroll_OnScrollChanged"
+                    Visibility="{Binding IsCompactTilesView, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <ItemsControl VerticalAlignment="Top" ItemsSource="{Binding Materials}" ItemTemplate="{StaticResource MaterialCompactTileTemplate}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid
+                                    libraryBehaviors:ResponsiveUniformGridBehavior.DesiredColumns="{Binding DataContext.DesiredTilesPerRow, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                    libraryBehaviors:ResponsiveUniformGridBehavior.MinimumItemWidth="220"
+                                    libraryBehaviors:ResponsiveUniformGridBehavior.MaximumColumns="7" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </ScrollViewer>
+
                 <Border
                     Background="{DynamicResource Mnemora.Brush.Surface}"
                     BorderBrush="{DynamicResource Mnemora.Brush.Border}"
                     BorderThickness="1"
                     CornerRadius="12"
-                    ClipToBounds="True"
-                    Visibility="{Binding HasMaterials, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    ClipToBounds="True">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding HasMaterials}" Value="True" />
+                                        <Condition Binding="{Binding IsTableView}" Value="True" />
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
                     <DataGrid
                         ItemsSource="{Binding Materials}"
                         AutoGenerateColumns="False"
@@ -1275,7 +1495,7 @@
             </Grid>
         </Grid>
 
-        <!-- Смешанное содержимое: единая таблица, сначала папки, затем материалы -->
+        <!-- Смешанное содержимое: три режима, папки всегда первыми -->
         <Grid
             Grid.Row="2"
             Grid.RowSpan="3"
@@ -1300,9 +1520,10 @@
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal">
-                    <ToggleButton Command="{Binding SelectAllMaterialsCommand}" Content="Все" IsChecked="{Binding IsAllFilter, Mode=OneWay}" Style="{StaticResource MaterialFilterButtonStyle}" />
-                    <ToggleButton Command="{Binding SelectArticlesCommand}" Content="Статьи" IsChecked="{Binding IsArticlesFilter, Mode=OneWay}" Style="{StaticResource MaterialFilterButtonStyle}" />
-                    <ToggleButton Command="{Binding SelectQuestionsCommand}" Content="Вопросы" IsChecked="{Binding IsQuestionsFilter, Mode=OneWay}" Style="{StaticResource MaterialFilterButtonStyle}" />
+                    <ToggleButton Command="{Binding SelectAllContentCommand}" Content="Все" IsChecked="{Binding IsMixedAllFilter, Mode=OneWay}" Style="{StaticResource MaterialFilterButtonStyle}" />
+                    <ToggleButton Command="{Binding SelectFoldersContentCommand}" Content="Папки" IsChecked="{Binding IsMixedFoldersFilter, Mode=OneWay}" Style="{StaticResource MaterialFilterButtonStyle}" />
+                    <ToggleButton Command="{Binding SelectArticlesContentCommand}" Content="Статьи" IsChecked="{Binding IsMixedArticlesFilter, Mode=OneWay}" Style="{StaticResource MaterialFilterButtonStyle}" />
+                    <ToggleButton Command="{Binding SelectQuestionsContentCommand}" Content="Вопросы" IsChecked="{Binding IsMixedQuestionsFilter, Mode=OneWay}" Style="{StaticResource MaterialFilterButtonStyle}" />
                 </StackPanel>
             </Grid>
 
@@ -1355,13 +1576,64 @@
                     </Grid>
                 </Border>
 
+                <!-- Смешанное содержимое крупными плитками: сначала папки, затем материалы -->
+                <ScrollViewer
+                    VerticalScrollBarVisibility="Auto"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalContentAlignment="Top"
+                    ScrollChanged="MixedContentScroll_OnScrollChanged"
+                    Visibility="{Binding IsTilesView, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <ItemsControl VerticalAlignment="Top" ItemsSource="{Binding MixedContent}" ItemTemplate="{StaticResource MixedLargeTileTemplate}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid
+                                    libraryBehaviors:ResponsiveUniformGridBehavior.DesiredColumns="{Binding DataContext.DesiredTilesPerRow, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                    libraryBehaviors:ResponsiveUniformGridBehavior.MinimumItemWidth="300"
+                                    libraryBehaviors:ResponsiveUniformGridBehavior.MaximumColumns="5" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <!-- Смешанное содержимое компактными плитками -->
+                <ScrollViewer
+                    VerticalScrollBarVisibility="Auto"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalContentAlignment="Top"
+                    ScrollChanged="MixedContentScroll_OnScrollChanged"
+                    Visibility="{Binding IsCompactTilesView, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <ItemsControl VerticalAlignment="Top" ItemsSource="{Binding MixedContent}" ItemTemplate="{StaticResource MixedCompactTileTemplate}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid
+                                    libraryBehaviors:ResponsiveUniformGridBehavior.DesiredColumns="{Binding DataContext.DesiredTilesPerRow, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                    libraryBehaviors:ResponsiveUniformGridBehavior.MinimumItemWidth="220"
+                                    libraryBehaviors:ResponsiveUniformGridBehavior.MaximumColumns="7" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </ScrollViewer>
+
                 <Border
                     Background="{DynamicResource Mnemora.Brush.Surface}"
                     BorderBrush="{DynamicResource Mnemora.Brush.Border}"
                     BorderThickness="1"
                     CornerRadius="12"
-                    ClipToBounds="True"
-                    Visibility="{Binding HasMixedItems, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    ClipToBounds="True">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding HasMixedItems}" Value="True" />
+                                        <Condition Binding="{Binding IsTableView}" Value="True" />
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
                     <DataGrid
                         ItemsSource="{Binding MixedContent}"
                         AutoGenerateColumns="False"

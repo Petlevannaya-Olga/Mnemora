@@ -16,6 +16,14 @@ namespace Mnemora.Desktop.ViewModels.Library;
 
 public sealed partial class LibraryContainerViewModel : ViewModelBase
 {
+    private enum MixedContentFilter
+    {
+        All,
+        Folders,
+        Articles,
+        Questions,
+    }
+
     private const int FolderPageSize = LibraryPagingDefaults.PageSize;
     private const int MaterialPageSize = 50;
     private const int MixedPageSize = 50;
@@ -42,6 +50,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
     private int _mixedMaterialsNextOffset;
     private bool _mixedFoldersHasMore;
     private bool _mixedMaterialsHasMore;
+    private MixedContentFilter _mixedContentFilter = MixedContentFilter.All;
     private readonly Queue<LibraryContentListItemViewModel> _mixedMaterialBuffer = new();
     private bool _isLoaded;
     private bool _isViewModeLoaded;
@@ -321,7 +330,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
         get
         {
             bool hasSearch = !string.IsNullOrWhiteSpace(SearchText);
-            bool hasFilter = !IsAllFilter;
+            bool hasFilter = !IsMixedAllFilter;
 
             return (hasSearch, hasFilter) switch
             {
@@ -332,6 +341,11 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
             };
         }
     }
+
+    public bool IsMixedAllFilter => _mixedContentFilter == MixedContentFilter.All;
+    public bool IsMixedFoldersFilter => _mixedContentFilter == MixedContentFilter.Folders;
+    public bool IsMixedArticlesFilter => _mixedContentFilter == MixedContentFilter.Articles;
+    public bool IsMixedQuestionsFilter => _mixedContentFilter == MixedContentFilter.Questions;
 
     public bool IsAllFilter =>
         SelectedFilterOption.Filter == LibraryMaterialFilter.All;
@@ -400,7 +414,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
                 MixedCurrentPageOffset,
                 visibleCount,
                 MixedTotalCount,
-                !string.IsNullOrWhiteSpace(SearchText) || !IsAllFilter);
+                !string.IsNullOrWhiteSpace(SearchText) || !IsMixedAllFilter);
         }
     }
 
@@ -565,6 +579,43 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    private void SelectAllContent() =>
+        SetMixedContentFilter(MixedContentFilter.All);
+
+    [RelayCommand]
+    private void SelectFoldersContent() =>
+        SetMixedContentFilter(MixedContentFilter.Folders);
+
+    [RelayCommand]
+    private void SelectArticlesContent() =>
+        SetMixedContentFilter(MixedContentFilter.Articles);
+
+    [RelayCommand]
+    private void SelectQuestionsContent() =>
+        SetMixedContentFilter(MixedContentFilter.Questions);
+
+    private void SetMixedContentFilter(MixedContentFilter filter)
+    {
+        if (_mixedContentFilter == filter)
+        {
+            return;
+        }
+
+        _mixedContentFilter = filter;
+        OnPropertyChanged(nameof(IsMixedAllFilter));
+        OnPropertyChanged(nameof(IsMixedFoldersFilter));
+        OnPropertyChanged(nameof(IsMixedArticlesFilter));
+        OnPropertyChanged(nameof(IsMixedQuestionsFilter));
+        OnPropertyChanged(nameof(MixedEmptyMessage));
+        OnPropertyChanged(nameof(MixedShownCountText));
+
+        if (_isLoaded && IsMixedContent)
+        {
+            _ = ReloadMixedFromSelectionChangeAsync();
+        }
+    }
+
+    [RelayCommand]
     private Task ShowTilesViewAsync(CancellationToken cancellationToken) =>
         SetViewModeAsync(LibraryTopicsViewMode.Tiles, cancellationToken);
 
@@ -592,14 +643,8 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsArticlesFilter));
         OnPropertyChanged(nameof(IsQuestionsFilter));
         OnPropertyChanged(nameof(MaterialsEmptyMessage));
-        OnPropertyChanged(nameof(MixedEmptyMessage));
-        OnPropertyChanged(nameof(MixedShownCountText));
 
-        if (_isLoaded && IsMixedContent)
-        {
-            _ = ReloadMixedFromSelectionChangeAsync();
-        }
-        else if (_isLoaded && HasMaterialContent)
+        if (_isLoaded && HasMaterialContent && !IsMixedContent)
         {
             _ = ReloadMaterialsFromSelectionChangeAsync();
         }
@@ -1006,14 +1051,19 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
     {
         int version = Interlocked.Increment(ref _mixedLoadVersion);
 
+        bool includeFolders =
+            _mixedContentFilter is MixedContentFilter.All or MixedContentFilter.Folders;
+        bool includeMaterials =
+            _mixedContentFilter is MixedContentFilter.All or MixedContentFilter.Articles or MixedContentFilter.Questions;
+
         _mixedFoldersNextOffset = 0;
         _mixedMaterialsNextOffset = 0;
-        _mixedFoldersHasMore = true;
-        _mixedMaterialsHasMore = true;
+        _mixedFoldersHasMore = includeFolders;
+        _mixedMaterialsHasMore = includeMaterials;
         _mixedMaterialBuffer.Clear();
         MixedCurrentPageOffset = 0;
         MixedTotalCount = 0;
-        MixedHasMore = true;
+        MixedHasMore = includeFolders || includeMaterials;
         IsLoadingNextMixedPage = false;
         MixedErrorMessage = null;
         MixedContent.Clear();
@@ -1023,6 +1073,91 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
 
         try
         {
+            if (_mixedContentFilter == MixedContentFilter.Folders)
+            {
+                var foldersResult = await _queryDispatcher.SendAsync<
+                    GetLibraryFoldersPageQuery,
+                    LibraryFoldersPageDto>(
+                    new GetLibraryFoldersPageQuery(
+                        _containerId,
+                        SearchText,
+                        SelectedSortOption.FolderSort,
+                        0,
+                        MixedPageSize),
+                    cancellationToken);
+
+                if (version != _mixedLoadVersion || cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                if (foldersResult.IsFailure)
+                {
+                    MixedErrorMessage = foldersResult.Error.FirstOrDefault()?.Message
+                                        ?? "Не удалось загрузить папки";
+                    return;
+                }
+
+                LibraryFoldersPageDto page = foldersResult.Value;
+                MixedTotalCount = page.TotalCount;
+                _mixedFoldersNextOffset = page.NextOffset;
+                _mixedFoldersHasMore = page.HasMore;
+                _mixedMaterialsHasMore = false;
+
+                foreach (LibraryFolderDto folder in page.Items)
+                {
+                    MixedContent.Add(
+                        new LibraryContentListItemViewModel(
+                            new LibraryFolderCardViewModel(folder)));
+                }
+
+                UpdateMixedHasMore();
+                return;
+            }
+
+            if (_mixedContentFilter is MixedContentFilter.Articles or MixedContentFilter.Questions)
+            {
+                var materialsResult = await _queryDispatcher.SendAsync<
+                    GetLibraryMaterialsPageQuery,
+                    LibraryMaterialsPageDto>(
+                    new GetLibraryMaterialsPageQuery(
+                        _containerId,
+                        SearchText,
+                        GetMixedMaterialFilter(),
+                        SelectedSortOption.MaterialSort,
+                        0,
+                        MixedPageSize),
+                    cancellationToken);
+
+                if (version != _mixedLoadVersion || cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                if (materialsResult.IsFailure)
+                {
+                    MixedErrorMessage = materialsResult.Error.FirstOrDefault()?.Message
+                                        ?? "Не удалось загрузить материалы";
+                    return;
+                }
+
+                LibraryMaterialsPageDto page = materialsResult.Value;
+                MixedTotalCount = page.TotalCount;
+                _mixedFoldersHasMore = false;
+                _mixedMaterialsNextOffset = page.NextOffset;
+                _mixedMaterialsHasMore = page.HasMore;
+
+                foreach (LibraryMaterialDto material in page.Items)
+                {
+                    MixedContent.Add(
+                        new LibraryContentListItemViewModel(
+                            new LibraryMaterialListItemViewModel(material)));
+                }
+
+                UpdateMixedHasMore();
+                return;
+            }
+
             var foldersTask = _queryDispatcher.SendAsync<
                 GetLibraryFoldersPageQuery,
                 LibraryFoldersPageDto>(
@@ -1040,7 +1175,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
                 new GetLibraryMaterialsPageQuery(
                     _containerId,
                     SearchText,
-                    SelectedFilterOption.Filter,
+                    LibraryMaterialFilter.All,
                     SelectedSortOption.MaterialSort,
                     0,
                     1),
@@ -1053,19 +1188,19 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
                 return;
             }
 
-            var foldersResult = await foldersTask;
-            var materialsResult = await materialsTask;
+            var foldersResultAll = await foldersTask;
+            var materialsResultAll = await materialsTask;
 
-            if (foldersResult.IsFailure || materialsResult.IsFailure)
+            if (foldersResultAll.IsFailure || materialsResultAll.IsFailure)
             {
-                MixedErrorMessage = foldersResult.IsFailure
-                    ? foldersResult.Error.FirstOrDefault()?.Message ?? "Не удалось загрузить папки"
-                    : materialsResult.Error.FirstOrDefault()?.Message ?? "Не удалось загрузить материалы";
+                MixedErrorMessage = foldersResultAll.IsFailure
+                    ? foldersResultAll.Error.FirstOrDefault()?.Message ?? "Не удалось загрузить папки"
+                    : materialsResultAll.Error.FirstOrDefault()?.Message ?? "Не удалось загрузить материалы";
                 return;
             }
 
-            LibraryFoldersPageDto foldersPage = foldersResult.Value;
-            LibraryMaterialsPageDto materialsPage = materialsResult.Value;
+            LibraryFoldersPageDto foldersPage = foldersResultAll.Value;
+            LibraryMaterialsPageDto materialsPage = materialsResultAll.Value;
 
             MixedTotalCount = foldersPage.TotalCount + materialsPage.TotalCount;
             _mixedFoldersNextOffset = foldersPage.NextOffset;
@@ -1247,7 +1382,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
             new GetLibraryMaterialsPageQuery(
                 _containerId,
                 SearchText,
-                SelectedFilterOption.Filter,
+                GetMixedMaterialFilter(),
                 SelectedSortOption.MaterialSort,
                 _mixedMaterialsNextOffset,
                 limit),
@@ -1277,6 +1412,14 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
         _mixedMaterialsHasMore = result.Value.HasMore;
         return result.Value.Items.Count;
     }
+
+    private LibraryMaterialFilter GetMixedMaterialFilter() =>
+        _mixedContentFilter switch
+        {
+            MixedContentFilter.Articles => LibraryMaterialFilter.Articles,
+            MixedContentFilter.Questions => LibraryMaterialFilter.Questions,
+            _ => LibraryMaterialFilter.All,
+        };
 
     private int AppendBufferedMixedMaterials(int limit)
     {
