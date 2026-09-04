@@ -1044,30 +1044,37 @@
                     </DataGrid>
                 </Border>
 
-                <!-- Служебное состояние догрузки -->
+                <!-- Догрузка: плавающая плашка не участвует в layout и не сдвигает скролл -->
+                <Border
+                    Grid.Row="1"
+                    Panel.ZIndex="50"
+                    Padding="18,14"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Background="#F0061735"
+                    CornerRadius="14"
+                    IsHitTestVisible="False"
+                    Visibility="{Binding IsLoadingNextPage, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <loading:LoadingIndicator
+                        IndicatorLength="180"
+                        IndicatorThickness="5"
+                        Message="Загружаем разделы..."
+                        MessageForeground="White"
+                        TrackBrush="#40FFFFFF" />
+                </Border>
 
+                <!-- Ошибка догрузки остаётся отдельной служебной строкой -->
                 <Grid Grid.Row="2" MinHeight="72">
                     <Grid.Style>
                         <Style TargetType="Grid">
                             <Setter Property="Visibility" Value="Collapsed" />
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsLoadingNextPage}" Value="True">
-                                    <Setter Property="Visibility" Value="Visible" />
-                                </DataTrigger>
                                 <DataTrigger Binding="{Binding HasNextPageError}" Value="True">
                                     <Setter Property="Visibility" Value="Visible" />
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
                     </Grid.Style>
-
-                    <loading:LoadingIndicator
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        IndicatorLength="200"
-                        IndicatorThickness="6"
-                        Message="Загружаем разделы..."
-                        Visibility="{Binding IsLoadingNextPage, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
                     <StackPanel
                         HorizontalAlignment="Left"

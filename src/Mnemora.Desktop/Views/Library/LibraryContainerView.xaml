@@ -648,6 +648,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <StackPanel Orientation="Horizontal">
@@ -907,15 +908,27 @@
                     </DataGrid>
                 </Border>
 
-                <loading:LoadingIndicator
-                    Margin="0,8,0,0"
+                <!-- Догрузка: плавающая плашка не участвует в layout и не сдвигает скролл -->
+                <Border
+                    Panel.ZIndex="50"
+                    Padding="18,14"
                     HorizontalAlignment="Center"
-                    VerticalAlignment="Bottom"
-                    IndicatorLength="180"
-                    IndicatorThickness="5"
-                    Message="Загружаем ещё папки..."
-                    Visibility="{Binding IsLoadingNextFoldersPage, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    VerticalAlignment="Center"
+                    Background="#F0061735"
+                    CornerRadius="14"
+                    IsHitTestVisible="False"
+                    Visibility="{Binding IsLoadingNextFoldersPage, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <loading:LoadingIndicator
+                        IndicatorLength="180"
+                        IndicatorThickness="5"
+                        Message="Загружаем папки..."
+                        MessageForeground="White"
+                        TrackBrush="#40FFFFFF" />
+                </Border>
+
             </Grid>
+
+            <!-- Нижняя строка больше не используется для обычной догрузки -->
         </Grid>
 
         <!-- Разделитель между папками и материалами -->
@@ -1232,14 +1245,23 @@
                     </DataGrid>
                 </Border>
 
-                <loading:LoadingIndicator
-                    Margin="0,8,0,0"
+                <!-- Догрузка материалов: плавающая плашка не участвует в layout и не сдвигает скролл -->
+                <Border
+                    Panel.ZIndex="50"
+                    Padding="18,14"
                     HorizontalAlignment="Center"
-                    VerticalAlignment="Bottom"
-                    IndicatorLength="190"
-                    IndicatorThickness="5"
-                    Message="Загружаем ещё материалы..."
-                    Visibility="{Binding IsLoadingNextMaterialsPage, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    VerticalAlignment="Center"
+                    Background="#F0061735"
+                    CornerRadius="14"
+                    IsHitTestVisible="False"
+                    Visibility="{Binding IsLoadingNextMaterialsPage, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <loading:LoadingIndicator
+                        IndicatorLength="180"
+                        IndicatorThickness="5"
+                        Message="Загружаем материалы..."
+                        MessageForeground="White"
+                        TrackBrush="#40FFFFFF" />
+                </Border>
             </Grid>
         </Grid>
 
