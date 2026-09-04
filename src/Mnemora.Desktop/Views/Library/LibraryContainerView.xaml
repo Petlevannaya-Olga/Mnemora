@@ -263,6 +263,15 @@
             </Setter>
         </Style>
 
+        <Style x:Key="MixedContentTableRowStyle" BasedOn="{StaticResource MaterialTableRowStyle}" TargetType="DataGridRow">
+            <EventSetter Event="MouseLeftButtonUp" Handler="MixedContentTableRow_OnMouseLeftButtonUp" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsFolder}" Value="True">
+                    <Setter Property="Cursor" Value="Hand" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
         <Style x:Key="MaterialTableCellStyle" TargetType="DataGridCell">
             <Setter Property="Padding" Value="14,9" />
             <Setter Property="Background" Value="Transparent" />
@@ -594,7 +603,7 @@
             <StackPanel
                 Grid.Column="3"
                 Orientation="Horizontal"
-                Visibility="{Binding HasFolderContent, Converter={StaticResource BooleanToVisibilityConverter}}">
+                Visibility="{Binding IsFoldersOnly, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <ToggleButton
                     Command="{Binding ShowTilesViewCommand}"
                     IsChecked="{Binding IsTilesView, Mode=OneWay}"
@@ -633,7 +642,7 @@
         </Grid>
 
         <!-- Папки -->
-        <Grid Grid.Row="2" Margin="32,0,32,12" Visibility="{Binding HasFolderContent, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <Grid Grid.Row="2" Margin="32,0,32,12" Visibility="{Binding IsFoldersOnly, Converter={StaticResource BooleanToVisibilityConverter}}">
             <Grid.Style>
                 <Style TargetType="Grid">
                     <Setter Property="Grid.RowSpan" Value="3" />
@@ -934,6 +943,7 @@
         <!-- Разделитель между папками и материалами -->
         <GridSplitter
             Grid.Row="3"
+            Visibility="Collapsed"
             Height="8"
             Margin="32,0,32,0"
             HorizontalAlignment="Stretch"
@@ -975,7 +985,7 @@
         </GridSplitter>
 
         <!-- Материалы -->
-        <Grid Margin="32,0,32,26" Visibility="{Binding HasMaterialContent, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <Grid Margin="32,0,32,26" Visibility="{Binding IsMaterialsOnly, Converter={StaticResource BooleanToVisibilityConverter}}">
             <Grid.Style>
                 <Style TargetType="Grid">
                     <Setter Property="Grid.Row" Value="4" />
@@ -1259,6 +1269,288 @@
                         IndicatorLength="180"
                         IndicatorThickness="5"
                         Message="Загружаем материалы..."
+                        MessageForeground="White"
+                        TrackBrush="#40FFFFFF" />
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!-- Смешанное содержимое: единая таблица, сначала папки, затем материалы -->
+        <Grid
+            Grid.Row="2"
+            Grid.RowSpan="3"
+            Margin="32,0,32,26"
+            Visibility="{Binding IsMixedContent, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Style="{StaticResource SectionHeaderTextStyle}" Text="Содержимое" />
+                    <TextBlock
+                        Style="{StaticResource RangeTextStyle}"
+                        Text="{Binding MixedShownCountText, Converter={StaticResource LibraryRangeCounterTextConverter}}" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <ToggleButton Command="{Binding SelectAllMaterialsCommand}" Content="Все" IsChecked="{Binding IsAllFilter, Mode=OneWay}" Style="{StaticResource MaterialFilterButtonStyle}" />
+                    <ToggleButton Command="{Binding SelectArticlesCommand}" Content="Статьи" IsChecked="{Binding IsArticlesFilter, Mode=OneWay}" Style="{StaticResource MaterialFilterButtonStyle}" />
+                    <ToggleButton Command="{Binding SelectQuestionsCommand}" Content="Вопросы" IsChecked="{Binding IsQuestionsFilter, Mode=OneWay}" Style="{StaticResource MaterialFilterButtonStyle}" />
+                </StackPanel>
+            </Grid>
+
+            <Grid Grid.Row="1" Margin="0,10,0,0">
+                <loading:LoadingIndicator
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    IndicatorLength="300"
+                    IndicatorThickness="7"
+                    Message="Загружаем содержимое..."
+                    Visibility="{Binding IsLoadingMixed, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
+                <Border
+                    Padding="18"
+                    Background="{DynamicResource Mnemora.Brush.Surface}"
+                    BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Visibility="{Binding HasMixedError, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <DockPanel>
+                        <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.Error}" Text="{Binding MixedErrorMessage}" />
+                        <Button DockPanel.Dock="Right" Margin="16,0,0,0" Command="{Binding ReloadCommand}" Content="Повторить" Style="{StaticResource MaterialDesignOutlinedButton}" />
+                    </DockPanel>
+                </Border>
+
+                <Border
+                    Padding="22"
+                    Background="{DynamicResource Mnemora.Brush.Surface}"
+                    BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Visibility="{Binding IsMixedEmpty, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <materialDesign:PackIcon
+                            Width="20"
+                            Height="20"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                            Kind="FolderMultipleOutline" />
+                        <TextBlock
+                            Grid.Column="1"
+                            Margin="10,0,0,0"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                            Text="{Binding MixedEmptyMessage}" />
+                    </Grid>
+                </Border>
+
+                <Border
+                    Background="{DynamicResource Mnemora.Brush.Surface}"
+                    BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    ClipToBounds="True"
+                    Visibility="{Binding HasMixedItems, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <DataGrid
+                        ItemsSource="{Binding MixedContent}"
+                        AutoGenerateColumns="False"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        CanUserAddRows="False"
+                        CanUserDeleteRows="False"
+                        CanUserReorderColumns="False"
+                        CanUserResizeRows="False"
+                        CanUserSortColumns="False"
+                        CellStyle="{StaticResource MaterialTableCellStyle}"
+                        ColumnHeaderStyle="{StaticResource MaterialTableColumnHeaderStyle}"
+                        EnableColumnVirtualization="True"
+                        EnableRowVirtualization="True"
+                        GridLinesVisibility="None"
+                        HeadersVisibility="Column"
+                        IsReadOnly="True"
+                        RowHeaderWidth="0"
+                        RowStyle="{StaticResource MixedContentTableRowStyle}"
+                        ScrollViewer.CanContentScroll="True"
+                        ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                        ScrollViewer.ScrollChanged="MixedContentScroll_OnScrollChanged"
+                        ScrollViewer.VerticalScrollBarVisibility="Auto"
+                        SelectionMode="Single"
+                        SelectionUnit="FullRow"
+                        VirtualizingPanel.IsVirtualizing="True"
+                        VirtualizingPanel.VirtualizationMode="Recycling">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="Название" MinWidth="280" Width="2*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="8,0,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <Grid Width="40" Height="40">
+                                                <Border
+                                                    Background="{Binding FolderColor, Converter={StaticResource LibraryFolderColorConverter}}"
+                                                    CornerRadius="10"
+                                                    Visibility="{Binding IsFolder, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                    <materialDesign:PackIcon
+                                                        Width="22"
+                                                        Height="22"
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="White"
+                                                        Kind="{Binding FolderIcon, Converter={StaticResource LibraryFolderIconConverter}}" />
+                                                </Border>
+
+                                                <Border
+                                                    CornerRadius="10"
+                                                    Visibility="{Binding IsMaterial, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                    <Border.Style>
+                                                        <Style TargetType="Border">
+                                                            <Setter Property="Background" Value="#F0ECFF" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsQuestion}" Value="True">
+                                                                    <Setter Property="Background" Value="#E6FBF8" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Border.Style>
+                                                    <materialDesign:PackIcon
+                                                        Width="22"
+                                                        Height="22"
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center">
+                                                        <materialDesign:PackIcon.Style>
+                                                            <Style TargetType="{x:Type materialDesign:PackIcon}">
+                                                                <Setter Property="Kind" Value="FileDocumentOutline" />
+                                                                <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.Secondary}" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsQuestion}" Value="True">
+                                                                        <Setter Property="Kind" Value="HelpCircleOutline" />
+                                                                        <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.PrimaryDark}" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </materialDesign:PackIcon.Style>
+                                                    </materialDesign:PackIcon>
+                                                </Border>
+                                            </Grid>
+
+                                            <StackPanel Grid.Column="1" Margin="13,0,0,0" VerticalAlignment="Center">
+                                                <TextBlock
+                                                    FontSize="14"
+                                                    FontWeight="SemiBold"
+                                                    Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                                    Text="{Binding Title}"
+                                                    TextTrimming="CharacterEllipsis" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    FontSize="12"
+                                                    Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                    Text="{Binding TypeTitle}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="Детали" MinWidth="210" Width="2*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <materialDesign:PackIcon
+                                                Width="18"
+                                                Height="18"
+                                                Margin="0,0,8,0"
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource Mnemora.Brush.TextSecondary}">
+                                                <materialDesign:PackIcon.Style>
+                                                    <Style TargetType="{x:Type materialDesign:PackIcon}">
+                                                        <Setter Property="Kind" Value="TagOutline" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsFolder}" Value="True">
+                                                                <Setter Property="Kind" Value="FolderOutline" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </materialDesign:PackIcon.Style>
+                                            </materialDesign:PackIcon>
+                                            <TextBlock Style="{StaticResource MaterialTableTextStyle}" Text="{Binding DetailsText}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="Сложность" Width="130">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border
+                                            Style="{StaticResource MaterialDifficultyBadgeStyle}"
+                                            Visibility="{Binding IsMaterial, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <Ellipse Width="7" Height="7" Margin="0,0,7,0" VerticalAlignment="Center" Style="{StaticResource MaterialDifficultyDotStyle}" />
+                                                <TextBlock VerticalAlignment="Center" Style="{StaticResource MaterialDifficultyTextStyle}" Text="{Binding DifficultyTitle}" />
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="Баллы" Width="145">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel
+                                            Orientation="Horizontal"
+                                            VerticalAlignment="Center"
+                                            Visibility="{Binding IsMaterial, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                            <materialDesign:PackIcon Width="18" Height="18" Margin="0,0,5,0" Foreground="{DynamicResource Mnemora.Brush.Secondary}" Kind="StarOutline" />
+                                            <TextBlock VerticalAlignment="Center" Text="{Binding StudyPoints}" />
+                                            <materialDesign:PackIcon Width="18" Height="18" Margin="12,0,5,0" Foreground="{DynamicResource Mnemora.Brush.PrimaryDark}" Kind="Refresh" />
+                                            <TextBlock VerticalAlignment="Center" Text="{Binding ReviewPoints}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTextColumn
+                                Header="Создан"
+                                Width="105"
+                                Binding="{Binding CreatedAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
+                                ElementStyle="{StaticResource MaterialTableTextStyle}" />
+                            <DataGridTextColumn
+                                Header="Изменён"
+                                Width="105"
+                                Binding="{Binding UpdatedAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
+                                ElementStyle="{StaticResource MaterialTableTextStyle}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Border>
+
+                <!-- Догрузка смешанного списка: overlay не меняет геометрию таблицы -->
+                <Border
+                    Panel.ZIndex="50"
+                    Padding="18,14"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Background="#F0061735"
+                    CornerRadius="14"
+                    IsHitTestVisible="False"
+                    Visibility="{Binding IsLoadingNextMixedPage, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <loading:LoadingIndicator
+                        IndicatorLength="180"
+                        IndicatorThickness="5"
+                        Message="Загружаем содержимое..."
                         MessageForeground="White"
                         TrackBrush="#40FFFFFF" />
                 </Border>

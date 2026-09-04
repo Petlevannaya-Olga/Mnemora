@@ -19,6 +19,7 @@ public partial class LibraryContainerView : UserControl
     private LibraryContainerViewModel? _loadedViewModel;
     private bool _isFoldersPageLoadRunning;
     private bool _isMaterialsPageLoadRunning;
+    private bool _isMixedPageLoadRunning;
 
     public LibraryContainerView()
     {
@@ -171,6 +172,53 @@ public partial class LibraryContainerView : UserControl
         }
     }
 
+    private async void MixedContentScroll_OnScrollChanged(object sender, ScrollChangedEventArgs e)
+    {
+        if (_isMixedPageLoadRunning ||
+            e.VerticalChange <= 0 ||
+            DataContext is not LibraryContainerViewModel viewModel)
+        {
+            return;
+        }
+
+        ScrollViewer? scrollViewer = ResolveScrollViewer(sender, e);
+        if (scrollViewer is null || !IsNearBottom(scrollViewer))
+        {
+            return;
+        }
+
+        _isMixedPageLoadRunning = true;
+
+        try
+        {
+            while (IsLoaded &&
+                   ReferenceEquals(DataContext, viewModel) &&
+                   IsNearBottom(scrollViewer) &&
+                   viewModel.LoadNextMixedPageCommand.CanExecute(null))
+            {
+                int countBeforeLoading = viewModel.MixedContent.Count;
+                await viewModel.LoadNextMixedPageCommand.ExecuteAsync(null);
+
+                await Dispatcher.InvokeAsync(
+                    static () => { },
+                    DispatcherPriority.Background);
+
+                if (viewModel.MixedContent.Count == countBeforeLoading)
+                {
+                    break;
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Обычная отмена при навигации или смене фильтра.
+        }
+        finally
+        {
+            _isMixedPageLoadRunning = false;
+        }
+    }
+
     private async void FoldersMaterialsSplitter_OnDragCompleted(
         object sender,
         DragCompletedEventArgs e)
@@ -232,6 +280,28 @@ public partial class LibraryContainerView : UserControl
         if (sender is not DataGridRow
             {
                 DataContext: LibraryFolderCardViewModel folder,
+            } ||
+            DataContext is not LibraryContainerViewModel viewModel ||
+            !viewModel.OpenFolderCommand.CanExecute(folder))
+        {
+            return;
+        }
+
+        viewModel.OpenFolderCommand.Execute(folder);
+        e.Handled = true;
+    }
+
+    private void MixedContentTableRow_OnMouseLeftButtonUp(
+        object sender,
+        MouseButtonEventArgs e)
+    {
+        if (sender is not DataGridRow
+            {
+                DataContext: LibraryContentListItemViewModel
+                {
+                    IsFolder: true,
+                    Folder: { } folder,
+                },
             } ||
             DataContext is not LibraryContainerViewModel viewModel ||
             !viewModel.OpenFolderCommand.CanExecute(folder))
