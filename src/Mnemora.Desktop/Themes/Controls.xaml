@@ -3,6 +3,49 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
 
+    <!-- Единая поверхность outlined-полей Mnemora.
+         Сохраняем штатные Material Design templates/триггеры,
+         меняем только фон и спокойную обводку. -->
+
+    <Style
+        x:Key="Mnemora.BaseOutlinedTextBox"
+        TargetType="{x:Type TextBox}"
+        BasedOn="{StaticResource MaterialDesignOutlinedTextBox}" />
+
+    <Style
+        x:Key="MaterialDesignOutlinedTextBox"
+        TargetType="{x:Type TextBox}"
+        BasedOn="{StaticResource Mnemora.BaseOutlinedTextBox}">
+        <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Border}" />
+    </Style>
+
+    <Style
+        x:Key="Mnemora.BaseOutlinedComboBox"
+        TargetType="{x:Type ComboBox}"
+        BasedOn="{StaticResource MaterialDesignOutlinedComboBox}" />
+
+    <Style
+        x:Key="MaterialDesignOutlinedComboBox"
+        TargetType="{x:Type ComboBox}"
+        BasedOn="{StaticResource Mnemora.BaseOutlinedComboBox}">
+        <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Border}" />
+    </Style>
+
+    <Style
+        x:Key="Mnemora.BaseOutlinedPasswordBox"
+        TargetType="{x:Type PasswordBox}"
+        BasedOn="{StaticResource MaterialDesignOutlinedPasswordBox}" />
+
+    <Style
+        x:Key="MaterialDesignOutlinedPasswordBox"
+        TargetType="{x:Type PasswordBox}"
+        BasedOn="{StaticResource Mnemora.BaseOutlinedPasswordBox}">
+        <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Border}" />
+    </Style>
+
     <!-- Светлая карточка Mnemora -->
 
     <Style

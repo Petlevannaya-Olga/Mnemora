@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     xmlns:libraryBehaviors="clr-namespace:Mnemora.Desktop.Views.Library"
     x:Class="Mnemora.Desktop.Views.Library.LibraryContainerView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -663,7 +663,7 @@
         </Grid.RowDefinitions>
 
         <!-- Заголовок и breadcrumbs -->
-        <Grid Margin="32,22,32,18">
+        <Grid Margin="32,22,32,0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -777,71 +777,78 @@
         </Grid>
 
         <!-- Общая панель поиска, сортировки и вида -->
-        <Grid Grid.Row="1" Margin="32,0,32,18" Visibility="{Binding HasAnyContent, Converter={StaticResource BooleanToVisibilityConverter}}">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="20" />
-                <ColumnDefinition Width="220" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
+        <Border
+            Grid.Row="1"
+            Margin="0,0,0,10"
+            Padding="32,16"
+            Background="{DynamicResource Mnemora.Brush.ToolbarSurface}"
+            Visibility="{Binding HasAnyContent, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="20" />
+                    <ColumnDefinition Width="220" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
 
-            <TextBox
-                Height="50"
-                VerticalContentAlignment="Center"
-                Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                materialDesign:HintAssist.Hint="Поиск в этой папке..."
-                Style="{StaticResource MaterialDesignOutlinedTextBox}" />
-
-            <ComboBox
-                Grid.Column="2"
-                Height="50"
-                VerticalContentAlignment="Center"
-                DisplayMemberPath="Name"
-                ItemsSource="{Binding SortOptions}"
-                SelectedItem="{Binding SelectedSortOption}"
-                materialDesign:HintAssist.Hint="Сортировка"
-                Style="{StaticResource MaterialDesignOutlinedComboBox}" />
-
-            <StackPanel
-                Grid.Column="3"
-                Orientation="Horizontal"
-                Visibility="{Binding HasAnyContent, Converter={StaticResource BooleanToVisibilityConverter}}">
-                <ToggleButton
-                    Command="{Binding ShowTilesViewCommand}"
-                    IsChecked="{Binding IsTilesView, Mode=OneWay}"
-                    Style="{StaticResource LibraryViewModeButtonStyle}"
-                    ToolTip="Визуально">
-                    <materialDesign:PackIcon Width="23" Height="23" Kind="ViewGridOutline" />
-                </ToggleButton>
-                <ToggleButton
-                    Command="{Binding ShowCompactTilesViewCommand}"
-                    IsChecked="{Binding IsCompactTilesView, Mode=OneWay}"
-                    Style="{StaticResource LibraryViewModeButtonStyle}"
-                    ToolTip="Компактно">
-                    <materialDesign:PackIcon Width="23" Height="23" Kind="ViewModule" />
-                </ToggleButton>
-                <ToggleButton
-                    Command="{Binding ShowTableViewCommand}"
-                    IsChecked="{Binding IsTableView, Mode=OneWay}"
-                    Style="{StaticResource LibraryViewModeButtonStyle}"
-                    ToolTip="Таблица">
-                    <materialDesign:PackIcon Width="23" Height="23" Kind="FormatListBulleted" />
-                </ToggleButton>
+                <TextBox
+                    Height="50"
+                    VerticalContentAlignment="Center"
+                    Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                    materialDesign:HintAssist.Hint="Поиск в этой папке..."
+                    Style="{StaticResource MaterialDesignOutlinedTextBox}" />
 
                 <ComboBox
-                    Width="108"
+                    Grid.Column="2"
                     Height="50"
-                    Margin="10,0,0,0"
                     VerticalContentAlignment="Center"
                     DisplayMemberPath="Name"
-                    ItemsSource="{Binding TilesPerRowOptions}"
-                    SelectedItem="{Binding SelectedTilesPerRowOption, Mode=TwoWay}"
-                    Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                    ToolTip="Максимальное количество плиток в строке. «Авто» подбирает количество по ширине окна."
-                    Visibility="{Binding IsTilesPerRowSelectorVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
-                    materialDesign:HintAssist.Hint="Колонки" />
-            </StackPanel>
-        </Grid>
+                    ItemsSource="{Binding SortOptions}"
+                    SelectedItem="{Binding SelectedSortOption}"
+                    materialDesign:HintAssist.Hint="Сортировка"
+                    Style="{StaticResource MaterialDesignOutlinedComboBox}" />
+
+                <StackPanel
+                    Grid.Column="3"
+                    Orientation="Horizontal"
+                    Visibility="{Binding HasAnyContent, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <ToggleButton
+                        Command="{Binding ShowTilesViewCommand}"
+                        IsChecked="{Binding IsTilesView, Mode=OneWay}"
+                        Style="{StaticResource LibraryViewModeButtonStyle}"
+                        ToolTip="Визуально">
+                        <materialDesign:PackIcon Width="23" Height="23" Kind="ViewGridOutline" />
+                    </ToggleButton>
+                    <ToggleButton
+                        Command="{Binding ShowCompactTilesViewCommand}"
+                        IsChecked="{Binding IsCompactTilesView, Mode=OneWay}"
+                        Style="{StaticResource LibraryViewModeButtonStyle}"
+                        ToolTip="Компактно">
+                        <materialDesign:PackIcon Width="23" Height="23" Kind="ViewModule" />
+                    </ToggleButton>
+                    <ToggleButton
+                        Command="{Binding ShowTableViewCommand}"
+                        IsChecked="{Binding IsTableView, Mode=OneWay}"
+                        Style="{StaticResource LibraryViewModeButtonStyle}"
+                        ToolTip="Таблица">
+                        <materialDesign:PackIcon Width="23" Height="23" Kind="FormatListBulleted" />
+                    </ToggleButton>
+
+                    <ComboBox
+                        Width="108"
+                        Height="50"
+                        Margin="10,0,0,0"
+                        VerticalContentAlignment="Center"
+                        DisplayMemberPath="Name"
+                        ItemsSource="{Binding TilesPerRowOptions}"
+                        SelectedItem="{Binding SelectedTilesPerRowOption, Mode=TwoWay}"
+                        Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                        ToolTip="Максимальное количество плиток в строке. «Авто» подбирает количество по ширине окна."
+                        Visibility="{Binding IsTilesPerRowSelectorVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
+                        materialDesign:HintAssist.Hint="Колонки" />
+                </StackPanel>
+            </Grid>
+        </Border>
 
         <!-- Папки -->
         <Grid Grid.Row="2" Margin="32,0,32,12" Visibility="{Binding IsFoldersOnly, Converter={StaticResource BooleanToVisibilityConverter}}">
@@ -1214,7 +1221,7 @@
         </GridSplitter>
 
         <!-- Материалы -->
-        <Grid Margin="32,0,32,26" Visibility="{Binding IsMaterialsOnly, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <Grid Margin="32,8,32,26" Visibility="{Binding IsMaterialsOnly, Converter={StaticResource BooleanToVisibilityConverter}}">
             <Grid.Style>
                 <Style TargetType="Grid">
                     <Setter Property="Grid.Row" Value="4" />
@@ -1559,7 +1566,7 @@
         <Grid
             Grid.Row="2"
             Grid.RowSpan="3"
-            Margin="32,0,32,26"
+            Margin="32,8,32,26"
             Visibility="{Binding IsMixedContent, Converter={StaticResource BooleanToVisibilityConverter}}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />

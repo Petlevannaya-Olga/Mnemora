@@ -11,6 +11,7 @@
     <Color x:Key="Mnemora.Color.Purple">#7C4DFF</Color>
     <Color x:Key="Mnemora.Color.Surface">#FFFFFF</Color>
     <Color x:Key="Mnemora.Color.SurfaceMuted">#F7F8FE</Color>
+    <Color x:Key="Mnemora.Color.ToolbarSurface">#EAF8F6</Color>
     <Color x:Key="Mnemora.Color.TextPrimary">#111B52</Color>
     <Color x:Key="Mnemora.Color.TextSecondary">#62698A</Color>
     <Color x:Key="Mnemora.Color.Border">#E1E4F2</Color>
@@ -48,6 +49,10 @@
         Color="{StaticResource Mnemora.Color.SurfaceMuted}" />
 
     <SolidColorBrush
+        x:Key="Mnemora.Brush.ToolbarSurface"
+        Color="{StaticResource Mnemora.Color.ToolbarSurface}" />
+
+    <SolidColorBrush
         x:Key="Mnemora.Brush.TextPrimary"
         Color="{StaticResource Mnemora.Color.TextPrimary}" />
 
@@ -72,6 +77,32 @@
     <SolidColorBrush
         x:Key="MaterialDesign.Brush.PasswordBox.OutlineBorder"
         Color="{StaticResource Mnemora.Color.Border}" />
+
+    <!-- Спокойные состояния outlined-полей -->
+
+    <SolidColorBrush
+        x:Key="MaterialDesign.Brush.TextBox.OutlineInactiveBorder"
+        Color="{StaticResource Mnemora.Color.Border}" />
+
+    <SolidColorBrush
+        x:Key="MaterialDesign.Brush.ComboBox.OutlineInactiveBorder"
+        Color="{StaticResource Mnemora.Color.Border}" />
+
+    <SolidColorBrush
+        x:Key="MaterialDesign.Brush.PasswordBox.OutlineInactiveBorder"
+        Color="{StaticResource Mnemora.Color.Border}" />
+
+    <SolidColorBrush
+        x:Key="MaterialDesign.Brush.TextBox.HoverBorder"
+        Color="#C9CEE2" />
+
+    <SolidColorBrush
+        x:Key="MaterialDesign.Brush.ComboBox.HoverBorder"
+        Color="#C9CEE2" />
+
+    <SolidColorBrush
+        x:Key="MaterialDesign.Brush.PasswordBox.HoverBorder"
+        Color="#C9CEE2" />
 
     <!-- Фон онбординга -->
 
