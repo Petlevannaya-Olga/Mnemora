@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     xmlns:libraryBehaviors="clr-namespace:Mnemora.Desktop.Views.Library"
     x:Class="Mnemora.Desktop.Views.Library.LibraryOverviewView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -18,6 +18,7 @@
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <converters:LibraryRangeCounterTextConverter x:Key="LibraryRangeCounterTextConverter" />
         <converters:SectionColorConverter x:Key="SectionColorConverter" />
         <converters:SectionIconConverter x:Key="SectionIconConverter" />
 
@@ -566,19 +567,15 @@
 
                 <TextBlock
                     Margin="0,18,0,0"
-                    HorizontalAlignment="Center"
                     FontSize="21"
                     FontWeight="SemiBold"
                     Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                    Text="Разделы не найдены"
-                    TextAlignment="Center" />
+                    Text="Разделы не найдены" />
 
                 <TextBlock
                     Margin="0,8,0,0"
-                    HorizontalAlignment="Center"
                     Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                    Text="Попробуйте изменить поисковый запрос."
-                    TextAlignment="Center" />
+                    Text="Попробуйте изменить поисковый запрос." />
             </StackPanel>
 
             <Grid>
@@ -604,12 +601,34 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <TextBlock
-                    Margin="0,0,0,18"
-                    FontSize="24"
-                    FontWeight="SemiBold"
-                    Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                    Text="Разделы" />
+                <StackPanel Margin="0,0,0,18" Orientation="Horizontal">
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontSize="24"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                        Text="Разделы" />
+
+                    <TextBlock
+                        Margin="12,2,0,0"
+                        VerticalAlignment="Center"
+                        FontSize="11"
+                        FontWeight="Normal"
+                        Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                        Opacity="0.68"
+                        Text="{Binding SectionsShownCountText, Converter={StaticResource LibraryRangeCounterTextConverter}}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Visible" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasNextPageError}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
 
                 <!-- Подробные плитки -->
 
@@ -1025,25 +1044,22 @@
                     </DataGrid>
                 </Border>
 
-                <!-- Диапазон текущей страницы -->
+                <!-- Служебное состояние догрузки -->
 
                 <Grid Grid.Row="2" MinHeight="72">
-                    <TextBlock
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Center"
-                        Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                        Text="{Binding SectionsShownCountText}">
-                        <TextBlock.Style>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Visibility" Value="Visible" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding HasNextPageError}" Value="True">
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsLoadingNextPage}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding HasNextPageError}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
 
                     <loading:LoadingIndicator
                         HorizontalAlignment="Center"

@@ -16,6 +16,7 @@
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <converters:LibraryRangeCounterTextConverter x:Key="LibraryRangeCounterTextConverter" />
         <converters:LibraryFolderColorConverter x:Key="LibraryFolderColorConverter" />
         <converters:LibraryFolderIconConverter x:Key="LibraryFolderIconConverter" />
 
@@ -174,9 +175,11 @@
         </Style>
 
         <Style x:Key="RangeTextStyle" TargetType="TextBlock">
-            <Setter Property="Margin" Value="12,0,0,0" />
-            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Margin" Value="10,0,0,0" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="Normal" />
             <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.TextSecondary}" />
+            <Setter Property="Opacity" Value="0.68" />
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
 
@@ -649,7 +652,7 @@
 
             <StackPanel Orientation="Horizontal">
                 <TextBlock Style="{StaticResource SectionHeaderTextStyle}" Text="Папки" />
-                <TextBlock Style="{StaticResource RangeTextStyle}" Text="{Binding FoldersShownCountText}" />
+                <TextBlock Style="{StaticResource RangeTextStyle}" Text="{Binding FoldersShownCountText, Converter={StaticResource LibraryRangeCounterTextConverter}}" />
             </StackPanel>
 
             <Grid Grid.Row="1" Margin="0,10,0,0">
@@ -985,7 +988,7 @@
 
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Style="{StaticResource SectionHeaderTextStyle}" Text="Материалы" />
-                    <TextBlock Style="{StaticResource RangeTextStyle}" Text="{Binding MaterialsShownCountText}" />
+                    <TextBlock Style="{StaticResource RangeTextStyle}" Text="{Binding MaterialsShownCountText, Converter={StaticResource LibraryRangeCounterTextConverter}}" />
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal">

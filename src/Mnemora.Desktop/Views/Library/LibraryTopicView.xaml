@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     x:Class="Mnemora.Desktop.Views.Library.LibraryTopicView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -14,6 +14,7 @@
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <converters:LibraryRangeCounterTextConverter x:Key="LibraryRangeCounterTextConverter" />
         <converters:TopicColorConverter x:Key="TopicColorConverter" />
         <converters:TopicIconConverter x:Key="TopicIconConverter" />
 
@@ -689,8 +690,11 @@
                     <TextBlock
                         HorizontalAlignment="Left"
                         VerticalAlignment="Center"
+                        FontSize="11"
+                        FontWeight="Normal"
                         Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                        Text="{Binding MaterialsShownCountText}">
+                        Opacity="0.68"
+                        Text="{Binding MaterialsShownCountText, Converter={StaticResource LibraryRangeCounterTextConverter}}">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Visibility" Value="Visible" />
