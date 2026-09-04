@@ -18,6 +18,7 @@
         BasedOn="{StaticResource Mnemora.BaseOutlinedTextBox}">
         <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
         <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Border}" />
+        <Setter Property="materialDesign:TextFieldAssist.TextFieldCornerRadius" Value="8" />
     </Style>
 
     <Style
@@ -31,6 +32,7 @@
         BasedOn="{StaticResource Mnemora.BaseOutlinedComboBox}">
         <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
         <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Border}" />
+        <Setter Property="materialDesign:TextFieldAssist.TextFieldCornerRadius" Value="8" />
     </Style>
 
     <Style
@@ -44,6 +46,7 @@
         BasedOn="{StaticResource Mnemora.BaseOutlinedPasswordBox}">
         <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
         <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Border}" />
+        <Setter Property="materialDesign:TextFieldAssist.TextFieldCornerRadius" Value="8" />
     </Style>
 
     <!-- Светлая карточка Mnemora -->
