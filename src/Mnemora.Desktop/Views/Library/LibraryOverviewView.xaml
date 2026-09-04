@@ -380,7 +380,7 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <StackPanel Margin="32,28,32,22">
+        <StackPanel Margin="32,28,32,0">
             <TextBlock Style="{StaticResource Mnemora.Heading}" Text="Библиотека" />
             <TextBlock
                 Margin="0,6,0,0"
@@ -392,76 +392,80 @@
                     Background="{DynamicResource Mnemora.Brush.Border}" />
         </StackPanel>
 
-        <Grid Grid.Row="1" Margin="32,0,32,24">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="20" />
-                <ColumnDefinition Width="220" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
+        <!-- Общая панель поиска, сортировки и вида -->
+        <Border
+            Grid.Row="1"
+            Margin="0,0,0,10"
+            Padding="32,16"
+            Background="{DynamicResource Mnemora.Brush.ToolbarSurface}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="20" />
+                    <ColumnDefinition Width="220" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
 
-            <TextBox
-                Height="52"
-                VerticalContentAlignment="Center"
-                BorderBrush="{DynamicResource Mnemora.Brush.Border}"
-                Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                materialDesign:HintAssist.Hint="Поиск по разделам..."
-                materialDesign:TextFieldAssist.HasClearButton="True"
-                Style="{StaticResource MaterialDesignOutlinedTextBox}" />
-
-            <ComboBox
-                Grid.Column="2"
-                Height="52"
-                VerticalContentAlignment="Center"
-                BorderBrush="{DynamicResource Mnemora.Brush.Border}"
-                DisplayMemberPath="Name"
-                ItemsSource="{Binding SortOptions}"
-                SelectedItem="{Binding SelectedSortOption}"
-                materialDesign:HintAssist.Hint="Сортировка"
-                Style="{StaticResource MaterialDesignOutlinedComboBox}" />
-
-            <StackPanel Grid.Column="3" Orientation="Horizontal">
-                <ToggleButton
-                    Command="{Binding ShowTilesViewCommand}"
-                    IsChecked="{Binding IsTilesView, Mode=OneWay}"
-                    Style="{StaticResource LibraryViewModeButtonStyle}"
-                    ToolTip="Плитки">
-                    <materialDesign:PackIcon Width="24" Height="24" Kind="ViewGridOutline" />
-                </ToggleButton>
-
-                <ToggleButton
-                    Command="{Binding ShowCompactTilesViewCommand}"
-                    IsChecked="{Binding IsCompactTilesView, Mode=OneWay}"
-                    Style="{StaticResource LibraryViewModeButtonStyle}"
-                    ToolTip="Компактные плитки">
-                    <materialDesign:PackIcon Width="24" Height="24" Kind="ViewModule" />
-                </ToggleButton>
-
-                <ToggleButton
-                    Command="{Binding ShowTableViewCommand}"
-                    IsChecked="{Binding IsTableView, Mode=OneWay}"
-                    Style="{StaticResource LibraryViewModeButtonStyle}"
-                    ToolTip="Таблица">
-                    <materialDesign:PackIcon Width="24" Height="24" Kind="FormatListBulleted" />
-                </ToggleButton>
+                <TextBox
+                    Height="50"
+                    VerticalContentAlignment="Center"
+                    Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                    materialDesign:HintAssist.Hint="Поиск по разделам..."
+                    materialDesign:TextFieldAssist.HasClearButton="True"
+                    Style="{StaticResource MaterialDesignOutlinedTextBox}" />
 
                 <ComboBox
-                    Width="108"
-                    Height="52"
-                    Margin="10,0,0,0"
+                    Grid.Column="2"
+                    Height="50"
                     VerticalContentAlignment="Center"
-                    BorderBrush="{DynamicResource Mnemora.Brush.Border}"
                     DisplayMemberPath="Name"
-                    ItemsSource="{Binding TilesPerRowOptions}"
-                    SelectedItem="{Binding SelectedTilesPerRowOption, Mode=TwoWay}"
-                    Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                    ToolTip="Максимальное количество плиток в строке. «Авто» подбирает количество по ширине окна."
-                    Visibility="{Binding IsTilesPerRowSelectorVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
-                    materialDesign:HintAssist.Hint="Колонки" />
-            </StackPanel>
-        </Grid>
+                    ItemsSource="{Binding SortOptions}"
+                    SelectedItem="{Binding SelectedSortOption}"
+                    materialDesign:HintAssist.Hint="Сортировка"
+                    Style="{StaticResource MaterialDesignOutlinedComboBox}" />
 
-        <Grid Grid.Row="2" Margin="32,0,32,28">
+                <StackPanel Grid.Column="3" Orientation="Horizontal">
+                    <ToggleButton
+                        Command="{Binding ShowTilesViewCommand}"
+                        IsChecked="{Binding IsTilesView, Mode=OneWay}"
+                        Style="{StaticResource LibraryViewModeButtonStyle}"
+                        ToolTip="Плитки">
+                        <materialDesign:PackIcon Width="23" Height="23" Kind="ViewGridOutline" />
+                    </ToggleButton>
+
+                    <ToggleButton
+                        Command="{Binding ShowCompactTilesViewCommand}"
+                        IsChecked="{Binding IsCompactTilesView, Mode=OneWay}"
+                        Style="{StaticResource LibraryViewModeButtonStyle}"
+                        ToolTip="Компактные плитки">
+                        <materialDesign:PackIcon Width="23" Height="23" Kind="ViewModule" />
+                    </ToggleButton>
+
+                    <ToggleButton
+                        Command="{Binding ShowTableViewCommand}"
+                        IsChecked="{Binding IsTableView, Mode=OneWay}"
+                        Style="{StaticResource LibraryViewModeButtonStyle}"
+                        ToolTip="Таблица">
+                        <materialDesign:PackIcon Width="23" Height="23" Kind="FormatListBulleted" />
+                    </ToggleButton>
+
+                    <ComboBox
+                        Width="108"
+                        Height="50"
+                        Margin="10,0,0,0"
+                        VerticalContentAlignment="Center"
+                        DisplayMemberPath="Name"
+                        ItemsSource="{Binding TilesPerRowOptions}"
+                        SelectedItem="{Binding SelectedTilesPerRowOption, Mode=TwoWay}"
+                        Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                        ToolTip="Максимальное количество плиток в строке. «Авто» подбирает количество по ширине окна."
+                        Visibility="{Binding IsTilesPerRowSelectorVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
+                        materialDesign:HintAssist.Hint="Колонки" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="2" Margin="32,8,32,28">
             <loading:LoadingIndicator
                 Panel.ZIndex="30"
                 HorizontalAlignment="Center"
