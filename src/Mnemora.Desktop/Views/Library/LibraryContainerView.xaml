@@ -207,10 +207,6 @@
             </Style.Triggers>
         </Style>
 
-        <Style x:Key="FolderTableRowStyle" BasedOn="{StaticResource TableRowStyle}" TargetType="DataGridRow">
-            <EventSetter Event="MouseLeftButtonUp" Handler="FolderTableRow_OnMouseLeftButtonUp" />
-        </Style>
-
         <Style x:Key="MaterialTableColumnHeaderStyle" TargetType="DataGridColumnHeader">
             <Setter Property="Height" Value="46" />
             <Setter Property="Padding" Value="14,0" />
@@ -261,6 +257,11 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+        </Style>
+
+        <Style x:Key="FolderTableRowStyle" BasedOn="{StaticResource MaterialTableRowStyle}" TargetType="DataGridRow">
+            <EventSetter Event="MouseLeftButtonUp" Handler="FolderTableRow_OnMouseLeftButtonUp" />
+            <Setter Property="Cursor" Value="Hand" />
         </Style>
 
         <Style x:Key="MixedContentTableRowStyle" BasedOn="{StaticResource MaterialTableRowStyle}" TargetType="DataGridRow">
@@ -1042,12 +1043,17 @@
                         CanUserReorderColumns="False"
                         CanUserResizeRows="False"
                         CanUserSortColumns="False"
-                        ColumnHeaderStyle="{StaticResource TableColumnHeaderStyle}"
+                        CellStyle="{StaticResource MaterialTableCellStyle}"
+                        ColumnHeaderStyle="{StaticResource MaterialTableColumnHeaderStyle}"
+                        EnableColumnVirtualization="True"
+                        EnableRowVirtualization="True"
                         GridLinesVisibility="None"
                         HeadersVisibility="Column"
                         IsReadOnly="True"
                         RowHeaderWidth="0"
                         RowStyle="{StaticResource FolderTableRowStyle}"
+                        ScrollViewer.CanContentScroll="True"
+                        ScrollViewer.HorizontalScrollBarVisibility="Auto"
                         ScrollViewer.ScrollChanged="FoldersScroll_OnScrollChanged"
                         ScrollViewer.VerticalScrollBarVisibility="Auto"
                         SelectionMode="Single"
@@ -1058,30 +1064,52 @@
                             <DataGridTemplateColumn Header="Папка" MinWidth="260" Width="*">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <StackPanel Orientation="Horizontal">
+                                        <Grid Margin="8,0,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
                                             <Border
-                                                Width="34"
-                                                Height="34"
+                                                Width="40"
+                                                Height="40"
                                                 Background="{Binding Color, Converter={StaticResource LibraryFolderColorConverter}}"
-                                                CornerRadius="9">
+                                                CornerRadius="10">
                                                 <materialDesign:PackIcon
-                                                    Width="19"
-                                                    Height="19"
+                                                    Width="22"
+                                                    Height="22"
                                                     HorizontalAlignment="Center"
                                                     VerticalAlignment="Center"
                                                     Foreground="White"
                                                     Kind="{Binding Icon, Converter={StaticResource LibraryFolderIconConverter}}" />
                                             </Border>
-                                            <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
-                                                <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="{Binding Name}" />
-                                                <TextBlock Margin="0,2,0,0" FontSize="11" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="{Binding ContentsText}" />
+                                            <StackPanel Grid.Column="1" Margin="13,0,0,0" VerticalAlignment="Center">
+                                                <TextBlock
+                                                    FontSize="14"
+                                                    FontWeight="SemiBold"
+                                                    Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                                    Text="{Binding Name}"
+                                                    TextTrimming="CharacterEllipsis" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    FontSize="12"
+                                                    Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                    Text="{Binding ContentsText}"
+                                                    TextTrimming="CharacterEllipsis" />
                                             </StackPanel>
-                                        </StackPanel>
+                                        </Grid>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="Вложенные папки" Width="130" Binding="{Binding ChildFoldersCount}" />
-                            <DataGridTextColumn Header="Материалы" Width="110" Binding="{Binding MaterialsCount}" />
+                            <DataGridTextColumn
+                                Header="Вложенные папки"
+                                Width="130"
+                                Binding="{Binding ChildFoldersCount}"
+                                ElementStyle="{StaticResource MaterialTableTextStyle}" />
+                            <DataGridTextColumn
+                                Header="Материалы"
+                                Width="110"
+                                Binding="{Binding MaterialsCount}"
+                                ElementStyle="{StaticResource MaterialTableTextStyle}" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </Border>
