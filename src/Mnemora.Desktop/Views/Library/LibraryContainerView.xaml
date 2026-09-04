@@ -910,7 +910,7 @@
                     Background="{DynamicResource Mnemora.Brush.Surface}"
                     BorderBrush="{DynamicResource Mnemora.Brush.Border}"
                     BorderThickness="1"
-                    CornerRadius="12"
+                    CornerRadius="14"
                     Visibility="{Binding IsFoldersEmpty, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
                         <Grid.ColumnDefinitions>
@@ -1069,11 +1069,12 @@
                     Background="{DynamicResource Mnemora.Brush.Surface}"
                     BorderBrush="{DynamicResource Mnemora.Brush.Border}"
                     BorderThickness="1"
-                    CornerRadius="12"
+                    CornerRadius="14"
                     ClipToBounds="True"
                     Visibility="{Binding IsTableView, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <DataGrid
                         ItemsSource="{Binding Folders}"
+                        SizeChanged="ContentTable_OnSizeChanged"
                         AutoGenerateColumns="False"
                         Background="Transparent"
                         BorderThickness="0"
@@ -1285,7 +1286,7 @@
                     Background="{DynamicResource Mnemora.Brush.Surface}"
                     BorderBrush="{DynamicResource Mnemora.Brush.Border}"
                     BorderThickness="1"
-                    CornerRadius="12"
+                    CornerRadius="14"
                     Visibility="{Binding IsMaterialsEmpty, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
                         <Grid.ColumnDefinitions>
@@ -1350,7 +1351,7 @@
                     Background="{DynamicResource Mnemora.Brush.Surface}"
                     BorderBrush="{DynamicResource Mnemora.Brush.Border}"
                     BorderThickness="1"
-                    CornerRadius="12"
+                    CornerRadius="14"
                     ClipToBounds="True">
                     <Border.Style>
                         <Style TargetType="Border">
@@ -1368,6 +1369,7 @@
                     </Border.Style>
                     <DataGrid
                         ItemsSource="{Binding Materials}"
+                        SizeChanged="ContentTable_OnSizeChanged"
                         AutoGenerateColumns="False"
                         Background="Transparent"
                         BorderThickness="0"
@@ -1621,7 +1623,7 @@
                     Background="{DynamicResource Mnemora.Brush.Surface}"
                     BorderBrush="{DynamicResource Mnemora.Brush.Border}"
                     BorderThickness="1"
-                    CornerRadius="12"
+                    CornerRadius="14"
                     Visibility="{Binding IsMixedEmpty, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
                         <Grid.ColumnDefinitions>
@@ -1685,7 +1687,7 @@
                     Background="{DynamicResource Mnemora.Brush.Surface}"
                     BorderBrush="{DynamicResource Mnemora.Brush.Border}"
                     BorderThickness="1"
-                    CornerRadius="12"
+                    CornerRadius="14"
                     ClipToBounds="True">
                     <Border.Style>
                         <Style TargetType="Border">
@@ -1703,6 +1705,7 @@
                     </Border.Style>
                     <DataGrid
                         ItemsSource="{Binding MixedContent}"
+                        SizeChanged="ContentTable_OnSizeChanged"
                         AutoGenerateColumns="False"
                         Background="Transparent"
                         BorderThickness="0"

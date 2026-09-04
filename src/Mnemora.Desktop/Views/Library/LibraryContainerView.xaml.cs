@@ -72,6 +72,22 @@ public partial class LibraryContainerView : UserControl
     }
 
 
+
+    private void ContentTable_OnSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (sender is not DataGrid dataGrid ||
+            e.NewSize.Width <= 0 ||
+            e.NewSize.Height <= 0)
+        {
+            return;
+        }
+
+        dataGrid.Clip = new RectangleGeometry(
+            new Rect(0, 0, e.NewSize.Width, e.NewSize.Height),
+            13,
+            13);
+    }
+
     private async void FoldersScroll_OnScrollChanged(object sender, ScrollChangedEventArgs e)
     {
         if (_isFoldersPageLoadRunning ||

@@ -509,6 +509,50 @@
             </Setter>
         </Style>
 
+        <Style x:Key="SimpleSectionTableFirstColumnHeaderStyle"
+               BasedOn="{StaticResource SimpleSectionTableColumnHeaderStyle}"
+               TargetType="DataGridColumnHeader">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridColumnHeader">
+                        <Border
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="13,0,0,0">
+                            <ContentPresenter
+                                Margin="{TemplateBinding Padding}"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                RecognizesAccessKey="True" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SimpleSectionTableLastColumnHeaderStyle"
+               BasedOn="{StaticResource SimpleSectionTableColumnHeaderStyle}"
+               TargetType="DataGridColumnHeader">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridColumnHeader">
+                        <Border
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="0,13,0,0">
+                            <ContentPresenter
+                                Margin="{TemplateBinding Padding}"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                RecognizesAccessKey="True" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="SimpleSectionTableRowStyle" TargetType="DataGridRow">
             <Setter Property="MinHeight" Value="72" />
             <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
@@ -1268,7 +1312,7 @@
                     Background="{DynamicResource Mnemora.Brush.Border}" />
         </StackPanel>
 
-        <!-- Общая панель поиска -->
+        <!-- Панель управления разделами: в режиме управления используем только таблицу. -->
         <Grid Grid.Row="1" Margin="32,22,32,24">
             <Grid.Style>
                 <Style TargetType="Grid">
@@ -1286,7 +1330,7 @@
                 <ColumnDefinition Width="220" />
                 <ColumnDefinition Width="24" />
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="24" />
+                <ColumnDefinition Width="12" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
@@ -1302,43 +1346,10 @@
                       DisplayMemberPath="Name"
                       ItemsSource="{Binding SimpleSectionSortOptions}"
                       SelectedItem="{Binding SelectedSimpleSectionSortOption, Mode=TwoWay}"
-                      materialDesign:HintAssist.Hint="Сортировка">
-                <ComboBox.Style>
-                    <Style TargetType="ComboBox" BasedOn="{StaticResource MaterialDesignOutlinedComboBox}">
-                        <Setter Property="Visibility" Value="Collapsed" />
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsSimpleSectionsPage}" Value="True">
-                                <Setter Property="Visibility" Value="Visible" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </ComboBox.Style>
-            </ComboBox>
+                      materialDesign:HintAssist.Hint="Сортировка"
+                      Style="{StaticResource MaterialDesignOutlinedComboBox}" />
 
-            <StackPanel Grid.Column="4"
-                        Orientation="Horizontal"
-                        Visibility="{Binding IsSimpleSectionsPage, Converter={StaticResource BooleanToVisibilityConverter}}">
-                <ToggleButton Command="{Binding ShowSimpleTilesViewCommand}"
-                              IsChecked="{Binding IsSimpleTilesView, Mode=OneWay}"
-                              Style="{StaticResource LibraryViewModeButtonStyle}"
-                              ToolTip="Большие плитки">
-                    <materialDesign:PackIcon Width="22" Height="22" Kind="ViewGridOutline" />
-                </ToggleButton>
-                <ToggleButton Command="{Binding ShowSimpleCompactTilesViewCommand}"
-                              IsChecked="{Binding IsSimpleCompactTilesView, Mode=OneWay}"
-                              Style="{StaticResource LibraryViewModeButtonStyle}"
-                              ToolTip="Маленькие плитки">
-                    <materialDesign:PackIcon Width="22" Height="22" Kind="ViewGrid" />
-                </ToggleButton>
-                <ToggleButton Command="{Binding ShowSimpleTableViewCommand}"
-                              IsChecked="{Binding IsSimpleTableView, Mode=OneWay}"
-                              Style="{StaticResource LibraryViewModeButtonStyle}"
-                              ToolTip="Таблица">
-                    <materialDesign:PackIcon Width="22" Height="22" Kind="FormatListBulleted" />
-                </ToggleButton>
-            </StackPanel>
-
-            <Button Grid.Column="6"
+            <Button Grid.Column="4"
                     Height="44"
                     MinWidth="190"
                     VerticalAlignment="Center"
@@ -1355,6 +1366,18 @@
                                Text="Настроить порядок" />
                 </StackPanel>
             </Button>
+
+            <Button Grid.Column="6"
+                    Height="44"
+                    MinWidth="160"
+                    VerticalAlignment="Center"
+                    Command="{Binding AddSectionCommand}"
+                    Style="{StaticResource Mnemora.PrimaryButton}">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Width="18" Height="18" Kind="Plus" />
+                    <TextBlock Margin="8,0,0,0" Text="Создать раздел" />
+                </StackPanel>
+            </Button>
         </Grid>
 
         <!-- ПРОСТОЙ РЕЖИМ: разделы -->
@@ -1367,218 +1390,36 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <Grid Margin="0,0,0,18"
-                  Visibility="{Binding IsSimpleSectionsEmpty, Converter={StaticResource BooleanToVisibilityConverter}}">
-                <Button Height="40"
-                        Margin="0"
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Center"
-                        Command="{Binding AddSectionCommand}"
-                        Style="{StaticResource Mnemora.PrimaryButton}">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Width="18" Height="18" Kind="Plus" />
-                        <TextBlock Margin="8,0,0,0" Text="Создать раздел" />
-                    </StackPanel>
-                </Button>
-            </Grid>
+            <StackPanel
+                Grid.Row="0"
+                Margin="0,0,0,18"
+                Orientation="Horizontal"
+                Visibility="{Binding HasSimpleSections, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <TextBlock
+                    VerticalAlignment="Center"
+                    FontSize="24"
+                    FontWeight="SemiBold"
+                    Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                    Text="Разделы" />
+
+                <TextBlock
+                    Margin="12,2,0,0"
+                    VerticalAlignment="Center"
+                    FontSize="11"
+                    FontWeight="Normal"
+                    Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                    Opacity="0.68"
+                    Text="{Binding SimpleSectionsShownCountText}" />
+            </StackPanel>
 
             <Grid Grid.Row="1">
-                <!-- Большие плитки: виртуализируем строки по 3 карточки. -->
-                <ListBox ItemsSource="{Binding SimpleSectionRows}"
-                         ItemContainerStyle="{StaticResource SimpleSectionListBoxItemStyle}"
-                         Background="Transparent"
-                         BorderThickness="0"
-                         ScrollViewer.CanContentScroll="True"
-                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                         ScrollViewer.ScrollChanged="SectionsScroll_OnScrollChanged"
-                         ScrollViewer.VerticalScrollBarVisibility="Auto"
-                         VirtualizingPanel.IsVirtualizing="True"
-                         VirtualizingPanel.VirtualizationMode="Recycling"
-                         Visibility="{Binding IsSimpleTilesView, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <ListBox.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <VirtualizingStackPanel />
-                        </ItemsPanelTemplate>
-                    </ListBox.ItemsPanel>
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-
-                                <Button Grid.Column="0"
-                                        Command="{Binding DataContext.AddSectionCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
-                                        ToolTip="Создать раздел">
-                                    <Button.Style>
-                                        <Style TargetType="Button" BasedOn="{StaticResource CreateLargeEntityTileButtonStyle}">
-                                            <Setter Property="Visibility" Value="Collapsed" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsFirstRow}" Value="True">
-                                                    <Setter Property="Visibility" Value="Visible" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Button.Style>
-                                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                        <Border Width="48" Height="48" HorizontalAlignment="Center" Background="#26FFFFFF" CornerRadius="24">
-                                            <materialDesign:PackIcon Width="25" Height="25"
-                                                                     HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                                     Foreground="White" Kind="Plus" />
-                                        </Border>
-                                        <TextBlock Margin="0,12,0,0" HorizontalAlignment="Center"
-                                                   FontSize="16" FontWeight="SemiBold"
-                                                   Foreground="White" Text="Создать раздел" />
-                                    </StackPanel>
-                                </Button>
-
-                                <ItemsControl Grid.Column="1" Grid.ColumnSpan="2"
-                                              ItemsSource="{Binding Sections}"
-                                              ItemTemplate="{StaticResource SimpleSectionCardTemplate}">
-                                    <ItemsControl.Style>
-                                        <Style TargetType="ItemsControl">
-                                            <Setter Property="Visibility" Value="Collapsed" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsFirstRow}" Value="True">
-                                                    <Setter Property="Visibility" Value="Visible" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </ItemsControl.Style>
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <UniformGrid Columns="2" />
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                </ItemsControl>
-
-                                <ItemsControl Grid.Column="0" Grid.ColumnSpan="3"
-                                              ItemsSource="{Binding Sections}"
-                                              ItemTemplate="{StaticResource SimpleSectionCardTemplate}">
-                                    <ItemsControl.Style>
-                                        <Style TargetType="ItemsControl">
-                                            <Setter Property="Visibility" Value="Visible" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsFirstRow}" Value="True">
-                                                    <Setter Property="Visibility" Value="Collapsed" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </ItemsControl.Style>
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <UniformGrid Columns="3" />
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                </ItemsControl>
-                            </Grid>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-
-                <!-- Маленькие плитки: виртуализируем строки по 4 карточки. -->
-                <ListBox ItemsSource="{Binding SimpleCompactSectionRows}"
-                         ItemContainerStyle="{StaticResource SimpleSectionListBoxItemStyle}"
-                         Background="Transparent"
-                         BorderThickness="0"
-                         ScrollViewer.CanContentScroll="True"
-                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                         ScrollViewer.ScrollChanged="SectionsScroll_OnScrollChanged"
-                         ScrollViewer.VerticalScrollBarVisibility="Auto"
-                         VirtualizingPanel.IsVirtualizing="True"
-                         VirtualizingPanel.VirtualizationMode="Recycling"
-                         Visibility="{Binding IsSimpleCompactTilesView, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <ListBox.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <VirtualizingStackPanel />
-                        </ItemsPanelTemplate>
-                    </ListBox.ItemsPanel>
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-
-                                <Button Grid.Column="0"
-                                        Command="{Binding DataContext.AddSectionCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
-                                        ToolTip="Создать раздел">
-                                    <Button.Style>
-                                        <Style TargetType="Button" BasedOn="{StaticResource CreateCompactEntityTileButtonStyle}">
-                                            <Setter Property="Visibility" Value="Collapsed" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsFirstRow}" Value="True">
-                                                    <Setter Property="Visibility" Value="Visible" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Button.Style>
-                                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal">
-                                        <materialDesign:PackIcon Width="21" Height="21"
-                                                                 VerticalAlignment="Center"
-                                                                 Foreground="White" Kind="Plus" />
-                                        <TextBlock Margin="9,0,0,0" VerticalAlignment="Center"
-                                                   FontSize="14" FontWeight="SemiBold"
-                                                   Foreground="White" Text="Создать раздел" />
-                                    </StackPanel>
-                                </Button>
-
-                                <ItemsControl Grid.Column="1" Grid.ColumnSpan="3"
-                                              ItemsSource="{Binding Sections}"
-                                              ItemTemplate="{StaticResource SimpleCompactSectionCardTemplate}">
-                                    <ItemsControl.Style>
-                                        <Style TargetType="ItemsControl">
-                                            <Setter Property="Visibility" Value="Collapsed" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsFirstRow}" Value="True">
-                                                    <Setter Property="Visibility" Value="Visible" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </ItemsControl.Style>
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <UniformGrid Columns="3" />
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                </ItemsControl>
-
-                                <ItemsControl Grid.Column="0" Grid.ColumnSpan="4"
-                                              ItemsSource="{Binding Sections}"
-                                              ItemTemplate="{StaticResource SimpleCompactSectionCardTemplate}">
-                                    <ItemsControl.Style>
-                                        <Style TargetType="ItemsControl">
-                                            <Setter Property="Visibility" Value="Visible" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsFirstRow}" Value="True">
-                                                    <Setter Property="Visibility" Value="Collapsed" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </ItemsControl.Style>
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <UniformGrid Columns="4" />
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                </ItemsControl>
-                            </Grid>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-
                 <!-- Таблица: штатная виртуализация строк DataGrid. -->
                 <Border Background="{DynamicResource Mnemora.Brush.Surface}"
                         BorderBrush="{DynamicResource Mnemora.Brush.Border}"
                         BorderThickness="1"
                         ClipToBounds="True"
                         CornerRadius="14"
-                        Visibility="{Binding IsSimpleTableView, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        Visibility="{Binding HasSimpleSections, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <DataGrid ItemsSource="{Binding SimpleSections}"
                               AutoGenerateColumns="False"
                               Background="Transparent"
@@ -1603,6 +1444,7 @@
                               ScrollViewer.VerticalScrollBarVisibility="Auto"
                               SelectionMode="Single"
                               SelectionUnit="FullRow"
+                              SizeChanged="SimpleSectionsTable_OnSizeChanged"
                               VirtualizingPanel.IsVirtualizing="True"
                               VirtualizingPanel.VirtualizationMode="Recycling">
                         <DataGrid.Columns>
@@ -1610,7 +1452,7 @@
                                 Header="Раздел"
                                 MinWidth="260"
                                 Width="*"
-                                HeaderStyle="{StaticResource SimpleSectionTableColumnHeaderStyle}">
+                                HeaderStyle="{StaticResource SimpleSectionTableFirstColumnHeaderStyle}">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Grid Margin="10,0,0,0">
@@ -1737,7 +1579,7 @@
                             <DataGridTemplateColumn
                                 Width="82"
                                 CellStyle="{StaticResource SimpleSectionTableActionsCellStyle}"
-                                HeaderStyle="{StaticResource SimpleSectionTableColumnHeaderStyle}">
+                                HeaderStyle="{StaticResource SimpleSectionTableLastColumnHeaderStyle}">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel HorizontalAlignment="Right" VerticalAlignment="Center" Orientation="Horizontal">
@@ -1762,6 +1604,24 @@
                             </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
+                </Border>
+
+                <!-- Догрузка как в Обзоре: overlay не участвует в layout и не двигает скролл. -->
+                <Border
+                    Panel.ZIndex="50"
+                    Padding="18,14"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Background="#F0061735"
+                    CornerRadius="14"
+                    IsHitTestVisible="False"
+                    Visibility="{Binding IsSimpleSectionsPaging, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <loading:LoadingIndicator
+                        IndicatorLength="180"
+                        IndicatorThickness="5"
+                        Message="Загружаем разделы..."
+                        MessageForeground="White"
+                        TrackBrush="#40FFFFFF" />
                 </Border>
 
                 <!-- Initial loading. -->
@@ -1842,59 +1702,33 @@
                 </Border>
             </Grid>
 
-            <!-- Нижняя строка: счётчик слева + incremental status. -->
-            <Grid Grid.Row="2" MinHeight="72" Margin="0,8,0,0">
-                <TextBlock HorizontalAlignment="Left"
-                           VerticalAlignment="Center"
-                           FontSize="13"
-                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                           Text="{Binding SimpleSectionsShownCountText}" />
+            <!-- Ошибка догрузки остаётся отдельной служебной строкой, как в Обзоре. -->
+            <Grid Grid.Row="2" MinHeight="72">
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding HasSimpleSectionsNextPageError}" Value="True">
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
 
-                <loading:LoadingIndicator
-                    HorizontalAlignment="Center"
+                <StackPanel
+                    HorizontalAlignment="Left"
                     VerticalAlignment="Center"
-                    IndicatorLength="200"
-                    IndicatorThickness="6"
-                    Message="Загружаем разделы..."
-                    Visibility="{Binding IsSimpleSectionsPaging, Converter={StaticResource BooleanToVisibilityConverter}}" />
-
-                <StackPanel HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            Orientation="Horizontal"
-                            Visibility="{Binding HasSimpleSectionsNextPageError, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <TextBlock Margin="0,0,12,0"
-                               VerticalAlignment="Center"
-                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                               Text="{Binding SimpleSectionsNextPageErrorMessage}" />
-                    <Button Command="{Binding RetryNextSimpleSectionPageCommand}"
-                            Content="Повторить"
-                            Style="{StaticResource Mnemora.SecondaryButton}" />
-                </StackPanel>
-
-                <Button Height="42"
-                        HorizontalAlignment="Right"
+                    Orientation="Horizontal">
+                    <TextBlock
+                        Margin="0,0,16,0"
                         VerticalAlignment="Center"
-                        Command="{Binding AddSectionCommand}">
-                    <Button.Style>
-                        <Style TargetType="Button" BasedOn="{StaticResource Mnemora.PrimaryButton}">
-                            <Setter Property="Visibility" Value="Collapsed" />
-                            <Style.Triggers>
-                                <MultiDataTrigger>
-                                    <MultiDataTrigger.Conditions>
-                                        <Condition Binding="{Binding IsSimpleTableView}" Value="True" />
-                                        <Condition Binding="{Binding HasSimpleSections}" Value="True" />
-                                    </MultiDataTrigger.Conditions>
-                                    <Setter Property="Visibility" Value="Visible" />
-                                </MultiDataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Width="18" Height="18" Kind="Plus" />
-                        <TextBlock Margin="8,0,0,0" Text="Создать раздел" />
-                    </StackPanel>
-                </Button>
-
+                        Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                        Text="{Binding SimpleSectionsNextPageErrorMessage}" />
+                    <Button
+                        Command="{Binding RetryNextSimpleSectionPageCommand}"
+                        Content="Повторить"
+                        Style="{StaticResource Mnemora.SecondaryButton}" />
+                </StackPanel>
             </Grid>
         </Grid>
 

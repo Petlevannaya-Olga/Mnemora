@@ -173,6 +173,52 @@
             </Setter>
         </Style>
 
+        <Style
+            x:Key="SectionTableFirstColumnHeaderStyle"
+            BasedOn="{StaticResource SectionTableColumnHeaderStyle}"
+            TargetType="DataGridColumnHeader">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridColumnHeader">
+                        <Border
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="13,0,0,0">
+                            <ContentPresenter
+                                Margin="{TemplateBinding Padding}"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                RecognizesAccessKey="True" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style
+            x:Key="SectionTableLastColumnHeaderStyle"
+            BasedOn="{StaticResource SectionTableColumnHeaderStyle}"
+            TargetType="DataGridColumnHeader">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridColumnHeader">
+                        <Border
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="0,13,0,0">
+                            <ContentPresenter
+                                Margin="{TemplateBinding Padding}"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                RecognizesAccessKey="True" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="SectionTableRowStyle" TargetType="DataGridRow">
             <Setter Property="MinHeight" Value="72" />
             <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
@@ -929,7 +975,7 @@
                                 Header="Раздел"
                                 MinWidth="260"
                                 Width="*"
-                                HeaderStyle="{StaticResource SectionTableColumnHeaderStyle}">
+                                HeaderStyle="{StaticResource SectionTableFirstColumnHeaderStyle}">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Grid Margin="10,0,0,0">
@@ -1049,7 +1095,7 @@
                                 Width="115"
                                 Binding="{Binding LastActivityAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
                                 CellStyle="{StaticResource SectionTableDateCellStyle}"
-                                HeaderStyle="{StaticResource SectionTableColumnHeaderStyle}"
+                                HeaderStyle="{StaticResource SectionTableLastColumnHeaderStyle}"
                                 ElementStyle="{StaticResource SectionTableTextStyle}" />
 
                         </DataGrid.Columns>
