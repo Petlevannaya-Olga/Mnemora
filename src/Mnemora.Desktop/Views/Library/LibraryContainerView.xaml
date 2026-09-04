@@ -588,7 +588,10 @@
                 materialDesign:HintAssist.Hint="Сортировка"
                 Style="{StaticResource MaterialDesignOutlinedComboBox}" />
 
-            <StackPanel Grid.Column="3" Orientation="Horizontal">
+            <StackPanel
+                Grid.Column="3"
+                Orientation="Horizontal"
+                Visibility="{Binding HasFolderContent, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <ToggleButton
                     Command="{Binding ShowTilesViewCommand}"
                     IsChecked="{Binding IsTilesView, Mode=OneWay}"
@@ -687,10 +690,24 @@
                     BorderThickness="1"
                     CornerRadius="12"
                     Visibility="{Binding IsFoldersEmpty, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
-                        <materialDesign:PackIcon Width="20" Height="20" Margin="0,0,8,0" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Kind="FolderOutline" />
-                        <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="{Binding FoldersEmptyMessage}" />
-                    </StackPanel>
+                    <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <materialDesign:PackIcon
+                            Width="20"
+                            Height="20"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                            Kind="FolderOutline" />
+                        <TextBlock
+                            Grid.Column="1"
+                            Margin="10,0,0,0"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                            Text="{Binding FoldersEmptyMessage}" />
+                    </Grid>
                 </Border>
 
                 <!-- Крупные папки -->
@@ -1008,10 +1025,24 @@
                     BorderThickness="1"
                     CornerRadius="12"
                     Visibility="{Binding IsMaterialsEmpty, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
-                        <materialDesign:PackIcon Width="20" Height="20" Margin="0,0,8,0" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Kind="FileDocumentOutline" />
-                        <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="{Binding MaterialsEmptyMessage}" />
-                    </StackPanel>
+                    <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <materialDesign:PackIcon
+                            Width="20"
+                            Height="20"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                            Kind="FileDocumentOutline" />
+                        <TextBlock
+                            Grid.Column="1"
+                            Margin="10,0,0,0"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                            Text="{Binding MaterialsEmptyMessage}" />
+                    </Grid>
                 </Border>
 
                 <!-- Материалы таблицей -->

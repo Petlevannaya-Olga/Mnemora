@@ -74,6 +74,7 @@ public partial class LibraryContainerView : UserControl
     private async void FoldersScroll_OnScrollChanged(object sender, ScrollChangedEventArgs e)
     {
         if (_isFoldersPageLoadRunning ||
+            e.VerticalChange <= 0 ||
             DataContext is not LibraryContainerViewModel viewModel)
         {
             return;
@@ -123,6 +124,7 @@ public partial class LibraryContainerView : UserControl
     private async void MaterialsScroll_OnScrollChanged(object sender, ScrollChangedEventArgs e)
     {
         if (_isMaterialsPageLoadRunning ||
+            e.VerticalChange <= 0 ||
             DataContext is not LibraryContainerViewModel viewModel)
         {
             return;

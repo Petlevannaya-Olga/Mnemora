@@ -566,15 +566,19 @@
 
                 <TextBlock
                     Margin="0,18,0,0"
+                    HorizontalAlignment="Center"
                     FontSize="21"
                     FontWeight="SemiBold"
                     Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                    Text="Разделы не найдены" />
+                    Text="Разделы не найдены"
+                    TextAlignment="Center" />
 
                 <TextBlock
                     Margin="0,8,0,0"
+                    HorizontalAlignment="Center"
                     Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                    Text="Попробуйте изменить поисковый запрос." />
+                    Text="Попробуйте изменить поисковый запрос."
+                    TextAlignment="Center" />
             </StackPanel>
 
             <Grid>
