@@ -6,14 +6,14 @@
     <Grid Background="{StaticResource Mnemora.Brush.SurfaceMuted}">
         <StackPanel Margin="42">
             <TextBlock
-                Text="Все материалы"
+                Text="Расширенный поиск"
                 Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
                 FontSize="34"
                 FontWeight="SemiBold" />
 
             <TextBlock
                 Margin="0,8,0,0"
-                Text="Статьи и вопросы из всех разделов и тем"
+                Text="Поиск материалов по всей библиотеке"
                 Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
                 FontSize="16" />
 
