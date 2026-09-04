@@ -695,28 +695,18 @@
                             </Grid>
 
                             <StackPanel Grid.Row="1" Margin="0,20,0,0" Orientation="Horizontal">
-                                <StackPanel.Style>
-                                    <Style TargetType="StackPanel">
-                                        <Setter Property="Visibility" Value="Visible" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding TopicsCount}" Value="0">
-                                                <Setter Property="Visibility" Value="Collapsed" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </StackPanel.Style>
                                 <Border Padding="10,7" Background="#F5F7FB" CornerRadius="8">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Width="18"
                                                                  Height="18"
                                                                  VerticalAlignment="Center"
                                                                  Foreground="{DynamicResource Mnemora.Brush.Secondary}"
-                                                                 Kind="BookOpenPageVariant" />
+                                                                 Kind="FolderOutline" />
                                         <TextBlock Margin="7,0,0,0"
                                                    VerticalAlignment="Center"
                                                    FontSize="13"
                                                    Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                                                   Text="{Binding TopicsSummaryText}" />
+                                                   Text="{Binding FoldersSummaryText}" />
                                     </StackPanel>
                                 </Border>
                                 <Border Margin="10,0,0,0" Padding="10,7" Background="#F5F7FB" CornerRadius="8">
@@ -734,36 +724,6 @@
                                     </StackPanel>
                                 </Border>
                             </StackPanel>
-
-                            <Border Grid.Row="1"
-                                    Margin="0,20,0,0"
-                                    Padding="10,7"
-                                    HorizontalAlignment="Left"
-                                    Background="#F5F7FB"
-                                    CornerRadius="8">
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding TopicsCount}" Value="0">
-                                                <Setter Property="Visibility" Value="Visible" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Width="18"
-                                                             Height="18"
-                                                             VerticalAlignment="Center"
-                                                             Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                                                             Kind="BookOpenPageVariantOutline" />
-                                    <TextBlock Margin="7,0,0,0"
-                                               VerticalAlignment="Center"
-                                               FontSize="13"
-                                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                                               Text="Тем пока нет" />
-                                </StackPanel>
-                            </Border>
                         </Grid>
                     </Border>
                 </Button>
@@ -848,17 +808,17 @@
                                     <StackPanel Margin="0,0,12,0"
                                                 VerticalAlignment="Center"
                                                 Orientation="Horizontal"
-                                                ToolTip="Количество тем">
+                                                ToolTip="Количество папок">
                                         <materialDesign:PackIcon Width="16"
                                                                  Height="16"
                                                                  VerticalAlignment="Center"
                                                                  Foreground="{DynamicResource Mnemora.Brush.Secondary}"
-                                                                 Kind="BookOpenPageVariant" />
+                                                                 Kind="FolderOutline" />
                                         <TextBlock Margin="4,0,0,0"
                                                    VerticalAlignment="Center"
                                                    FontSize="12"
                                                    Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                                                   Text="{Binding TopicsCount}" />
+                                                   Text="{Binding FoldersCount}" />
                                     </StackPanel>
 
                                     <StackPanel VerticalAlignment="Center"
@@ -1507,14 +1467,14 @@
                             </DataGridTemplateColumn>
 
                             <DataGridTemplateColumn
-                                Header="Темы"
+                                Header="Папки"
                                 Width="90"
                                 HeaderStyle="{StaticResource SimpleSectionTableColumnHeaderStyle}">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center" Orientation="Horizontal">
-                                            <materialDesign:PackIcon Kind="ViewGridOutline" Style="{StaticResource SimpleSectionCountIconStyle}" />
-                                            <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="{Binding TopicsCount}" />
+                                            <materialDesign:PackIcon Kind="FolderOutline" Style="{StaticResource SimpleSectionCountIconStyle}" />
+                                            <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="{Binding FoldersCount}" />
                                         </StackPanel>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
@@ -1635,14 +1595,14 @@
                         TrackBrush="#40FFFFFF" />
                 </Border>
 
-                <!-- Initial loading. -->
-                <loading:LoadingIndicator
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    IndicatorLength="360"
-                    IndicatorThickness="8"
-                    Message="Загружаем разделы..."
-                    Visibility="{Binding IsSimpleSectionsLoading, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                <!-- Initial loading: светлый вариант, как в Обзоре. -->
+                <loading:LoadingIndicator Panel.ZIndex="50"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"
+                                          IndicatorLength="360"
+                                          IndicatorThickness="8"
+                                          Message="Загружаем разделы..."
+                                          Visibility="{Binding IsSimpleSectionsLoading, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                     <StackPanel.Style>
@@ -1804,6 +1764,11 @@
                 </StackPanel>
             </Grid>
 
+            <Border Grid.Row="2"
+                    Height="1"
+                    VerticalAlignment="Center"
+                    Background="{DynamicResource Mnemora.Brush.Border}" />
+
             <Grid Grid.Row="3">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -1811,7 +1776,7 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <!-- В дереве только сам раздел и папки. Материалы намеренно остаются вне дерева. -->
+                <!-- Root-контейнер раздела не показываем как папку: его материалы доступны через «Без папки». -->
                 <Border Grid.Column="0"
                         Padding="0">
                     <Border.Style>
@@ -1828,49 +1793,21 @@
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
 
-                        <Grid>
-                            <Grid.Style>
-                                <Style TargetType="Grid">
-                                    <Setter Property="Margin" Value="20,18,20,12" />
-                                </Style>
-                            </Grid.Style>
+                        <Grid Margin="20,18,20,12">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
-                            <Grid Grid.Column="0" Margin="0,0,8,0">
-                                <Grid.Style>
-                                    <Style TargetType="Grid">
-                                        <Setter Property="Visibility" Value="Visible" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding SectionStructure.IsTreeCollapsed}" Value="True">
-                                                <Setter Property="Visibility" Value="Collapsed" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Grid.Style>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-
-                                <TextBlock VerticalAlignment="Center"
-                                           FontSize="16"
-                                           FontWeight="SemiBold"
-                                           Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                                           Text="Папки" />
-                                <loading:LoadingIndicator Grid.Column="1"
-                                                          Width="28"
-                                                          Height="22"
-                                                          IndicatorLength="26"
-                                                          IndicatorThickness="3"
-                                                          Message=""
-                                                          Visibility="{Binding SectionStructure.IsLoadingTree, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                            </Grid>
+                            <TextBlock VerticalAlignment="Center"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                       Text="Структура" />
 
                             <Button Grid.Column="1"
                                     Width="24"
@@ -1878,14 +1815,7 @@
                                     Command="{Binding SectionStructure.ToggleTreeCommand}"
                                     ToolTip="Свернуть дерево папок">
                                 <Button.Style>
-                                    <Style TargetType="Button" BasedOn="{StaticResource SmallIconButtonStyle}">
-                                        <Setter Property="Visibility" Value="Visible" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding SectionStructure.IsTreeCollapsed}" Value="True">
-                                                <Setter Property="Visibility" Value="Collapsed" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource SmallIconButtonStyle}" />
                                 </Button.Style>
                                 <materialDesign:PackIcon Width="16"
                                                          Height="16"
@@ -1894,23 +1824,97 @@
                             </Button>
                         </Grid>
 
-                        <TreeView Grid.Row="1"
+                        <Button Grid.Row="1"
+                                MinHeight="38"
+                                Margin="12,0,12,8"
+                                Padding="8,6"
+                                HorizontalContentAlignment="Stretch"
+                                Command="{Binding SectionStructure.SelectRootMaterialsCommand}"
+                                Cursor="Hand"
+                                ToolTip="Материалы, которые лежат непосредственно в разделе">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderThickness" Value="0" />
+                                    <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.TextPrimary}" />
+                                    <Setter Property="FontWeight" Value="Normal" />
+                                    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="Transparent"
+                                                        CornerRadius="6">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                                      VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SectionStructure.HasRootMaterials}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Opacity" Value="0.72" />
+                                        </Trigger>
+                                        <DataTrigger Binding="{Binding SectionStructure.IsRootSelected}" Value="True">
+                                            <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.PrimaryDark}" />
+                                            <Setter Property="FontWeight" Value="SemiBold" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Width="19"
+                                                         Height="19"
+                                                         Margin="0,0,9,0"
+                                                         VerticalAlignment="Center"
+                                                         Foreground="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}"
+                                                         Kind="FileDocumentOutline" />
+                                <TextBlock VerticalAlignment="Center"
+                                           FontSize="13"
+                                           FontWeight="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=FontWeight}"
+                                           Foreground="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}"
+                                           Text="Без папки" />
+                            </StackPanel>
+                        </Button>
+
+
+                        <Border Grid.Row="2"
+                                Panel.ZIndex="50"
+                                Padding="18,14"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Background="#F0061735"
+                                CornerRadius="14"
+                                IsHitTestVisible="False"
+                                Visibility="{Binding SectionStructure.IsLoadingFolders, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <loading:LoadingIndicator IndicatorLength="180"
+                                                      IndicatorThickness="5"
+                                                      Message="Загружаем папки..."
+                                                      MessageForeground="White"
+                                                      TrackBrush="#40FFFFFF" />
+                        </Border>
+
+                        <TreeView Grid.Row="2"
                                   Margin="8,0,8,12"
                                   Padding="0"
                                   Background="Transparent"
                                   BorderThickness="0"
-                                  ItemsSource="{Binding SectionStructure.Roots}"
+                                  ItemsSource="{Binding SectionStructure.RootNode.Children}"
                                   SelectedItemChanged="SectionStructureTree_OnSelectedItemChanged"
+                                  ScrollViewer.ScrollChanged="SectionStructureTree_OnScrollChanged"
                                   ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                   ScrollViewer.VerticalScrollBarVisibility="Auto"
                                   VirtualizingPanel.IsVirtualizing="True"
                                   VirtualizingPanel.VirtualizationMode="Recycling">
                             <TreeView.Style>
                                 <Style TargetType="TreeView" BasedOn="{StaticResource MaterialDesignTreeView}">
-                                    <Setter Property="Visibility" Value="Visible" />
+                                    <Setter Property="Visibility" Value="Collapsed" />
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding SectionStructure.IsTreeCollapsed}" Value="True">
-                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        <DataTrigger Binding="{Binding SectionStructure.HasFolders}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible" />
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
@@ -1921,16 +1925,47 @@
                                     <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
                                     <Setter Property="Padding" Value="0" />
                                     <Setter Property="Margin" Value="0,1" />
+                                    <Setter Property="Cursor" Value="Arrow" />
                                     <Setter Property="materialDesign:TreeViewAssist.ShowSelection" Value="False" />
                                     <EventSetter Event="Expanded" Handler="SectionStructureTreeItem_OnExpanded" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsNavigationNode}" Value="True">
+                                            <Setter Property="Cursor" Value="Hand" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsError}" Value="True">
+                                            <Setter Property="Cursor" Value="Hand" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsPlaceholder}" Value="True">
+                                            <Setter Property="IsHitTestVisible" Value="False" />
+                                            <Setter Property="Focusable" Value="False" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsLoadMore}" Value="True">
+                                            <Setter Property="IsHitTestVisible" Value="False" />
+                                            <Setter Property="Focusable" Value="False" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
                                 </Style>
                             </TreeView.ItemContainerStyle>
                             <TreeView.Resources>
                                 <HierarchicalDataTemplate DataType="{x:Type viewModels:LibrarySectionManagementTreeNodeViewModel}"
                                                           ItemsSource="{Binding Children}">
-                                    <Grid MinHeight="38">
-                                        <Border Padding="8,6"
-                                                Background="Transparent">
+                                    <Grid>
+                                        <Grid.Style>
+                                            <Style TargetType="Grid">
+                                                <Setter Property="MinHeight" Value="38" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsPlaceholder}" Value="True">
+                                                        <Setter Property="Height" Value="1" />
+                                                        <Setter Property="MinHeight" Value="1" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding IsLoadMore}" Value="True">
+                                                        <Setter Property="Height" Value="1" />
+                                                        <Setter Property="MinHeight" Value="1" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Grid.Style>
+                                        <Border Padding="8,6" Background="Transparent">
                                             <Grid>
                                                 <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
                                                     <StackPanel.Style>
@@ -1956,45 +1991,24 @@
                                                                TextTrimming="CharacterEllipsis" />
                                                 </StackPanel>
 
-                                                <StackPanel Margin="4,0,0,0" VerticalAlignment="Center" Orientation="Horizontal">
-                                                    <StackPanel.Style>
-                                                        <Style TargetType="StackPanel">
-                                                            <Setter Property="Visibility" Value="Collapsed" />
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding IsLoadMore}" Value="True">
-                                                                    <Setter Property="Visibility" Value="Visible" />
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </StackPanel.Style>
-                                                    <materialDesign:PackIcon Width="17"
-                                                                             Height="17"
-                                                                             Margin="0,0,7,0"
-                                                                             Foreground="{DynamicResource Mnemora.Brush.Secondary}"
-                                                                             Kind="DotsHorizontal" />
-                                                    <TextBlock VerticalAlignment="Center"
-                                                               FontSize="12"
-                                                               Foreground="{DynamicResource Mnemora.Brush.Secondary}"
-                                                               Text="{Binding Name}" />
-                                                </StackPanel>
-
-                                                <TextBlock Margin="8,0,0,0"
-                                                           VerticalAlignment="Center"
-                                                           FontSize="12"
-                                                           FontStyle="Italic"
-                                                           Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                                                           Text="Загрузка...">
-                                                    <TextBlock.Style>
-                                                        <Style TargetType="TextBlock">
+                                                <Border Width="1"
+                                                        Height="1"
+                                                        Background="Transparent"
+                                                        IsHitTestVisible="False">
+                                                    <Border.Style>
+                                                        <Style TargetType="Border">
                                                             <Setter Property="Visibility" Value="Collapsed" />
                                                             <Style.Triggers>
                                                                 <DataTrigger Binding="{Binding IsPlaceholder}" Value="True">
                                                                     <Setter Property="Visibility" Value="Visible" />
                                                                 </DataTrigger>
+                                                                <DataTrigger Binding="{Binding IsLoadMore}" Value="True">
+                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                </DataTrigger>
                                                             </Style.Triggers>
                                                         </Style>
-                                                    </TextBlock.Style>
-                                                </TextBlock>
+                                                    </Border.Style>
+                                                </Border>
 
                                                 <StackPanel Margin="4,0,0,0" VerticalAlignment="Center" Orientation="Horizontal">
                                                     <StackPanel.Style>
@@ -2228,12 +2242,20 @@
                                                       TrackBrush="#40FFFFFF" />
                         </Border>
 
-                        <loading:LoadingIndicator HorizontalAlignment="Center"
-                                                  VerticalAlignment="Center"
-                                                  IndicatorLength="300"
-                                                  IndicatorThickness="7"
-                                                  Message="Загружаем материалы..."
-                                                  Visibility="{Binding SectionStructure.IsLoadingMaterials, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                        <Border Panel.ZIndex="50"
+                                Padding="18,14"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Background="#F0061735"
+                                CornerRadius="14"
+                                IsHitTestVisible="False"
+                                Visibility="{Binding SectionStructure.IsLoadingMaterials, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <loading:LoadingIndicator IndicatorLength="300"
+                                                      IndicatorThickness="7"
+                                                      Message="Загружаем материалы..."
+                                                      MessageForeground="White"
+                                                      TrackBrush="#40FFFFFF" />
+                        </Border>
 
                         <StackPanel HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
@@ -2881,13 +2903,20 @@
                                Text="Попробуйте изменить поисковый запрос" />
                 </StackPanel>
 
-                <loading:LoadingIndicator
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    IndicatorLength="360"
-                    IndicatorThickness="8"
-                    Message="Загружаем темы..."
-                    Visibility="{Binding IsContextLoading, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                <Border Panel.ZIndex="50"
+                        Padding="18,14"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Background="#F0061735"
+                        CornerRadius="14"
+                        IsHitTestVisible="False"
+                        Visibility="{Binding IsContextLoading, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <loading:LoadingIndicator IndicatorLength="360"
+                                              IndicatorThickness="8"
+                                              Message="Загружаем темы..."
+                                              MessageForeground="White"
+                                              TrackBrush="#40FFFFFF" />
+                </Border>
             </Grid>
 
             <Grid Grid.Row="4" MinHeight="72" Margin="0,8,0,0">
@@ -2898,13 +2927,19 @@
                            Text="{Binding SimpleTopicsShownCountText}"
                            Visibility="{Binding HasSimpleTopicSource, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
-                <loading:LoadingIndicator
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    IndicatorLength="200"
-                    IndicatorThickness="6"
-                    Message="Загружаем темы..."
-                    Visibility="{Binding IsSimpleTopicsPaging, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                <Border Padding="14,10"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Background="#F0061735"
+                        CornerRadius="12"
+                        IsHitTestVisible="False"
+                        Visibility="{Binding IsSimpleTopicsPaging, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <loading:LoadingIndicator IndicatorLength="200"
+                                              IndicatorThickness="6"
+                                              Message="Загружаем темы..."
+                                              MessageForeground="White"
+                                              TrackBrush="#40FFFFFF" />
+                </Border>
 
                 <Button Height="42"
                         HorizontalAlignment="Right"
@@ -3257,13 +3292,13 @@
                                Text="Измените запрос или выбранный фильтр." />
                 </StackPanel>
 
-                <loading:LoadingIndicator
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    IndicatorLength="360"
-                    IndicatorThickness="8"
-                    Message="Загружаем материалы..."
-                    Visibility="{Binding IsContextLoading, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                <loading:LoadingIndicator Panel.ZIndex="50"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"
+                                          IndicatorLength="360"
+                                          IndicatorThickness="8"
+                                          Message="Загружаем материалы..."
+                                          Visibility="{Binding IsContextLoading, Converter={StaticResource BooleanToVisibilityConverter}}" />
             </Grid>
 
             <!-- Служебная строка: счётчик слева, создание — справа, как в табличном режиме выше. -->
@@ -3277,13 +3312,19 @@
                            Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
                            Text="{Binding SimpleMaterialsShownCountText}" />
 
-                <loading:LoadingIndicator
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    IndicatorLength="200"
-                    IndicatorThickness="6"
-                    Message="Загружаем материалы..."
-                    Visibility="{Binding IsSimpleMaterialsPaging, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                <Border Padding="14,10"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Background="#F0061735"
+                        CornerRadius="12"
+                        IsHitTestVisible="False"
+                        Visibility="{Binding IsSimpleMaterialsPaging, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <loading:LoadingIndicator IndicatorLength="200"
+                                              IndicatorThickness="6"
+                                              Message="Загружаем материалы..."
+                                              MessageForeground="White"
+                                              TrackBrush="#40FFFFFF" />
+                </Border>
 
                 <Button Height="44"
                         MinWidth="180"
@@ -3303,14 +3344,20 @@
         <Border Grid.Row="2"
                 Margin="32,0,32,18"
                 Panel.ZIndex="50"
-                Background="#CCF7F8FB"
+                Background="#88F7F8FB"
                 Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}">
-            <loading:LoadingIndicator
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                IndicatorLength="380"
-                IndicatorThickness="9"
-                Message="Загружаем библиотеку..." />
+            <Border Padding="20,16"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Background="#F0061735"
+                    CornerRadius="14"
+                    IsHitTestVisible="False">
+                <loading:LoadingIndicator IndicatorLength="380"
+                                          IndicatorThickness="9"
+                                          Message="Загружаем библиотеку..."
+                                          MessageForeground="White"
+                                          TrackBrush="#40FFFFFF" />
+            </Border>
         </Border>
 
         <Border Grid.Row="2"

@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Mnemora.Application.Library.GetHierarchyFoldersPage;
@@ -31,7 +31,17 @@ public sealed partial class LibrarySectionManagementViewModel(
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SelectedContainerName))]
+    [NotifyPropertyChangedFor(nameof(IsRootSelected))]
     private LibrarySectionManagementTreeNodeViewModel? _selectedNode;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsRootSelected))]
+    [NotifyPropertyChangedFor(nameof(HasFolders))]
+    private LibrarySectionManagementTreeNodeViewModel? _rootNode;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasRootMaterials))]
+    private int _rootMaterialsCount;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasTreeError))]
@@ -44,6 +54,9 @@ public sealed partial class LibrarySectionManagementViewModel(
 
     [ObservableProperty]
     private bool _isLoadingTree;
+
+    [ObservableProperty]
+    private bool _isLoadingFolders;
 
     [ObservableProperty]
     private bool _isTreeCollapsed;
@@ -61,6 +74,9 @@ public sealed partial class LibrarySectionManagementViewModel(
     private bool _isLoadingPreviousMaterialsPage;
 
     public bool HasSection => Section is not null;
+    public bool IsRootSelected => RootNode is not null && ReferenceEquals(SelectedNode, RootNode);
+    public bool HasFolders => RootNode?.ChildFoldersCount > 0;
+    public bool HasRootMaterials => RootMaterialsCount > 0;
     public bool HasTreeError => !string.IsNullOrWhiteSpace(TreeErrorMessage);
     public bool HasMaterialsError => !string.IsNullOrWhiteSpace(MaterialsErrorMessage);
     public bool HasMaterials => Materials.Count > 0;
@@ -106,6 +122,8 @@ public sealed partial class LibrarySectionManagementViewModel(
         IsTreeCollapsed = false;
         TreeErrorMessage = null;
         MaterialsErrorMessage = null;
+        RootNode = null;
+        RootMaterialsCount = 0;
         Roots.Clear();
         Materials.Clear();
         _materialWindow.Reset();
@@ -115,6 +133,7 @@ public sealed partial class LibrarySectionManagementViewModel(
 
         root.IsExpanded = true;
         root.IsSelected = true;
+        RootNode = root;
         Roots.Add(root);
         SelectedNode = root;
 
@@ -294,6 +313,15 @@ public sealed partial class LibrarySectionManagementViewModel(
     }
 
     [RelayCommand]
+    private async Task SelectRootMaterialsAsync(CancellationToken cancellationToken)
+    {
+        if (RootNode is not null)
+        {
+            await SelectNodeAsync(RootNode, cancellationToken);
+        }
+    }
+
+    [RelayCommand]
     private async Task RetryMaterialsAsync(CancellationToken cancellationToken)
     {
         if (SelectedNode is not null)
@@ -323,10 +351,21 @@ public sealed partial class LibrarySectionManagementViewModel(
         }
 
         parent.IsLoading = true;
+        IsLoadingFolders = true;
+        bool isPaging = offset > 0;
 
         try
         {
-            RemoveAuxiliaryChildren(parent);
+            RemoveAuxiliaryChildren(
+                parent,
+                keepPlaceholder: !isPaging,
+                keepLoadMore: isPaging);
+
+            if (!isPaging && !parent.Children.Any(child => child.IsPlaceholder))
+            {
+                parent.Children.Add(
+                    LibrarySectionManagementTreeNodeViewModel.CreateLoading(parent));
+            }
 
             var result = await queryDispatcher.SendAsync<
                 GetLibraryHierarchyFoldersPageQuery,
@@ -336,6 +375,8 @@ public sealed partial class LibrarySectionManagementViewModel(
                     offset,
                     PageSize),
                 cancellationToken);
+
+            RemoveAuxiliaryChildren(parent);
 
             if (result.IsFailure)
             {
@@ -374,6 +415,7 @@ public sealed partial class LibrarySectionManagementViewModel(
         finally
         {
             parent.IsLoading = false;
+            IsLoadingFolders = false;
         }
     }
 
@@ -409,6 +451,11 @@ public sealed partial class LibrarySectionManagementViewModel(
             }
 
             _materialWindow.SetTotalCount(page.TotalCount);
+
+            if (ReferenceEquals(node, RootNode))
+            {
+                RootMaterialsCount = page.TotalCount;
+            }
 
             if (page.Items.Count > 0)
             {
@@ -525,13 +572,17 @@ public sealed partial class LibrarySectionManagementViewModel(
     }
 
     private static void RemoveAuxiliaryChildren(
-        LibrarySectionManagementTreeNodeViewModel parent)
+        LibrarySectionManagementTreeNodeViewModel parent,
+        bool keepPlaceholder = false,
+        bool keepLoadMore = false)
     {
         for (int index = parent.Children.Count - 1; index >= 0; index--)
         {
             LibrarySectionManagementTreeNodeViewModel child = parent.Children[index];
 
-            if (child.IsPlaceholder || child.IsLoadMore || child.IsError)
+            if ((!keepPlaceholder && child.IsPlaceholder) ||
+                (!keepLoadMore && child.IsLoadMore) ||
+                child.IsError)
             {
                 parent.Children.RemoveAt(index);
             }

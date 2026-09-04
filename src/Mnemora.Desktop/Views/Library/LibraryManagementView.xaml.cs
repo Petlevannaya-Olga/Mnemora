@@ -1,4 +1,4 @@
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -22,6 +22,7 @@ public partial class LibraryManagementView : UserControl
     private bool _isMaterialsScrollPageLoadRunning;
     private bool _isSectionStructureMaterialsScrollPageLoadRunning;
     private bool _isSectionStructureTreeSelectionRunning;
+    private bool _isSectionStructureTreePageLoadRunning;
 
     public LibraryManagementView()
     {
@@ -483,6 +484,16 @@ public partial class LibraryManagementView : UserControl
         try
         {
             await viewModel.SectionStructure.ExpandAsync(node, cancellationToken);
+            await WaitForScrollLayoutAsync();
+
+            TreeView? treeView = FindAncestor<TreeView>(sender as DependencyObject);
+            if (treeView is not null)
+            {
+                await LoadVisibleSectionStructureFolderPagesAsync(
+                    treeView,
+                    viewModel,
+                    cancellationToken);
+            }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -507,9 +518,8 @@ public partial class LibraryManagementView : UserControl
 
         try
         {
-            if (node.IsLoadMore)
+            if (node.IsLoadMore || node.IsPlaceholder)
             {
-                await viewModel.SectionStructure.LoadMoreFoldersAsync(node, cancellationToken);
                 return;
             }
 
@@ -531,6 +541,134 @@ public partial class LibraryManagementView : UserControl
         finally
         {
             _isSectionStructureTreeSelectionRunning = false;
+        }
+    }
+
+    private async void SectionStructureTree_OnScrollChanged(
+        object sender,
+        ScrollChangedEventArgs e)
+    {
+        if (sender is not TreeView treeView ||
+            DataContext is not LibraryManagementViewModel viewModel)
+        {
+            return;
+        }
+
+        CancellationToken cancellationToken =
+            _loadCancellationTokenSource?.Token ?? CancellationToken.None;
+
+        try
+        {
+            await LoadVisibleSectionStructureFolderPagesAsync(
+                treeView,
+                viewModel,
+                cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // View was unloaded or navigation replaced the current load.
+        }
+    }
+
+    private async Task LoadVisibleSectionStructureFolderPagesAsync(
+        TreeView treeView,
+        LibraryManagementViewModel viewModel,
+        CancellationToken cancellationToken)
+    {
+        if (_isSectionStructureTreePageLoadRunning)
+        {
+            return;
+        }
+
+        _isSectionStructureTreePageLoadRunning = true;
+
+        try
+        {
+            while (IsLoaded &&
+                   ReferenceEquals(DataContext, viewModel) &&
+                   !cancellationToken.IsCancellationRequested)
+            {
+                LibrarySectionManagementTreeNodeViewModel? loaderNode =
+                    FindVisibleSectionStructureLoader(treeView, treeView);
+
+                if (loaderNode is null)
+                {
+                    break;
+                }
+
+                await viewModel.SectionStructure.LoadMoreFoldersAsync(
+                    loaderNode,
+                    cancellationToken);
+
+                await WaitForScrollLayoutAsync();
+            }
+        }
+        finally
+        {
+            _isSectionStructureTreePageLoadRunning = false;
+        }
+    }
+
+    private static LibrarySectionManagementTreeNodeViewModel? FindVisibleSectionStructureLoader(
+        DependencyObject parent,
+        TreeView treeView)
+    {
+        int childrenCount = VisualTreeHelper.GetChildrenCount(parent);
+
+        for (int index = 0; index < childrenCount; index++)
+        {
+            DependencyObject child = VisualTreeHelper.GetChild(parent, index);
+
+            if (child is TreeViewItem item &&
+                item.DataContext is LibrarySectionManagementTreeNodeViewModel node &&
+                node.IsLoadMore &&
+                node.Parent is { IsLoading: false } &&
+                IsVisibleInsideTree(item, treeView))
+            {
+                return node;
+            }
+
+            LibrarySectionManagementTreeNodeViewModel? nested =
+                FindVisibleSectionStructureLoader(child, treeView);
+
+            if (nested is not null)
+            {
+                return nested;
+            }
+        }
+
+        return null;
+    }
+
+    private static bool IsVisibleInsideTree(
+        FrameworkElement element,
+        FrameworkElement treeView)
+    {
+        if (!element.IsVisible ||
+            element.ActualWidth <= 0 ||
+            element.ActualHeight <= 0 ||
+            treeView.ActualHeight <= 0)
+        {
+            return false;
+        }
+
+        try
+        {
+            Rect bounds = element
+                .TransformToAncestor(treeView)
+                .TransformBounds(
+                    new Rect(
+                        0,
+                        0,
+                        element.ActualWidth,
+                        element.ActualHeight));
+
+            return bounds.Bottom >= 0 &&
+                   bounds.Top <= treeView.ActualHeight;
+        }
+        catch (InvalidOperationException)
+        {
+            return false;
         }
     }
 

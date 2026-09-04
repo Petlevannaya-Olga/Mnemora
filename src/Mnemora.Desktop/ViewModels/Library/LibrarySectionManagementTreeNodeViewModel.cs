@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Mnemora.Contracts.Library;
 
@@ -110,11 +110,18 @@ public sealed partial class LibrarySectionManagementTreeNodeViewModel : Observab
         return node;
     }
 
+    public static LibrarySectionManagementTreeNodeViewModel CreateLoading(
+        LibrarySectionManagementTreeNodeViewModel parent) =>
+        new(
+            LibrarySectionManagementTreeNodeKind.Placeholder,
+            "Загружаем папки...",
+            parent: parent);
+
     public static LibrarySectionManagementTreeNodeViewModel CreateLoadMore(
         LibrarySectionManagementTreeNodeViewModel parent) =>
         new(
             LibrarySectionManagementTreeNodeKind.LoadMore,
-            "Показать ещё папки",
+            "Загружаем папки...",
             parent: parent);
 
     public static LibrarySectionManagementTreeNodeViewModel CreateError(
@@ -133,10 +140,6 @@ public sealed partial class LibrarySectionManagementTreeNodeViewModel : Observab
             return;
         }
 
-        Children.Add(
-            new LibrarySectionManagementTreeNodeViewModel(
-                LibrarySectionManagementTreeNodeKind.Placeholder,
-                "Загрузка...",
-                parent: this));
+        Children.Add(CreateLoading(this));
     }
 }
