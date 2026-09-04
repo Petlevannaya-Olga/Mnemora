@@ -1863,8 +1863,8 @@
                                     <Setter Property="Template">
                                         <Setter.Value>
                                             <ControlTemplate TargetType="Button">
-                                                <Border Background="Transparent"
-                                                        CornerRadius="6">
+                                                <Border Background="{TemplateBinding Background}"
+                                                        CornerRadius="7">
                                                     <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                                                       VerticalAlignment="Center" />
                                                 </Border>
@@ -1876,9 +1876,10 @@
                                             <Setter Property="Visibility" Value="Visible" />
                                         </DataTrigger>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="Opacity" Value="0.72" />
+                                            <Setter Property="Background" Value="#F2FBFA" />
                                         </Trigger>
                                         <DataTrigger Binding="{Binding SectionStructure.IsRootSelected}" Value="True">
+                                            <Setter Property="Background" Value="#E6FBF8" />
                                             <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.PrimaryDark}" />
                                             <Setter Property="FontWeight" Value="SemiBold" />
                                         </DataTrigger>
@@ -1986,7 +1987,18 @@
                                                 </Style.Triggers>
                                             </Style>
                                         </Grid.Style>
-                                        <Border Padding="8,6" Background="Transparent">
+                                        <Border Padding="8,6"
+                                                CornerRadius="7">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="Transparent" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                            <Setter Property="Background" Value="#E6FBF8" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
                                             <Grid>
                                                 <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
                                                     <StackPanel.Style>
@@ -2003,13 +2015,35 @@
                                                                              Height="19"
                                                                              Margin="0,0,9,0"
                                                                              VerticalAlignment="Center"
-                                                                             Foreground="{Binding Color, Converter={StaticResource LibraryFolderColorConverter}}"
-                                                                             Kind="{Binding Icon, Converter={StaticResource LibraryFolderIconConverter}}" />
+                                                                             Kind="{Binding Icon, Converter={StaticResource LibraryFolderIconConverter}}">
+                                                        <materialDesign:PackIcon.Style>
+                                                            <Style TargetType="materialDesign:PackIcon">
+                                                                <Setter Property="Foreground" Value="{Binding Color, Converter={StaticResource LibraryFolderColorConverter}}" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                                        <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.PrimaryDark}" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </materialDesign:PackIcon.Style>
+                                                    </materialDesign:PackIcon>
                                                     <TextBlock VerticalAlignment="Center"
                                                                FontSize="13"
-                                                               Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
                                                                Text="{Binding Name}"
-                                                               TextTrimming="CharacterEllipsis" />
+                                                               TextTrimming="CharacterEllipsis">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.TextPrimary}" />
+                                                                <Setter Property="FontWeight" Value="Normal" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                                        <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.PrimaryDark}" />
+                                                                        <Setter Property="FontWeight" Value="SemiBold" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
                                                 </StackPanel>
 
                                                 <Border Width="1"
