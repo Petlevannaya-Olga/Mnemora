@@ -59,6 +59,20 @@
         x:Key="Mnemora.Brush.Border"
         Color="{StaticResource Mnemora.Color.Border}" />
 
+    <!-- Единая светлая обводка outlined-полей Material Design по всему приложению -->
+
+    <SolidColorBrush
+        x:Key="MaterialDesign.Brush.TextBox.OutlineBorder"
+        Color="{StaticResource Mnemora.Color.Border}" />
+
+    <SolidColorBrush
+        x:Key="MaterialDesign.Brush.ComboBox.OutlineBorder"
+        Color="{StaticResource Mnemora.Color.Border}" />
+
+    <SolidColorBrush
+        x:Key="MaterialDesign.Brush.PasswordBox.OutlineBorder"
+        Color="{StaticResource Mnemora.Color.Border}" />
+
     <!-- Фон онбординга -->
 
     <LinearGradientBrush
