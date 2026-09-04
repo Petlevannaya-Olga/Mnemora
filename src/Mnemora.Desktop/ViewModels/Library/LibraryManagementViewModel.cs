@@ -21,6 +21,7 @@ namespace Mnemora.Desktop.ViewModels.Library;
 public enum LibraryManagementSimplePage
 {
     Sections,
+    SectionStructure,
     Topics,
     Materials,
 }
@@ -71,6 +72,9 @@ public sealed partial class LibraryManagementViewModel(
     private readonly Dictionary<Guid, Guid[]> _pendingMaterialOrders = new();
 
     public CreateMaterialViewModel CreateMaterial { get; } = createMaterialViewModel;
+
+    public LibrarySectionManagementViewModel SectionStructure { get; } =
+        new(queryDispatcher);
 
     private const int SimpleSectionPageSize = LibraryPagingDefaults.PageSize;
     private const int SimpleMaterialPageSize = LibraryPagingDefaults.PageSize;
@@ -262,6 +266,7 @@ public sealed partial class LibraryManagementViewModel(
     [NotifyPropertyChangedFor(nameof(IsOrderMode))]
     [NotifyPropertyChangedFor(nameof(IsSimpleMode))]
     [NotifyPropertyChangedFor(nameof(IsSimpleSectionsPage))]
+    [NotifyPropertyChangedFor(nameof(IsSectionStructurePage))]
     [NotifyPropertyChangedFor(nameof(IsSimpleTopicsPage))]
     [NotifyPropertyChangedFor(nameof(IsSimpleMaterialsPage))]
     [NotifyPropertyChangedFor(nameof(OrderItems))]
@@ -275,6 +280,7 @@ public sealed partial class LibraryManagementViewModel(
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsSimpleSectionsPage))]
+    [NotifyPropertyChangedFor(nameof(IsSectionStructurePage))]
     [NotifyPropertyChangedFor(nameof(IsSimpleTopicsPage))]
     [NotifyPropertyChangedFor(nameof(IsSimpleMaterialsPage))]
     [NotifyPropertyChangedFor(nameof(IsSimpleTilesView))]
@@ -288,6 +294,8 @@ public sealed partial class LibraryManagementViewModel(
     public bool IsSimpleMode => !IsOrderMode;
 
     public bool IsSimpleSectionsPage => IsSimpleMode && SimplePage == LibraryManagementSimplePage.Sections;
+
+    public bool IsSectionStructurePage => IsSimpleMode && SimplePage == LibraryManagementSimplePage.SectionStructure;
 
     public bool IsSimpleTopicsPage => IsSimpleMode && SimplePage == LibraryManagementSimplePage.Topics;
 
@@ -773,13 +781,11 @@ public sealed partial class LibraryManagementViewModel(
             return;
         }
 
-        // Normal browsing must stay lightweight: do not materialize the full library tree.
         SelectedTopic = null;
         SelectedSection = new LibraryManagementOrderItemViewModel(item.Source, position: 1);
-        SimpleTopicSearchText = null;
-        SimplePage = LibraryManagementSimplePage.Topics;
+        SimplePage = LibraryManagementSimplePage.SectionStructure;
 
-        await ReloadSimpleTopicsPagedAsync(cancellationToken);
+        await SectionStructure.InitializeAsync(item.Source, cancellationToken);
     }
 
     [RelayCommand]
@@ -809,6 +815,7 @@ public sealed partial class LibraryManagementViewModel(
                 SimplePage = LibraryManagementSimplePage.Topics;
                 break;
             case LibraryManagementSimplePage.Topics:
+            case LibraryManagementSimplePage.SectionStructure:
                 SelectedTopic = null;
                 SimplePage = LibraryManagementSimplePage.Sections;
                 break;
