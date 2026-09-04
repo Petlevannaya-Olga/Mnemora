@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Materials;
@@ -80,11 +80,6 @@ public sealed class MaterialConfiguration
         ConfigureDiscriminator(builder);
         ConfigureExperienceRewards(builder);
         ConfigureTags(builder);
-
-        builder.HasOne<Topic>()
-            .WithMany()
-            .HasForeignKey(material => material.TopicId)
-            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne<LibraryContainer>()
             .WithMany()

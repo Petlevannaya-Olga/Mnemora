@@ -1,10 +1,10 @@
-using CSharpFunctionalExtensions;
+﻿using CSharpFunctionalExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Mnemora.Application.Database;
 using Mnemora.Contracts;
 using Mnemora.Domain.Materials;
-using Mnemora.Domain.Topics;
+using Mnemora.Domain.LibraryContainers;
 using Mnemora.Shared;
 using Mnemora.Shared.Abstractions;
 
@@ -21,40 +21,40 @@ public sealed class GetMaterialLearningLinkOptionsQueryHandler(
         GetMaterialLearningLinkOptionsQuery query,
         CancellationToken cancellationToken = default)
     {
-        var topicIdResult = TopicId.Create(query.TopicId);
+        var containerIdResult = LibraryContainerId.Create(query.ContainerId);
 
-        if (topicIdResult.IsFailure)
+        if (containerIdResult.IsFailure)
         {
-            return topicIdResult.Error.ToErrors();
+            return containerIdResult.Error.ToErrors();
         }
 
-        TopicId topicId = topicIdResult.Value;
+        LibraryContainerId containerId = containerIdResult.Value;
 
         try
         {
-            bool topicExists = await readDbContext.TopicsRead
+            bool containerExists = await readDbContext.LibraryContainersRead
                 .AnyAsync(
-                    topic => topic.Id == topicId,
+                    container => container.Id == containerId,
                     cancellationToken);
 
-            if (!topicExists)
+            if (!containerExists)
             {
                 return CommonErrors.NotFound(
-                        "topic.not.found",
-                        $"Тема с идентификатором '{query.TopicId}' не найдена")
+                        "library.container.not.found",
+                        $"Контейнер библиотеки с идентификатором '{query.ContainerId}' не найден")
                     .ToErrors();
             }
 
             List<Question> questions = await readDbContext.MaterialsRead
                 .OfType<Question>()
                 .Where(question =>
-                    question.TopicId == topicId &&
+                    question.ContainerId == containerId &&
                     question.ArticleId == null)
                 .ToListAsync(cancellationToken);
 
             List<Article> articles = await readDbContext.MaterialsRead
                 .OfType<Article>()
-                .Where(article => article.TopicId == topicId)
+                .Where(article => article.ContainerId == containerId)
                 .ToListAsync(cancellationToken);
 
             var questionOptions = questions
@@ -79,8 +79,8 @@ public sealed class GetMaterialLearningLinkOptionsQueryHandler(
             when (cancellationToken.IsCancellationRequested)
         {
             logger.LogInformation(
-                "Загрузка вариантов связей для темы {TopicId} была отменена",
-                query.TopicId);
+                "Загрузка вариантов связей для контейнера {ContainerId} была отменена",
+                query.ContainerId);
 
             return CommonErrors.OperationCancelled(
                     "material.learning.options.cancelled")
@@ -90,8 +90,8 @@ public sealed class GetMaterialLearningLinkOptionsQueryHandler(
         {
             logger.LogError(
                 exception,
-                "Не удалось загрузить варианты связей для темы {TopicId}",
-                query.TopicId);
+                "Не удалось загрузить варианты связей для контейнера {ContainerId}",
+                query.ContainerId);
 
             return CommonErrors.Db(
                     "material.learning.options.failed",

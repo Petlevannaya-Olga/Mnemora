@@ -16,6 +16,15 @@
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <Style x:Key="DelayedLoadingHostStyle" TargetType="Border">
+            <Setter Property="Opacity" Value="0" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=Child.IsPresented}" Value="True">
+                    <Setter Property="Opacity" Value="1" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
         <converters:LibraryRangeCounterTextConverter x:Key="LibraryRangeCounterTextConverter" />
         <converters:LibraryFolderColorConverter x:Key="LibraryFolderColorConverter" />
         <converters:LibraryFolderIconConverter x:Key="LibraryFolderIconConverter" />
@@ -1160,6 +1169,7 @@
                     Padding="18,14"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
+                    Style="{StaticResource DelayedLoadingHostStyle}"
                     Background="#F0061735"
                     CornerRadius="14"
                     IsHitTestVisible="False"
@@ -1550,6 +1560,7 @@
                     Padding="18,14"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
+                    Style="{StaticResource DelayedLoadingHostStyle}"
                     Background="#F0061735"
                     CornerRadius="14"
                     IsHitTestVisible="False"
@@ -1885,6 +1896,7 @@
                     Padding="18,14"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
+                    Style="{StaticResource DelayedLoadingHostStyle}"
                     Background="#F0061735"
                     CornerRadius="14"
                     IsHitTestVisible="False"

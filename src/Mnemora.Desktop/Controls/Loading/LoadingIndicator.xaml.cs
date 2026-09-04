@@ -2,11 +2,15 @@
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Threading;
 
 namespace Mnemora.Desktop.Controls.Loading;
 
 public partial class LoadingIndicator : UserControl
 {
+    private const int DefaultShowDelay = 1000;
+    private const int DefaultMinimumVisibleDuration = 300;
+
     public static readonly DependencyProperty MessageProperty = DependencyProperty.Register(
         nameof(Message),
         typeof(string),
@@ -72,9 +76,42 @@ public partial class LoadingIndicator : UserControl
         typeof(LoadingIndicator),
         new PropertyMetadata(new SolidColorBrush(Color.FromRgb(22, 205, 183))));
 
+    public static readonly DependencyProperty ShowDelayProperty = DependencyProperty.Register(
+        nameof(ShowDelay),
+        typeof(int),
+        typeof(LoadingIndicator),
+        new PropertyMetadata(DefaultShowDelay, OnTimingPropertyChanged));
+
+    public static readonly DependencyProperty MinimumVisibleDurationProperty = DependencyProperty.Register(
+        nameof(MinimumVisibleDuration),
+        typeof(int),
+        typeof(LoadingIndicator),
+        new PropertyMetadata(DefaultMinimumVisibleDuration, OnTimingPropertyChanged));
+
+    private static readonly DependencyPropertyKey IsPresentedPropertyKey = DependencyProperty.RegisterReadOnly(
+        nameof(IsPresented),
+        typeof(bool),
+        typeof(LoadingIndicator),
+        new PropertyMetadata(false));
+
+    public static readonly DependencyProperty IsPresentedProperty = IsPresentedPropertyKey.DependencyProperty;
+
+    private readonly DispatcherTimer _showTimer;
+    private readonly DispatcherTimer _hideTimer;
+    private DateTime? _shownAt;
+    private bool _isIndicatorVisible;
+    private int _presentationVersion;
+
     public LoadingIndicator()
     {
         InitializeComponent();
+
+        _showTimer = new DispatcherTimer();
+        _showTimer.Tick += ShowTimer_OnTick;
+
+        _hideTimer = new DispatcherTimer();
+        _hideTimer.Tick += HideTimer_OnTick;
+
         Loaded += LoadingIndicator_OnLoaded;
         Unloaded += LoadingIndicator_OnUnloaded;
         IsVisibleChanged += LoadingIndicator_OnIsVisibleChanged;
@@ -140,6 +177,34 @@ public partial class LoadingIndicator : UserControl
         set => SetValue(PercentageForegroundProperty, value);
     }
 
+    /// <summary>
+    /// Задержка перед фактическим показом индикатора, в миллисекундах.
+    /// Короткие операции успевают завершиться до её окончания и не вызывают мерцание UI.
+    /// </summary>
+    public int ShowDelay
+    {
+        get => (int)GetValue(ShowDelayProperty);
+        set => SetValue(ShowDelayProperty, value);
+    }
+
+    /// <summary>
+    /// Минимальное время, в течение которого уже показанный индикатор считается активным,
+    /// в миллисекундах. Это предотвращает короткое исчезновение/повторное появление при
+    /// быстро следующих друг за другом состояниях загрузки.
+    /// </summary>
+    public int MinimumVisibleDuration
+    {
+        get => (int)GetValue(MinimumVisibleDurationProperty);
+        set => SetValue(MinimumVisibleDurationProperty, value);
+    }
+
+    /// <summary>
+    /// True only when the indicator has passed ShowDelay and is actually painted.
+    /// Loading hosts can bind their own visual chrome to this property so that
+    /// a dark background never flashes before the indicator itself appears.
+    /// </summary>
+    public bool IsPresented => (bool)GetValue(IsPresentedProperty);
+
     private static void OnVisualPropertyChanged(
         DependencyObject dependencyObject,
         DependencyPropertyChangedEventArgs eventArgs)
@@ -150,14 +215,36 @@ public partial class LoadingIndicator : UserControl
         }
     }
 
+    private static void OnTimingPropertyChanged(
+        DependencyObject dependencyObject,
+        DependencyPropertyChangedEventArgs eventArgs)
+    {
+        if (dependencyObject is not LoadingIndicator indicator || !indicator.IsLoaded)
+        {
+            return;
+        }
+
+        indicator.RefreshPresentationState(restartDelay: true);
+    }
+
     private void LoadingIndicator_OnLoaded(object sender, RoutedEventArgs e)
     {
+        HideImmediately();
         UpdateVisualState();
+        RefreshPresentationState();
     }
 
     private void LoadingIndicator_OnUnloaded(object sender, RoutedEventArgs e)
     {
+        _showTimer.Stop();
+        _hideTimer.Stop();
         StopIndeterminateAnimation();
+        IndicatorContent.Visibility = Visibility.Collapsed;
+        IndicatorContent.Opacity = 0;
+        SetValue(IsPresentedPropertyKey, false);
+        _isIndicatorVisible = false;
+        _shownAt = null;
+        _presentationVersion++;
     }
 
     private void LoadingIndicator_OnIsVisibleChanged(
@@ -166,16 +253,161 @@ public partial class LoadingIndicator : UserControl
     {
         if (IsLoaded)
         {
-            UpdateVisualState();
+            RefreshPresentationState();
         }
     }
 
     private void Track_OnSizeChanged(object sender, SizeChangedEventArgs e)
     {
-        if (IsLoaded)
+        if (IsLoaded && _isIndicatorVisible)
         {
             UpdateVisualState();
         }
+    }
+
+    private void RefreshPresentationState(bool restartDelay = false)
+    {
+        if (!IsLoaded)
+        {
+            return;
+        }
+
+        if (IsVisible)
+        {
+            RequestShow(restartDelay);
+        }
+        else
+        {
+            RequestHide();
+        }
+    }
+
+    private void RequestShow(bool restartDelay)
+    {
+        _hideTimer.Stop();
+
+        if (_isIndicatorVisible)
+        {
+            return;
+        }
+
+        int delay = Math.Max(0, ShowDelay);
+
+        if (delay == 0)
+        {
+            _showTimer.Stop();
+            ShowImmediately();
+            return;
+        }
+
+        if (_showTimer.IsEnabled && !restartDelay)
+        {
+            return;
+        }
+
+        _showTimer.Stop();
+        _showTimer.Interval = TimeSpan.FromMilliseconds(delay);
+        _showTimer.Start();
+    }
+
+    private void RequestHide()
+    {
+        _showTimer.Stop();
+        SetValue(IsPresentedPropertyKey, false);
+
+        if (!_isIndicatorVisible)
+        {
+            IndicatorContent.Opacity = 0;
+            IndicatorContent.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        int minimumDuration = Math.Max(0, MinimumVisibleDuration);
+
+        if (minimumDuration == 0 || _shownAt is null)
+        {
+            HideImmediately();
+            return;
+        }
+
+        TimeSpan elapsed = DateTime.UtcNow - _shownAt.Value;
+        TimeSpan remaining = TimeSpan.FromMilliseconds(minimumDuration) - elapsed;
+
+        if (remaining <= TimeSpan.Zero)
+        {
+            HideImmediately();
+            return;
+        }
+
+        _hideTimer.Stop();
+        _hideTimer.Interval = remaining;
+        _hideTimer.Start();
+    }
+
+    private void ShowTimer_OnTick(object? sender, EventArgs e)
+    {
+        _showTimer.Stop();
+
+        if (IsLoaded && IsVisible)
+        {
+            ShowImmediately();
+        }
+    }
+
+    private void HideTimer_OnTick(object? sender, EventArgs e)
+    {
+        _hideTimer.Stop();
+
+        if (!IsVisible)
+        {
+            HideImmediately();
+        }
+    }
+
+    private void ShowImmediately()
+    {
+        int version = ++_presentationVersion;
+
+        // Сначала включаем layout, но не даём контролу отрисоваться.
+        // Иначе у indeterminate-полосы на один кадр виден сегмент у левого края,
+        // пока Track.ActualWidth ещё не рассчитан.
+        IndicatorContent.Opacity = 0;
+        IndicatorContent.Visibility = Visibility.Visible;
+        _isIndicatorVisible = true;
+        _shownAt = DateTime.UtcNow;
+
+        PrepareHiddenIndeterminateState();
+        UpdateVisualState();
+
+        Dispatcher.BeginInvoke(
+            DispatcherPriority.Loaded,
+            new Action(() =>
+            {
+                if (version != _presentationVersion ||
+                    !_isIndicatorVisible ||
+                    !IsVisible ||
+                    !IsLoaded)
+                {
+                    return;
+                }
+
+                UpdateVisualState();
+                IndicatorContent.Opacity = 1;
+                SetValue(IsPresentedPropertyKey, true);
+            }));
+    }
+
+    private void HideImmediately()
+    {
+        _presentationVersion++;
+        _showTimer.Stop();
+        _hideTimer.Stop();
+        IndicatorContent.Opacity = 0;
+        IndicatorContent.Visibility = Visibility.Collapsed;
+        SetValue(IsPresentedPropertyKey, false);
+        _isIndicatorVisible = false;
+        _shownAt = null;
+        StopIndeterminateAnimation();
     }
 
     private void UpdateVisualState()
@@ -200,20 +432,40 @@ public partial class LoadingIndicator : UserControl
             ? Visibility.Visible
             : Visibility.Collapsed;
 
-        if (IsIndeterminate)
+        if (IsIndeterminate && _isIndicatorVisible)
         {
             StartIndeterminateAnimation();
         }
         else
         {
             StopIndeterminateAnimation();
-            UpdateDeterminateFill();
+
+            if (!IsIndeterminate)
+            {
+                UpdateDeterminateFill();
+            }
         }
+    }
+
+    private void PrepareHiddenIndeterminateState()
+    {
+        if (!IsIndeterminate)
+        {
+            return;
+        }
+
+        double trackWidth = Track.ActualWidth > 0
+            ? Track.ActualWidth
+            : Math.Max(0d, IndicatorLength);
+        double segmentWidth = Math.Clamp(trackWidth * 0.3d, 76d, 140d);
+
+        IndeterminateFill.Width = segmentWidth;
+        IndeterminateTranslation.X = -segmentWidth;
     }
 
     private void StartIndeterminateAnimation()
     {
-        if (!IsVisible || Track.ActualWidth <= 0)
+        if (!_isIndicatorVisible || !IsVisible || Track.ActualWidth <= 0)
         {
             StopIndeterminateAnimation();
             return;
@@ -256,7 +508,7 @@ public partial class LoadingIndicator : UserControl
 
         DeterminateFill.Width = targetWidth;
 
-        if (!IsVisible || Track.ActualWidth <= 0)
+        if (!_isIndicatorVisible || !IsVisible || Track.ActualWidth <= 0)
         {
             return;
         }

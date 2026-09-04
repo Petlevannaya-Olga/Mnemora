@@ -1,10 +1,10 @@
-using CSharpFunctionalExtensions;
+﻿using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
 using Mnemora.Application.Database;
 using Mnemora.Application.Materials.Content;
-using Mnemora.Application.Topics;
+using Mnemora.Application.LibraryContainers;
 using Mnemora.Domain.Materials;
-using Mnemora.Domain.Topics;
+using Mnemora.Domain.LibraryContainers;
 using Mnemora.Shared;
 using Mnemora.Shared.Abstractions;
 using ArticleMaterial = Mnemora.Domain.Materials.Article;
@@ -20,7 +20,7 @@ namespace Mnemora.Application.Materials.CreateGraph;
 /// новые файлы компенсирующе удаляются.
 /// </summary>
 public sealed class CreateMaterialGraphCommandHandler(
-    ITopicsRepository topicsRepository,
+    ILibraryContainersRepository libraryContainersRepository,
     IMaterialsRepository materialsRepository,
     IMaterialContentStore materialContentStore,
     ITransactionManager transactionManager,
@@ -84,7 +84,7 @@ public sealed class CreateMaterialGraphCommandHandler(
         CancellationToken cancellationToken)
     {
         var commonResult = await PrepareCommonAsync(
-            command.TopicId,
+            command.ContainerId,
             command.Title,
             command.Difficulty,
             command.IconKey,
@@ -106,8 +106,8 @@ public sealed class CreateMaterialGraphCommandHandler(
             return articleContentResult.Error.ToErrors();
         }
 
-        var articleResult = ArticleMaterial.Create(
-            commonResult.Value.TopicId,
+        var articleResult = ArticleMaterial.CreateInContainer(
+            commonResult.Value.ContainerId,
             commonResult.Value.Title,
             command.Difficulty,
             commonResult.Value.Icon,
@@ -298,13 +298,13 @@ public sealed class CreateMaterialGraphCommandHandler(
         }
         else
         {
-            var topicResult = await EnsureTopicExistsAsync(
-                command.TopicId,
+            var containerResult = await EnsureContainerExistsAsync(
+                command.ContainerId,
                 cancellationToken);
 
-            if (topicResult.IsFailure)
+            if (containerResult.IsFailure)
             {
-                return topicResult.Error;
+                return containerResult.Error;
             }
 
             var tagsResult = CreateTags(command.Tags);
@@ -313,8 +313,8 @@ public sealed class CreateMaterialGraphCommandHandler(
                 return tagsResult.Error.ToErrors();
             }
 
-            var questionResult = Question.CreateStandalone(
-                topicResult.Value,
+            var questionResult = Question.CreateStandaloneInContainer(
+                containerResult.Value,
                 titleResult.Value,
                 command.Difficulty,
                 iconResult.Value,
@@ -360,7 +360,7 @@ public sealed class CreateMaterialGraphCommandHandler(
     }
 
     private async Task<Result<PreparedCommon, Errors>> PrepareCommonAsync(
-        Guid topicId,
+        Guid containerId,
         string title,
         MaterialDifficulty difficulty,
         string? iconKey,
@@ -369,13 +369,13 @@ public sealed class CreateMaterialGraphCommandHandler(
         IReadOnlyCollection<string>? tags,
         CancellationToken cancellationToken)
     {
-        var actualTopicResult = await EnsureTopicExistsAsync(
-            topicId,
+        var actualContainerResult = await EnsureContainerExistsAsync(
+            containerId,
             cancellationToken);
 
-        if (actualTopicResult.IsFailure)
+        if (actualContainerResult.IsFailure)
         {
-            return actualTopicResult.Error;
+            return actualContainerResult.Error;
         }
 
         var titleResult = MaterialTitle.Create(title);
@@ -406,41 +406,41 @@ public sealed class CreateMaterialGraphCommandHandler(
         }
 
         return new PreparedCommon(
-            actualTopicResult.Value,
+            actualContainerResult.Value,
             titleResult.Value,
             iconResult.Value,
             rewardsResult.Value,
             tagsResult.Value);
     }
 
-    private async Task<Result<TopicId, Errors>> EnsureTopicExistsAsync(
-        Guid topicId,
+    private async Task<Result<LibraryContainerId, Errors>> EnsureContainerExistsAsync(
+        Guid containerId,
         CancellationToken cancellationToken)
     {
-        var topicIdResult = TopicId.Create(topicId);
-        if (topicIdResult.IsFailure)
+        var containerIdResult = LibraryContainerId.Create(containerId);
+        if (containerIdResult.IsFailure)
         {
-            return topicIdResult.Error.ToErrors();
+            return containerIdResult.Error.ToErrors();
         }
 
-        var existsResult = await topicsRepository.ExistsAsync(
-            topic => topic.Id == topicIdResult.Value,
+        var containerResult = await libraryContainersRepository.GetByIdAsync(
+            containerIdResult.Value,
             cancellationToken);
 
-        if (existsResult.IsFailure)
+        if (containerResult.IsFailure)
         {
-            return existsResult.Error.ToErrors();
+            return containerResult.Error.ToErrors();
         }
 
-        if (!existsResult.Value)
+        if (containerResult.Value is null)
         {
             return CommonErrors.NotFound(
-                    "topic.not.found",
-                    $"Тема с идентификатором '{topicId}' не найдена")
+                    "library.container.not.found",
+                    $"Контейнер библиотеки с идентификатором '{containerId}' не найден")
                 .ToErrors();
         }
 
-        return topicIdResult.Value;
+        return containerIdResult.Value;
     }
 
     private async Task<Result<IReadOnlyList<Question>, Errors>>
@@ -647,7 +647,7 @@ public sealed class CreateMaterialGraphCommandHandler(
     }
 
     private sealed record PreparedCommon(
-        TopicId TopicId,
+        LibraryContainerId ContainerId,
         MaterialTitle Title,
         MaterialIcon? Icon,
         MaterialExperienceRewards Rewards,

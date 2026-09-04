@@ -27,35 +27,45 @@ public sealed partial class LibrarySectionManagementViewModel(
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSection))]
+    [NotifyPropertyChangedFor(nameof(IsSectionEmpty))]
     private LibrarySectionOverviewDto? _section;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SelectedContainerName))]
     [NotifyPropertyChangedFor(nameof(IsRootSelected))]
+    [NotifyPropertyChangedFor(nameof(IsSelectedFolder))]
+    [NotifyPropertyChangedFor(nameof(EmptyMaterialsTitle))]
+    [NotifyPropertyChangedFor(nameof(EmptyMaterialsDescription))]
     private LibrarySectionManagementTreeNodeViewModel? _selectedNode;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsRootSelected))]
     [NotifyPropertyChangedFor(nameof(HasFolders))]
+    [NotifyPropertyChangedFor(nameof(IsSectionEmpty))]
     private LibrarySectionManagementTreeNodeViewModel? _rootNode;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasRootMaterials))]
+    [NotifyPropertyChangedFor(nameof(IsSectionEmpty))]
     private int _rootMaterialsCount;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasTreeError))]
+    [NotifyPropertyChangedFor(nameof(IsSectionEmpty))]
     private string? _treeErrorMessage;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasMaterialsError))]
     [NotifyPropertyChangedFor(nameof(IsMaterialsEmpty))]
+    [NotifyPropertyChangedFor(nameof(IsSectionEmpty))]
     private string? _materialsErrorMessage;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSectionEmpty))]
     private bool _isLoadingTree;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSectionEmpty))]
     private bool _isLoadingFolders;
 
     [ObservableProperty]
@@ -63,6 +73,7 @@ public sealed partial class LibrarySectionManagementViewModel(
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsMaterialsEmpty))]
+    [NotifyPropertyChangedFor(nameof(IsSectionEmpty))]
     private bool _isLoadingMaterials;
 
     [ObservableProperty]
@@ -75,8 +86,20 @@ public sealed partial class LibrarySectionManagementViewModel(
 
     public bool HasSection => Section is not null;
     public bool IsRootSelected => RootNode is not null && ReferenceEquals(SelectedNode, RootNode);
-    public bool HasFolders => RootNode?.ChildFoldersCount > 0;
+    public bool IsSelectedFolder => SelectedNode?.IsFolder == true;
+    public bool HasFolders => RootNode is not null &&
+                              (RootNode.ChildFoldersCount > 0 ||
+                               RootNode.Children.Any(child => child.IsFolder));
     public bool HasRootMaterials => RootMaterialsCount > 0;
+    public bool IsSectionEmpty =>
+        HasSection &&
+        !IsLoadingTree &&
+        !IsLoadingFolders &&
+        !IsLoadingMaterials &&
+        !HasTreeError &&
+        !HasMaterialsError &&
+        !HasFolders &&
+        !HasRootMaterials;
     public bool HasTreeError => !string.IsNullOrWhiteSpace(TreeErrorMessage);
     public bool HasMaterialsError => !string.IsNullOrWhiteSpace(MaterialsErrorMessage);
     public bool HasMaterials => Materials.Count > 0;
@@ -88,6 +111,14 @@ public sealed partial class LibrarySectionManagementViewModel(
     public int MaterialsWindowEndOffset => _materialWindow.WindowEndOffset;
 
     public string SelectedContainerName => SelectedNode?.Name ?? Section?.Name ?? string.Empty;
+
+    public string EmptyMaterialsTitle => IsSelectedFolder
+        ? "В этой папке пока нет материалов"
+        : "Здесь пока нет материалов";
+
+    public string EmptyMaterialsDescription => IsSelectedFolder
+        ? "Создайте материал или выберите другое место в структуре."
+        : "Создайте материал прямо в разделе или выберите папку.";
 
     public string MaterialsShownCountText
     {
@@ -153,6 +184,20 @@ public sealed partial class LibrarySectionManagementViewModel(
         {
             IsLoadingTree = false;
         }
+
+        if (!HasRootMaterials)
+        {
+            LibrarySectionManagementTreeNodeViewModel? firstFolder =
+                root.Children.FirstOrDefault(child => child.IsFolder);
+
+            if (firstFolder is not null)
+            {
+                await SelectNodeAsync(firstFolder, cancellationToken);
+            }
+        }
+
+        OnPropertyChanged(nameof(HasFolders));
+        OnPropertyChanged(nameof(IsSectionEmpty));
     }
 
     public async Task ExpandAsync(
@@ -330,6 +375,47 @@ public sealed partial class LibrarySectionManagementViewModel(
         }
     }
 
+    public async Task RefreshSelectedMaterialsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        if (SelectedNode is not null)
+        {
+            await ReloadMaterialsAsync(SelectedNode, cancellationToken);
+        }
+    }
+
+    public async Task ReloadChildrenAndSelectAsync(
+        LibrarySectionManagementTreeNodeViewModel parent,
+        Guid? childToSelectId,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(parent);
+
+        parent.Children.Clear();
+        parent.ChildrenLoaded = false;
+        parent.NextOffset = 0;
+        parent.HasMore = false;
+
+        await LoadFoldersPageAsync(parent, 0, cancellationToken);
+
+        OnPropertyChanged(nameof(HasFolders));
+        OnPropertyChanged(nameof(IsSectionEmpty));
+
+        if (childToSelectId is not Guid targetId)
+        {
+            return;
+        }
+
+        LibrarySectionManagementTreeNodeViewModel? child =
+            parent.Children.FirstOrDefault(item =>
+                item.IsFolder && item.ContainerId == targetId);
+
+        if (child is not null)
+        {
+            await SelectNodeAsync(child, cancellationToken);
+        }
+    }
+
     public void UpdateMaterialsViewport(double logicalItemOffset)
     {
         if (!_materialWindow.UpdateViewport(logicalItemOffset))
@@ -410,6 +496,12 @@ public sealed partial class LibrarySectionManagementViewModel(
             {
                 parent.Children.Add(
                     LibrarySectionManagementTreeNodeViewModel.CreateLoadMore(parent));
+            }
+
+            if (ReferenceEquals(parent, RootNode))
+            {
+                OnPropertyChanged(nameof(HasFolders));
+                OnPropertyChanged(nameof(IsSectionEmpty));
             }
         }
         finally
@@ -557,6 +649,7 @@ public sealed partial class LibrarySectionManagementViewModel(
         OnPropertyChanged(nameof(MaterialsWindowStartOffset));
         OnPropertyChanged(nameof(MaterialsWindowEndOffset));
         OnPropertyChanged(nameof(MaterialsShownCountText));
+        OnPropertyChanged(nameof(IsSectionEmpty));
     }
 
 

@@ -9,6 +9,9 @@
     UseLayoutRounding="True">
 
     <Grid
+        x:Name="IndicatorContent"
+        Opacity="0"
+        Visibility="Collapsed"
         Width="{Binding IndicatorLength, RelativeSource={RelativeSource AncestorType={x:Type loading:LoadingIndicator}}}"
         HorizontalAlignment="Center"
         VerticalAlignment="Center">

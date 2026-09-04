@@ -17,6 +17,15 @@
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <Style x:Key="DelayedLoadingHostStyle" TargetType="Border">
+            <Setter Property="Opacity" Value="0" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=Child.IsPresented}" Value="True">
+                    <Setter Property="Opacity" Value="1" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
 
         <converters:SectionColorConverter x:Key="SectionColorConverter" />
         <converters:SectionIconConverter x:Key="SectionIconConverter" />
@@ -1583,6 +1592,7 @@
                     Padding="18,14"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
+                    Style="{StaticResource DelayedLoadingHostStyle}"
                     Background="#F0061735"
                     CornerRadius="14"
                     IsHitTestVisible="False"
@@ -1770,6 +1780,16 @@
                     Background="{DynamicResource Mnemora.Brush.Border}" />
 
             <Grid Grid.Row="3">
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Visibility" Value="Visible" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SectionStructure.IsSectionEmpty}" Value="True">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
@@ -1886,6 +1906,7 @@
                                 Padding="18,14"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
+                                Style="{StaticResource DelayedLoadingHostStyle}"
                                 Background="#F0061735"
                                 CornerRadius="14"
                                 IsHitTestVisible="False"
@@ -2231,6 +2252,7 @@
                                 Padding="18,14"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
+                                Style="{StaticResource DelayedLoadingHostStyle}"
                                 Background="#F0061735"
                                 CornerRadius="14"
                                 IsHitTestVisible="False"
@@ -2246,6 +2268,7 @@
                                 Padding="18,14"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
+                                Style="{StaticResource DelayedLoadingHostStyle}"
                                 Background="#F0061735"
                                 CornerRadius="14"
                                 IsHitTestVisible="False"
@@ -2270,12 +2293,25 @@
                                        FontSize="18"
                                        FontWeight="SemiBold"
                                        Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                                       Text="Здесь пока нет материалов" />
+                                       Text="{Binding SectionStructure.EmptyMaterialsTitle}" />
                             <TextBlock Margin="0,7,0,0"
+                                       MaxWidth="430"
                                        HorizontalAlignment="Center"
                                        FontSize="13"
+                                       TextAlignment="Center"
+                                       TextWrapping="Wrap"
                                        Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                                       Text="Выберите другую папку или корень раздела" />
+                                       Text="{Binding SectionStructure.EmptyMaterialsDescription}" />
+                            <Button Margin="0,18,0,0"
+                                    Height="42"
+                                    MinWidth="180"
+                                    Command="{Binding StartCreateSectionStructureMaterialCommand}"
+                                    Style="{StaticResource Mnemora.PrimaryButton}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Width="18" Height="18" Kind="Plus" />
+                                    <TextBlock Margin="8,0,0,0" Text="Создать материал" />
+                                </StackPanel>
+                            </Button>
                         </StackPanel>
 
                         <Border Width="430"
@@ -2305,6 +2341,68 @@
                         </Border>
                     </Grid>
                 </Grid>
+            </Grid>
+
+            <Grid Grid.Row="3"
+                  Visibility="{Binding SectionStructure.IsSectionEmpty, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <StackPanel MaxWidth="620"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+                    <Border Width="76"
+                            Height="76"
+                            HorizontalAlignment="Center"
+                            Background="#EEFFFC"
+                            CornerRadius="20">
+                        <materialDesign:PackIcon Width="42"
+                                                 Height="42"
+                                                 HorizontalAlignment="Center"
+                                                 VerticalAlignment="Center"
+                                                 Foreground="{DynamicResource Mnemora.Brush.PrimaryDark}"
+                                                 Kind="FolderPlusOutline" />
+                    </Border>
+
+                    <TextBlock Margin="0,22,0,0"
+                               HorizontalAlignment="Center"
+                               FontSize="24"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                               Text="Раздел пока пуст" />
+
+                    <TextBlock Margin="0,9,0,0"
+                               MaxWidth="560"
+                               HorizontalAlignment="Center"
+                               FontSize="14"
+                               LineHeight="21"
+                               TextAlignment="Center"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                               Text="Добавьте первый материал или создайте папку, чтобы начать формировать структуру." />
+
+                    <StackPanel Margin="0,24,0,0"
+                                HorizontalAlignment="Center"
+                                Orientation="Horizontal">
+                        <Button Height="44"
+                                MinWidth="190"
+                                Command="{Binding StartCreateSectionStructureMaterialCommand}"
+                                Style="{StaticResource Mnemora.PrimaryButton}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Width="18" Height="18" Kind="FileDocumentPlusOutline" />
+                                <TextBlock Margin="8,0,0,0" Text="Создать материал" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button Height="44"
+                                MinWidth="180"
+                                Margin="12,0,0,0"
+                                Command="{Binding CreateSectionStructureFolderCommand}"
+                                Style="{StaticResource Mnemora.SecondaryButton}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Width="18" Height="18" Kind="FolderPlusOutline" />
+                                <TextBlock Margin="8,0,0,0" Text="Создать папку" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
             </Grid>
         </Grid>
 
@@ -2907,6 +3005,7 @@
                         Padding="18,14"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
+                        Style="{StaticResource DelayedLoadingHostStyle}"
                         Background="#F0061735"
                         CornerRadius="14"
                         IsHitTestVisible="False"
@@ -2930,6 +3029,7 @@
                 <Border Padding="14,10"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
+                        Style="{StaticResource DelayedLoadingHostStyle}"
                         Background="#F0061735"
                         CornerRadius="12"
                         IsHitTestVisible="False"
@@ -3315,6 +3415,7 @@
                 <Border Padding="14,10"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
+                        Style="{StaticResource DelayedLoadingHostStyle}"
                         Background="#F0061735"
                         CornerRadius="12"
                         IsHitTestVisible="False"
@@ -3346,9 +3447,20 @@
                 Panel.ZIndex="50"
                 Background="#88F7F8FB"
                 Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Opacity" Value="0" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=Child.Child.IsPresented}" Value="True">
+                            <Setter Property="Opacity" Value="1" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
             <Border Padding="20,16"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
+                    Style="{StaticResource DelayedLoadingHostStyle}"
                     Background="#F0061735"
                     CornerRadius="14"
                     IsHitTestVisible="False">

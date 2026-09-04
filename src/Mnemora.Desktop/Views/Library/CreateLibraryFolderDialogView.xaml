@@ -1,0 +1,125 @@
+﻿<UserControl x:Class="Mnemora.Desktop.Views.Library.CreateLibraryFolderDialogView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             Width="560"
+             Background="Transparent">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    </UserControl.Resources>
+
+    <UserControl.InputBindings>
+        <KeyBinding Key="Escape" Command="{Binding CancelCommand}" />
+    </UserControl.InputBindings>
+
+    <Grid Margin="22">
+        <Border Padding="30,26,30,30"
+                Background="{DynamicResource Mnemora.Brush.Surface}"
+                BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                BorderThickness="1"
+                CornerRadius="18">
+            <Border.Effect>
+                <DropShadowEffect Color="#061735"
+                                  BlurRadius="26"
+                                  ShadowDepth="7"
+                                  Opacity="0.28" />
+            </Border.Effect>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Width="48"
+                            Height="48"
+                            Background="#EEFFFC"
+                            CornerRadius="12">
+                        <materialDesign:PackIcon Width="27"
+                                                 Height="27"
+                                                 HorizontalAlignment="Center"
+                                                 VerticalAlignment="Center"
+                                                 Foreground="{DynamicResource Mnemora.Brush.PrimaryDark}"
+                                                 Kind="FolderPlusOutline" />
+                    </Border>
+
+                    <StackPanel Grid.Column="1"
+                                Margin="15,0"
+                                VerticalAlignment="Center">
+                        <TextBlock FontSize="21"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                   Text="Новая папка" />
+                        <TextBlock Margin="0,3,0,0"
+                                   FontSize="13"
+                                   Foreground="{DynamicResource Mnemora.Brush.TextSecondary}">
+                            <Run Text="Внутри: " />
+                            <Run Text="{Binding ParentName}" />
+                        </TextBlock>
+                    </StackPanel>
+
+                    <Button Grid.Column="2"
+                            Command="{Binding CancelCommand}"
+                            Style="{StaticResource Mnemora.DialogCloseButton}">
+                        <materialDesign:PackIcon Width="20"
+                                                 Height="20"
+                                                 Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                                 Kind="Close" />
+                    </Button>
+                </Grid>
+
+                <StackPanel Grid.Row="1" Margin="0,24,0,0">
+                    <TextBox MaxLength="150"
+                             Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             materialDesign:HintAssist.Hint="Название папки"
+                             materialDesign:TextFieldAssist.HasClearButton="True" />
+
+                    <Border Margin="0,14,0,0"
+                            Padding="12,10"
+                            Background="#FFF4F4"
+                            CornerRadius="8"
+                            Visibility="{Binding HasError, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <TextBlock FontSize="12"
+                                   Foreground="#C62828"
+                                   Text="{Binding ErrorMessage}"
+                                   TextWrapping="Wrap" />
+                    </Border>
+                </StackPanel>
+
+                <Grid Grid.Row="2" Margin="0,26,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Button Grid.Column="1"
+                            MinWidth="120"
+                            Command="{Binding CancelCommand}"
+                            Content="Отмена"
+                            Style="{StaticResource Mnemora.SecondaryButton}" />
+
+                    <Button Grid.Column="3"
+                            MinWidth="150"
+                            Command="{Binding CreateCommand}"
+                            Style="{StaticResource Mnemora.PrimaryButton}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Width="18" Height="18" Kind="Plus" />
+                            <TextBlock Margin="8,0,0,0" Text="Создать папку" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

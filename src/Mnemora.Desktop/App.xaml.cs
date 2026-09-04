@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -205,6 +205,7 @@ public partial class App : System.Windows.Application
         services.AddTransient<AllMaterialsViewModel>();
         services.AddTransient<LibraryOverviewViewModel>();
         services.AddTransient<CreateMaterialViewModel>();
+        services.AddTransient<CreateLibraryFolderDialogViewModel>();
         services.AddTransient<LibraryManagementViewModel>();
         services.AddTransient<DeleteTopicDialogViewModel>();
         services.AddTransient<EditTopicDialogViewModel>();
