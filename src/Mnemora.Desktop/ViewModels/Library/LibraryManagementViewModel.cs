@@ -107,7 +107,6 @@ public sealed partial class LibraryManagementViewModel(
     private int _contextLoadVersion;
     private Guid? _preferredSectionId;
     private Guid? _preferredTopicId;
-    private bool _isCreatingMaterialFromSectionStructure;
 
     public ObservableCollection<LibraryManagementOrderItemViewModel> Sections { get; } = [];
 
@@ -790,84 +789,6 @@ public sealed partial class LibraryManagementViewModel(
     }
 
     [RelayCommand]
-    private void StartCreateSectionStructureMaterial()
-    {
-        LibrarySectionManagementTreeNodeViewModel? node =
-            SectionStructure.SelectedNode ?? SectionStructure.RootNode;
-        LibrarySectionOverviewDto? section = SectionStructure.Section;
-
-        if (node?.ContainerId is not Guid containerId || section is null)
-        {
-            return;
-        }
-
-        string contextName = node.IsSection
-            ? section.Name
-            : node.Name;
-
-        var context = new LibraryManagementOrderItemViewModel(
-            new LibraryManagementTopicOverviewDto(
-                containerId,
-                section.Id,
-                contextName,
-                node.Color ?? section.Color,
-                "FolderOutline",
-                section.CreatedAt,
-                section.UpdatedAt,
-                section.LastActivityAt,
-                0,
-                0,
-                0,
-                0),
-            position: 1);
-
-        _isCreatingMaterialFromSectionStructure = true;
-
-        CreateMaterial.Initialize(
-            context,
-            CancelCreateMaterial,
-            CompleteCreateMaterial);
-
-        IsCreatingMaterial = true;
-    }
-
-    [RelayCommand]
-    private async Task CreateSectionStructureFolderAsync(
-        CancellationToken cancellationToken)
-    {
-        LibrarySectionManagementTreeNodeViewModel? parent =
-            SectionStructure.SelectedNode ?? SectionStructure.RootNode;
-
-        if (parent?.ContainerId is not Guid parentContainerId ||
-            !parent.CanCreateChildFolder)
-        {
-            return;
-        }
-
-        Guid? folderId = dialogService.Show<CreateLibraryFolderDialogViewModel, Guid?>(
-            viewModel => viewModel.Initialize(
-                parentContainerId,
-                parent.IsSection
-                    ? SectionStructure.Section?.Name ?? parent.Name
-                    : parent.Name,
-                parent.Color));
-
-        if (folderId is null)
-        {
-            return;
-        }
-
-        notificationService.ShowSuccess("Папка создана");
-
-        await SectionStructure.ReloadChildrenAndSelectAsync(
-            parent,
-            folderId.Value,
-            cancellationToken);
-
-        await ReloadSimpleSectionsCoreAsync(cancellationToken);
-    }
-
-    [RelayCommand]
     private async Task OpenSimpleTopicAsync(
         LibraryManagementOrderItemViewModel? item,
         CancellationToken cancellationToken)
@@ -927,7 +848,6 @@ public sealed partial class LibraryManagementViewModel(
     [RelayCommand]
     private void CancelCreateMaterial()
     {
-        _isCreatingMaterialFromSectionStructure = false;
         IsCreatingMaterial = false;
         CreateMaterial.Reset();
     }
@@ -939,15 +859,9 @@ public sealed partial class LibraryManagementViewModel(
                 ? "Вопрос создан"
                 : "Статья создана";
 
-        bool refreshSectionStructure = _isCreatingMaterialFromSectionStructure;
+        _preferredSectionId = SelectedSection?.Id;
+        _preferredTopicId = SelectedTopic?.Id;
 
-        if (!refreshSectionStructure)
-        {
-            _preferredSectionId = SelectedSection?.Id;
-            _preferredTopicId = SelectedTopic?.Id;
-        }
-
-        _isCreatingMaterialFromSectionStructure = false;
         IsCreatingMaterial = false;
         CreateMaterial.Reset();
 
@@ -955,14 +869,6 @@ public sealed partial class LibraryManagementViewModel(
 
         try
         {
-            if (refreshSectionStructure)
-            {
-                await SectionStructure.RefreshSelectedMaterialsAsync(
-                    CancellationToken.None);
-                await ReloadSimpleSectionsCoreAsync(CancellationToken.None);
-                return;
-            }
-
             await RefreshAfterMutationAsync(
                 CancellationToken.None);
         }
@@ -1498,6 +1404,7 @@ public sealed partial class LibraryManagementViewModel(
                _simpleSectionWindow.HasNext &&
                !IsSimpleSectionsLoading &&
                !IsSimpleSectionsLoadingNextPage &&
+               !_isSimpleSectionsLoadingPreviousPage &&
                !HasError &&
                !HasSimpleSectionsNextPageError;
     }
@@ -2705,6 +2612,7 @@ public sealed partial class LibraryManagementViewModel(
         IsSimpleMaterialsPage &&
         !IsContextLoading &&
         !_isSimpleMaterialsLoadingNextPage &&
+        !_isSimpleMaterialsLoadingPreviousPage &&
         SimpleMaterialsHasMore;
 
     private ObservableCollection<LibraryManagementOrderItemViewModel> GetOrderCollection(

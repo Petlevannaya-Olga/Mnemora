@@ -1,4 +1,6 @@
 ﻿using System.Collections.ObjectModel;
+using System.Windows;
+using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Mnemora.Application.Library.GetHierarchyFoldersPage;
@@ -105,8 +107,8 @@ public sealed partial class LibrarySectionManagementViewModel(
     public bool HasMaterials => Materials.Count > 0;
     public bool IsMaterialsEmpty => !IsLoadingMaterials && !HasMaterialsError && !HasMaterials;
     public bool IsMaterialsPaging => IsLoadingNextMaterialsPage || IsLoadingPreviousMaterialsPage;
-    public bool MaterialsHasMore => _materialWindow.HasNext && !IsLoadingNextMaterialsPage;
-    public bool MaterialsHasPrevious => _materialWindow.HasPrevious && !IsLoadingPreviousMaterialsPage;
+    public bool MaterialsHasMore => _materialWindow.HasNext && !IsLoadingNextMaterialsPage && !IsLoadingPreviousMaterialsPage;
+    public bool MaterialsHasPrevious => _materialWindow.HasPrevious && !IsLoadingPreviousMaterialsPage && !IsLoadingNextMaterialsPage;
     public int MaterialsWindowStartOffset => _materialWindow.WindowStartOffset;
     public int MaterialsWindowEndOffset => _materialWindow.WindowEndOffset;
 
@@ -279,11 +281,25 @@ public sealed partial class LibrarySectionManagementViewModel(
 
         int version = _materialLoadVersion;
         int offset = _materialWindow.NextOffset;
+
+        if (_materialWindow.TryGetCachedPage(
+                offset,
+                out IReadOnlyList<LibraryManagementMaterialOverviewDto> cached))
+        {
+            _materialWindow.ShowPage(offset, cached, PageWindowInsert.Append);
+            RebuildMaterials();
+            NotifyMaterialsStateChanged();
+            return;
+        }
+
         IsLoadingNextMaterialsPage = true;
         MaterialsErrorMessage = null;
+        NotifyMaterialsStateChanged();
 
         try
         {
+            await YieldForPagingLoaderAsync(cancellationToken);
+
             LibraryManagementMaterialsPageDto? page = await GetMaterialsPageAsync(
                 containerId,
                 offset,
@@ -320,11 +336,25 @@ public sealed partial class LibrarySectionManagementViewModel(
 
         int version = _materialLoadVersion;
         int offset = _materialWindow.PreviousOffset;
+
+        if (_materialWindow.TryGetCachedPage(
+                offset,
+                out IReadOnlyList<LibraryManagementMaterialOverviewDto> cached))
+        {
+            _materialWindow.ShowPage(offset, cached, PageWindowInsert.Prepend);
+            RebuildMaterials();
+            NotifyMaterialsStateChanged();
+            return;
+        }
+
         IsLoadingPreviousMaterialsPage = true;
         MaterialsErrorMessage = null;
+        NotifyMaterialsStateChanged();
 
         try
         {
+            await YieldForPagingLoaderAsync(cancellationToken);
+
             LibraryManagementMaterialsPageDto? page = await GetMaterialsPageAsync(
                 containerId,
                 offset,
@@ -696,4 +726,21 @@ public sealed partial class LibrarySectionManagementViewModel(
                 parent,
                 message));
     }
+
+    private static async Task YieldForPagingLoaderAsync(CancellationToken cancellationToken)
+    {
+        Dispatcher? dispatcher = System.Windows.Application.Current?.Dispatcher;
+
+        if (dispatcher is null || dispatcher.HasShutdownStarted)
+        {
+            await Task.Yield();
+            return;
+        }
+
+        await dispatcher.InvokeAsync(
+            static () => { },
+            DispatcherPriority.Background,
+            cancellationToken);
+    }
+
 }
