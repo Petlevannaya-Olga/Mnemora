@@ -953,6 +953,7 @@
                             <ItemsPanelTemplate>
                                 <UniformGrid
                                     libraryBehaviors:ResponsiveUniformGridBehavior.DesiredColumns="{Binding DataContext.DesiredTilesPerRow, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                    libraryBehaviors:ResponsiveUniformGridBehavior.ActualColumns="{Binding DataContext.ActualFolderTilesPerRow, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}, Mode=OneWayToSource}"
                                     libraryBehaviors:ResponsiveUniformGridBehavior.MinimumItemWidth="300"
                                     libraryBehaviors:ResponsiveUniformGridBehavior.MaximumColumns="5" />
                             </ItemsPanelTemplate>
@@ -1020,6 +1021,7 @@
                             <ItemsPanelTemplate>
                                 <UniformGrid
                                     libraryBehaviors:ResponsiveUniformGridBehavior.DesiredColumns="{Binding DataContext.DesiredTilesPerRow, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                    libraryBehaviors:ResponsiveUniformGridBehavior.ActualColumns="{Binding DataContext.ActualFolderCompactTilesPerRow, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}, Mode=OneWayToSource}"
                                     libraryBehaviors:ResponsiveUniformGridBehavior.MinimumItemWidth="220"
                                     libraryBehaviors:ResponsiveUniformGridBehavior.MaximumColumns="7" />
                             </ItemsPanelTemplate>

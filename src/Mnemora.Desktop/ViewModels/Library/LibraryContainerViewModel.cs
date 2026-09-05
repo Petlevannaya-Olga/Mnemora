@@ -237,6 +237,12 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
     [ObservableProperty]
     private double _foldersPaneRatio = DefaultFoldersPaneRatio;
 
+    [ObservableProperty]
+    private int _actualFolderTilesPerRow = 1;
+
+    [ObservableProperty]
+    private int _actualFolderCompactTilesPerRow = 1;
+
     public string ContainerTitle =>
         Contents?.Container.Name ?? "Библиотека";
 
@@ -384,6 +390,22 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
                 FoldersTotalCount,
                 !string.IsNullOrWhiteSpace(SearchText));
         }
+    }
+
+    public void UpdateFoldersViewport(double logicalItemOffset)
+    {
+        int pageOffset = LibraryRangeTextFormatter.GetPageStartOffset(
+            windowStartOffset: 0,
+            verticalOffset: logicalItemOffset,
+            pageSize: FolderPageSize);
+
+        if (FoldersTotalCount > 0)
+        {
+            int lastPageOffset = (FoldersTotalCount - 1) / FolderPageSize * FolderPageSize;
+            pageOffset = Math.Min(pageOffset, lastPageOffset);
+        }
+
+        FoldersCurrentPageOffset = pageOffset;
     }
 
     public string MaterialsShownCountText

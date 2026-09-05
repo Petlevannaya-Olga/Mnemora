@@ -8,7 +8,7 @@ namespace Mnemora.Desktop.Controls.Loading;
 
 public partial class LoadingIndicator : UserControl
 {
-    private const int DefaultShowDelay = 1000;
+    private const int DefaultShowDelay = 0;
     private const int DefaultMinimumVisibleDuration = 300;
 
     public static readonly DependencyProperty MessageProperty = DependencyProperty.Register(
@@ -179,7 +179,8 @@ public partial class LoadingIndicator : UserControl
 
     /// <summary>
     /// Задержка перед фактическим показом индикатора, в миллисекундах.
-    /// Короткие операции успевают завершиться до её окончания и не вызывают мерцание UI.
+    /// По умолчанию индикатор показывается сразу; при необходимости отдельный экран
+    /// может задать собственную задержку.
     /// </summary>
     public int ShowDelay
     {
@@ -229,6 +230,12 @@ public partial class LoadingIndicator : UserControl
 
     private void LoadingIndicator_OnLoaded(object sender, RoutedEventArgs e)
     {
+        if (ShowDelay <= 0)
+        {
+            PrepareImmediatePresentation();
+            return;
+        }
+
         HideImmediately();
         UpdateVisualState();
         RefreshPresentationState();
@@ -251,10 +258,18 @@ public partial class LoadingIndicator : UserControl
         object sender,
         DependencyPropertyChangedEventArgs e)
     {
-        if (IsLoaded)
+        if (!IsLoaded)
         {
-            RefreshPresentationState();
+            return;
         }
+
+        if (ShowDelay <= 0)
+        {
+            PrepareImmediatePresentation();
+            return;
+        }
+
+        RefreshPresentationState();
     }
 
     private void Track_OnSizeChanged(object sender, SizeChangedEventArgs e)
@@ -272,6 +287,12 @@ public partial class LoadingIndicator : UserControl
             return;
         }
 
+        if (ShowDelay <= 0)
+        {
+            PrepareImmediatePresentation();
+            return;
+        }
+
         if (IsVisible)
         {
             RequestShow(restartDelay);
@@ -279,6 +300,32 @@ public partial class LoadingIndicator : UserControl
         else
         {
             RequestHide();
+        }
+    }
+
+    private void PrepareImmediatePresentation()
+    {
+        _showTimer.Stop();
+        _hideTimer.Stop();
+
+        // При ShowDelay = 0 внутреннее содержимое не участвует в управлении
+        // видимостью. Экран сам показывает/скрывает LoadingIndicator через
+        // IsLoading, поэтому содержимое всегда готово к первому кадру.
+        IndicatorContent.Visibility = Visibility.Visible;
+        IndicatorContent.Opacity = 1;
+
+        _isIndicatorVisible = IsVisible;
+        _shownAt = IsVisible ? DateTime.UtcNow : null;
+        SetValue(IsPresentedPropertyKey, IsVisible);
+
+        if (IsVisible)
+        {
+            PrepareHiddenIndeterminateState();
+            UpdateVisualState();
+        }
+        else
+        {
+            StopIndeterminateAnimation();
         }
     }
 
@@ -366,35 +413,19 @@ public partial class LoadingIndicator : UserControl
 
     private void ShowImmediately()
     {
-        int version = ++_presentationVersion;
-
-        // Сначала включаем layout, но не даём контролу отрисоваться.
-        // Иначе у indeterminate-полосы на один кадр виден сегмент у левого края,
-        // пока Track.ActualWidth ещё не рассчитан.
-        IndicatorContent.Opacity = 0;
-        IndicatorContent.Visibility = Visibility.Visible;
+        _presentationVersion++;
         _isIndicatorVisible = true;
         _shownAt = DateTime.UtcNow;
 
+        // При ShowDelay = 0 индикатор действительно должен появляться в текущем
+        // UI-цикле. Раньше Opacity включалась через Dispatcher.BeginInvoke, и
+        // быстрые операции успевали завершиться до следующего кадра — визуально
+        // лоадер полностью пропадал.
         PrepareHiddenIndeterminateState();
+        IndicatorContent.Visibility = Visibility.Visible;
+        IndicatorContent.Opacity = 1;
         UpdateVisualState();
-
-        Dispatcher.BeginInvoke(
-            DispatcherPriority.Loaded,
-            new Action(() =>
-            {
-                if (version != _presentationVersion ||
-                    !_isIndicatorVisible ||
-                    !IsVisible ||
-                    !IsLoaded)
-                {
-                    return;
-                }
-
-                UpdateVisualState();
-                IndicatorContent.Opacity = 1;
-                SetValue(IsPresentedPropertyKey, true);
-            }));
+        SetValue(IsPresentedPropertyKey, true);
     }
 
     private void HideImmediately()

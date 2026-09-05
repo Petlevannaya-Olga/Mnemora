@@ -523,6 +523,7 @@
         <Grid Grid.Row="2" Margin="32,8,32,28">
             <loading:LoadingIndicator
                 Panel.ZIndex="30"
+                ShowDelay="0"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 IndicatorLength="360"
@@ -1072,7 +1073,7 @@
                             <DataGridTemplateColumn
                                 Header="Вопросы"
                                 Width="100"
-                                HeaderStyle="{StaticResource SectionTableColumnHeaderStyle}">
+                                HeaderStyle="{StaticResource SectionTableLastColumnHeaderStyle}">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center" Orientation="Horizontal">
@@ -1083,29 +1084,7 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <DataGridTextColumn
-                                Header="Создан"
-                                Width="105"
-                                Binding="{Binding CreatedAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
-                                CellStyle="{StaticResource SectionTableDateCellStyle}"
-                                HeaderStyle="{StaticResource SectionTableColumnHeaderStyle}"
-                                ElementStyle="{StaticResource SectionTableTextStyle}" />
 
-                            <DataGridTextColumn
-                                Header="Изменён"
-                                Width="105"
-                                Binding="{Binding UpdatedAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
-                                CellStyle="{StaticResource SectionTableDateCellStyle}"
-                                HeaderStyle="{StaticResource SectionTableColumnHeaderStyle}"
-                                ElementStyle="{StaticResource SectionTableTextStyle}" />
-
-                            <DataGridTextColumn
-                                Header="Активность"
-                                Width="115"
-                                Binding="{Binding LastActivityAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
-                                CellStyle="{StaticResource SectionTableDateCellStyle}"
-                                HeaderStyle="{StaticResource SectionTableLastColumnHeaderStyle}"
-                                ElementStyle="{StaticResource SectionTableTextStyle}" />
 
                         </DataGrid.Columns>
                     </DataGrid>
@@ -1118,12 +1097,12 @@
                     Padding="18,14"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
-                    Style="{StaticResource DelayedLoadingHostStyle}"
                     Background="#F0061735"
                     CornerRadius="14"
                     IsHitTestVisible="False"
                     Visibility="{Binding IsLoadingNextPage, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <loading:LoadingIndicator
+                        ShowDelay="0"
                         IndicatorLength="180"
                         IndicatorThickness="5"
                         Message="Загружаем разделы..."

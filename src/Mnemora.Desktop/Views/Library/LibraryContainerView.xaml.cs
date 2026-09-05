@@ -90,15 +90,33 @@ public partial class LibraryContainerView : UserControl
 
     private async void FoldersScroll_OnScrollChanged(object sender, ScrollChangedEventArgs e)
     {
-        if (_isFoldersPageLoadRunning ||
-            e.VerticalChange <= 0 ||
-            DataContext is not LibraryContainerViewModel viewModel)
+        if (DataContext is not LibraryContainerViewModel viewModel)
         {
             return;
         }
 
         ScrollViewer? scrollViewer = ResolveScrollViewer(sender, e);
-        if (scrollViewer is null || !IsNearBottom(scrollViewer))
+        if (scrollViewer is null)
+        {
+            return;
+        }
+
+        int itemsPerRow = viewModel.IsTilesView
+            ? Math.Max(1, viewModel.ActualFolderTilesPerRow)
+            : viewModel.IsCompactTilesView
+                ? Math.Max(1, viewModel.ActualFolderCompactTilesPerRow)
+                : 1;
+
+        viewModel.UpdateFoldersViewport(
+            GetLogicalFolderOffset(
+                sender,
+                scrollViewer,
+                viewModel.Folders.Count,
+                itemsPerRow));
+
+        if (_isFoldersPageLoadRunning ||
+            e.VerticalChange <= 0 ||
+            !IsNearBottom(scrollViewer))
         {
             return;
         }
@@ -327,6 +345,33 @@ public partial class LibraryContainerView : UserControl
 
         viewModel.OpenFolderCommand.Execute(folder);
         e.Handled = true;
+    }
+
+    private static double GetLogicalFolderOffset(
+        object sender,
+        ScrollViewer scrollViewer,
+        int loadedItemsCount,
+        int itemsPerRow)
+    {
+        if (sender is DataGrid)
+        {
+            return Math.Max(0, scrollViewer.VerticalOffset);
+        }
+
+        int safeItemsPerRow = Math.Max(1, itemsPerRow);
+        int loadedRows = Math.Max(1,
+            (int)Math.Ceiling(loadedItemsCount / (double)safeItemsPerRow));
+
+        double rowHeight = scrollViewer.ExtentHeight / loadedRows;
+        if (rowHeight <= 0 || double.IsNaN(rowHeight) || double.IsInfinity(rowHeight))
+        {
+            return 0;
+        }
+
+        int firstVisibleRow = Math.Max(0,
+            (int)Math.Floor(scrollViewer.VerticalOffset / rowHeight));
+
+        return firstVisibleRow * safeItemsPerRow;
     }
 
     private static bool IsNearBottom(ScrollViewer scrollViewer)
