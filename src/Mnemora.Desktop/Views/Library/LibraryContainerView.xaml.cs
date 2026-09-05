@@ -108,39 +108,92 @@ public partial class LibraryContainerView : UserControl
                 : 1;
 
         viewModel.UpdateFoldersViewport(
-            GetLogicalFolderOffset(
+            GetLogicalEntityOffset(
                 sender,
                 scrollViewer,
                 viewModel.Folders.Count,
                 itemsPerRow));
 
         if (_isFoldersPageLoadRunning ||
-            e.VerticalChange <= 0 ||
-            !IsNearBottom(scrollViewer))
+            (!IsNearTop(scrollViewer) && !IsNearBottom(scrollViewer)))
         {
             return;
         }
 
         _isFoldersPageLoadRunning = true;
+        CancellationToken cancellationToken =
+            _loadCancellationTokenSource?.Token ?? CancellationToken.None;
+
+        bool loadPreviousPage =
+            IsNearTop(scrollViewer) &&
+            viewModel.FoldersHasPrevious;
 
         try
         {
             while (IsLoaded &&
                    ReferenceEquals(DataContext, viewModel) &&
+                   IsNearTop(scrollViewer) &&
+                   viewModel.FoldersHasPrevious)
+            {
+                int startOffsetBeforeLoading = viewModel.FolderWindowStartOffset;
+                int endOffsetBeforeLoading = viewModel.FolderWindowEndOffset;
+                Guid? anchorId = viewModel.Folders.FirstOrDefault()?.Id;
+
+                await viewModel.LoadPreviousFoldersPageCommand.ExecuteAsync(null);
+                await WaitForScrollLayoutAsync();
+
+                if (anchorId is Guid id)
+                {
+                    ScrollFolderAnchorIntoView(sender, viewModel, id);
+                    await WaitForScrollLayoutAsync();
+                }
+
+                viewModel.UpdateFoldersViewport(
+                    GetLogicalEntityOffset(
+                        sender,
+                        scrollViewer,
+                        viewModel.Folders.Count,
+                        itemsPerRow));
+
+                if (startOffsetBeforeLoading == viewModel.FolderWindowStartOffset &&
+                    endOffsetBeforeLoading == viewModel.FolderWindowEndOffset)
+                {
+                    break;
+                }
+            }
+
+            if (loadPreviousPage)
+            {
+                return;
+            }
+
+            while (IsLoaded &&
+                   ReferenceEquals(DataContext, viewModel) &&
                    IsNearBottom(scrollViewer) &&
                    viewModel.LoadNextFoldersPageCommand.CanExecute(null))
             {
-                int foldersCountBeforeLoading = viewModel.Folders.Count;
+                int startOffsetBeforeLoading = viewModel.FolderWindowStartOffset;
+                int endOffsetBeforeLoading = viewModel.FolderWindowEndOffset;
+                Guid? anchorId = viewModel.Folders.LastOrDefault()?.Id;
+
                 await viewModel.LoadNextFoldersPageCommand.ExecuteAsync(null);
+                await WaitForScrollLayoutAsync();
 
-                // Коллекция уже обновлена, но ScrollViewer пересчитывает ExtentHeight
-                // на следующем проходе привязки и разметки. После него повторно
-                // проверяем низ, чтобы не потерять ScrollChanged во время загрузки.
-                await Dispatcher.InvokeAsync(
-                    static () => { },
-                    DispatcherPriority.Background);
+                if (anchorId is Guid id)
+                {
+                    ScrollFolderAnchorIntoView(sender, viewModel, id);
+                    await WaitForScrollLayoutAsync();
+                }
 
-                if (viewModel.Folders.Count == foldersCountBeforeLoading)
+                viewModel.UpdateFoldersViewport(
+                    GetLogicalEntityOffset(
+                        sender,
+                        scrollViewer,
+                        viewModel.Folders.Count,
+                        itemsPerRow));
+
+                if (startOffsetBeforeLoading == viewModel.FolderWindowStartOffset &&
+                    endOffsetBeforeLoading == viewModel.FolderWindowEndOffset)
                 {
                     break;
                 }
@@ -158,39 +211,106 @@ public partial class LibraryContainerView : UserControl
 
     private async void MaterialsScroll_OnScrollChanged(object sender, ScrollChangedEventArgs e)
     {
-        if (_isMaterialsPageLoadRunning ||
-            e.VerticalChange <= 0 ||
-            DataContext is not LibraryContainerViewModel viewModel)
+        if (DataContext is not LibraryContainerViewModel viewModel)
         {
             return;
         }
 
         ScrollViewer? scrollViewer = ResolveScrollViewer(sender, e);
-        if (scrollViewer is null || !IsNearBottom(scrollViewer))
+        if (scrollViewer is null)
+        {
+            return;
+        }
+
+        int itemsPerRow = viewModel.IsTilesView
+            ? Math.Max(1, viewModel.ActualMaterialTilesPerRow)
+            : viewModel.IsCompactTilesView
+                ? Math.Max(1, viewModel.ActualMaterialCompactTilesPerRow)
+                : 1;
+
+        viewModel.UpdateMaterialsViewport(
+            GetLogicalEntityOffset(
+                sender,
+                scrollViewer,
+                viewModel.Materials.Count,
+                itemsPerRow));
+
+        if (_isMaterialsPageLoadRunning ||
+            (!IsNearTop(scrollViewer) && !IsNearBottom(scrollViewer)))
         {
             return;
         }
 
         _isMaterialsPageLoadRunning = true;
+        bool loadPreviousPage = IsNearTop(scrollViewer) && viewModel.MaterialsHasPrevious;
 
         try
         {
             while (IsLoaded &&
                    ReferenceEquals(DataContext, viewModel) &&
+                   IsNearTop(scrollViewer) &&
+                   viewModel.MaterialsHasPrevious &&
+                   viewModel.LoadPreviousMaterialsPageCommand.CanExecute(null))
+            {
+                int startOffsetBeforeLoading = viewModel.MaterialWindowStartOffset;
+                int endOffsetBeforeLoading = viewModel.MaterialWindowEndOffset;
+                Guid? anchorId = viewModel.Materials.FirstOrDefault()?.Id;
+
+                await viewModel.LoadPreviousMaterialsPageCommand.ExecuteAsync(null);
+                await WaitForScrollLayoutAsync();
+
+                if (anchorId is Guid id)
+                {
+                    ScrollMaterialAnchorIntoView(sender, viewModel, id);
+                    await WaitForScrollLayoutAsync();
+                }
+
+                viewModel.UpdateMaterialsViewport(
+                    GetLogicalEntityOffset(
+                        sender,
+                        scrollViewer,
+                        viewModel.Materials.Count,
+                        itemsPerRow));
+
+                if (startOffsetBeforeLoading == viewModel.MaterialWindowStartOffset &&
+                    endOffsetBeforeLoading == viewModel.MaterialWindowEndOffset)
+                {
+                    break;
+                }
+            }
+
+            if (loadPreviousPage)
+            {
+                return;
+            }
+
+            while (IsLoaded &&
+                   ReferenceEquals(DataContext, viewModel) &&
                    IsNearBottom(scrollViewer) &&
                    viewModel.LoadNextMaterialsPageCommand.CanExecute(null))
             {
-                int materialsCountBeforeLoading = viewModel.Materials.Count;
+                int startOffsetBeforeLoading = viewModel.MaterialWindowStartOffset;
+                int endOffsetBeforeLoading = viewModel.MaterialWindowEndOffset;
+                Guid? anchorId = viewModel.Materials.LastOrDefault()?.Id;
+
                 await viewModel.LoadNextMaterialsPageCommand.ExecuteAsync(null);
+                await WaitForScrollLayoutAsync();
 
-                // После добавления строк DataGrid обновляет диапазон прокрутки
-                // асинхронно. Ждём layout и ещё раз проверяем нижнюю границу,
-                // чтобы продолжить загрузку без движения вверх-вниз.
-                await Dispatcher.InvokeAsync(
-                    static () => { },
-                    DispatcherPriority.Background);
+                if (anchorId is Guid id)
+                {
+                    ScrollMaterialAnchorIntoView(sender, viewModel, id);
+                    await WaitForScrollLayoutAsync();
+                }
 
-                if (viewModel.Materials.Count == materialsCountBeforeLoading)
+                viewModel.UpdateMaterialsViewport(
+                    GetLogicalEntityOffset(
+                        sender,
+                        scrollViewer,
+                        viewModel.Materials.Count,
+                        itemsPerRow));
+
+                if (startOffsetBeforeLoading == viewModel.MaterialWindowStartOffset &&
+                    endOffsetBeforeLoading == viewModel.MaterialWindowEndOffset)
                 {
                     break;
                 }
@@ -208,36 +328,106 @@ public partial class LibraryContainerView : UserControl
 
     private async void MixedContentScroll_OnScrollChanged(object sender, ScrollChangedEventArgs e)
     {
-        if (_isMixedPageLoadRunning ||
-            e.VerticalChange <= 0 ||
-            DataContext is not LibraryContainerViewModel viewModel)
+        if (DataContext is not LibraryContainerViewModel viewModel)
         {
             return;
         }
 
         ScrollViewer? scrollViewer = ResolveScrollViewer(sender, e);
-        if (scrollViewer is null || !IsNearBottom(scrollViewer))
+        if (scrollViewer is null)
+        {
+            return;
+        }
+
+        int itemsPerRow = viewModel.IsTilesView
+            ? Math.Max(1, viewModel.ActualMixedTilesPerRow)
+            : viewModel.IsCompactTilesView
+                ? Math.Max(1, viewModel.ActualMixedCompactTilesPerRow)
+                : 1;
+
+        viewModel.UpdateMixedViewport(
+            GetLogicalEntityOffset(
+                sender,
+                scrollViewer,
+                viewModel.MixedContent.Count,
+                itemsPerRow));
+
+        if (_isMixedPageLoadRunning ||
+            (!IsNearTop(scrollViewer) && !IsNearBottom(scrollViewer)))
         {
             return;
         }
 
         _isMixedPageLoadRunning = true;
+        bool loadPreviousPage = IsNearTop(scrollViewer) && viewModel.MixedHasPrevious;
 
         try
         {
             while (IsLoaded &&
                    ReferenceEquals(DataContext, viewModel) &&
+                   IsNearTop(scrollViewer) &&
+                   viewModel.MixedHasPrevious &&
+                   viewModel.LoadPreviousMixedPageCommand.CanExecute(null))
+            {
+                int startOffsetBeforeLoading = viewModel.MixedWindowStartOffset;
+                int endOffsetBeforeLoading = viewModel.MixedWindowEndOffset;
+                Guid? anchorId = viewModel.MixedContent.FirstOrDefault()?.Id;
+
+                await viewModel.LoadPreviousMixedPageCommand.ExecuteAsync(null);
+                await WaitForScrollLayoutAsync();
+
+                if (anchorId is Guid id)
+                {
+                    ScrollMixedAnchorIntoView(sender, viewModel, id);
+                    await WaitForScrollLayoutAsync();
+                }
+
+                viewModel.UpdateMixedViewport(
+                    GetLogicalEntityOffset(
+                        sender,
+                        scrollViewer,
+                        viewModel.MixedContent.Count,
+                        itemsPerRow));
+
+                if (startOffsetBeforeLoading == viewModel.MixedWindowStartOffset &&
+                    endOffsetBeforeLoading == viewModel.MixedWindowEndOffset)
+                {
+                    break;
+                }
+            }
+
+            if (loadPreviousPage)
+            {
+                return;
+            }
+
+            while (IsLoaded &&
+                   ReferenceEquals(DataContext, viewModel) &&
                    IsNearBottom(scrollViewer) &&
                    viewModel.LoadNextMixedPageCommand.CanExecute(null))
             {
-                int countBeforeLoading = viewModel.MixedContent.Count;
+                int startOffsetBeforeLoading = viewModel.MixedWindowStartOffset;
+                int endOffsetBeforeLoading = viewModel.MixedWindowEndOffset;
+                Guid? anchorId = viewModel.MixedContent.LastOrDefault()?.Id;
+
                 await viewModel.LoadNextMixedPageCommand.ExecuteAsync(null);
+                await WaitForScrollLayoutAsync();
 
-                await Dispatcher.InvokeAsync(
-                    static () => { },
-                    DispatcherPriority.Background);
+                if (anchorId is Guid id)
+                {
+                    ScrollMixedAnchorIntoView(sender, viewModel, id);
+                    await WaitForScrollLayoutAsync();
+                }
 
-                if (viewModel.MixedContent.Count == countBeforeLoading)
+                viewModel.UpdateMixedViewport(
+                    GetLogicalEntityOffset(
+                        sender,
+                        scrollViewer,
+                        viewModel.MixedContent.Count,
+                        itemsPerRow));
+
+                if (startOffsetBeforeLoading == viewModel.MixedWindowStartOffset &&
+                    endOffsetBeforeLoading == viewModel.MixedWindowEndOffset)
                 {
                     break;
                 }
@@ -347,7 +537,7 @@ public partial class LibraryContainerView : UserControl
         e.Handled = true;
     }
 
-    private static double GetLogicalFolderOffset(
+    private static double GetLogicalEntityOffset(
         object sender,
         ScrollViewer scrollViewer,
         int loadedItemsCount,
@@ -374,6 +564,99 @@ public partial class LibraryContainerView : UserControl
         return firstVisibleRow * safeItemsPerRow;
     }
 
+    private static void ScrollFolderAnchorIntoView(
+        object sender,
+        LibraryContainerViewModel viewModel,
+        Guid anchorId)
+    {
+        LibraryFolderCardViewModel? anchor =
+            viewModel.Folders.FirstOrDefault(folder => folder.Id == anchorId);
+
+        if (anchor is null)
+        {
+            return;
+        }
+
+        if (sender is DataGrid dataGrid)
+        {
+            dataGrid.ScrollIntoView(anchor);
+            return;
+        }
+
+        if (sender is not ScrollViewer scrollViewer)
+        {
+            return;
+        }
+
+        ItemsControl? itemsControl = FindVisualChild<ItemsControl>(scrollViewer);
+        FrameworkElement? container =
+            itemsControl?.ItemContainerGenerator.ContainerFromItem(anchor) as FrameworkElement;
+
+        container?.BringIntoView();
+    }
+
+    private static void ScrollMaterialAnchorIntoView(
+        object sender,
+        LibraryContainerViewModel viewModel,
+        Guid anchorId)
+    {
+        LibraryMaterialListItemViewModel? anchor =
+            viewModel.Materials.FirstOrDefault(material => material.Id == anchorId);
+
+        ScrollAnchorIntoView(sender, anchor);
+    }
+
+    private static void ScrollMixedAnchorIntoView(
+        object sender,
+        LibraryContainerViewModel viewModel,
+        Guid anchorId)
+    {
+        LibraryContentListItemViewModel? anchor =
+            viewModel.MixedContent.FirstOrDefault(item => item.Id == anchorId);
+
+        ScrollAnchorIntoView(sender, anchor);
+    }
+
+    private static void ScrollAnchorIntoView(object sender, object? anchor)
+    {
+        if (anchor is null)
+        {
+            return;
+        }
+
+        if (sender is DataGrid dataGrid)
+        {
+            dataGrid.ScrollIntoView(anchor);
+            return;
+        }
+
+        if (sender is not ScrollViewer scrollViewer)
+        {
+            return;
+        }
+
+        ItemsControl? itemsControl = FindVisualChild<ItemsControl>(scrollViewer);
+        FrameworkElement? container =
+            itemsControl?.ItemContainerGenerator.ContainerFromItem(anchor) as FrameworkElement;
+
+        container?.BringIntoView();
+    }
+
+    private static bool IsNearTop(ScrollViewer scrollViewer)
+    {
+        if (scrollViewer.ExtentHeight <= 0 ||
+            scrollViewer.ViewportHeight <= 0)
+        {
+            return false;
+        }
+
+        double threshold = Math.Max(
+            2,
+            scrollViewer.ViewportHeight * 0.5);
+
+        return scrollViewer.VerticalOffset <= threshold;
+    }
+
     private static bool IsNearBottom(ScrollViewer scrollViewer)
     {
         if (scrollViewer.ExtentHeight <= 0 ||
@@ -390,9 +673,16 @@ public partial class LibraryContainerView : UserControl
 
         double threshold = Math.Max(
             2,
-            scrollViewer.ViewportHeight * 0.45);
+            scrollViewer.ViewportHeight * 0.5);
 
         return remainingDistance <= threshold;
+    }
+
+    private async Task WaitForScrollLayoutAsync()
+    {
+        await Dispatcher.InvokeAsync(
+            static () => { },
+            DispatcherPriority.Background);
     }
 
     private static ScrollViewer? ResolveScrollViewer(

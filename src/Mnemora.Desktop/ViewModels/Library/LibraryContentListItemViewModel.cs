@@ -1,4 +1,4 @@
-namespace Mnemora.Desktop.ViewModels.Library;
+﻿namespace Mnemora.Desktop.ViewModels.Library;
 
 public sealed class LibraryContentListItemViewModel
 {
@@ -16,6 +16,8 @@ public sealed class LibraryContentListItemViewModel
 
     public LibraryFolderCardViewModel? Folder { get; }
     public LibraryMaterialListItemViewModel? Material { get; }
+
+    public Guid Id => Folder?.Id ?? Material?.Id ?? Guid.Empty;
 
     public bool IsFolder => Folder is not null;
     public bool IsMaterial => Material is not null;

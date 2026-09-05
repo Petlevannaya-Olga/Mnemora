@@ -1,4 +1,4 @@
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -57,9 +57,9 @@ public partial class LibraryOverviewView : UserControl
         }
 
         int itemsPerRow = viewModel.IsTilesView
-            ? viewModel.ActualTilesPerRow
+            ? Math.Max(1, viewModel.ActualTilesPerRow)
             : viewModel.IsCompactTilesView
-                ? viewModel.ActualCompactTilesPerRow
+                ? Math.Max(1, viewModel.ActualCompactTilesPerRow)
                 : 1;
 
         viewModel.UpdateViewport(
@@ -71,32 +71,82 @@ public partial class LibraryOverviewView : UserControl
         }
 
         ScrollViewer? scrollViewer = ResolveScrollViewer(sender, e);
-
-        if (scrollViewer is null || !IsNearBottom(scrollViewer))
+        if (scrollViewer is null ||
+            (!IsNearTop(scrollViewer) && !IsNearBottom(scrollViewer)))
         {
             return;
         }
 
         _isScrollPageLoadRunning = true;
+        bool loadPreviousPage =
+            IsNearTop(scrollViewer) &&
+            viewModel.SectionsHasPrevious;
 
         try
         {
             while (IsLoaded &&
                    ReferenceEquals(DataContext, viewModel) &&
+                   IsNearTop(scrollViewer) &&
+                   viewModel.SectionsHasPrevious &&
+                   viewModel.LoadPreviousPageCommand.CanExecute(null))
+            {
+                int startOffsetBeforeLoading = viewModel.SectionWindowStartOffset;
+                int endOffsetBeforeLoading = viewModel.SectionWindowEndOffset;
+                Guid? anchorId = viewModel.Sections.FirstOrDefault()?.Id;
+
+                await viewModel.LoadPreviousPageCommand.ExecuteAsync(null);
+                await WaitForScrollLayoutAsync();
+
+                if (anchorId is Guid id)
+                {
+                    ScrollSectionAnchorIntoView(sender, viewModel, id);
+                    await WaitForScrollLayoutAsync();
+                }
+
+                viewModel.UpdateViewport(
+                    GetLogicalEntityOffset(
+                        sender,
+                        scrollViewer.VerticalOffset,
+                        itemsPerRow));
+
+                if (startOffsetBeforeLoading == viewModel.SectionWindowStartOffset &&
+                    endOffsetBeforeLoading == viewModel.SectionWindowEndOffset)
+                {
+                    break;
+                }
+            }
+
+            if (loadPreviousPage)
+            {
+                return;
+            }
+
+            while (IsLoaded &&
+                   ReferenceEquals(DataContext, viewModel) &&
                    IsNearBottom(scrollViewer) &&
                    viewModel.LoadNextPageCommand.CanExecute(null))
             {
-                int sectionsCountBeforeLoading = viewModel.Sections.Count;
+                int startOffsetBeforeLoading = viewModel.SectionWindowStartOffset;
+                int endOffsetBeforeLoading = viewModel.SectionWindowEndOffset;
+                Guid? anchorId = viewModel.Sections.LastOrDefault()?.Id;
+
                 await viewModel.LoadNextPageCommand.ExecuteAsync(null);
+                await WaitForScrollLayoutAsync();
 
-                // Ждём перерасчёта диапазона прокрутки после добавления разделов.
-                // Затем повторно проверяем низ, чтобы не потерять ScrollChanged,
-                // пришедший во время выполнения команды.
-                await Dispatcher.InvokeAsync(
-                    static () => { },
-                    DispatcherPriority.Background);
+                if (anchorId is Guid id)
+                {
+                    ScrollSectionAnchorIntoView(sender, viewModel, id);
+                    await WaitForScrollLayoutAsync();
+                }
 
-                if (viewModel.Sections.Count == sectionsCountBeforeLoading)
+                viewModel.UpdateViewport(
+                    GetLogicalEntityOffset(
+                        sender,
+                        scrollViewer.VerticalOffset,
+                        itemsPerRow));
+
+                if (startOffsetBeforeLoading == viewModel.SectionWindowStartOffset &&
+                    endOffsetBeforeLoading == viewModel.SectionWindowEndOffset)
                 {
                     break;
                 }
@@ -110,6 +160,17 @@ public partial class LibraryOverviewView : UserControl
         {
             _isScrollPageLoadRunning = false;
         }
+    }
+
+    private static bool IsNearTop(ScrollViewer scrollViewer)
+    {
+        if (scrollViewer.ExtentHeight <= 0 || scrollViewer.ViewportHeight <= 0)
+        {
+            return false;
+        }
+
+        double threshold = Math.Max(2, scrollViewer.ViewportHeight * 0.5);
+        return scrollViewer.VerticalOffset <= threshold;
     }
 
     private static bool IsNearBottom(ScrollViewer scrollViewer)
@@ -127,6 +188,87 @@ public partial class LibraryOverviewView : UserControl
 
         double loadingThreshold = Math.Max(2, scrollViewer.ViewportHeight * 0.5);
         return remainingDistance <= loadingThreshold;
+    }
+
+    private async Task WaitForScrollLayoutAsync()
+    {
+        await Dispatcher.InvokeAsync(
+            static () => { },
+            DispatcherPriority.Background);
+    }
+
+    private static void ScrollSectionAnchorIntoView(
+        object sender,
+        LibraryOverviewViewModel viewModel,
+        Guid anchorId)
+    {
+        LibrarySectionCardViewModel? anchor =
+            viewModel.Sections.FirstOrDefault(section => section.Id == anchorId);
+
+        if (anchor is null)
+        {
+            return;
+        }
+
+        if (sender is DataGrid dataGrid)
+        {
+            dataGrid.ScrollIntoView(anchor);
+            return;
+        }
+
+        if (sender is ListBox listBox)
+        {
+            IEnumerable<LibrarySectionRowViewModel> rows = viewModel.IsTilesView
+                ? viewModel.SectionRows
+                : viewModel.CompactSectionRows;
+
+            LibrarySectionRowViewModel? row = rows.FirstOrDefault(
+                candidate => candidate.Sections.Any(section => section.Id == anchorId));
+
+            if (row is not null)
+            {
+                listBox.ScrollIntoView(row);
+            }
+
+            return;
+        }
+
+        if (sender is DependencyObject dependencyObject)
+        {
+            ListBox? parentListBox = FindVisualParent<ListBox>(dependencyObject);
+            if (parentListBox is not null)
+            {
+                IEnumerable<LibrarySectionRowViewModel> rows = viewModel.IsTilesView
+                    ? viewModel.SectionRows
+                    : viewModel.CompactSectionRows;
+
+                LibrarySectionRowViewModel? row = rows.FirstOrDefault(
+                    candidate => candidate.Sections.Any(section => section.Id == anchorId));
+
+                if (row is not null)
+                {
+                    parentListBox.ScrollIntoView(row);
+                }
+            }
+        }
+    }
+
+    private static T? FindVisualParent<T>(DependencyObject child)
+        where T : DependencyObject
+    {
+        DependencyObject? current = child;
+
+        while (current is not null)
+        {
+            if (current is T match)
+            {
+                return match;
+            }
+
+            current = VisualTreeHelper.GetParent(current);
+        }
+
+        return null;
     }
 
     private static ScrollViewer? ResolveScrollViewer(

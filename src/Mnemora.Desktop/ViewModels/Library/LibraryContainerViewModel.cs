@@ -1,4 +1,6 @@
 ﻿using System.Collections.ObjectModel;
+using System.Windows;
+using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
@@ -25,8 +27,14 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
     }
 
     private const int FolderPageSize = LibraryPagingDefaults.PageSize;
+    private const int FolderVisiblePageLimit = 7;
+    private const int FolderCachePageLimit = 10;
     private const int MaterialPageSize = 50;
+    private const int MaterialVisiblePageLimit = 7;
+    private const int MaterialCachePageLimit = 10;
     private const int MixedPageSize = 50;
+    private const int MixedVisiblePageLimit = 7;
+    private const int MixedCachePageLimit = 10;
     private const double DefaultFoldersPaneRatio = 1d / 3d;
     private const double MinFoldersPaneRatio = 0.1;
     private const double MaxFoldersPaneRatio = 0.9;
@@ -38,20 +46,22 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
     private readonly ISettingsService _settingsService;
     private readonly ILogger<LibraryContainerViewModel> _logger;
 
+    private readonly BoundedPagedWindow<LibraryFolderDto> _folderWindow =
+        new(FolderPageSize, FolderVisiblePageLimit, FolderCachePageLimit);
+    private readonly BoundedPagedWindow<LibraryMaterialDto> _materialWindow =
+        new(MaterialPageSize, MaterialVisiblePageLimit, MaterialCachePageLimit);
+    private readonly BoundedPagedWindow<LibraryContentListItemViewModel> _mixedWindow =
+        new(MixedPageSize, MixedVisiblePageLimit, MixedCachePageLimit);
+
     private CancellationToken _viewCancellationToken;
     private Guid _containerId;
-    private int _foldersNextOffset;
-    private int _materialsNextOffset;
     private int _foldersLoadVersion;
     private int _materialsLoadVersion;
     private int _searchVersion;
     private int _mixedLoadVersion;
-    private int _mixedFoldersNextOffset;
-    private int _mixedMaterialsNextOffset;
-    private bool _mixedFoldersHasMore;
-    private bool _mixedMaterialsHasMore;
+    private int _mixedFoldersTotalCount = -1;
+    private int _mixedMaterialsTotalCount = -1;
     private MixedContentFilter _mixedContentFilter = MixedContentFilter.All;
-    private readonly Queue<LibraryContentListItemViewModel> _mixedMaterialBuffer = new();
     private bool _isLoaded;
     private bool _isViewModeLoaded;
 
@@ -131,41 +141,77 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsFoldersEmpty))]
+    [NotifyPropertyChangedFor(nameof(IsFoldersPaging))]
+    [NotifyPropertyChangedFor(nameof(FoldersHasPrevious))]
     [NotifyCanExecuteChangedFor(nameof(LoadNextFoldersPageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(LoadPreviousFoldersPageCommand))]
     private bool _isLoadingFolders;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsFoldersPaging))]
+    [NotifyPropertyChangedFor(nameof(FoldersHasPrevious))]
     [NotifyCanExecuteChangedFor(nameof(LoadNextFoldersPageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(LoadPreviousFoldersPageCommand))]
     private bool _isLoadingNextFoldersPage;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsFoldersPaging))]
+    [NotifyPropertyChangedFor(nameof(FoldersHasPrevious))]
+    [NotifyCanExecuteChangedFor(nameof(LoadNextFoldersPageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(LoadPreviousFoldersPageCommand))]
+    private bool _isLoadingPreviousFoldersPage;
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsMaterialsEmpty))]
+    [NotifyPropertyChangedFor(nameof(IsMaterialsPaging))]
     [NotifyCanExecuteChangedFor(nameof(LoadNextMaterialsPageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(LoadPreviousMaterialsPageCommand))]
     private bool _isLoadingMaterials;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsMaterialsPaging))]
     [NotifyCanExecuteChangedFor(nameof(LoadNextMaterialsPageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(LoadPreviousMaterialsPageCommand))]
     private bool _isLoadingNextMaterialsPage;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsMaterialsPaging))]
+    [NotifyCanExecuteChangedFor(nameof(LoadNextMaterialsPageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(LoadPreviousMaterialsPageCommand))]
+    private bool _isLoadingPreviousMaterialsPage;
+
+    [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(LoadNextFoldersPageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(LoadPreviousFoldersPageCommand))]
     private bool _foldersHasMore;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(LoadNextMaterialsPageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(LoadPreviousMaterialsPageCommand))]
     private bool _materialsHasMore;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsMixedEmpty))]
+    [NotifyPropertyChangedFor(nameof(IsMixedPaging))]
     [NotifyCanExecuteChangedFor(nameof(LoadNextMixedPageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(LoadPreviousMixedPageCommand))]
     private bool _isLoadingMixed;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsMixedPaging))]
     [NotifyCanExecuteChangedFor(nameof(LoadNextMixedPageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(LoadPreviousMixedPageCommand))]
     private bool _isLoadingNextMixedPage;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsMixedPaging))]
     [NotifyCanExecuteChangedFor(nameof(LoadNextMixedPageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(LoadPreviousMixedPageCommand))]
+    private bool _isLoadingPreviousMixedPage;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(LoadNextMixedPageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(LoadPreviousMixedPageCommand))]
     private bool _mixedHasMore;
 
     [ObservableProperty]
@@ -183,6 +229,9 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasFoldersError))]
+    [NotifyPropertyChangedFor(nameof(FoldersHasPrevious))]
+    [NotifyCanExecuteChangedFor(nameof(LoadNextFoldersPageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(LoadPreviousFoldersPageCommand))]
     private string? _foldersErrorMessage;
 
     [ObservableProperty]
@@ -243,6 +292,18 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
     [ObservableProperty]
     private int _actualFolderCompactTilesPerRow = 1;
 
+    [ObservableProperty]
+    private int _actualMaterialTilesPerRow = 1;
+
+    [ObservableProperty]
+    private int _actualMaterialCompactTilesPerRow = 1;
+
+    [ObservableProperty]
+    private int _actualMixedTilesPerRow = 1;
+
+    [ObservableProperty]
+    private int _actualMixedCompactTilesPerRow = 1;
+
     public string ContainerTitle =>
         Contents?.Container.Name ?? "Библиотека";
 
@@ -283,6 +344,44 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
     public bool HasMaterialsError => !string.IsNullOrWhiteSpace(MaterialsErrorMessage);
     public bool HasMixedError => !string.IsNullOrWhiteSpace(MixedErrorMessage);
     public bool HasFolders => Folders.Count > 0;
+    public bool FoldersHasPrevious =>
+        _folderWindow.HasPrevious &&
+        !IsLoadingFolders &&
+        !IsLoadingNextFoldersPage &&
+        !IsLoadingPreviousFoldersPage &&
+        !HasFoldersError;
+
+    public bool IsFoldersPaging =>
+        IsLoadingNextFoldersPage ||
+        IsLoadingPreviousFoldersPage;
+
+    public int FolderWindowStartOffset => _folderWindow.WindowStartOffset;
+    public int FolderWindowEndOffset => _folderWindow.WindowEndOffset;
+    public int FolderCachedPageCount => _folderWindow.CachedPageCount;
+    public int FolderCachedItemUpperBound => _folderWindow.CachedItemUpperBound;
+
+    public bool MaterialsHasPrevious =>
+        _materialWindow.HasPrevious &&
+        !IsLoadingMaterials &&
+        !IsLoadingNextMaterialsPage &&
+        !IsLoadingPreviousMaterialsPage &&
+        !HasMaterialsError;
+    public bool IsMaterialsPaging =>
+        IsLoadingNextMaterialsPage || IsLoadingPreviousMaterialsPage;
+    public int MaterialWindowStartOffset => _materialWindow.WindowStartOffset;
+    public int MaterialWindowEndOffset => _materialWindow.WindowEndOffset;
+
+    public bool MixedHasPrevious =>
+        _mixedWindow.HasPrevious &&
+        !IsLoadingMixed &&
+        !IsLoadingNextMixedPage &&
+        !IsLoadingPreviousMixedPage &&
+        !HasMixedError;
+    public bool IsMixedPaging =>
+        IsLoadingNextMixedPage || IsLoadingPreviousMixedPage;
+    public int MixedWindowStartOffset => _mixedWindow.WindowStartOffset;
+    public int MixedWindowEndOffset => _mixedWindow.WindowEndOffset;
+
     public bool HasMaterials => Materials.Count > 0;
     public bool HasMixedItems => MixedContent.Count > 0;
     public bool HasFolderContent => Contents?.FoldersCount > 0;
@@ -394,18 +493,12 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
 
     public void UpdateFoldersViewport(double logicalItemOffset)
     {
-        int pageOffset = LibraryRangeTextFormatter.GetPageStartOffset(
-            windowStartOffset: 0,
-            verticalOffset: logicalItemOffset,
-            pageSize: FolderPageSize);
-
-        if (FoldersTotalCount > 0)
+        if (!_folderWindow.UpdateViewport(logicalItemOffset))
         {
-            int lastPageOffset = (FoldersTotalCount - 1) / FolderPageSize * FolderPageSize;
-            pageOffset = Math.Min(pageOffset, lastPageOffset);
+            return;
         }
 
-        FoldersCurrentPageOffset = pageOffset;
+        FoldersCurrentPageOffset = _folderWindow.CurrentPageOffset;
     }
 
     public string MaterialsShownCountText
@@ -420,8 +513,18 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
                 MaterialsCurrentPageOffset,
                 visibleCount,
                 MaterialsTotalCount,
-                !string.IsNullOrWhiteSpace(SearchText));
+                !string.IsNullOrWhiteSpace(SearchText) || !IsAllFilter);
         }
+    }
+
+    public void UpdateMaterialsViewport(double logicalItemOffset)
+    {
+        if (!_materialWindow.UpdateViewport(logicalItemOffset))
+        {
+            return;
+        }
+
+        MaterialsCurrentPageOffset = _materialWindow.CurrentPageOffset;
     }
 
     public string MixedShownCountText
@@ -432,12 +535,24 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
                 MixedPageSize,
                 Math.Max(0, MixedTotalCount - MixedCurrentPageOffset));
 
-            return LibraryRangeTextFormatter.Format(
+            return LibraryRangeTextFormatter.FormatEntity(
+                "Элементы",
+                "Содержимое не найдено",
                 MixedCurrentPageOffset,
                 visibleCount,
                 MixedTotalCount,
                 !string.IsNullOrWhiteSpace(SearchText) || !IsMixedAllFilter);
         }
+    }
+
+    public void UpdateMixedViewport(double logicalItemOffset)
+    {
+        if (!_mixedWindow.UpdateViewport(logicalItemOffset))
+        {
+            return;
+        }
+
+        MixedCurrentPageOffset = _mixedWindow.CurrentPageOffset;
     }
 
     public void Initialize(Guid containerId)
@@ -548,16 +663,34 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
         return LoadNextFoldersPageWithLinkedCancellationAsync(cancellationToken);
     }
 
+    [RelayCommand(CanExecute = nameof(CanLoadPreviousFoldersPage))]
+    private Task LoadPreviousFoldersPageAsync(CancellationToken cancellationToken)
+    {
+        return LoadPreviousFoldersPageWithLinkedCancellationAsync(cancellationToken);
+    }
+
     [RelayCommand(CanExecute = nameof(CanLoadNextMaterialsPage))]
     private Task LoadNextMaterialsPageAsync(CancellationToken cancellationToken)
     {
         return LoadNextMaterialsPageWithLinkedCancellationAsync(cancellationToken);
     }
 
+    [RelayCommand(CanExecute = nameof(CanLoadPreviousMaterialsPage))]
+    private Task LoadPreviousMaterialsPageAsync(CancellationToken cancellationToken)
+    {
+        return LoadPreviousMaterialsPageWithLinkedCancellationAsync(cancellationToken);
+    }
+
     [RelayCommand(CanExecute = nameof(CanLoadNextMixedPage))]
     private Task LoadNextMixedPageAsync(CancellationToken cancellationToken)
     {
         return LoadNextMixedPageWithLinkedCancellationAsync(cancellationToken);
+    }
+
+    [RelayCommand(CanExecute = nameof(CanLoadPreviousMixedPage))]
+    private Task LoadPreviousMixedPageAsync(CancellationToken cancellationToken)
+    {
+        return LoadPreviousMixedPageWithLinkedCancellationAsync(cancellationToken);
     }
 
     [RelayCommand]
@@ -810,87 +943,161 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
     private void ResetFolders()
     {
         Interlocked.Increment(ref _foldersLoadVersion);
-        _foldersNextOffset = 0;
+        _folderWindow.Reset();
         FoldersCurrentPageOffset = 0;
         FoldersTotalCount = 0;
         FoldersHasMore = false;
         IsLoadingFolders = false;
         IsLoadingNextFoldersPage = false;
+        IsLoadingPreviousFoldersPage = false;
         FoldersErrorMessage = null;
         Folders.Clear();
-        NotifyFolderStateChanged();
+        SyncFolderWindowState();
     }
 
     private void ResetMaterials()
     {
         Interlocked.Increment(ref _materialsLoadVersion);
-        _materialsNextOffset = 0;
+        _materialWindow.Reset();
         MaterialsCurrentPageOffset = 0;
         MaterialsTotalCount = 0;
         MaterialsHasMore = false;
         IsLoadingMaterials = false;
         IsLoadingNextMaterialsPage = false;
+        IsLoadingPreviousMaterialsPage = false;
         MaterialsErrorMessage = null;
         Materials.Clear();
-        NotifyMaterialStateChanged();
+        SyncMaterialWindowState();
     }
 
     private void ResetMixed()
     {
         Interlocked.Increment(ref _mixedLoadVersion);
-        _mixedFoldersNextOffset = 0;
-        _mixedMaterialsNextOffset = 0;
-        _mixedFoldersHasMore = false;
-        _mixedMaterialsHasMore = false;
-        _mixedMaterialBuffer.Clear();
+        _mixedWindow.Reset();
+        _mixedFoldersTotalCount = -1;
+        _mixedMaterialsTotalCount = -1;
         MixedCurrentPageOffset = 0;
         MixedTotalCount = 0;
         MixedHasMore = false;
         IsLoadingMixed = false;
         IsLoadingNextMixedPage = false;
+        IsLoadingPreviousMixedPage = false;
         MixedErrorMessage = null;
         MixedContent.Clear();
-        NotifyMixedStateChanged();
+        SyncMixedWindowState();
     }
 
     private async Task ReloadFoldersAsync(CancellationToken cancellationToken)
     {
         int version = Interlocked.Increment(ref _foldersLoadVersion);
 
-        _foldersNextOffset = 0;
+        _folderWindow.Reset();
         FoldersCurrentPageOffset = 0;
         FoldersTotalCount = 0;
-        FoldersHasMore = true;
+        FoldersHasMore = false;
         IsLoadingNextFoldersPage = false;
+        IsLoadingPreviousFoldersPage = false;
         FoldersErrorMessage = null;
         Folders.Clear();
-        NotifyFolderStateChanged();
+        SyncFolderWindowState();
 
-        await LoadFoldersPageAsync(version, cancellationToken);
+        await ShowFolderPageAsync(
+            0,
+            PageWindowInsert.Append,
+            version,
+            cancellationToken,
+            isInitialPage: true,
+            isPreviousPage: false);
     }
 
-    private async Task LoadFoldersPageAsync(
+    private Task LoadNextFoldersWindowAsync(
         int version,
         CancellationToken cancellationToken)
     {
         if (version != _foldersLoadVersion ||
-            !FoldersHasMore ||
+            !_folderWindow.HasNext ||
+            IsLoadingFolders ||
             IsLoadingNextFoldersPage ||
+            IsLoadingPreviousFoldersPage ||
+            cancellationToken.IsCancellationRequested)
+        {
+            return Task.CompletedTask;
+        }
+
+        return ShowFolderPageAsync(
+            _folderWindow.NextOffset,
+            PageWindowInsert.Append,
+            version,
+            cancellationToken,
+            isInitialPage: false,
+            isPreviousPage: false);
+    }
+
+    private Task LoadPreviousFoldersWindowAsync(
+        int version,
+        CancellationToken cancellationToken)
+    {
+        if (version != _foldersLoadVersion ||
+            !_folderWindow.HasPrevious ||
+            IsLoadingFolders ||
+            IsLoadingNextFoldersPage ||
+            IsLoadingPreviousFoldersPage ||
+            cancellationToken.IsCancellationRequested)
+        {
+            return Task.CompletedTask;
+        }
+
+        return ShowFolderPageAsync(
+            _folderWindow.PreviousOffset,
+            PageWindowInsert.Prepend,
+            version,
+            cancellationToken,
+            isInitialPage: false,
+            isPreviousPage: true);
+    }
+
+    private async Task ShowFolderPageAsync(
+        int offset,
+        PageWindowInsert insert,
+        int version,
+        CancellationToken cancellationToken,
+        bool isInitialPage,
+        bool isPreviousPage)
+    {
+        if (version != _foldersLoadVersion ||
             cancellationToken.IsCancellationRequested)
         {
             return;
         }
 
-        int requestedOffset = _foldersNextOffset;
-        bool isInitialPage = requestedOffset == 0;
+        if (_folderWindow.TryGetCachedPage(
+                offset,
+                out IReadOnlyList<LibraryFolderDto> cached))
+        {
+            _folderWindow.ShowPage(offset, cached, insert);
+            RebuildFolders();
+            SyncFolderWindowState();
+            return;
+        }
 
         if (isInitialPage)
         {
             IsLoadingFolders = true;
         }
+        else if (isPreviousPage)
+        {
+            IsLoadingPreviousFoldersPage = true;
+        }
         else
         {
             IsLoadingNextFoldersPage = true;
+        }
+
+        FoldersErrorMessage = null;
+
+        if (!isInitialPage)
+        {
+            await YieldForPagingLoaderAsync(cancellationToken);
         }
 
         try
@@ -899,7 +1106,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
                 _containerId,
                 SearchText,
                 SelectedSortOption.FolderSort,
-                requestedOffset,
+                offset,
                 FolderPageSize);
 
             var result = await _queryDispatcher.SendAsync<
@@ -921,15 +1128,10 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
                 return;
             }
 
-            foreach (LibraryFolderDto folder in result.Value.Items)
-            {
-                Folders.Add(new LibraryFolderCardViewModel(folder));
-            }
-
-            _foldersNextOffset = result.Value.NextOffset;
-            FoldersHasMore = result.Value.HasMore;
-            FoldersTotalCount = result.Value.TotalCount;
-            FoldersCurrentPageOffset = requestedOffset;
+            _folderWindow.SetTotalCount(result.Value.TotalCount);
+            _folderWindow.ShowPage(offset, result.Value.Items, insert);
+            RebuildFolders();
+            SyncFolderWindowState();
         }
         catch (OperationCanceledException)
             when (cancellationToken.IsCancellationRequested)
@@ -940,8 +1142,9 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
         {
             _logger.LogError(
                 exception,
-                "Не удалось загрузить папки контейнера {ContainerId}",
-                _containerId);
+                "Не удалось загрузить папки контейнера {ContainerId}, offset {Offset}",
+                _containerId,
+                offset);
 
             FoldersErrorMessage = "Не удалось загрузить папки";
         }
@@ -951,70 +1154,194 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
             {
                 IsLoadingFolders = false;
                 IsLoadingNextFoldersPage = false;
-                LoadNextFoldersPageCommand.NotifyCanExecuteChanged();
-                NotifyFolderStateChanged();
+                IsLoadingPreviousFoldersPage = false;
+                SyncFolderWindowState();
             }
         }
+    }
+
+    private static async Task YieldForPagingLoaderAsync(
+        CancellationToken cancellationToken)
+    {
+        Dispatcher? dispatcher = System.Windows.Application.Current?.Dispatcher;
+
+        if (dispatcher is null || dispatcher.HasShutdownStarted)
+        {
+            await Task.Yield();
+            return;
+        }
+
+        await dispatcher.InvokeAsync(
+            static () => { },
+            DispatcherPriority.Background,
+            cancellationToken);
+    }
+
+    private void RebuildFolders()
+    {
+        Folders.Clear();
+
+        foreach (int offset in _folderWindow.VisibleOffsets)
+        {
+            if (!_folderWindow.TryGetCachedPage(
+                    offset,
+                    out IReadOnlyList<LibraryFolderDto> page))
+            {
+                continue;
+            }
+
+            foreach (LibraryFolderDto folder in page)
+            {
+                Folders.Add(new LibraryFolderCardViewModel(folder));
+            }
+        }
+    }
+
+    private void SyncFolderWindowState()
+    {
+        FoldersTotalCount = _folderWindow.TotalCount;
+        FoldersCurrentPageOffset = _folderWindow.CurrentPageOffset;
+        FoldersHasMore = _folderWindow.HasNext;
+
+        OnPropertyChanged(nameof(FoldersHasPrevious));
+        OnPropertyChanged(nameof(IsFoldersPaging));
+        OnPropertyChanged(nameof(FolderWindowStartOffset));
+        OnPropertyChanged(nameof(FolderWindowEndOffset));
+        OnPropertyChanged(nameof(FolderCachedPageCount));
+        OnPropertyChanged(nameof(FolderCachedItemUpperBound));
+
+        LoadNextFoldersPageCommand.NotifyCanExecuteChanged();
+        LoadPreviousFoldersPageCommand.NotifyCanExecuteChanged();
+        NotifyFolderStateChanged();
     }
 
     private async Task ReloadMaterialsAsync(CancellationToken cancellationToken)
     {
         int version = Interlocked.Increment(ref _materialsLoadVersion);
 
-        _materialsNextOffset = 0;
+        _materialWindow.Reset();
         MaterialsCurrentPageOffset = 0;
         MaterialsTotalCount = 0;
-        MaterialsHasMore = true;
+        MaterialsHasMore = false;
         IsLoadingNextMaterialsPage = false;
+        IsLoadingPreviousMaterialsPage = false;
         MaterialsErrorMessage = null;
         Materials.Clear();
-        NotifyMaterialStateChanged();
+        SyncMaterialWindowState();
 
-        await LoadMaterialsPageAsync(version, cancellationToken);
+        await ShowMaterialPageAsync(
+            0,
+            PageWindowInsert.Append,
+            version,
+            cancellationToken,
+            isInitialPage: true,
+            isPreviousPage: false);
     }
 
-    private async Task LoadMaterialsPageAsync(
+    private Task LoadNextMaterialsWindowAsync(
         int version,
         CancellationToken cancellationToken)
     {
         if (version != _materialsLoadVersion ||
-            !MaterialsHasMore ||
+            !_materialWindow.HasNext ||
+            IsLoadingMaterials ||
             IsLoadingNextMaterialsPage ||
+            IsLoadingPreviousMaterialsPage ||
             cancellationToken.IsCancellationRequested)
+        {
+            return Task.CompletedTask;
+        }
+
+        return ShowMaterialPageAsync(
+            _materialWindow.NextOffset,
+            PageWindowInsert.Append,
+            version,
+            cancellationToken,
+            isInitialPage: false,
+            isPreviousPage: false);
+    }
+
+    private Task LoadPreviousMaterialsWindowAsync(
+        int version,
+        CancellationToken cancellationToken)
+    {
+        if (version != _materialsLoadVersion ||
+            !_materialWindow.HasPrevious ||
+            IsLoadingMaterials ||
+            IsLoadingNextMaterialsPage ||
+            IsLoadingPreviousMaterialsPage ||
+            cancellationToken.IsCancellationRequested)
+        {
+            return Task.CompletedTask;
+        }
+
+        return ShowMaterialPageAsync(
+            _materialWindow.PreviousOffset,
+            PageWindowInsert.Prepend,
+            version,
+            cancellationToken,
+            isInitialPage: false,
+            isPreviousPage: true);
+    }
+
+    private async Task ShowMaterialPageAsync(
+        int offset,
+        PageWindowInsert insert,
+        int version,
+        CancellationToken cancellationToken,
+        bool isInitialPage,
+        bool isPreviousPage)
+    {
+        if (version != _materialsLoadVersion || cancellationToken.IsCancellationRequested)
         {
             return;
         }
 
-        int requestedOffset = _materialsNextOffset;
-        bool isInitialPage = requestedOffset == 0;
+        if (_materialWindow.TryGetCachedPage(
+                offset,
+                out IReadOnlyList<LibraryMaterialDto> cached))
+        {
+            _materialWindow.ShowPage(offset, cached, insert);
+            RebuildMaterials();
+            SyncMaterialWindowState();
+            return;
+        }
 
         if (isInitialPage)
         {
             IsLoadingMaterials = true;
+        }
+        else if (isPreviousPage)
+        {
+            IsLoadingPreviousMaterialsPage = true;
         }
         else
         {
             IsLoadingNextMaterialsPage = true;
         }
 
+        MaterialsErrorMessage = null;
+
+        if (!isInitialPage)
+        {
+            await YieldForPagingLoaderAsync(cancellationToken);
+        }
+
         try
         {
-            var query = new GetLibraryMaterialsPageQuery(
-                _containerId,
-                SearchText,
-                SelectedFilterOption.Filter,
-                SelectedSortOption.MaterialSort,
-                requestedOffset,
-                MaterialPageSize);
-
             var result = await _queryDispatcher.SendAsync<
                 GetLibraryMaterialsPageQuery,
                 LibraryMaterialsPageDto>(
-                query,
+                new GetLibraryMaterialsPageQuery(
+                    _containerId,
+                    SearchText,
+                    SelectedFilterOption.Filter,
+                    SelectedSortOption.MaterialSort,
+                    offset,
+                    MaterialPageSize),
                 cancellationToken);
 
-            if (version != _materialsLoadVersion ||
-                cancellationToken.IsCancellationRequested)
+            if (version != _materialsLoadVersion || cancellationToken.IsCancellationRequested)
             {
                 return;
             }
@@ -1026,25 +1353,19 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
                 return;
             }
 
-            foreach (LibraryMaterialDto material in result.Value.Items)
-            {
-                Materials.Add(new LibraryMaterialListItemViewModel(material));
-            }
-
-            _materialsNextOffset = result.Value.NextOffset;
-            MaterialsHasMore = result.Value.HasMore;
-            MaterialsTotalCount = result.Value.TotalCount;
-            MaterialsCurrentPageOffset = requestedOffset;
+            _materialWindow.SetTotalCount(result.Value.TotalCount);
+            _materialWindow.ShowPage(offset, result.Value.Items, insert);
+            RebuildMaterials();
+            SyncMaterialWindowState();
 
             _logger.LogInformation(
                 "Материалы контейнера {ContainerId}: загружено {ItemsCount}, всего {TotalCount}, offset {Offset}",
                 _containerId,
                 result.Value.Items.Count,
                 result.Value.TotalCount,
-                requestedOffset);
+                offset);
         }
-        catch (OperationCanceledException)
-            when (cancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             // Смена страницы или контекста.
         }
@@ -1052,8 +1373,9 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
         {
             _logger.LogError(
                 exception,
-                "Не удалось загрузить материалы контейнера {ContainerId}",
-                _containerId);
+                "Не удалось загрузить материалы контейнера {ContainerId}, offset {Offset}",
+                _containerId,
+                offset);
 
             MaterialsErrorMessage = "Не удалось загрузить материалы";
         }
@@ -1063,208 +1385,178 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
             {
                 IsLoadingMaterials = false;
                 IsLoadingNextMaterialsPage = false;
-                LoadNextMaterialsPageCommand.NotifyCanExecuteChanged();
-                NotifyMaterialStateChanged();
+                IsLoadingPreviousMaterialsPage = false;
+                SyncMaterialWindowState();
             }
         }
+    }
+
+    private void RebuildMaterials()
+    {
+        Materials.Clear();
+
+        foreach (int offset in _materialWindow.VisibleOffsets)
+        {
+            if (!_materialWindow.TryGetCachedPage(
+                    offset,
+                    out IReadOnlyList<LibraryMaterialDto> page))
+            {
+                continue;
+            }
+
+            foreach (LibraryMaterialDto material in page)
+            {
+                Materials.Add(new LibraryMaterialListItemViewModel(material));
+            }
+        }
+    }
+
+    private void SyncMaterialWindowState()
+    {
+        MaterialsTotalCount = _materialWindow.TotalCount;
+        MaterialsCurrentPageOffset = _materialWindow.CurrentPageOffset;
+        MaterialsHasMore = _materialWindow.HasNext;
+
+        OnPropertyChanged(nameof(MaterialsHasPrevious));
+        OnPropertyChanged(nameof(IsMaterialsPaging));
+        OnPropertyChanged(nameof(MaterialWindowStartOffset));
+        OnPropertyChanged(nameof(MaterialWindowEndOffset));
+
+        LoadNextMaterialsPageCommand.NotifyCanExecuteChanged();
+        LoadPreviousMaterialsPageCommand.NotifyCanExecuteChanged();
+        NotifyMaterialStateChanged();
     }
 
     private async Task ReloadMixedAsync(CancellationToken cancellationToken)
     {
         int version = Interlocked.Increment(ref _mixedLoadVersion);
 
-        bool includeFolders =
-            _mixedContentFilter is MixedContentFilter.All or MixedContentFilter.Folders;
-        bool includeMaterials =
-            _mixedContentFilter is MixedContentFilter.All or MixedContentFilter.Articles or MixedContentFilter.Questions;
-
-        _mixedFoldersNextOffset = 0;
-        _mixedMaterialsNextOffset = 0;
-        _mixedFoldersHasMore = includeFolders;
-        _mixedMaterialsHasMore = includeMaterials;
-        _mixedMaterialBuffer.Clear();
+        _mixedWindow.Reset();
+        _mixedFoldersTotalCount = -1;
+        _mixedMaterialsTotalCount = -1;
         MixedCurrentPageOffset = 0;
         MixedTotalCount = 0;
-        MixedHasMore = includeFolders || includeMaterials;
+        MixedHasMore = false;
         IsLoadingNextMixedPage = false;
+        IsLoadingPreviousMixedPage = false;
         MixedErrorMessage = null;
         MixedContent.Clear();
-        NotifyMixedStateChanged();
+        SyncMixedWindowState();
 
-        IsLoadingMixed = true;
+        await ShowMixedPageAsync(
+            0,
+            PageWindowInsert.Append,
+            version,
+            cancellationToken,
+            isInitialPage: true,
+            isPreviousPage: false);
+    }
+
+    private Task LoadNextMixedWindowAsync(
+        int version,
+        CancellationToken cancellationToken)
+    {
+        if (version != _mixedLoadVersion ||
+            !_mixedWindow.HasNext ||
+            IsLoadingMixed ||
+            IsLoadingNextMixedPage ||
+            IsLoadingPreviousMixedPage ||
+            cancellationToken.IsCancellationRequested)
+        {
+            return Task.CompletedTask;
+        }
+
+        return ShowMixedPageAsync(
+            _mixedWindow.NextOffset,
+            PageWindowInsert.Append,
+            version,
+            cancellationToken,
+            isInitialPage: false,
+            isPreviousPage: false);
+    }
+
+    private Task LoadPreviousMixedWindowAsync(
+        int version,
+        CancellationToken cancellationToken)
+    {
+        if (version != _mixedLoadVersion ||
+            !_mixedWindow.HasPrevious ||
+            IsLoadingMixed ||
+            IsLoadingNextMixedPage ||
+            IsLoadingPreviousMixedPage ||
+            cancellationToken.IsCancellationRequested)
+        {
+            return Task.CompletedTask;
+        }
+
+        return ShowMixedPageAsync(
+            _mixedWindow.PreviousOffset,
+            PageWindowInsert.Prepend,
+            version,
+            cancellationToken,
+            isInitialPage: false,
+            isPreviousPage: true);
+    }
+
+    private async Task ShowMixedPageAsync(
+        int offset,
+        PageWindowInsert insert,
+        int version,
+        CancellationToken cancellationToken,
+        bool isInitialPage,
+        bool isPreviousPage)
+    {
+        if (version != _mixedLoadVersion || cancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
+
+        if (_mixedWindow.TryGetCachedPage(
+                offset,
+                out IReadOnlyList<LibraryContentListItemViewModel> cached))
+        {
+            _mixedWindow.ShowPage(offset, cached, insert);
+            RebuildMixedContent();
+            SyncMixedWindowState();
+            return;
+        }
+
+        if (isInitialPage)
+        {
+            IsLoadingMixed = true;
+        }
+        else if (isPreviousPage)
+        {
+            IsLoadingPreviousMixedPage = true;
+        }
+        else
+        {
+            IsLoadingNextMixedPage = true;
+        }
+
+        MixedErrorMessage = null;
+
+        if (!isInitialPage)
+        {
+            await YieldForPagingLoaderAsync(cancellationToken);
+        }
 
         try
         {
-            if (_mixedContentFilter == MixedContentFilter.Folders)
-            {
-                var foldersResult = await _queryDispatcher.SendAsync<
-                    GetLibraryFoldersPageQuery,
-                    LibraryFoldersPageDto>(
-                    new GetLibraryFoldersPageQuery(
-                        _containerId,
-                        SearchText,
-                        SelectedSortOption.FolderSort,
-                        0,
-                        MixedPageSize),
-                    cancellationToken);
-
-                if (version != _mixedLoadVersion || cancellationToken.IsCancellationRequested)
-                {
-                    return;
-                }
-
-                if (foldersResult.IsFailure)
-                {
-                    MixedErrorMessage = foldersResult.Error.FirstOrDefault()?.Message
-                                        ?? "Не удалось загрузить папки";
-                    return;
-                }
-
-                LibraryFoldersPageDto page = foldersResult.Value;
-                MixedTotalCount = page.TotalCount;
-                _mixedFoldersNextOffset = page.NextOffset;
-                _mixedFoldersHasMore = page.HasMore;
-                _mixedMaterialsHasMore = false;
-
-                foreach (LibraryFolderDto folder in page.Items)
-                {
-                    MixedContent.Add(
-                        new LibraryContentListItemViewModel(
-                            new LibraryFolderCardViewModel(folder)));
-                }
-
-                UpdateMixedHasMore();
-                return;
-            }
-
-            if (_mixedContentFilter is MixedContentFilter.Articles or MixedContentFilter.Questions)
-            {
-                var materialsResult = await _queryDispatcher.SendAsync<
-                    GetLibraryMaterialsPageQuery,
-                    LibraryMaterialsPageDto>(
-                    new GetLibraryMaterialsPageQuery(
-                        _containerId,
-                        SearchText,
-                        GetMixedMaterialFilter(),
-                        SelectedSortOption.MaterialSort,
-                        0,
-                        MixedPageSize),
-                    cancellationToken);
-
-                if (version != _mixedLoadVersion || cancellationToken.IsCancellationRequested)
-                {
-                    return;
-                }
-
-                if (materialsResult.IsFailure)
-                {
-                    MixedErrorMessage = materialsResult.Error.FirstOrDefault()?.Message
-                                        ?? "Не удалось загрузить материалы";
-                    return;
-                }
-
-                LibraryMaterialsPageDto page = materialsResult.Value;
-                MixedTotalCount = page.TotalCount;
-                _mixedFoldersHasMore = false;
-                _mixedMaterialsNextOffset = page.NextOffset;
-                _mixedMaterialsHasMore = page.HasMore;
-
-                foreach (LibraryMaterialDto material in page.Items)
-                {
-                    MixedContent.Add(
-                        new LibraryContentListItemViewModel(
-                            new LibraryMaterialListItemViewModel(material)));
-                }
-
-                UpdateMixedHasMore();
-                return;
-            }
-
-            var foldersTask = _queryDispatcher.SendAsync<
-                GetLibraryFoldersPageQuery,
-                LibraryFoldersPageDto>(
-                new GetLibraryFoldersPageQuery(
-                    _containerId,
-                    SearchText,
-                    SelectedSortOption.FolderSort,
-                    0,
-                    MixedPageSize),
-                cancellationToken);
-
-            var materialsTask = _queryDispatcher.SendAsync<
-                GetLibraryMaterialsPageQuery,
-                LibraryMaterialsPageDto>(
-                new GetLibraryMaterialsPageQuery(
-                    _containerId,
-                    SearchText,
-                    LibraryMaterialFilter.All,
-                    SelectedSortOption.MaterialSort,
-                    0,
-                    1),
-                cancellationToken);
-
-            await Task.WhenAll(foldersTask, materialsTask);
+            (IReadOnlyList<LibraryContentListItemViewModel> items, int totalCount) =
+                await LoadMixedPageDataAsync(version, offset, cancellationToken);
 
             if (version != _mixedLoadVersion || cancellationToken.IsCancellationRequested)
             {
                 return;
             }
 
-            var foldersResultAll = await foldersTask;
-            var materialsResultAll = await materialsTask;
-
-            if (foldersResultAll.IsFailure || materialsResultAll.IsFailure)
-            {
-                MixedErrorMessage = foldersResultAll.IsFailure
-                    ? foldersResultAll.Error.FirstOrDefault()?.Message ?? "Не удалось загрузить папки"
-                    : materialsResultAll.Error.FirstOrDefault()?.Message ?? "Не удалось загрузить материалы";
-                return;
-            }
-
-            LibraryFoldersPageDto foldersPage = foldersResultAll.Value;
-            LibraryMaterialsPageDto materialsPage = materialsResultAll.Value;
-
-            MixedTotalCount = foldersPage.TotalCount + materialsPage.TotalCount;
-            _mixedFoldersNextOffset = foldersPage.NextOffset;
-            _mixedFoldersHasMore = foldersPage.HasMore;
-            _mixedMaterialsNextOffset = materialsPage.NextOffset;
-            _mixedMaterialsHasMore = materialsPage.HasMore;
-
-            foreach (LibraryMaterialDto material in materialsPage.Items)
-            {
-                _mixedMaterialBuffer.Enqueue(
-                    new LibraryContentListItemViewModel(
-                        new LibraryMaterialListItemViewModel(material)));
-            }
-
-            int added = 0;
-
-            foreach (LibraryFolderDto folder in foldersPage.Items)
-            {
-                MixedContent.Add(
-                    new LibraryContentListItemViewModel(
-                        new LibraryFolderCardViewModel(folder)));
-                added++;
-            }
-
-            if (!_mixedFoldersHasMore && added < MixedPageSize)
-            {
-                added += AppendBufferedMixedMaterials(MixedPageSize - added);
-
-                if (added < MixedPageSize && _mixedMaterialsHasMore)
-                {
-                    added += await LoadMixedMaterialsChunkAsync(
-                        version,
-                        MixedPageSize - added,
-                        cancellationToken);
-                }
-            }
-
-            MixedCurrentPageOffset = 0;
-            UpdateMixedHasMore();
+            _mixedWindow.SetTotalCount(totalCount);
+            _mixedWindow.ShowPage(offset, items, insert);
+            RebuildMixedContent();
+            SyncMixedWindowState();
         }
-        catch (OperationCanceledException)
-            when (cancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             // Смена страницы или контекста.
         }
@@ -1272,10 +1564,13 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
         {
             _logger.LogError(
                 exception,
-                "Не удалось загрузить смешанное содержимое контейнера {ContainerId}",
-                _containerId);
+                "Не удалось загрузить смешанное содержимое контейнера {ContainerId}, offset {Offset}",
+                _containerId,
+                offset);
 
-            MixedErrorMessage = "Не удалось загрузить содержимое";
+            MixedErrorMessage = exception.Message.StartsWith("Не удалось", StringComparison.Ordinal)
+                ? exception.Message
+                : "Не удалось загрузить содержимое";
         }
         finally
         {
@@ -1283,121 +1578,140 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
             {
                 IsLoadingMixed = false;
                 IsLoadingNextMixedPage = false;
-                LoadNextMixedPageCommand.NotifyCanExecuteChanged();
-                NotifyMixedStateChanged();
+                IsLoadingPreviousMixedPage = false;
+                SyncMixedWindowState();
             }
         }
     }
 
-    private async Task LoadMixedPageAsync(
+    private async Task<(IReadOnlyList<LibraryContentListItemViewModel> Items, int TotalCount)>
+        LoadMixedPageDataAsync(
+            int version,
+            int offset,
+            CancellationToken cancellationToken)
+    {
+        if (_mixedContentFilter == MixedContentFilter.Folders)
+        {
+            LibraryFoldersPageDto page = await GetFoldersPageForMixedAsync(
+                version, offset, MixedPageSize, cancellationToken);
+
+            return (
+                page.Items
+                    .Select(folder => new LibraryContentListItemViewModel(
+                        new LibraryFolderCardViewModel(folder)))
+                    .ToArray(),
+                page.TotalCount);
+        }
+
+        if (_mixedContentFilter is MixedContentFilter.Articles or MixedContentFilter.Questions)
+        {
+            LibraryMaterialsPageDto page = await GetMaterialsPageForMixedAsync(
+                version, offset, MixedPageSize, cancellationToken);
+
+            return (
+                page.Items
+                    .Select(material => new LibraryContentListItemViewModel(
+                        new LibraryMaterialListItemViewModel(material)))
+                    .ToArray(),
+                page.TotalCount);
+        }
+
+        await EnsureMixedTotalsAsync(version, cancellationToken);
+
+        int totalCount = _mixedFoldersTotalCount + _mixedMaterialsTotalCount;
+        var result = new List<LibraryContentListItemViewModel>(MixedPageSize);
+        int remaining = MixedPageSize;
+
+        if (offset < _mixedFoldersTotalCount)
+        {
+            int folderTake = Math.Min(remaining, _mixedFoldersTotalCount - offset);
+            LibraryFoldersPageDto foldersPage = await GetFoldersPageForMixedAsync(
+                version, offset, folderTake, cancellationToken);
+
+            result.AddRange(
+                foldersPage.Items.Select(folder =>
+                    new LibraryContentListItemViewModel(
+                        new LibraryFolderCardViewModel(folder))));
+
+            remaining -= foldersPage.Items.Count;
+        }
+
+        if (remaining > 0)
+        {
+            int materialOffset = Math.Max(0, offset + result.Count - _mixedFoldersTotalCount);
+
+            if (materialOffset < _mixedMaterialsTotalCount)
+            {
+                LibraryMaterialsPageDto materialsPage = await GetMaterialsPageForMixedAsync(
+                    version, materialOffset, remaining, cancellationToken);
+
+                result.AddRange(
+                    materialsPage.Items.Select(material =>
+                        new LibraryContentListItemViewModel(
+                            new LibraryMaterialListItemViewModel(material))));
+            }
+        }
+
+        return (result, totalCount);
+    }
+
+    private async Task EnsureMixedTotalsAsync(
         int version,
         CancellationToken cancellationToken)
     {
-        if (version != _mixedLoadVersion ||
-            !MixedHasMore ||
-            IsLoadingMixed ||
-            IsLoadingNextMixedPage ||
-            cancellationToken.IsCancellationRequested)
+        if (_mixedFoldersTotalCount >= 0 && _mixedMaterialsTotalCount >= 0)
         {
             return;
         }
 
-        int requestedOffset = MixedContent.Count;
-        int remaining = MixedPageSize;
-        IsLoadingNextMixedPage = true;
-        MixedErrorMessage = null;
+        Task<LibraryFoldersPageDto> foldersTask = GetFoldersPageForMixedAsync(
+            version, 0, 1, cancellationToken);
+        Task<LibraryMaterialsPageDto> materialsTask = GetMaterialsPageForMixedAsync(
+            version, 0, 1, cancellationToken);
 
-        try
-        {
-            if (_mixedFoldersHasMore)
-            {
-                var result = await _queryDispatcher.SendAsync<
-                    GetLibraryFoldersPageQuery,
-                    LibraryFoldersPageDto>(
-                    new GetLibraryFoldersPageQuery(
-                        _containerId,
-                        SearchText,
-                        SelectedSortOption.FolderSort,
-                        _mixedFoldersNextOffset,
-                        remaining),
-                    cancellationToken);
+        await Task.WhenAll(foldersTask, materialsTask);
 
-                if (version != _mixedLoadVersion || cancellationToken.IsCancellationRequested)
-                {
-                    return;
-                }
-
-                if (result.IsFailure)
-                {
-                    MixedErrorMessage = result.Error.FirstOrDefault()?.Message
-                                        ?? "Не удалось загрузить папки";
-                    return;
-                }
-
-                foreach (LibraryFolderDto folder in result.Value.Items)
-                {
-                    MixedContent.Add(
-                        new LibraryContentListItemViewModel(
-                            new LibraryFolderCardViewModel(folder)));
-                    remaining--;
-                }
-
-                _mixedFoldersNextOffset = result.Value.NextOffset;
-                _mixedFoldersHasMore = result.Value.HasMore;
-            }
-
-            if (!_mixedFoldersHasMore && remaining > 0)
-            {
-                remaining -= AppendBufferedMixedMaterials(remaining);
-
-                if (remaining > 0 && _mixedMaterialsHasMore)
-                {
-                    int loaded = await LoadMixedMaterialsChunkAsync(
-                        version,
-                        remaining,
-                        cancellationToken);
-                    remaining -= loaded;
-                }
-            }
-
-            MixedCurrentPageOffset = requestedOffset;
-            UpdateMixedHasMore();
-        }
-        catch (OperationCanceledException)
-            when (cancellationToken.IsCancellationRequested)
-        {
-            // Смена страницы или контекста.
-        }
-        catch (Exception exception)
-        {
-            _logger.LogError(
-                exception,
-                "Не удалось догрузить смешанное содержимое контейнера {ContainerId}",
-                _containerId);
-
-            MixedErrorMessage = "Не удалось загрузить содержимое";
-        }
-        finally
-        {
-            if (version == _mixedLoadVersion)
-            {
-                IsLoadingNextMixedPage = false;
-                LoadNextMixedPageCommand.NotifyCanExecuteChanged();
-                NotifyMixedStateChanged();
-            }
-        }
+        _mixedFoldersTotalCount = (await foldersTask).TotalCount;
+        _mixedMaterialsTotalCount = (await materialsTask).TotalCount;
     }
 
-    private async Task<int> LoadMixedMaterialsChunkAsync(
+    private async Task<LibraryFoldersPageDto> GetFoldersPageForMixedAsync(
         int version,
+        int offset,
         int limit,
         CancellationToken cancellationToken)
     {
-        if (limit <= 0 || !_mixedMaterialsHasMore)
+        var result = await _queryDispatcher.SendAsync<
+            GetLibraryFoldersPageQuery,
+            LibraryFoldersPageDto>(
+            new GetLibraryFoldersPageQuery(
+                _containerId,
+                SearchText,
+                SelectedSortOption.FolderSort,
+                offset,
+                Math.Max(1, limit)),
+            cancellationToken);
+
+        if (version != _mixedLoadVersion || cancellationToken.IsCancellationRequested)
         {
-            return 0;
+            throw new OperationCanceledException(cancellationToken);
         }
 
+        if (result.IsFailure)
+        {
+            throw new InvalidOperationException(
+                result.Error.FirstOrDefault()?.Message ?? "Не удалось загрузить папки");
+        }
+
+        return result.Value;
+    }
+
+    private async Task<LibraryMaterialsPageDto> GetMaterialsPageForMixedAsync(
+        int version,
+        int offset,
+        int limit,
+        CancellationToken cancellationToken)
+    {
         var result = await _queryDispatcher.SendAsync<
             GetLibraryMaterialsPageQuery,
             LibraryMaterialsPageDto>(
@@ -1406,33 +1720,22 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
                 SearchText,
                 GetMixedMaterialFilter(),
                 SelectedSortOption.MaterialSort,
-                _mixedMaterialsNextOffset,
-                limit),
+                offset,
+                Math.Max(1, limit)),
             cancellationToken);
 
         if (version != _mixedLoadVersion || cancellationToken.IsCancellationRequested)
         {
-            return 0;
+            throw new OperationCanceledException(cancellationToken);
         }
 
         if (result.IsFailure)
         {
-            MixedErrorMessage = result.Error.FirstOrDefault()?.Message
-                                ?? "Не удалось загрузить материалы";
-            _mixedMaterialsHasMore = false;
-            return 0;
+            throw new InvalidOperationException(
+                result.Error.FirstOrDefault()?.Message ?? "Не удалось загрузить материалы");
         }
 
-        foreach (LibraryMaterialDto material in result.Value.Items)
-        {
-            MixedContent.Add(
-                new LibraryContentListItemViewModel(
-                    new LibraryMaterialListItemViewModel(material)));
-        }
-
-        _mixedMaterialsNextOffset = result.Value.NextOffset;
-        _mixedMaterialsHasMore = result.Value.HasMore;
-        return result.Value.Items.Count;
+        return result.Value;
     }
 
     private LibraryMaterialFilter GetMixedMaterialFilter() =>
@@ -1443,50 +1746,96 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
             _ => LibraryMaterialFilter.All,
         };
 
-    private int AppendBufferedMixedMaterials(int limit)
+    private void RebuildMixedContent()
     {
-        int added = 0;
+        MixedContent.Clear();
 
-        while (added < limit && _mixedMaterialBuffer.Count > 0)
+        foreach (int offset in _mixedWindow.VisibleOffsets)
         {
-            MixedContent.Add(_mixedMaterialBuffer.Dequeue());
-            added++;
-        }
+            if (!_mixedWindow.TryGetCachedPage(
+                    offset,
+                    out IReadOnlyList<LibraryContentListItemViewModel> page))
+            {
+                continue;
+            }
 
-        return added;
+            foreach (LibraryContentListItemViewModel item in page)
+            {
+                MixedContent.Add(item);
+            }
+        }
     }
 
-    private void UpdateMixedHasMore()
+    private void SyncMixedWindowState()
     {
-        MixedHasMore =
-            _mixedFoldersHasMore ||
-            _mixedMaterialBuffer.Count > 0 ||
-            _mixedMaterialsHasMore;
+        MixedTotalCount = _mixedWindow.TotalCount;
+        MixedCurrentPageOffset = _mixedWindow.CurrentPageOffset;
+        MixedHasMore = _mixedWindow.HasNext;
+
+        OnPropertyChanged(nameof(MixedHasPrevious));
+        OnPropertyChanged(nameof(IsMixedPaging));
+        OnPropertyChanged(nameof(MixedWindowStartOffset));
+        OnPropertyChanged(nameof(MixedWindowEndOffset));
+
+        LoadNextMixedPageCommand.NotifyCanExecuteChanged();
+        LoadPreviousMixedPageCommand.NotifyCanExecuteChanged();
+        NotifyMixedStateChanged();
     }
 
     private bool CanLoadNextFoldersPage() =>
         _isLoaded &&
         _containerId != Guid.Empty &&
-        FoldersHasMore &&
+        _folderWindow.HasNext &&
         !IsLoadingFolders &&
         !IsLoadingNextFoldersPage &&
+        !IsLoadingPreviousFoldersPage &&
+        !HasFoldersError;
+
+    private bool CanLoadPreviousFoldersPage() =>
+        _isLoaded &&
+        _containerId != Guid.Empty &&
+        _folderWindow.HasPrevious &&
+        !IsLoadingFolders &&
+        !IsLoadingNextFoldersPage &&
+        !IsLoadingPreviousFoldersPage &&
         !HasFoldersError;
 
     private bool CanLoadNextMaterialsPage() =>
         _isLoaded &&
         _containerId != Guid.Empty &&
-        MaterialsHasMore &&
+        _materialWindow.HasNext &&
         !IsLoadingMaterials &&
         !IsLoadingNextMaterialsPage &&
+        !IsLoadingPreviousMaterialsPage &&
+        !HasMaterialsError;
+
+    private bool CanLoadPreviousMaterialsPage() =>
+        _isLoaded &&
+        _containerId != Guid.Empty &&
+        _materialWindow.HasPrevious &&
+        !IsLoadingMaterials &&
+        !IsLoadingNextMaterialsPage &&
+        !IsLoadingPreviousMaterialsPage &&
         !HasMaterialsError;
 
     private bool CanLoadNextMixedPage() =>
         _isLoaded &&
         _containerId != Guid.Empty &&
         IsMixedContent &&
-        MixedHasMore &&
+        _mixedWindow.HasNext &&
         !IsLoadingMixed &&
         !IsLoadingNextMixedPage &&
+        !IsLoadingPreviousMixedPage &&
+        !HasMixedError;
+
+    private bool CanLoadPreviousMixedPage() =>
+        _isLoaded &&
+        _containerId != Guid.Empty &&
+        IsMixedContent &&
+        _mixedWindow.HasPrevious &&
+        !IsLoadingMixed &&
+        !IsLoadingNextMixedPage &&
+        !IsLoadingPreviousMixedPage &&
         !HasMixedError;
 
     private async Task LoadNextFoldersPageWithLinkedCancellationAsync(
@@ -1497,7 +1846,20 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
                 _viewCancellationToken,
                 cancellationToken);
 
-        await LoadFoldersPageAsync(
+        await LoadNextFoldersWindowAsync(
+            _foldersLoadVersion,
+            linkedCancellationTokenSource.Token);
+    }
+
+    private async Task LoadPreviousFoldersPageWithLinkedCancellationAsync(
+        CancellationToken cancellationToken)
+    {
+        using var linkedCancellationTokenSource =
+            CancellationTokenSource.CreateLinkedTokenSource(
+                _viewCancellationToken,
+                cancellationToken);
+
+        await LoadPreviousFoldersWindowAsync(
             _foldersLoadVersion,
             linkedCancellationTokenSource.Token);
     }
@@ -1510,7 +1872,20 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
                 _viewCancellationToken,
                 cancellationToken);
 
-        await LoadMaterialsPageAsync(
+        await LoadNextMaterialsWindowAsync(
+            _materialsLoadVersion,
+            linkedCancellationTokenSource.Token);
+    }
+
+    private async Task LoadPreviousMaterialsPageWithLinkedCancellationAsync(
+        CancellationToken cancellationToken)
+    {
+        using var linkedCancellationTokenSource =
+            CancellationTokenSource.CreateLinkedTokenSource(
+                _viewCancellationToken,
+                cancellationToken);
+
+        await LoadPreviousMaterialsWindowAsync(
             _materialsLoadVersion,
             linkedCancellationTokenSource.Token);
     }
@@ -1523,7 +1898,20 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
                 _viewCancellationToken,
                 cancellationToken);
 
-        await LoadMixedPageAsync(
+        await LoadNextMixedWindowAsync(
+            _mixedLoadVersion,
+            linkedCancellationTokenSource.Token);
+    }
+
+    private async Task LoadPreviousMixedPageWithLinkedCancellationAsync(
+        CancellationToken cancellationToken)
+    {
+        using var linkedCancellationTokenSource =
+            CancellationTokenSource.CreateLinkedTokenSource(
+                _viewCancellationToken,
+                cancellationToken);
+
+        await LoadPreviousMixedWindowAsync(
             _mixedLoadVersion,
             linkedCancellationTokenSource.Token);
     }

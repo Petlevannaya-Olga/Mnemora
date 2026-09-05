@@ -1,4 +1,6 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
+using System.Windows;
+using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
@@ -16,18 +18,20 @@ namespace Mnemora.Desktop.ViewModels.Library;
 public sealed partial class LibraryOverviewViewModel : ViewModelBase
 {
     private const int PageSize = LibraryPagingDefaults.PageSize;
+    private const int VisiblePageLimit = 7;
+    private const int CachePageLimit = 10;
     private static readonly TimeSpan SearchDelay = TimeSpan.FromMilliseconds(350);
 
     private readonly IQueryDispatcher _queryDispatcher;
     private readonly ISettingsService _settingsService;
     private readonly IPageNavigationService _pageNavigationService;
     private readonly ILogger<LibraryOverviewViewModel> _logger;
+    private readonly BoundedPagedWindow<LibrarySectionOverviewDto> _sectionWindow =
+        new(PageSize, VisiblePageLimit, CachePageLimit);
 
     private CancellationToken _viewCancellationToken;
-    private int _nextOffset;
     private int _loadVersion;
     private int _searchVersion;
-    private int? _loadingVersion;
     private bool _isLoaded;
     private bool _isViewModeLoaded;
 
@@ -64,12 +68,24 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(IsEmpty))]
     [NotifyPropertyChangedFor(nameof(HasNoSearchResults))]
     [NotifyCanExecuteChangedFor(nameof(LoadNextPageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(LoadPreviousPageCommand))]
     private bool _isLoading;
 
-    [ObservableProperty] [NotifyCanExecuteChangedFor(nameof(LoadNextPageCommand))]
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsPaging))]
+    [NotifyCanExecuteChangedFor(nameof(LoadNextPageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(LoadPreviousPageCommand))]
     private bool _isLoadingNextPage;
 
-    [ObservableProperty] [NotifyCanExecuteChangedFor(nameof(LoadNextPageCommand))]
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsPaging))]
+    [NotifyCanExecuteChangedFor(nameof(LoadNextPageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(LoadPreviousPageCommand))]
+    private bool _isLoadingPreviousPage;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(LoadNextPageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(LoadPreviousPageCommand))]
     private bool _hasMore = true;
 
     [ObservableProperty]
@@ -77,6 +93,7 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(IsEmpty))]
     [NotifyPropertyChangedFor(nameof(HasNoSearchResults))]
     [NotifyCanExecuteChangedFor(nameof(LoadNextPageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(LoadPreviousPageCommand))]
     private string? _errorMessage;
 
     [ObservableProperty]
@@ -122,6 +139,11 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
     public bool HasError => !string.IsNullOrWhiteSpace(ErrorMessage);
 
     public bool HasNextPageError => !string.IsNullOrWhiteSpace(NextPageErrorMessage);
+
+    public bool IsPaging => IsLoadingNextPage || IsLoadingPreviousPage;
+    public bool SectionsHasPrevious => _sectionWindow.HasPrevious;
+    public int SectionWindowStartOffset => _sectionWindow.WindowStartOffset;
+    public int SectionWindowEndOffset => _sectionWindow.WindowEndOffset;
 
     public bool IsEmpty =>
         !IsLoading &&
@@ -173,6 +195,7 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
         _isLoaded = true;
 
         LoadNextPageCommand.NotifyCanExecuteChanged();
+        LoadPreviousPageCommand.NotifyCanExecuteChanged();
 
         await EnsureViewModeLoadedAsync(cancellationToken);
         await ReloadCoreAsync(cancellationToken);
@@ -194,6 +217,12 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
         return LoadNextPageWithLinkedCancellationAsync(cancellationToken);
     }
 
+    [RelayCommand(CanExecute = nameof(CanLoadPreviousPage))]
+    private Task LoadPreviousPageAsync(CancellationToken cancellationToken)
+    {
+        return LoadPreviousPageWithLinkedCancellationAsync(cancellationToken);
+    }
+
     [RelayCommand]
     private async Task RetryNextPageAsync(CancellationToken cancellationToken)
     {
@@ -203,7 +232,7 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
             _viewCancellationToken,
             cancellationToken);
 
-        await LoadPageAsync(_loadVersion, linkedCancellationTokenSource.Token);
+        await LoadNextPageWithLinkedCancellationAsync(linkedCancellationTokenSource.Token);
     }
 
     [RelayCommand]
@@ -299,15 +328,22 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
         }
     }
 
-    private bool CanLoadNextPage()
-    {
-        return _isLoaded &&
-               HasMore &&
-               !IsLoading &&
-               !IsLoadingNextPage &&
-               !HasError &&
-               !HasNextPageError;
-    }
+    private bool CanLoadNextPage() =>
+        _isLoaded &&
+        _sectionWindow.HasNext &&
+        !IsLoading &&
+        !IsLoadingNextPage &&
+        !IsLoadingPreviousPage &&
+        !HasError &&
+        !HasNextPageError;
+
+    private bool CanLoadPreviousPage() =>
+        _isLoaded &&
+        _sectionWindow.HasPrevious &&
+        !IsLoading &&
+        !IsLoadingNextPage &&
+        !IsLoadingPreviousPage &&
+        !HasError;
 
     private async Task LoadNextPageWithLinkedCancellationAsync(CancellationToken cancellationToken)
     {
@@ -315,47 +351,100 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
             _viewCancellationToken,
             cancellationToken);
 
-        await LoadPageAsync(_loadVersion, linkedCancellationTokenSource.Token);
+        if (!_sectionWindow.HasNext)
+        {
+            return;
+        }
+
+        await ShowSectionPageAsync(
+            _sectionWindow.NextOffset,
+            PageWindowInsert.Append,
+            _loadVersion,
+            linkedCancellationTokenSource.Token,
+            isInitialPage: false,
+            isPreviousPage: false);
+    }
+
+    private async Task LoadPreviousPageWithLinkedCancellationAsync(CancellationToken cancellationToken)
+    {
+        using var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
+            _viewCancellationToken,
+            cancellationToken);
+
+        if (!_sectionWindow.HasPrevious)
+        {
+            return;
+        }
+
+        await ShowSectionPageAsync(
+            _sectionWindow.PreviousOffset,
+            PageWindowInsert.Prepend,
+            _loadVersion,
+            linkedCancellationTokenSource.Token,
+            isInitialPage: false,
+            isPreviousPage: true);
     }
 
     private async Task ReloadCoreAsync(CancellationToken cancellationToken)
     {
         int loadVersion = Interlocked.Increment(ref _loadVersion);
 
-        _nextOffset = 0;
+        _sectionWindow.Reset();
         CurrentPageOffset = 0;
         TotalCount = 0;
-        HasMore = true;
+        HasMore = false;
         ErrorMessage = null;
         NextPageErrorMessage = null;
+        IsLoadingNextPage = false;
+        IsLoadingPreviousPage = false;
 
         Sections.Clear();
         SectionRows.Clear();
         CompactSectionRows.Clear();
 
         NotifyCollectionStateChanged();
+        SyncSectionWindowState();
 
-        await LoadPageAsync(loadVersion, cancellationToken);
+        await ShowSectionPageAsync(
+            0,
+            PageWindowInsert.Append,
+            loadVersion,
+            cancellationToken,
+            isInitialPage: true,
+            isPreviousPage: false);
     }
 
-    private async Task LoadPageAsync(int loadVersion, CancellationToken cancellationToken)
+    private async Task ShowSectionPageAsync(
+        int offset,
+        PageWindowInsert insert,
+        int loadVersion,
+        CancellationToken cancellationToken,
+        bool isInitialPage,
+        bool isPreviousPage)
     {
-        if (loadVersion != _loadVersion ||
-            _loadingVersion == loadVersion ||
-            !HasMore ||
-            cancellationToken.IsCancellationRequested)
+        if (loadVersion != _loadVersion || cancellationToken.IsCancellationRequested)
         {
             return;
         }
 
-        _loadingVersion = loadVersion;
-
-        bool isInitialPage = _nextOffset == 0;
+        if (_sectionWindow.TryGetCachedPage(
+                offset,
+                out IReadOnlyList<LibrarySectionOverviewDto> cached))
+        {
+            _sectionWindow.ShowPage(offset, cached, insert);
+            RebuildSections();
+            SyncSectionWindowState();
+            return;
+        }
 
         if (isInitialPage)
         {
             IsLoading = true;
             ErrorMessage = null;
+        }
+        else if (isPreviousPage)
+        {
+            IsLoadingPreviousPage = true;
         }
         else
         {
@@ -363,12 +452,17 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
             NextPageErrorMessage = null;
         }
 
+        if (!isInitialPage)
+        {
+            await YieldForPagingLoaderAsync(cancellationToken);
+        }
+
         try
         {
             var query = new GetLibrarySectionsPageQuery(
                 SearchText,
                 SelectedSortOption.Sort,
-                _nextOffset,
+                offset,
                 PageSize);
 
             var result = await _queryDispatcher.SendAsync<
@@ -384,8 +478,8 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
 
             if (result.IsFailure)
             {
-                var message = result.Error.FirstOrDefault()?.Message
-                              ?? "Не удалось загрузить разделы";
+                string message = result.Error.FirstOrDefault()?.Message
+                                 ?? "Не удалось загрузить разделы";
 
                 if (isInitialPage)
                 {
@@ -399,27 +493,18 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
                 return;
             }
 
-            foreach (var section in result.Value.Items)
-            {
-                var sectionViewModel = new LibrarySectionCardViewModel(section);
-
-                Sections.Add(sectionViewModel);
-                AddToSectionRows(sectionViewModel);
-            }
-
-            _nextOffset = result.Value.NextOffset;
-            HasMore = result.Value.HasMore;
-            TotalCount = result.Value.TotalCount;
-
-            NotifyCollectionStateChanged();
+            _sectionWindow.SetTotalCount(result.Value.TotalCount);
+            _sectionWindow.ShowPage(offset, result.Value.Items, insert);
+            RebuildSections();
+            SyncSectionWindowState();
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            // ignore
+            // Закрытие страницы или новый поиск/сортировка.
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "Не удалось загрузить страницу разделов");
+            _logger.LogError(exception, "Не удалось загрузить страницу разделов offset {Offset}", offset);
 
             if (loadVersion != _loadVersion)
             {
@@ -432,24 +517,75 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
             }
             else
             {
-                NextPageErrorMessage = "Не удалось загрузить следующую порцию разделов";
+                NextPageErrorMessage = "Не удалось загрузить страницу разделов";
             }
         }
         finally
         {
-            if (_loadingVersion == loadVersion)
-            {
-                _loadingVersion = null;
-            }
-
             if (loadVersion == _loadVersion)
             {
                 IsLoading = false;
                 IsLoadingNextPage = false;
-                LoadNextPageCommand.NotifyCanExecuteChanged();
-                NotifyCollectionStateChanged();
+                IsLoadingPreviousPage = false;
+                SyncSectionWindowState();
             }
         }
+    }
+
+    private static async Task YieldForPagingLoaderAsync(CancellationToken cancellationToken)
+    {
+        Dispatcher? dispatcher = System.Windows.Application.Current?.Dispatcher;
+
+        if (dispatcher is null || dispatcher.HasShutdownStarted)
+        {
+            await Task.Yield();
+            return;
+        }
+
+        await dispatcher.InvokeAsync(
+            static () => { },
+            DispatcherPriority.Background,
+            cancellationToken);
+    }
+
+    private void RebuildSections()
+    {
+        Sections.Clear();
+
+        foreach (int offset in _sectionWindow.VisibleOffsets)
+        {
+            if (!_sectionWindow.TryGetCachedPage(
+                    offset,
+                    out IReadOnlyList<LibrarySectionOverviewDto> page))
+            {
+                continue;
+            }
+
+            foreach (LibrarySectionOverviewDto section in page)
+            {
+                Sections.Add(new LibrarySectionCardViewModel(section));
+            }
+        }
+
+        RebuildRows(SectionRows, Math.Max(1, ActualTilesPerRow), Sections);
+        RebuildRows(CompactSectionRows, Math.Max(1, ActualCompactTilesPerRow), Sections);
+    }
+
+    private void SyncSectionWindowState()
+    {
+        TotalCount = _sectionWindow.TotalCount;
+        CurrentPageOffset = _sectionWindow.CurrentPageOffset;
+        HasMore = _sectionWindow.HasNext;
+
+        OnPropertyChanged(nameof(IsPaging));
+        OnPropertyChanged(nameof(SectionsHasPrevious));
+        OnPropertyChanged(nameof(SectionWindowStartOffset));
+        OnPropertyChanged(nameof(SectionWindowEndOffset));
+        OnPropertyChanged(nameof(SectionsShownCountText));
+
+        LoadNextPageCommand.NotifyCanExecuteChanged();
+        LoadPreviousPageCommand.NotifyCanExecuteChanged();
+        NotifyCollectionStateChanged();
     }
 
     private void AddToSectionRows(LibrarySectionCardViewModel section)
@@ -496,18 +632,13 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
 
     public void UpdateViewport(double logicalItemOffset)
     {
-        int pageOffset = LibraryRangeTextFormatter.GetPageStartOffset(
-            windowStartOffset: 0,
-            verticalOffset: logicalItemOffset,
-            pageSize: PageSize);
-
-        if (TotalCount > 0)
+        if (!_sectionWindow.UpdateViewport(logicalItemOffset))
         {
-            int lastPageOffset = (TotalCount - 1) / PageSize * PageSize;
-            pageOffset = Math.Min(pageOffset, lastPageOffset);
+            return;
         }
 
-        CurrentPageOffset = pageOffset;
+        CurrentPageOffset = _sectionWindow.CurrentPageOffset;
+        OnPropertyChanged(nameof(SectionsShownCountText));
     }
 
     private async Task ReloadAfterSearchDelayAsync(int searchVersion)
