@@ -2,11 +2,15 @@
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Threading;
 
 namespace Mnemora.Desktop.Controls.Loading;
 
 public partial class LoadingIndicator : UserControl
 {
+    private const int DefaultShowDelay = 0;
+    private const int DefaultMinimumVisibleDuration = 300;
+
     public static readonly DependencyProperty MessageProperty = DependencyProperty.Register(
         nameof(Message),
         typeof(string),
@@ -72,9 +76,42 @@ public partial class LoadingIndicator : UserControl
         typeof(LoadingIndicator),
         new PropertyMetadata(new SolidColorBrush(Color.FromRgb(22, 205, 183))));
 
+    public static readonly DependencyProperty ShowDelayProperty = DependencyProperty.Register(
+        nameof(ShowDelay),
+        typeof(int),
+        typeof(LoadingIndicator),
+        new PropertyMetadata(DefaultShowDelay, OnTimingPropertyChanged));
+
+    public static readonly DependencyProperty MinimumVisibleDurationProperty = DependencyProperty.Register(
+        nameof(MinimumVisibleDuration),
+        typeof(int),
+        typeof(LoadingIndicator),
+        new PropertyMetadata(DefaultMinimumVisibleDuration, OnTimingPropertyChanged));
+
+    private static readonly DependencyPropertyKey IsPresentedPropertyKey = DependencyProperty.RegisterReadOnly(
+        nameof(IsPresented),
+        typeof(bool),
+        typeof(LoadingIndicator),
+        new PropertyMetadata(false));
+
+    public static readonly DependencyProperty IsPresentedProperty = IsPresentedPropertyKey.DependencyProperty;
+
+    private readonly DispatcherTimer _showTimer;
+    private readonly DispatcherTimer _hideTimer;
+    private DateTime? _shownAt;
+    private bool _isIndicatorVisible;
+    private int _presentationVersion;
+
     public LoadingIndicator()
     {
         InitializeComponent();
+
+        _showTimer = new DispatcherTimer();
+        _showTimer.Tick += ShowTimer_OnTick;
+
+        _hideTimer = new DispatcherTimer();
+        _hideTimer.Tick += HideTimer_OnTick;
+
         Loaded += LoadingIndicator_OnLoaded;
         Unloaded += LoadingIndicator_OnUnloaded;
         IsVisibleChanged += LoadingIndicator_OnIsVisibleChanged;
@@ -140,6 +177,35 @@ public partial class LoadingIndicator : UserControl
         set => SetValue(PercentageForegroundProperty, value);
     }
 
+    /// <summary>
+    /// Задержка перед фактическим показом индикатора, в миллисекундах.
+    /// По умолчанию индикатор показывается сразу; при необходимости отдельный экран
+    /// может задать собственную задержку.
+    /// </summary>
+    public int ShowDelay
+    {
+        get => (int)GetValue(ShowDelayProperty);
+        set => SetValue(ShowDelayProperty, value);
+    }
+
+    /// <summary>
+    /// Минимальное время, в течение которого уже показанный индикатор считается активным,
+    /// в миллисекундах. Это предотвращает короткое исчезновение/повторное появление при
+    /// быстро следующих друг за другом состояниях загрузки.
+    /// </summary>
+    public int MinimumVisibleDuration
+    {
+        get => (int)GetValue(MinimumVisibleDurationProperty);
+        set => SetValue(MinimumVisibleDurationProperty, value);
+    }
+
+    /// <summary>
+    /// True only when the indicator has passed ShowDelay and is actually painted.
+    /// Loading hosts can bind their own visual chrome to this property so that
+    /// a dark background never flashes before the indicator itself appears.
+    /// </summary>
+    public bool IsPresented => (bool)GetValue(IsPresentedProperty);
+
     private static void OnVisualPropertyChanged(
         DependencyObject dependencyObject,
         DependencyPropertyChangedEventArgs eventArgs)
@@ -150,32 +216,229 @@ public partial class LoadingIndicator : UserControl
         }
     }
 
+    private static void OnTimingPropertyChanged(
+        DependencyObject dependencyObject,
+        DependencyPropertyChangedEventArgs eventArgs)
+    {
+        if (dependencyObject is not LoadingIndicator indicator || !indicator.IsLoaded)
+        {
+            return;
+        }
+
+        indicator.RefreshPresentationState(restartDelay: true);
+    }
+
     private void LoadingIndicator_OnLoaded(object sender, RoutedEventArgs e)
     {
+        if (ShowDelay <= 0)
+        {
+            PrepareImmediatePresentation();
+            return;
+        }
+
+        HideImmediately();
         UpdateVisualState();
+        RefreshPresentationState();
     }
 
     private void LoadingIndicator_OnUnloaded(object sender, RoutedEventArgs e)
     {
+        _showTimer.Stop();
+        _hideTimer.Stop();
         StopIndeterminateAnimation();
+        IndicatorContent.Visibility = Visibility.Collapsed;
+        IndicatorContent.Opacity = 0;
+        SetValue(IsPresentedPropertyKey, false);
+        _isIndicatorVisible = false;
+        _shownAt = null;
+        _presentationVersion++;
     }
 
     private void LoadingIndicator_OnIsVisibleChanged(
         object sender,
         DependencyPropertyChangedEventArgs e)
     {
-        if (IsLoaded)
+        if (!IsLoaded)
+        {
+            return;
+        }
+
+        if (ShowDelay <= 0)
+        {
+            PrepareImmediatePresentation();
+            return;
+        }
+
+        RefreshPresentationState();
+    }
+
+    private void Track_OnSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (IsLoaded && _isIndicatorVisible)
         {
             UpdateVisualState();
         }
     }
 
-    private void Track_OnSizeChanged(object sender, SizeChangedEventArgs e)
+    private void RefreshPresentationState(bool restartDelay = false)
     {
-        if (IsLoaded)
+        if (!IsLoaded)
         {
+            return;
+        }
+
+        if (ShowDelay <= 0)
+        {
+            PrepareImmediatePresentation();
+            return;
+        }
+
+        if (IsVisible)
+        {
+            RequestShow(restartDelay);
+        }
+        else
+        {
+            RequestHide();
+        }
+    }
+
+    private void PrepareImmediatePresentation()
+    {
+        _showTimer.Stop();
+        _hideTimer.Stop();
+
+        // При ShowDelay = 0 внутреннее содержимое не участвует в управлении
+        // видимостью. Экран сам показывает/скрывает LoadingIndicator через
+        // IsLoading, поэтому содержимое всегда готово к первому кадру.
+        IndicatorContent.Visibility = Visibility.Visible;
+        IndicatorContent.Opacity = 1;
+
+        _isIndicatorVisible = IsVisible;
+        _shownAt = IsVisible ? DateTime.UtcNow : null;
+        SetValue(IsPresentedPropertyKey, IsVisible);
+
+        if (IsVisible)
+        {
+            PrepareHiddenIndeterminateState();
             UpdateVisualState();
         }
+        else
+        {
+            StopIndeterminateAnimation();
+        }
+    }
+
+    private void RequestShow(bool restartDelay)
+    {
+        _hideTimer.Stop();
+
+        if (_isIndicatorVisible)
+        {
+            return;
+        }
+
+        int delay = Math.Max(0, ShowDelay);
+
+        if (delay == 0)
+        {
+            _showTimer.Stop();
+            ShowImmediately();
+            return;
+        }
+
+        if (_showTimer.IsEnabled && !restartDelay)
+        {
+            return;
+        }
+
+        _showTimer.Stop();
+        _showTimer.Interval = TimeSpan.FromMilliseconds(delay);
+        _showTimer.Start();
+    }
+
+    private void RequestHide()
+    {
+        _showTimer.Stop();
+        SetValue(IsPresentedPropertyKey, false);
+
+        if (!_isIndicatorVisible)
+        {
+            IndicatorContent.Opacity = 0;
+            IndicatorContent.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        int minimumDuration = Math.Max(0, MinimumVisibleDuration);
+
+        if (minimumDuration == 0 || _shownAt is null)
+        {
+            HideImmediately();
+            return;
+        }
+
+        TimeSpan elapsed = DateTime.UtcNow - _shownAt.Value;
+        TimeSpan remaining = TimeSpan.FromMilliseconds(minimumDuration) - elapsed;
+
+        if (remaining <= TimeSpan.Zero)
+        {
+            HideImmediately();
+            return;
+        }
+
+        _hideTimer.Stop();
+        _hideTimer.Interval = remaining;
+        _hideTimer.Start();
+    }
+
+    private void ShowTimer_OnTick(object? sender, EventArgs e)
+    {
+        _showTimer.Stop();
+
+        if (IsLoaded && IsVisible)
+        {
+            ShowImmediately();
+        }
+    }
+
+    private void HideTimer_OnTick(object? sender, EventArgs e)
+    {
+        _hideTimer.Stop();
+
+        if (!IsVisible)
+        {
+            HideImmediately();
+        }
+    }
+
+    private void ShowImmediately()
+    {
+        _presentationVersion++;
+        _isIndicatorVisible = true;
+        _shownAt = DateTime.UtcNow;
+
+        // При ShowDelay = 0 индикатор действительно должен появляться в текущем
+        // UI-цикле. Раньше Opacity включалась через Dispatcher.BeginInvoke, и
+        // быстрые операции успевали завершиться до следующего кадра — визуально
+        // лоадер полностью пропадал.
+        PrepareHiddenIndeterminateState();
+        IndicatorContent.Visibility = Visibility.Visible;
+        IndicatorContent.Opacity = 1;
+        UpdateVisualState();
+        SetValue(IsPresentedPropertyKey, true);
+    }
+
+    private void HideImmediately()
+    {
+        _presentationVersion++;
+        _showTimer.Stop();
+        _hideTimer.Stop();
+        IndicatorContent.Opacity = 0;
+        IndicatorContent.Visibility = Visibility.Collapsed;
+        SetValue(IsPresentedPropertyKey, false);
+        _isIndicatorVisible = false;
+        _shownAt = null;
+        StopIndeterminateAnimation();
     }
 
     private void UpdateVisualState()
@@ -200,20 +463,40 @@ public partial class LoadingIndicator : UserControl
             ? Visibility.Visible
             : Visibility.Collapsed;
 
-        if (IsIndeterminate)
+        if (IsIndeterminate && _isIndicatorVisible)
         {
             StartIndeterminateAnimation();
         }
         else
         {
             StopIndeterminateAnimation();
-            UpdateDeterminateFill();
+
+            if (!IsIndeterminate)
+            {
+                UpdateDeterminateFill();
+            }
         }
+    }
+
+    private void PrepareHiddenIndeterminateState()
+    {
+        if (!IsIndeterminate)
+        {
+            return;
+        }
+
+        double trackWidth = Track.ActualWidth > 0
+            ? Track.ActualWidth
+            : Math.Max(0d, IndicatorLength);
+        double segmentWidth = Math.Clamp(trackWidth * 0.3d, 76d, 140d);
+
+        IndeterminateFill.Width = segmentWidth;
+        IndeterminateTranslation.X = -segmentWidth;
     }
 
     private void StartIndeterminateAnimation()
     {
-        if (!IsVisible || Track.ActualWidth <= 0)
+        if (!_isIndicatorVisible || !IsVisible || Track.ActualWidth <= 0)
         {
             StopIndeterminateAnimation();
             return;
@@ -256,7 +539,7 @@ public partial class LoadingIndicator : UserControl
 
         DeterminateFill.Width = targetWidth;
 
-        if (!IsVisible || Track.ActualWidth <= 0)
+        if (!_isIndicatorVisible || !IsVisible || Track.ActualWidth <= 0)
         {
             return;
         }

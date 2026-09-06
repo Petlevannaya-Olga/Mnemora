@@ -1,4 +1,4 @@
-<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:converters="clr-namespace:Mnemora.Desktop.Converters" xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes" xmlns:views="clr-namespace:Mnemora.Desktop.Views.Library" x:Class="Mnemora.Desktop.Views.Library.CreateMaterialView" x:Name="Root" SnapsToDevicePixels="True" TextOptions.TextFormattingMode="Display" TextOptions.TextRenderingMode="ClearType" UseLayoutRounding="True">
+﻿<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:converters="clr-namespace:Mnemora.Desktop.Converters" xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes" xmlns:views="clr-namespace:Mnemora.Desktop.Views.Library" x:Class="Mnemora.Desktop.Views.Library.CreateMaterialView" x:Name="Root" SnapsToDevicePixels="True" TextOptions.TextFormattingMode="Display" TextOptions.TextRenderingMode="ClearType" UseLayoutRounding="True">
 
     <UserControl.Resources>
         <converters:TopicColorConverter x:Key="TopicColorConverter"/>
@@ -336,7 +336,7 @@
     <Grid Background="{DynamicResource Mnemora.Brush.SurfaceMuted}"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions><Button Grid.Row="0" Margin="32,28,32,0" HorizontalAlignment="Left" Style="{StaticResource CreateMaterial.BreadcrumbButton}">
             <StackPanel Orientation="Horizontal">
                 <materialDesign:PackIcon Width="18" Height="18" VerticalAlignment="Center" Kind="ChevronLeft"/>
-                <TextBlock Margin="4,0,0,0" VerticalAlignment="Center" FontSize="14" Text="Темы"/>
+                <TextBlock Margin="4,0,0,0" VerticalAlignment="Center" FontSize="14" Text="Структура"/>
             </StackPanel>
         </Button>
 
@@ -2529,7 +2529,7 @@
                                                     <ColumnDefinition Width="*"/>
                                                 </Grid.ColumnDefinitions>
                                                 <materialDesign:PackIcon Width="18" Height="18" VerticalAlignment="Top" Foreground="#9A6A12" Kind="InformationOutline"/>
-                                                <TextBlock Grid.Column="2" FontSize="12" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="После финального подтверждения готовые вопросы перестанут быть самостоятельными. Вопросы из других тем перейдут в тему статьи." TextWrapping="Wrap"/>
+                                                <TextBlock Grid.Column="2" FontSize="12" Foreground="{DynamicResource Mnemora.Brush.TextSecondary}" Text="После финального подтверждения готовые вопросы перестанут быть самостоятельными. Вопросы из других папок будут перенесены туда же, где находится статья." TextWrapping="Wrap"/>
                                             </Grid>
                                         </Border>
                 

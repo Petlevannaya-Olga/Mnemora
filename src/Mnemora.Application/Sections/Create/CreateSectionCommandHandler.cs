@@ -1,6 +1,8 @@
-﻿using CSharpFunctionalExtensions;
+using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
 using Mnemora.Application.Database;
+using Mnemora.Application.LibraryContainers;
+using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Sections;
 using Mnemora.Shared;
 using Mnemora.Shared.Abstractions;
@@ -9,6 +11,7 @@ namespace Mnemora.Application.Sections.Create;
 
 public sealed class CreateSectionCommandHandler(
     ISectionsRepository sectionsRepository,
+    ILibraryContainersRepository libraryContainersRepository,
     ITransactionManager transactionManager,
     ILogger<CreateSectionCommandHandler> logger)
     : ICommandHandler<Guid, CreateSectionCommand>
@@ -48,8 +51,18 @@ public sealed class CreateSectionCommandHandler(
             command.Color,
             command.Icon);
 
-        sectionsRepository.Add(section);
+        var rootResult = LibraryContainer.CreateRoot(section.Id);
 
+        if (rootResult.IsFailure)
+        {
+            return rootResult.Error.ToErrors();
+        }
+
+        sectionsRepository.Add(section);
+        libraryContainersRepository.Add(rootResult.Value);
+
+        // Section и его root-контейнер сохраняются одним SaveChanges.
+        // Поэтому новый раздел не может штатно сохраниться без своего root.
         var saveResult = await transactionManager.SaveChangesAsync(
             cancellationToken);
 
@@ -64,9 +77,10 @@ public sealed class CreateSectionCommandHandler(
         }
 
         logger.LogInformation(
-            "Создан раздел {SectionId} с названием {SectionName}",
+            "Создан раздел {SectionId} с названием {SectionName} и корневым контейнером {ContainerId}",
             section.Id.Value,
-            section.Name.Value);
+            section.Name.Value,
+            rootResult.Value.Id.Value);
 
         return section.Id.Value;
     }

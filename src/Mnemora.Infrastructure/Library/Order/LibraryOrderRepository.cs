@@ -2,6 +2,7 @@ using CSharpFunctionalExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Mnemora.Application.Library.Order;
+using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Materials;
 using Mnemora.Domain.Sections;
 using Mnemora.Domain.Topics;
@@ -15,7 +16,8 @@ internal sealed class LibraryOrderRepository(
     ILogger<LibraryOrderRepository> logger)
     : ILibraryOrderRepository
 {
-    public Task<Result<IReadOnlyList<Section>, Error>> GetSectionsAsync(CancellationToken cancellationToken)
+    public Task<Result<IReadOnlyList<Section>, Error>> GetSectionsAsync(
+        CancellationToken cancellationToken)
     {
         return ExecuteAsync(
             async () => await dbContext.Sections
@@ -39,6 +41,23 @@ internal sealed class LibraryOrderRepository(
                 .ThenBy(topic => topic.Id)
                 .ToListAsync(cancellationToken),
             "темы",
+            cancellationToken);
+    }
+
+    public Task<Result<IReadOnlyList<LibraryContainer>, Error>> GetFirstLevelFoldersAsync(
+        SectionId sectionId,
+        CancellationToken cancellationToken)
+    {
+        return ExecuteAsync(
+            async () => await dbContext.LibraryContainers
+                .Where(container =>
+                    container.SectionId == sectionId &&
+                    container.Depth == 1)
+                .OrderBy(container => container.DisplayOrder)
+                .ThenBy(container => container.CreatedAt)
+                .ThenBy(container => container.Id)
+                .ToListAsync(cancellationToken),
+            "папки первого уровня",
             cancellationToken);
     }
 
@@ -67,13 +86,19 @@ internal sealed class LibraryOrderRepository(
             IReadOnlyList<TEntity> entities = await query();
             return Result.Success<IReadOnlyList<TEntity>, Error>(entities);
         }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException)
+            when (cancellationToken.IsCancellationRequested)
         {
-            return CommonErrors.OperationCancelled("library.order.get.cancelled");
+            return CommonErrors.OperationCancelled(
+                "library.order.get.cancelled");
         }
         catch (Exception exception)
         {
-            logger.LogError(exception, "Не удалось получить {EntityName} для изменения порядка", entityName);
+            logger.LogError(
+                exception,
+                "Не удалось получить {EntityName} для изменения порядка",
+                entityName);
+
             return CommonErrors.Db(
                 "library.order.get.failed",
                 "Не удалось получить элементы для изменения порядка");

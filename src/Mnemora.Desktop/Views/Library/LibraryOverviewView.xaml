@@ -1,4 +1,5 @@
 ﻿<UserControl
+    xmlns:libraryBehaviors="clr-namespace:Mnemora.Desktop.Views.Library"
     x:Class="Mnemora.Desktop.Views.Library.LibraryOverviewView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -17,6 +18,16 @@
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <Style x:Key="DelayedLoadingHostStyle" TargetType="Border">
+            <Setter Property="Opacity" Value="0" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=Child.IsPresented}" Value="True">
+                    <Setter Property="Opacity" Value="1" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <converters:LibraryRangeCounterTextConverter x:Key="LibraryRangeCounterTextConverter" />
         <converters:SectionColorConverter x:Key="SectionColorConverter" />
         <converters:SectionIconConverter x:Key="SectionIconConverter" />
 
@@ -64,7 +75,9 @@
             <Setter Property="VerticalContentAlignment" Value="Stretch" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Focusable" Value="False" />
             <Setter Property="IsTabStop" Value="False" />
+            <Setter Property="libraryBehaviors:SuppressBringIntoViewBehavior.IsEnabled" Value="True" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -102,7 +115,7 @@
                             Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="9">
+                            CornerRadius="8">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
 
@@ -158,6 +171,52 @@
                             Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter
+                                Margin="{TemplateBinding Padding}"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                RecognizesAccessKey="True" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style
+            x:Key="SectionTableFirstColumnHeaderStyle"
+            BasedOn="{StaticResource SectionTableColumnHeaderStyle}"
+            TargetType="DataGridColumnHeader">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridColumnHeader">
+                        <Border
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="13,0,0,0">
+                            <ContentPresenter
+                                Margin="{TemplateBinding Padding}"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                RecognizesAccessKey="True" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style
+            x:Key="SectionTableLastColumnHeaderStyle"
+            BasedOn="{StaticResource SectionTableColumnHeaderStyle}"
+            TargetType="DataGridColumnHeader">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridColumnHeader">
+                        <Border
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="0,13,0,0">
                             <ContentPresenter
                                 Margin="{TemplateBinding Padding}"
                                 HorizontalAlignment="Left"
@@ -256,112 +315,10 @@
             <Setter Property="Margin" Value="0,0,7,0" />
             <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.TextSecondary}" />
         </Style>
-        <Style x:Key="LibraryScrollBarPageButtonStyle" TargetType="{x:Type RepeatButton}">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Focusable" Value="False" />
-            <Setter Property="IsTabStop" Value="False" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type RepeatButton}">
-                        <Border Background="Transparent" />
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="LibraryVerticalScrollThumbStyle" TargetType="{x:Type Thumb}">
-            <Setter Property="Height" Value="48" />
-            <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Primary}" />
-            <Setter Property="Opacity" Value="0.78" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type Thumb}">
-                        <Border
-                            Margin="2,0"
-                            Background="{TemplateBinding Background}"
-                            CornerRadius="5" />
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Opacity" Value="1" />
-                </Trigger>
-
-                <Trigger Property="IsDragging" Value="True">
-                    <Setter Property="Opacity" Value="1" />
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-
-        <ControlTemplate
-            x:Key="LibraryVerticalScrollBarTemplate"
-            TargetType="{x:Type ScrollBar}">
-            <Grid
-                Background="Transparent"
-                SnapsToDevicePixels="True">
-                <Border
-                    Margin="3,2"
-                    Background="{TemplateBinding Background}"
-                    CornerRadius="5" />
-
-                <Track
-                    x:Name="PART_Track"
-                    Margin="2"
-                    IsDirectionReversed="True"
-                    Orientation="Vertical"
-                    ViewportSize="NaN">
-                    <Track.DecreaseRepeatButton>
-                        <RepeatButton
-                            Command="{x:Static ScrollBar.PageUpCommand}"
-                            Style="{StaticResource LibraryScrollBarPageButtonStyle}" />
-                    </Track.DecreaseRepeatButton>
-
-                    <Track.Thumb>
-                        <Thumb Style="{StaticResource LibraryVerticalScrollThumbStyle}" />
-                    </Track.Thumb>
-
-                    <Track.IncreaseRepeatButton>
-                        <RepeatButton
-                            Command="{x:Static ScrollBar.PageDownCommand}"
-                            Style="{StaticResource LibraryScrollBarPageButtonStyle}" />
-                    </Track.IncreaseRepeatButton>
-                </Track>
-            </Grid>
-
-            <ControlTemplate.Triggers>
-                <Trigger Property="IsEnabled" Value="False">
-                    <Setter Property="Opacity" Value="0.45" />
-                </Trigger>
-            </ControlTemplate.Triggers>
-        </ControlTemplate>
-
         <Style
             x:Key="LibraryScrollBarStyle"
-            BasedOn="{StaticResource {x:Type ScrollBar}}"
-            TargetType="{x:Type ScrollBar}">
-            <Style.Triggers>
-                <Trigger Property="Orientation" Value="Vertical">
-                    <Setter Property="Width" Value="16" />
-                    <Setter Property="MinWidth" Value="16" />
-                    <Setter Property="Margin" Value="6,2,2,2" />
-                    <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Border}" />
-                    <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.Primary}" />
-                    <Setter Property="Opacity" Value="0.9" />
-                    <Setter Property="Template" Value="{StaticResource LibraryVerticalScrollBarTemplate}" />
-                </Trigger>
-
-                <MultiTrigger>
-                    <MultiTrigger.Conditions>
-                        <Condition Property="Orientation" Value="Vertical" />
-                        <Condition Property="IsMouseOver" Value="True" />
-                    </MultiTrigger.Conditions>
-                    <Setter Property="Opacity" Value="1" />
-                </MultiTrigger>
-            </Style.Triggers>
-        </Style>
+            BasedOn="{StaticResource Mnemora.LibraryScrollBar}"
+            TargetType="{x:Type ScrollBar}" />
     </UserControl.Resources>
 
     <Grid Background="{DynamicResource Mnemora.Brush.SurfaceMuted}">
@@ -376,69 +333,95 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <StackPanel Margin="32,28,32,22">
+        <StackPanel Margin="32,28,32,0">
             <TextBlock Style="{StaticResource Mnemora.Heading}" Text="Библиотека" />
             <TextBlock
                 Margin="0,6,0,0"
                 Style="{StaticResource Mnemora.Description}"
                 Text="Разделы базы знаний" />
+
+            <Border Height="1"
+                    Margin="0,22,0,0"
+                    Background="{DynamicResource Mnemora.Brush.Border}" />
         </StackPanel>
 
-        <Grid Grid.Row="1" Margin="32,0,32,24">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="20" />
-                <ColumnDefinition Width="220" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
+        <!-- Общая панель поиска, сортировки и вида -->
+        <Border
+            Grid.Row="1"
+            Margin="0,0,0,10"
+            Padding="32,16"
+            Background="{DynamicResource Mnemora.Brush.ToolbarSurface}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="20" />
+                    <ColumnDefinition Width="220" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
 
-            <TextBox
-                Height="52"
-                VerticalContentAlignment="Center"
-                Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                materialDesign:HintAssist.Hint="Поиск по разделам..."
-                Style="{StaticResource MaterialDesignOutlinedTextBox}" />
+                <TextBox
+                    Height="50"
+                    VerticalContentAlignment="Center"
+                    Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                    materialDesign:HintAssist.Hint="Поиск по разделам..."
+                    materialDesign:TextFieldAssist.HasClearButton="True"
+                    Style="{StaticResource MaterialDesignOutlinedTextBox}" />
 
-            <ComboBox
-                Grid.Column="2"
-                Height="52"
-                VerticalContentAlignment="Center"
-                DisplayMemberPath="Name"
-                ItemsSource="{Binding SortOptions}"
-                SelectedItem="{Binding SelectedSortOption}"
-                materialDesign:HintAssist.Hint="Сортировка"
-                Style="{StaticResource MaterialDesignOutlinedComboBox}" />
+                <ComboBox
+                    Grid.Column="2"
+                    Height="50"
+                    VerticalContentAlignment="Center"
+                    DisplayMemberPath="Name"
+                    ItemsSource="{Binding SortOptions}"
+                    SelectedItem="{Binding SelectedSortOption}"
+                    materialDesign:HintAssist.Hint="Сортировка"
+                    Style="{StaticResource MaterialDesignOutlinedComboBox}" />
 
-            <StackPanel Grid.Column="3" Orientation="Horizontal">
-                <ToggleButton
-                    Command="{Binding ShowTilesViewCommand}"
-                    IsChecked="{Binding IsTilesView, Mode=OneWay}"
-                    Style="{StaticResource LibraryViewModeButtonStyle}"
-                    ToolTip="Плитки">
-                    <materialDesign:PackIcon Width="24" Height="24" Kind="ViewGridOutline" />
-                </ToggleButton>
+                <StackPanel Grid.Column="3" Orientation="Horizontal">
+                    <ToggleButton
+                        Command="{Binding ShowTilesViewCommand}"
+                        IsChecked="{Binding IsTilesView, Mode=OneWay}"
+                        Style="{StaticResource LibraryViewModeButtonStyle}"
+                        ToolTip="Плитки">
+                        <materialDesign:PackIcon Width="23" Height="23" Kind="ViewGridOutline" />
+                    </ToggleButton>
 
-                <ToggleButton
-                    Command="{Binding ShowCompactTilesViewCommand}"
-                    IsChecked="{Binding IsCompactTilesView, Mode=OneWay}"
-                    Style="{StaticResource LibraryViewModeButtonStyle}"
-                    ToolTip="Компактные плитки">
-                    <materialDesign:PackIcon Width="24" Height="24" Kind="ViewModule" />
-                </ToggleButton>
+                    <ToggleButton
+                        Command="{Binding ShowCompactTilesViewCommand}"
+                        IsChecked="{Binding IsCompactTilesView, Mode=OneWay}"
+                        Style="{StaticResource LibraryViewModeButtonStyle}"
+                        ToolTip="Компактные плитки">
+                        <materialDesign:PackIcon Width="23" Height="23" Kind="ViewModule" />
+                    </ToggleButton>
 
-                <ToggleButton
-                    Command="{Binding ShowTableViewCommand}"
-                    IsChecked="{Binding IsTableView, Mode=OneWay}"
-                    Style="{StaticResource LibraryViewModeButtonStyle}"
-                    ToolTip="Таблица">
-                    <materialDesign:PackIcon Width="24" Height="24" Kind="FormatListBulleted" />
-                </ToggleButton>
-            </StackPanel>
-        </Grid>
+                    <ToggleButton
+                        Command="{Binding ShowTableViewCommand}"
+                        IsChecked="{Binding IsTableView, Mode=OneWay}"
+                        Style="{StaticResource LibraryViewModeButtonStyle}"
+                        ToolTip="Таблица">
+                        <materialDesign:PackIcon Width="23" Height="23" Kind="FormatListBulleted" />
+                    </ToggleButton>
 
-        <Grid Grid.Row="2" Margin="32,0,32,28">
+                    <ComboBox
+                        Width="108"
+                        Height="50"
+                        Margin="10,0,0,0"
+                        VerticalContentAlignment="Center"
+                        DisplayMemberPath="Name"
+                        ItemsSource="{Binding TilesPerRowOptions}"
+                        SelectedItem="{Binding SelectedTilesPerRowOption, Mode=TwoWay}"
+                        Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                        ToolTip="Максимальное количество плиток в строке. «Авто» подбирает количество по ширине окна."
+                        Visibility="{Binding IsTilesPerRowSelectorVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
+                        materialDesign:HintAssist.Hint="Колонки" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="2" Margin="32,8,32,28">
             <loading:LoadingIndicator
                 Panel.ZIndex="30"
+                ShowDelay="0"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 IndicatorLength="360"
@@ -546,6 +529,8 @@
 
                 <TextBlock
                     Margin="0,18,0,0"
+                    HorizontalAlignment="Stretch"
+                    TextAlignment="Center"
                     FontSize="21"
                     FontWeight="SemiBold"
                     Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
@@ -553,6 +538,8 @@
 
                 <TextBlock
                     Margin="0,8,0,0"
+                    HorizontalAlignment="Stretch"
+                    TextAlignment="Center"
                     Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
                     Text="Попробуйте изменить поисковый запрос." />
             </StackPanel>
@@ -580,12 +567,34 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <TextBlock
-                    Margin="0,0,0,18"
-                    FontSize="24"
-                    FontWeight="SemiBold"
-                    Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                    Text="Разделы" />
+                <StackPanel Margin="0,0,0,18" Orientation="Horizontal">
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontSize="24"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                        Text="Разделы" />
+
+                    <TextBlock
+                        Margin="12,2,0,0"
+                        VerticalAlignment="Center"
+                        FontSize="11"
+                        FontWeight="Normal"
+                        Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                        Opacity="0.68"
+                        Text="{Binding SectionsShownCountText, Converter={StaticResource LibraryRangeCounterTextConverter}}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Visible" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasNextPageError}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
 
                 <!-- Подробные плитки -->
 
@@ -614,7 +623,11 @@
                             <ItemsControl ItemsSource="{Binding Sections}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
-                                        <UniformGrid Columns="3" />
+                                        <UniformGrid
+                                            libraryBehaviors:ResponsiveUniformGridBehavior.ActualColumns="{Binding DataContext.ActualTilesPerRow, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}, Mode=OneWayToSource}"
+                                            libraryBehaviors:ResponsiveUniformGridBehavior.DesiredColumns="{Binding DataContext.DesiredTilesPerRow, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                            libraryBehaviors:ResponsiveUniformGridBehavior.MinimumItemWidth="300"
+                                            libraryBehaviors:ResponsiveUniformGridBehavior.MaximumColumns="5" />
                                     </ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
 
@@ -765,7 +778,11 @@
                             <ItemsControl ItemsSource="{Binding Sections}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
-                                        <UniformGrid Columns="5" />
+                                        <UniformGrid
+                                            libraryBehaviors:ResponsiveUniformGridBehavior.ActualColumns="{Binding DataContext.ActualCompactTilesPerRow, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}, Mode=OneWayToSource}"
+                                            libraryBehaviors:ResponsiveUniformGridBehavior.DesiredColumns="{Binding DataContext.DesiredTilesPerRow, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                            libraryBehaviors:ResponsiveUniformGridBehavior.MinimumItemWidth="220"
+                                            libraryBehaviors:ResponsiveUniformGridBehavior.MaximumColumns="7" />
                                     </ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
 
@@ -866,7 +883,7 @@
                                 Header="Раздел"
                                 MinWidth="260"
                                 Width="*"
-                                HeaderStyle="{StaticResource SectionTableColumnHeaderStyle}">
+                                HeaderStyle="{StaticResource SectionTableFirstColumnHeaderStyle}">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Grid Margin="10,0,0,0">
@@ -910,14 +927,14 @@
                             </DataGridTemplateColumn>
 
                             <DataGridTemplateColumn
-                                Header="Темы"
+                                Header="Папки"
                                 Width="90"
                                 HeaderStyle="{StaticResource SectionTableColumnHeaderStyle}">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center" Orientation="Horizontal">
                                             <materialDesign:PackIcon Kind="ViewGridOutline" Style="{StaticResource SectionCountIconStyle}" />
-                                            <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="{Binding TopicsCount}" />
+                                            <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.TextPrimary}" Text="{Binding FoldersCount}" />
                                         </StackPanel>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
@@ -954,7 +971,7 @@
                             <DataGridTemplateColumn
                                 Header="Вопросы"
                                 Width="100"
-                                HeaderStyle="{StaticResource SectionTableColumnHeaderStyle}">
+                                HeaderStyle="{StaticResource SectionTableLastColumnHeaderStyle}">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center" Orientation="Horizontal">
@@ -965,61 +982,44 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <DataGridTextColumn
-                                Header="Создан"
-                                Width="105"
-                                Binding="{Binding CreatedAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
-                                CellStyle="{StaticResource SectionTableDateCellStyle}"
-                                HeaderStyle="{StaticResource SectionTableColumnHeaderStyle}"
-                                ElementStyle="{StaticResource SectionTableTextStyle}" />
 
-                            <DataGridTextColumn
-                                Header="Изменён"
-                                Width="105"
-                                Binding="{Binding UpdatedAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
-                                CellStyle="{StaticResource SectionTableDateCellStyle}"
-                                HeaderStyle="{StaticResource SectionTableColumnHeaderStyle}"
-                                ElementStyle="{StaticResource SectionTableTextStyle}" />
-
-                            <DataGridTextColumn
-                                Header="Активность"
-                                Width="115"
-                                Binding="{Binding LastActivityAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
-                                CellStyle="{StaticResource SectionTableDateCellStyle}"
-                                HeaderStyle="{StaticResource SectionTableColumnHeaderStyle}"
-                                ElementStyle="{StaticResource SectionTableTextStyle}" />
 
                         </DataGrid.Columns>
                     </DataGrid>
                 </Border>
 
-                <!-- Диапазон текущей страницы -->
-
-                <Grid Grid.Row="2" MinHeight="72">
-                    <TextBlock
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Center"
-                        Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                        Text="{Binding SectionsShownCountText}">
-                        <TextBlock.Style>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Visibility" Value="Visible" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding HasNextPageError}" Value="True">
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
-
+                <!-- Догрузка: плавающая плашка не участвует в layout и не сдвигает скролл -->
+                <Border
+                    Grid.Row="1"
+                    Panel.ZIndex="50"
+                    Padding="18,14"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Background="#F0061735"
+                    CornerRadius="14"
+                    IsHitTestVisible="False"
+                    Visibility="{Binding IsPaging, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <loading:LoadingIndicator
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        IndicatorLength="200"
-                        IndicatorThickness="6"
+                        ShowDelay="0"
+                        IndicatorLength="180"
+                        IndicatorThickness="5"
                         Message="Загружаем разделы..."
-                        Visibility="{Binding IsLoadingNextPage, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                        MessageForeground="White"
+                        TrackBrush="#40FFFFFF" />
+                </Border>
+
+                <!-- Ошибка догрузки остаётся отдельной служебной строкой -->
+                <Grid Grid.Row="2" MinHeight="72">
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasNextPageError}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
 
                     <StackPanel
                         HorizontalAlignment="Left"

@@ -1,4 +1,4 @@
-﻿using Mnemora.Contracts;
+using Mnemora.Contracts;
 using Mnemora.Contracts.Library;
 
 namespace Mnemora.Desktop.ViewModels.Library;
@@ -21,6 +21,8 @@ public sealed class LibrarySectionCardViewModel
 
     public Guid Id => Source.Id;
 
+    public Guid RootContainerId => Source.RootContainerId;
+
     public string Name => Source.Name;
 
     public string Color => Source.Color;
@@ -38,6 +40,8 @@ public sealed class LibrarySectionCardViewModel
     public DateTime UpdatedAtLocal => ToLocalTime(UpdatedAt);
 
     public DateTime LastActivityAtLocal => ToLocalTime(LastActivityAt);
+
+    public int FoldersCount => Source.FoldersCount;
 
     public int TopicsCount => Source.TopicsCount;
 
@@ -61,7 +65,7 @@ public sealed class LibrarySectionCardViewModel
             : null;
 
     public string StructureText =>
-        $"{FormatCount(TopicsCount, "тема", "темы", "тем")} • " +
+        $"{FormatCount(FoldersCount, "папка", "папки", "папок")} • " +
         FormatCount(MaterialsCount, "материал", "материала", "материалов");
 
     public string ProgressText =>

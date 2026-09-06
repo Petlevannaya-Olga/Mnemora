@@ -1,4 +1,6 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
+using System.Windows;
+using System.Windows.Threading;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using Mnemora.Application.Library.GetManagementMaterialsPage;
@@ -117,6 +119,17 @@ public sealed partial class LibraryManagementViewModel
 
         int loadVersion = _simpleSectionLoadVersion;
         int offset = _simpleSectionWindow.NextOffset;
+
+        if (_simpleSectionWindow.TryGetCachedPage(
+                offset,
+                out IReadOnlyList<LibrarySectionOverviewDto> cached))
+        {
+            _simpleSectionWindow.ShowPage(offset, cached, PageWindowInsert.Append);
+            RebuildSimpleSectionWindow();
+            SyncSimpleSectionPagingProperties();
+            return;
+        }
+
         IsSimpleSectionsLoadingNextPage = true;
         SimpleSectionsNextPageErrorMessage = null;
         NotifySimpleSectionsStateChanged();
@@ -126,6 +139,8 @@ public sealed partial class LibraryManagementViewModel
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(
                 _simpleSectionContextCancellation?.Token ?? _viewCancellationToken,
                 cancellationToken);
+
+            await YieldForPagingLoaderAsync(linked.Token);
 
             LibraryManagementSectionsPageDto? page = await GetSimpleSectionPageAsync(
                 offset,
@@ -163,6 +178,7 @@ public sealed partial class LibraryManagementViewModel
     {
         if (!SimpleSectionsHasPrevious ||
             IsSimpleSectionsLoading ||
+            IsSimpleSectionsLoadingNextPage ||
             _isSimpleSectionsLoadingPreviousPage)
         {
             return;
@@ -170,6 +186,17 @@ public sealed partial class LibraryManagementViewModel
 
         int loadVersion = _simpleSectionLoadVersion;
         int offset = _simpleSectionWindow.PreviousOffset;
+
+        if (_simpleSectionWindow.TryGetCachedPage(
+                offset,
+                out IReadOnlyList<LibrarySectionOverviewDto> cached))
+        {
+            _simpleSectionWindow.ShowPage(offset, cached, PageWindowInsert.Prepend);
+            RebuildSimpleSectionWindow();
+            SyncSimpleSectionPagingProperties();
+            return;
+        }
+
         _isSimpleSectionsLoadingPreviousPage = true;
         OnPropertyChanged(nameof(IsSimpleSectionsLoadingPreviousPage));
         NotifySimpleSectionsStateChanged();
@@ -179,6 +206,8 @@ public sealed partial class LibraryManagementViewModel
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(
                 _simpleSectionContextCancellation?.Token ?? _viewCancellationToken,
                 cancellationToken);
+
+            await YieldForPagingLoaderAsync(linked.Token);
 
             LibraryManagementSectionsPageDto? page = await GetSimpleSectionPageAsync(
                 offset,
@@ -505,6 +534,17 @@ public sealed partial class LibraryManagementViewModel
 
         int loadVersion = _simpleTopicLoadVersion;
         int offset = _simpleTopicWindow.NextOffset;
+
+        if (_simpleTopicWindow.TryGetCachedPage(
+                offset,
+                out IReadOnlyList<LibraryManagementTopicOverviewDto> cached))
+        {
+            _simpleTopicWindow.ShowPage(offset, cached, PageWindowInsert.Append);
+            RebuildSimpleTopicWindow();
+            NotifySimpleTopicsStateChanged();
+            return;
+        }
+
         _isSimpleTopicsLoadingNextPage = true;
         OnPropertyChanged(nameof(IsSimpleTopicsLoadingNextPage));
         NotifySimpleTopicsStateChanged();
@@ -514,6 +554,8 @@ public sealed partial class LibraryManagementViewModel
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(
                 _simpleTopicContextCancellation?.Token ?? _viewCancellationToken,
                 cancellationToken);
+
+            await YieldForPagingLoaderAsync(linked.Token);
 
             LibraryManagementTopicsPageDto? page = await GetSimpleTopicPageAsync(
                 offset,
@@ -553,6 +595,7 @@ public sealed partial class LibraryManagementViewModel
     {
         if (!SimpleTopicsHasPrevious ||
             IsContextLoading ||
+            _isSimpleTopicsLoadingNextPage ||
             _isSimpleTopicsLoadingPreviousPage ||
             SelectedSection is null)
         {
@@ -561,6 +604,17 @@ public sealed partial class LibraryManagementViewModel
 
         int loadVersion = _simpleTopicLoadVersion;
         int offset = _simpleTopicWindow.PreviousOffset;
+
+        if (_simpleTopicWindow.TryGetCachedPage(
+                offset,
+                out IReadOnlyList<LibraryManagementTopicOverviewDto> cached))
+        {
+            _simpleTopicWindow.ShowPage(offset, cached, PageWindowInsert.Prepend);
+            RebuildSimpleTopicWindow();
+            NotifySimpleTopicsStateChanged();
+            return;
+        }
+
         _isSimpleTopicsLoadingPreviousPage = true;
         OnPropertyChanged(nameof(IsSimpleTopicsLoadingPreviousPage));
         NotifySimpleTopicsStateChanged();
@@ -570,6 +624,8 @@ public sealed partial class LibraryManagementViewModel
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(
                 _simpleTopicContextCancellation?.Token ?? _viewCancellationToken,
                 cancellationToken);
+
+            await YieldForPagingLoaderAsync(linked.Token);
 
             LibraryManagementTopicsPageDto? page = await GetSimpleTopicPageAsync(
                 offset,
@@ -606,6 +662,7 @@ public sealed partial class LibraryManagementViewModel
         IsSimpleTopicsPage &&
         _simpleTopicWindow.HasNext &&
         !_isSimpleTopicsLoadingNextPage &&
+        !_isSimpleTopicsLoadingPreviousPage &&
         !IsContextLoading &&
         !HasError;
 
@@ -915,6 +972,18 @@ public sealed partial class LibraryManagementViewModel
 
         int loadVersion = _simpleMaterialLoadVersion;
         int offset = _simpleMaterialWindowEndOffset;
+
+        if (_simpleMaterialPageCache.TryGet(
+                offset,
+                out IReadOnlyList<LibraryManagementMaterialOverviewDto> cached))
+        {
+            AddVisibleMaterialPageOffset(offset, append: true);
+            TrimVisibleMaterialPagesFromStart();
+            RebuildSimpleMaterialWindow();
+            NotifySimpleMaterialsStateChanged();
+            return;
+        }
+
         _isSimpleMaterialsLoadingNextPage = true;
         NotifySimpleMaterialsStateChanged();
 
@@ -923,6 +992,8 @@ public sealed partial class LibraryManagementViewModel
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(
                 _simpleMaterialContextCancellation?.Token ?? _viewCancellationToken,
                 cancellationToken);
+
+            await YieldForPagingLoaderAsync(linked.Token);
 
             LibraryManagementMaterialsPageDto? page = await GetSimpleMaterialPageAsync(
                 offset,
@@ -961,6 +1032,7 @@ public sealed partial class LibraryManagementViewModel
     {
         if (!SimpleMaterialsHasPrevious ||
             IsContextLoading ||
+            _isSimpleMaterialsLoadingNextPage ||
             _isSimpleMaterialsLoadingPreviousPage ||
             SelectedTopic is null)
         {
@@ -970,6 +1042,18 @@ public sealed partial class LibraryManagementViewModel
         int loadVersion = _simpleMaterialLoadVersion;
         int firstOffset = _simpleMaterialVisiblePageOffsets.First?.Value ?? 0;
         int offset = Math.Max(0, firstOffset - SimpleMaterialPageSize);
+
+        if (_simpleMaterialPageCache.TryGet(
+                offset,
+                out IReadOnlyList<LibraryManagementMaterialOverviewDto> cached))
+        {
+            AddVisibleMaterialPageOffset(offset, append: false);
+            TrimVisibleMaterialPagesFromEnd();
+            RebuildSimpleMaterialWindow();
+            NotifySimpleMaterialsStateChanged();
+            return;
+        }
+
         _isSimpleMaterialsLoadingPreviousPage = true;
         NotifySimpleMaterialsStateChanged();
 
@@ -978,6 +1062,8 @@ public sealed partial class LibraryManagementViewModel
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(
                 _simpleMaterialContextCancellation?.Token ?? _viewCancellationToken,
                 cancellationToken);
+
+            await YieldForPagingLoaderAsync(linked.Token);
 
             LibraryManagementMaterialsPageDto? page = await GetSimpleMaterialPageAsync(
                 offset,
@@ -1330,4 +1416,21 @@ public sealed partial class LibraryManagementViewModel
             LibraryManagementMaterialSort.Newest => LibraryManagementMaterialPageSort.Newest,
             _ => LibraryManagementMaterialPageSort.Custom,
         };
+
+    private static async Task YieldForPagingLoaderAsync(CancellationToken cancellationToken)
+    {
+        Dispatcher? dispatcher = System.Windows.Application.Current?.Dispatcher;
+
+        if (dispatcher is null || dispatcher.HasShutdownStarted)
+        {
+            await Task.Yield();
+            return;
+        }
+
+        await dispatcher.InvokeAsync(
+            static () => { },
+            DispatcherPriority.Background,
+            cancellationToken);
+    }
+
 }

@@ -77,7 +77,12 @@ public sealed class AppSettings
         }
     }
 
-    public LibraryTopicsViewMode LibraryTopicsViewMode { get; set; } = LibraryTopicsViewMode.Tiles;
+    public LibraryTopicsViewMode LibraryTopicsViewMode { get; set; } = LibraryTopicsViewMode.CompactTiles;
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public int? LibraryTilesPerRow { get; set; }
+
+    public double LibraryContainerFoldersPaneRatio { get; set; } = 1d / 3d;
 
     public LibraryManagementSortMode LibraryManagementSectionSort { get; set; } = LibraryManagementSortMode.Custom;
 

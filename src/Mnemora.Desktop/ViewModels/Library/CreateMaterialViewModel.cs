@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -226,7 +226,7 @@ public sealed partial class CreateMaterialViewModel(
     public string QuestionsMovingToArticleTopicText =>
         QuestionsMovingToArticleTopicCount == 0
             ? string.Empty
-            : $"{FormatCount(QuestionsMovingToArticleTopicCount, "вопрос", "вопроса", "вопросов")} перейдут в тему статьи.";
+            : $"{FormatCount(QuestionsMovingToArticleTopicCount, "вопрос", "вопроса", "вопросов")} будут перенесены туда же, где статья.";
 
     public bool HasLearningOptionsError =>
         !string.IsNullOrWhiteSpace(
@@ -648,7 +648,7 @@ public sealed partial class CreateMaterialViewModel(
             if (SelectedTopic is null)
             {
                 LearningOptionsError =
-                    "Не удалось определить тему создаваемого материала.";
+                    "Не удалось определить место создаваемого материала.";
 
                 ClearArticleOptions();
                 return;
@@ -731,7 +731,7 @@ public sealed partial class CreateMaterialViewModel(
         if (SelectedTopic is null)
         {
             throw new InvalidOperationException(
-                "Не удалось определить тему создаваемой статьи.");
+                "Не удалось определить место создаваемой статьи.");
         }
 
         AvailableQuestions.Clear();
@@ -1229,8 +1229,8 @@ public sealed class LearningQuestionOptionViewModel
 
     public string MoveText =>
         MovesToArticleTopic
-            ? $"Будет перенесён в тему «{TargetTopicName}»"
-            : "Уже находится в теме статьи";
+            ? $"Будет перенесён в «{TargetTopicName}»"
+            : "Уже находится там же, где статья";
 
     public string ExperienceText =>
         $"{StudyPoints} / {ReviewPoints} XP";

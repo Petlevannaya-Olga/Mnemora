@@ -10,4 +10,10 @@ public sealed record LibraryManagementMaterialOverviewDto(
     DateTime CreatedAt,
     DateTime UpdatedAt,
     int DisplayOrder,
-    int ArticleQuestionCount);
+    int ArticleQuestionCount)
+{
+    /// <summary>
+    /// Фактическое расположение материала. TopicId остаётся legacy-полем.
+    /// </summary>
+    public Guid ContainerId { get; init; } = TopicId;
+}

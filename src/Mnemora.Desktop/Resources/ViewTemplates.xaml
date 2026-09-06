@@ -125,12 +125,21 @@
         <library:LibraryManagementView />
     </DataTemplate>
 
+    <DataTemplate
+        DataType="{x:Type libraryViewModels:CreateLibraryFolderDialogViewModel}">
+        <library:CreateLibraryFolderDialogView />
+    </DataTemplate>
+
     <DataTemplate DataType="{x:Type libraryViewModels:AllMaterialsViewModel}">
         <library:AllMaterialsView />
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type libraryViewModels:LibrarySectionViewModel}">
         <library:LibrarySectionView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type libraryViewModels:LibraryContainerViewModel}">
+        <library:LibraryContainerView />
     </DataTemplate>
     
     <DataTemplate DataType="{x:Type libraryViewModels:LibraryTopicViewModel}">

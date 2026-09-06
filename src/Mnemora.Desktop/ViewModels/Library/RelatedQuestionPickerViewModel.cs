@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Mnemora.Contracts;
 
@@ -44,7 +44,7 @@ public sealed partial class RelatedQuestionPickerViewModel : ObservableObject
 
         BuildNavigation(options);
 
-        // Чаще всего нужные вопросы находятся рядом со статьёй. Если в её теме
+        // Чаще всего нужные вопросы находятся рядом со статьёй. Если в выбранном месте
         // нет самостоятельных вопросов, сразу показываем всю библиотеку.
         var targetTopic = Sections
             .SelectMany(section => section.Topics)
@@ -106,8 +106,8 @@ public sealed partial class RelatedQuestionPickerViewModel : ObservableObject
     public string MoveWarningText =>
         CrossTopicSelectedCount == 0
             ? string.Empty
-            : $"В других темах выбрано: {CrossTopicSelectedCount}. " +
-              $"После создания статьи эти вопросы будут перенесены в тему «{_targetTopicName}».";
+            : $"В других местах выбрано: {CrossTopicSelectedCount}. " +
+              $"После создания статьи эти вопросы будут перенесены в «{_targetTopicName}».";
 
     public IReadOnlyList<StandaloneQuestionPickerOptionDto>
         GetSelectedOptions() =>
@@ -210,7 +210,7 @@ public sealed partial class RelatedQuestionPickerViewModel : ObservableObject
 
         IEnumerable<StandaloneQuestionPickerItemViewModel> query = _allQuestions;
 
-        // Поиск глобальный: когда пользователь вводит текст, текущий раздел/тема
+        // Поиск глобальный: когда пользователь вводит текст, текущий раздел/папка
         // не ограничивают результаты.
         if (search.Length > 0)
         {

@@ -721,12 +721,12 @@
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
 
-                                <materialDesign:PackIcon Kind="ViewAgendaOutline" Width="19" Height="19" />
+                                <materialDesign:PackIcon Kind="Magnify" Width="19" Height="19" />
 
                                 <TextBlock
                                     Grid.Column="1"
                                     Margin="11,0,0,0"
-                                    Text="Все материалы"
+                                    Text="Поиск"
                                     FontSize="14"
                                     VerticalAlignment="Center" />
                             </Grid>

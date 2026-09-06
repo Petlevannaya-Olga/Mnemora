@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using Mnemora.Contracts;
 using Mnemora.Contracts.Library;
 
@@ -21,7 +21,7 @@ public sealed class LibraryManagementSectionViewModel
     public DateTime CreatedAt => Source.CreatedAt;
     public DateTime UpdatedAt => Source.UpdatedAt;
     public DateTime LastActivityAt => Source.LastActivityAt;
-    public int TopicsCount => Source.TopicsCount;
+    public int FoldersCount => Source.FoldersCount;
     public int MaterialsCount => Source.MaterialsCount;
     public int ArticlesCount => Source.ArticlesCount;
     public int QuestionsCount => Source.QuestionsCount;
@@ -30,15 +30,14 @@ public sealed class LibraryManagementSectionViewModel
     public DateTime UpdatedAtLocal => ToLocalTime(UpdatedAt);
     public DateTime LastActivityAtLocal => ToLocalTime(LastActivityAt);
 
-    public string TopicsSummaryText => TopicsCount == 0
-        ? "Тем пока нет"
-        : FormatCount(TopicsCount, "тема", "темы", "тем");
+    public string FoldersSummaryText =>
+        FormatCount(FoldersCount, "папка", "папки", "папок");
 
     public string MaterialsSummaryText =>
         FormatCount(MaterialsCount, "материал", "материала", "материалов");
 
     public string StructureText =>
-        $"{FormatCount(TopicsCount, "тема", "темы", "тем")} • " +
+        $"{FormatCount(FoldersCount, "папка", "папки", "папок")} • " +
         FormatCount(MaterialsCount, "материал", "материала", "материалов");
 
     private static DateTime ToLocalTime(DateTime value)

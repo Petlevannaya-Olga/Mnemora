@@ -1,3 +1,4 @@
+using Mnemora.Application.Library.GetFoldersPage;
 using Mnemora.Application.Library.GetMaterialsPage;
 using Mnemora.Application.Library.GetSectionsPage;
 using Mnemora.Application.Library.GetTopicsPage;
@@ -16,6 +17,13 @@ public sealed class LibraryQueryValidationTests
             new GetLibrarySectionsPageQuery(null, LibrarySectionSort.Name, 0, 30));
         Assert.IsAssignableFrom<IQueryValidation>(
             new GetLibraryTopicsPageQuery(Guid.NewGuid(), null, LibraryTopicSort.Name, 0, 30));
+        Assert.IsAssignableFrom<IQueryValidation>(
+            new GetLibraryFoldersPageQuery(
+                Guid.NewGuid(),
+                null,
+                LibraryFolderSort.Name,
+                0,
+                30));
         Assert.IsAssignableFrom<IQueryValidation>(
             new GetLibraryMaterialsPageQuery(
                 Guid.NewGuid(),
@@ -63,7 +71,27 @@ public sealed class LibraryQueryValidationTests
     }
 
     [Fact]
-    public void MaterialsPageValidator_RejectsEmptyTopicIdAndInvalidEnums()
+    public void FoldersPageValidator_RejectsEmptyContainerIdAndInvalidPaging()
+    {
+        var query = new GetLibraryFoldersPageQuery(
+            Guid.Empty,
+            new string('F', 151),
+            (LibraryFolderSort)999,
+            Offset: -1,
+            PageSize: 101);
+
+        var result = new GetLibraryFoldersPageQueryValidator().Validate(query);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, error => error.PropertyName == "containerId");
+        Assert.Contains(result.Errors, error => error.PropertyName == nameof(query.Search));
+        Assert.Contains(result.Errors, error => error.PropertyName == nameof(query.Sort));
+        Assert.Contains(result.Errors, error => error.PropertyName == nameof(query.Offset));
+        Assert.Contains(result.Errors, error => error.PropertyName == nameof(query.PageSize));
+    }
+
+    [Fact]
+    public void MaterialsPageValidator_RejectsEmptyContainerIdAndInvalidEnums()
     {
         var query = new GetLibraryMaterialsPageQuery(
             Guid.Empty,
@@ -76,7 +104,7 @@ public sealed class LibraryQueryValidationTests
         var result = new GetLibraryMaterialsPageQueryValidator().Validate(query);
 
         Assert.False(result.IsValid);
-        Assert.Contains(result.Errors, error => error.PropertyName == "topicId");
+        Assert.Contains(result.Errors, error => error.PropertyName == "containerId");
         Assert.Contains(result.Errors, error => error.PropertyName == nameof(query.Filter));
         Assert.Contains(result.Errors, error => error.PropertyName == nameof(query.Sort));
     }

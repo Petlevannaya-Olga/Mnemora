@@ -1,4 +1,4 @@
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -20,6 +20,9 @@ public partial class LibraryManagementView : UserControl
     private bool _isSectionsScrollPageLoadRunning;
     private bool _isTopicsScrollPageLoadRunning;
     private bool _isMaterialsScrollPageLoadRunning;
+    private bool _isSectionStructureMaterialsScrollPageLoadRunning;
+    private bool _isSectionStructureTreeSelectionRunning;
+    private bool _isSectionStructureTreePageLoadRunning;
 
     public LibraryManagementView()
     {
@@ -457,6 +460,352 @@ public partial class LibraryManagementView : UserControl
         {
             _isMaterialsScrollPageLoadRunning = false;
         }
+    }
+
+    private async void SectionStructureTreeItem_OnExpanded(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (sender is not TreeViewItem { DataContext: LibrarySectionManagementTreeNodeViewModel node } ||
+            DataContext is not LibraryManagementViewModel viewModel)
+        {
+            return;
+        }
+
+        if (e.OriginalSource is TreeViewItem original && !ReferenceEquals(sender, original))
+        {
+            return;
+        }
+
+        e.Handled = true;
+        CancellationToken cancellationToken =
+            _loadCancellationTokenSource?.Token ?? CancellationToken.None;
+
+        try
+        {
+            await viewModel.SectionStructure.ExpandAsync(node, cancellationToken);
+            await WaitForScrollLayoutAsync();
+
+            TreeView? treeView = FindAncestor<TreeView>(sender as DependencyObject);
+            if (treeView is not null)
+            {
+                await LoadVisibleSectionStructureFolderPagesAsync(
+                    treeView,
+                    viewModel,
+                    cancellationToken);
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // View was unloaded or another navigation replaced the current load.
+        }
+    }
+
+    private async void SectionStructureTree_OnSelectedItemChanged(
+        object sender,
+        RoutedPropertyChangedEventArgs<object> e)
+    {
+        if (_isSectionStructureTreeSelectionRunning ||
+            e.NewValue is not LibrarySectionManagementTreeNodeViewModel node ||
+            DataContext is not LibraryManagementViewModel viewModel)
+        {
+            return;
+        }
+
+        CancellationToken cancellationToken =
+            _loadCancellationTokenSource?.Token ?? CancellationToken.None;
+        _isSectionStructureTreeSelectionRunning = true;
+
+        try
+        {
+            if (node.IsLoadMore || node.IsPlaceholder)
+            {
+                return;
+            }
+
+            if (node.IsError)
+            {
+                await viewModel.SectionStructure.RetryFoldersAsync(node, cancellationToken);
+                return;
+            }
+
+            if (!node.IsPlaceholder)
+            {
+                await viewModel.SectionStructure.SelectNodeAsync(node, cancellationToken);
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // View was unloaded or another navigation replaced the current load.
+        }
+        finally
+        {
+            _isSectionStructureTreeSelectionRunning = false;
+        }
+    }
+
+    private async void SectionStructureTree_OnScrollChanged(
+        object sender,
+        ScrollChangedEventArgs e)
+    {
+        if (sender is not TreeView treeView ||
+            DataContext is not LibraryManagementViewModel viewModel)
+        {
+            return;
+        }
+
+        CancellationToken cancellationToken =
+            _loadCancellationTokenSource?.Token ?? CancellationToken.None;
+
+        try
+        {
+            await LoadVisibleSectionStructureFolderPagesAsync(
+                treeView,
+                viewModel,
+                cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // View was unloaded or navigation replaced the current load.
+        }
+    }
+
+    private async Task LoadVisibleSectionStructureFolderPagesAsync(
+        TreeView treeView,
+        LibraryManagementViewModel viewModel,
+        CancellationToken cancellationToken)
+    {
+        if (_isSectionStructureTreePageLoadRunning)
+        {
+            return;
+        }
+
+        _isSectionStructureTreePageLoadRunning = true;
+
+        try
+        {
+            while (IsLoaded &&
+                   ReferenceEquals(DataContext, viewModel) &&
+                   !cancellationToken.IsCancellationRequested)
+            {
+                LibrarySectionManagementTreeNodeViewModel? loaderNode =
+                    FindVisibleSectionStructureLoader(treeView, treeView);
+
+                if (loaderNode is null)
+                {
+                    break;
+                }
+
+                await viewModel.SectionStructure.LoadMoreFoldersAsync(
+                    loaderNode,
+                    cancellationToken);
+
+                await WaitForScrollLayoutAsync();
+            }
+        }
+        finally
+        {
+            _isSectionStructureTreePageLoadRunning = false;
+        }
+    }
+
+    private static LibrarySectionManagementTreeNodeViewModel? FindVisibleSectionStructureLoader(
+        DependencyObject parent,
+        TreeView treeView)
+    {
+        int childrenCount = VisualTreeHelper.GetChildrenCount(parent);
+
+        for (int index = 0; index < childrenCount; index++)
+        {
+            DependencyObject child = VisualTreeHelper.GetChild(parent, index);
+
+            if (child is TreeViewItem item &&
+                item.DataContext is LibrarySectionManagementTreeNodeViewModel node &&
+                node.IsLoadMore &&
+                node.Parent is { IsLoading: false } &&
+                IsVisibleInsideTree(item, treeView))
+            {
+                return node;
+            }
+
+            LibrarySectionManagementTreeNodeViewModel? nested =
+                FindVisibleSectionStructureLoader(child, treeView);
+
+            if (nested is not null)
+            {
+                return nested;
+            }
+        }
+
+        return null;
+    }
+
+    private static bool IsVisibleInsideTree(
+        FrameworkElement element,
+        FrameworkElement treeView)
+    {
+        if (!element.IsVisible ||
+            element.ActualWidth <= 0 ||
+            element.ActualHeight <= 0 ||
+            treeView.ActualHeight <= 0)
+        {
+            return false;
+        }
+
+        try
+        {
+            Rect bounds = element
+                .TransformToAncestor(treeView)
+                .TransformBounds(
+                    new Rect(
+                        0,
+                        0,
+                        element.ActualWidth,
+                        element.ActualHeight));
+
+            return bounds.Bottom >= 0 &&
+                   bounds.Top <= treeView.ActualHeight;
+        }
+        catch (InvalidOperationException)
+        {
+            return false;
+        }
+    }
+
+    private async void SectionStructureMaterialsScroll_OnScrollChanged(
+        object sender,
+        ScrollChangedEventArgs e)
+    {
+        if (DataContext is not LibraryManagementViewModel viewModel)
+        {
+            return;
+        }
+
+        LibrarySectionManagementViewModel sectionViewModel = viewModel.SectionStructure;
+        ScrollViewer? scrollViewer = ResolveScrollViewer(sender, e);
+
+        if (scrollViewer is null ||
+            scrollViewer.ExtentHeight <= 0 ||
+            scrollViewer.ViewportHeight <= 0)
+        {
+            return;
+        }
+
+        sectionViewModel.UpdateMaterialsViewport(scrollViewer.VerticalOffset);
+
+        if (_isSectionStructureMaterialsScrollPageLoadRunning ||
+            (!IsNearTop(scrollViewer) && !IsNearBottom(scrollViewer)))
+        {
+            return;
+        }
+
+        _isSectionStructureMaterialsScrollPageLoadRunning = true;
+        CancellationToken cancellationToken =
+            _loadCancellationTokenSource?.Token ?? CancellationToken.None;
+        bool loadPreviousPage =
+            IsNearTop(scrollViewer) && sectionViewModel.MaterialsHasPrevious;
+
+        try
+        {
+            while (IsLoaded &&
+                   ReferenceEquals(DataContext, viewModel) &&
+                   IsNearTop(scrollViewer) &&
+                   sectionViewModel.MaterialsHasPrevious)
+            {
+                int startOffsetBeforeLoading = sectionViewModel.MaterialsWindowStartOffset;
+                int endOffsetBeforeLoading = sectionViewModel.MaterialsWindowEndOffset;
+                Guid? anchorId = sectionViewModel.Materials.FirstOrDefault()?.Id;
+
+                await sectionViewModel.LoadPreviousMaterialsWindowAsync(cancellationToken);
+
+                if (anchorId is Guid id)
+                {
+                    ScrollSectionStructureMaterialAnchorIntoView(sender, sectionViewModel, id);
+                }
+
+                await WaitForScrollLayoutAsync();
+
+                if (startOffsetBeforeLoading == sectionViewModel.MaterialsWindowStartOffset &&
+                    endOffsetBeforeLoading == sectionViewModel.MaterialsWindowEndOffset)
+                {
+                    break;
+                }
+            }
+
+            if (loadPreviousPage)
+            {
+                return;
+            }
+
+            while (IsLoaded &&
+                   ReferenceEquals(DataContext, viewModel) &&
+                   IsNearBottom(scrollViewer) &&
+                   sectionViewModel.MaterialsHasMore)
+            {
+                int startOffsetBeforeLoading = sectionViewModel.MaterialsWindowStartOffset;
+                int endOffsetBeforeLoading = sectionViewModel.MaterialsWindowEndOffset;
+                Guid? anchorId = sectionViewModel.Materials.LastOrDefault()?.Id;
+
+                await sectionViewModel.LoadNextMaterialsWindowAsync(cancellationToken);
+
+                if (anchorId is Guid id)
+                {
+                    ScrollSectionStructureMaterialAnchorIntoView(sender, sectionViewModel, id);
+                }
+
+                await WaitForScrollLayoutAsync();
+
+                if (startOffsetBeforeLoading == sectionViewModel.MaterialsWindowStartOffset &&
+                    endOffsetBeforeLoading == sectionViewModel.MaterialsWindowEndOffset)
+                {
+                    break;
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Normal cancellation when leaving the page.
+        }
+        finally
+        {
+            _isSectionStructureMaterialsScrollPageLoadRunning = false;
+        }
+    }
+
+    private static void ScrollSectionStructureMaterialAnchorIntoView(
+        object sender,
+        LibrarySectionManagementViewModel viewModel,
+        Guid anchorId)
+    {
+        if (sender is not DataGrid grid)
+        {
+            return;
+        }
+
+        LibraryManagementOrderItemViewModel? anchor =
+            viewModel.Materials.FirstOrDefault(material => material.Id == anchorId);
+
+        if (anchor is not null)
+        {
+            grid.ScrollIntoView(anchor);
+        }
+    }
+
+    private void SimpleSectionsTable_OnSizeChanged(
+        object sender,
+        SizeChangedEventArgs e)
+    {
+        if (sender is not DataGrid dataGrid ||
+            e.NewSize.Width <= 0 ||
+            e.NewSize.Height <= 0)
+        {
+            return;
+        }
+
+        dataGrid.Clip = new RectangleGeometry(
+            new Rect(0, 0, e.NewSize.Width, e.NewSize.Height),
+            13,
+            13);
     }
 
     private void SimpleSectionTableRow_OnMouseLeftButtonUp(

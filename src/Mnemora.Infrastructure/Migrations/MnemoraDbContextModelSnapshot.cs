@@ -17,11 +17,93 @@ namespace Mnemora.Infrastructure.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.11");
 
+            modelBuilder.Entity("Mnemora.Domain.LibraryContainers.LibraryContainer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Color")
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("color");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("Depth")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("depth");
+
+                    b.Property<int>("DisplayOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(2147483647)
+                        .HasColumnName("display_order");
+
+                    b.Property<string>("Icon")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("icon");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("name")
+                        .UseCollation("MNEMORA_UNICODE_NOCASE");
+
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("parent_id");
+
+                    b.Property<Guid>("SectionId")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("section_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasAlternateKey("Id", "SectionId")
+                        .HasName("ak_library_containers_id_section_id");
+
+                    b.HasIndex("ParentId", "DisplayOrder")
+                        .HasDatabaseName("ix_library_containers_parent_id_display_order");
+
+                    b.HasIndex("ParentId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("ux_library_containers_parent_id_name")
+                        .HasFilter("parent_id IS NOT NULL");
+
+                    b.HasIndex("ParentId", "SectionId");
+
+                    b.HasIndex("SectionId", "Depth", "DisplayOrder")
+                        .HasDatabaseName("ix_library_containers_section_id_depth_display_order");
+
+                    b.HasIndex(new[] { "SectionId" }, "ux_library_containers_section_id_root")
+                        .IsUnique()
+                        .HasFilter("parent_id IS NULL");
+
+                    b.ToTable("library_containers", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_library_containers_display_order", "display_order >= 0");
+
+                            t.HasCheckConstraint("ck_library_containers_shape", "(parent_id IS NULL AND depth = 0 AND name IS NULL AND color IS NULL AND icon IS NULL) OR (parent_id IS NOT NULL AND depth BETWEEN 1 AND 3 AND name IS NOT NULL AND color IS NOT NULL AND icon IS NOT NULL)");
+                        });
+                });
+
             modelBuilder.Entity("Mnemora.Domain.Materials.Material", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("TEXT")
                         .HasColumnName("id");
+
+                    b.Property<Guid>("ContainerId")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("container_id");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT")
@@ -68,11 +150,29 @@ namespace Mnemora.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ContainerId")
+                        .HasDatabaseName("ix_materials_container_id");
+
                     b.HasIndex("TopicId")
                         .HasDatabaseName("ix_materials_topic_id");
 
+                    b.HasIndex("ContainerId", "type")
+                        .HasDatabaseName("ix_materials_container_id_type");
+
                     b.HasIndex("TopicId", "type")
                         .HasDatabaseName("ix_materials_topic_id_type");
+
+                    b.HasIndex("ContainerId", "CreatedAt", "Id")
+                        .HasDatabaseName("ix_materials_container_id_created_at_id");
+
+                    b.HasIndex("ContainerId", "DisplayOrder", "Id")
+                        .HasDatabaseName("ix_materials_container_id_display_order_id");
+
+                    b.HasIndex("ContainerId", "Title", "Id")
+                        .HasDatabaseName("ix_materials_container_id_title_id");
+
+                    b.HasIndex("ContainerId", "UpdatedAt", "Id")
+                        .HasDatabaseName("ix_materials_container_id_updated_at_id");
 
                     b.HasIndex("TopicId", "CreatedAt", "Id")
                         .HasDatabaseName("ix_materials_topic_id_created_at_id");
@@ -223,11 +323,26 @@ namespace Mnemora.Infrastructure.Migrations
                     b.HasDiscriminator().HasValue(2);
                 });
 
+            modelBuilder.Entity("Mnemora.Domain.LibraryContainers.LibraryContainer", b =>
+                {
+                    b.HasOne("Mnemora.Domain.Sections.Section", null)
+                        .WithMany()
+                        .HasForeignKey("SectionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Mnemora.Domain.LibraryContainers.LibraryContainer", null)
+                        .WithMany()
+                        .HasForeignKey("ParentId", "SectionId")
+                        .HasPrincipalKey("Id", "SectionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
             modelBuilder.Entity("Mnemora.Domain.Materials.Material", b =>
                 {
-                    b.HasOne("Mnemora.Domain.Topics.Topic", null)
+                    b.HasOne("Mnemora.Domain.LibraryContainers.LibraryContainer", null)
                         .WithMany()
-                        .HasForeignKey("TopicId")
+                        .HasForeignKey("ContainerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 

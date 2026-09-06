@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Mnemora.Application.Library.GetManagementMaterialsPage;
 using Mnemora.Contracts;
+using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Materials;
 using Xunit;
 
@@ -38,6 +39,70 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandlerTests
         result.Value.SourceTotalCount.Should().Be(materialCount);
         result.Value.HasMore.Should().Be(expectedHasMore);
         result.Value.NextOffset.Should().Be(expectedItems);
+    }
+
+
+    [Fact]
+    public async Task ContainerId_ScopesRootAndNestedFolderIndependently()
+    {
+        await using var db = await SqliteLibraryTestDatabase.CreateAsync();
+        (var section, var topic) = await db.CreateSectionAndTopicAsync();
+
+        LibraryContainer root = await db.Context.LibraryContainers
+            .SingleAsync(container =>
+                container.SectionId == section.Id &&
+                container.ParentId == null);
+
+        LibraryContainer topicFolder = await db.Context.LibraryContainers
+            .SingleAsync(container =>
+                container.Id == LibraryContainerId.Create(topic.Id.Value).Value);
+
+        LibraryContainer nestedFolder = LibraryContainer.CreateFolder(
+            topicFolder,
+            FolderName.Create("Nested").Value,
+            FolderColor.Teal,
+            FolderIcon.Folder).Value;
+
+        db.Context.LibraryContainers.Add(nestedFolder);
+        await db.Context.SaveChangesAsync();
+        db.Context.ChangeTracker.Clear();
+
+        Article rootArticle = db.CreateArticle(topic.Id, "Root article");
+        rootArticle.MoveToContainer(root.Id).IsSuccess.Should().BeTrue();
+
+        Article topicArticle = db.CreateArticle(topic.Id, "Topic folder article");
+
+        Article nestedArticle = db.CreateArticle(topic.Id, "Nested article");
+        nestedArticle.MoveToContainer(nestedFolder.Id).IsSuccess.Should().BeTrue();
+
+        Question linkedQuestion = db.CreateLinkedQuestion(
+            nestedArticle,
+            "Nested linked question");
+
+        await db.AddMaterialsAsync(
+            rootArticle,
+            topicArticle,
+            nestedArticle,
+            linkedQuestion);
+
+        var sut = CreateHandler(db);
+
+        var rootResult = await sut.Handle(Query(root.Id.Value));
+        var nestedResult = await sut.Handle(Query(nestedFolder.Id.Value));
+
+        rootResult.IsSuccess.Should().BeTrue();
+        rootResult.Value.Items.Should().ContainSingle();
+        rootResult.Value.Items[0].Id.Should().Be(rootArticle.Id.Value);
+        rootResult.Value.Items[0].ContainerId.Should().Be(root.Id.Value);
+        rootResult.Value.Items[0].TopicId.Should().Be(topic.Id.Value);
+
+        nestedResult.IsSuccess.Should().BeTrue();
+        nestedResult.Value.Items.Should().ContainSingle();
+        nestedResult.Value.Items[0].Id.Should().Be(nestedArticle.Id.Value);
+        nestedResult.Value.Items[0].ContainerId.Should().Be(nestedFolder.Id.Value);
+        nestedResult.Value.Items[0].TopicId.Should().Be(topic.Id.Value);
+        nestedResult.Value.Items[0].ArticleQuestionCount.Should().Be(1);
+        nestedResult.Value.SourceTotalCount.Should().Be(1);
     }
 
     [Fact]
@@ -306,11 +371,11 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandlerTests
         new(db.Context, NullLogger<GetLibraryManagementMaterialsPageQueryHandler>.Instance);
 
     private static GetLibraryManagementMaterialsPageQuery Query(
-        Guid topicId,
+        Guid containerId,
         string? search = null,
         LibraryManagementMaterialPageFilter filter = LibraryManagementMaterialPageFilter.All,
         LibraryManagementMaterialPageSort sort = LibraryManagementMaterialPageSort.Name,
         int offset = 0,
         int pageSize = LibraryPagingDefaults.PageSize) =>
-        new(topicId, search, filter, sort, offset, pageSize);
+        new(containerId, search, filter, sort, offset, pageSize);
 }

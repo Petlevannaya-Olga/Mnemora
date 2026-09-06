@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Mnemora.Application.Database;
 using Mnemora.Application.Library.Order;
+using Mnemora.Application.LibraryContainers;
 using Mnemora.Application.Materials;
 using Mnemora.Application.Materials.Content;
 using Mnemora.Application.Sections;
@@ -8,6 +9,7 @@ using Mnemora.Application.Topics;
 using Mnemora.Infrastructure.Database;
 using Mnemora.Infrastructure.Database.Errors;
 using Mnemora.Infrastructure.Library.Order;
+using Mnemora.Infrastructure.LibraryContainers;
 using Mnemora.Infrastructure.Materials;
 using Mnemora.Infrastructure.Materials.Content;
 using Mnemora.Infrastructure.Persistence;
@@ -31,6 +33,7 @@ public static class DependencyInjection
         services.AddSingleton<SqliteErrorTranslator>();
 
         services.AddScoped<ITopicsRepository, TopicsRepository>();
+        services.AddScoped<ILibraryContainersRepository, LibraryContainersRepository>();
         services.AddScoped<ISectionsRepository, SectionsRepository>();
         services.AddScoped<IMaterialsRepository, MaterialsRepository>();
         services.AddScoped<ILibraryOrderRepository, LibraryOrderRepository>();

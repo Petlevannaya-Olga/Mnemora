@@ -13,4 +13,11 @@ public sealed record LibraryMaterialDto(
     IReadOnlyList<string> Tags,
     Guid? ArticleId,
     DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTime UpdatedAt)
+{
+    /// <summary>
+    /// Фактическое расположение материала в новой структуре библиотеки.
+    /// TopicId пока сохраняется как legacy-связь до удаления Topic.
+    /// </summary>
+    public Guid ContainerId { get; init; } = TopicId;
+}

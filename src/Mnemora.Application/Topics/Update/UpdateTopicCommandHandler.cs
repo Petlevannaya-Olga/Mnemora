@@ -1,6 +1,8 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
 using Mnemora.Application.Database;
+using Mnemora.Application.LibraryContainers;
+using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Topics;
 using Mnemora.Shared;
 using Mnemora.Shared.Abstractions;
@@ -9,6 +11,7 @@ namespace Mnemora.Application.Topics.Update;
 
 public sealed class UpdateTopicCommandHandler(
     ITopicsRepository topicsRepository,
+    ILibraryContainersRepository libraryContainersRepository,
     ITransactionManager transactionManager,
     ILogger<UpdateTopicCommandHandler> logger)
     : ICommandHandler<Guid, UpdateTopicCommand>
@@ -17,7 +20,7 @@ public sealed class UpdateTopicCommandHandler(
         UpdateTopicCommand command,
         CancellationToken cancellationToken)
     {
-        var topicId =  TopicId.Create(command.TopicId).Value;
+        var topicId = TopicId.Create(command.TopicId).Value;
 
         var topicResult =
             await topicsRepository.GetByIdAsync(
@@ -72,10 +75,43 @@ public sealed class UpdateTopicCommandHandler(
                 .ToErrors();
         }
 
+        var containerId =
+            LibraryContainerId.Create(topic.Id.Value).Value;
+
+        var folderResult =
+            await libraryContainersRepository.GetByIdAsync(
+                containerId,
+                cancellationToken);
+
+        if (folderResult.IsFailure)
+        {
+            return folderResult.Error.ToErrors();
+        }
+
+        var folder = folderResult.Value;
+
+        if (folder is null || !folder.IsFolder)
+        {
+            return CommonErrors.Failure(
+                    "legacy.topic.folder.missing",
+                    "Для темы не найдена соответствующая папка библиотеки")
+                .ToErrors();
+        }
+
         topic.Update(
             nameResult.Value,
             command.Color,
             command.Icon);
+
+        var updateFolderResult = folder.UpdateFolder(
+            LegacyTopicFolderMapper.ToFolderName(topic.Name),
+            LegacyTopicFolderMapper.ToFolderColor(topic.Color),
+            LegacyTopicFolderMapper.ToFolderIcon(topic.Icon));
+
+        if (updateFolderResult.IsFailure)
+        {
+            return updateFolderResult.Error.ToErrors();
+        }
 
         var saveResult =
             await transactionManager.SaveChangesAsync(

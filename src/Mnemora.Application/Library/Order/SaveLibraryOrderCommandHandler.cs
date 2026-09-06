@@ -1,6 +1,7 @@
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
 using Mnemora.Application.Database;
+using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Materials;
 using Mnemora.Domain.Sections;
 using Mnemora.Domain.Topics;
@@ -78,18 +79,40 @@ public sealed class SaveLibraryOrderCommandHandler(
             return sectionIdResult.Error;
         }
 
-        var topicsResult = await libraryOrderRepository.GetTopicsAsync(sectionIdResult.Value, cancellationToken);
+        var topicsResult = await libraryOrderRepository.GetTopicsAsync(
+            sectionIdResult.Value,
+            cancellationToken);
 
         if (topicsResult.IsFailure)
         {
             return topicsResult.Error;
         }
 
-        return ApplyOrder(
+        var foldersResult = await libraryOrderRepository.GetFirstLevelFoldersAsync(
+            sectionIdResult.Value,
+            cancellationToken);
+
+        if (foldersResult.IsFailure)
+        {
+            return foldersResult.Error;
+        }
+
+        var topicOrderResult = ApplyOrder(
             topicsResult.Value,
             orderedIds,
             topic => topic.Id.Value,
             (topic, position) => topic.ChangeDisplayOrder(position));
+
+        if (topicOrderResult.IsFailure)
+        {
+            return topicOrderResult.Error;
+        }
+
+        return ApplyOrder(
+            foldersResult.Value,
+            orderedIds,
+            folder => folder.Id.Value,
+            (folder, position) => folder.ChangeDisplayOrder(position));
     }
 
     private async Task<UnitResult<Error>> ChangeMaterialsAsync(

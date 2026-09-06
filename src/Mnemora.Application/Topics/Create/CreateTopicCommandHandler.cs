@@ -1,7 +1,9 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
 using Mnemora.Application.Database;
+using Mnemora.Application.LibraryContainers;
 using Mnemora.Application.Sections;
+using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Sections;
 using Mnemora.Domain.Topics;
 using Mnemora.Shared;
@@ -12,6 +14,7 @@ namespace Mnemora.Application.Topics.Create;
 public sealed class CreateTopicCommandHandler(
     ISectionsRepository sectionsRepository,
     ITopicsRepository topicsRepository,
+    ILibraryContainersRepository libraryContainersRepository,
     ITransactionManager transactionManager,
     ILogger<CreateTopicCommandHandler> logger)
     : ICommandHandler<Guid, CreateTopicCommand>
@@ -28,7 +31,7 @@ public sealed class CreateTopicCommandHandler(
             return nameResult.Error.ToErrors();
         }
 
-        var sectionId =  SectionId.Create(command.SectionId).Value;
+        var sectionId = SectionId.Create(command.SectionId).Value;
 
         var sectionExistsResult =
             await sectionsRepository.ExistsAsync(
@@ -70,14 +73,47 @@ public sealed class CreateTopicCommandHandler(
                 .ToErrors();
         }
 
+        var rootResult =
+            await libraryContainersRepository.GetRootBySectionIdAsync(
+                sectionId,
+                cancellationToken);
+
+        if (rootResult.IsFailure)
+        {
+            return rootResult.Error.ToErrors();
+        }
+
+        if (rootResult.Value is null)
+        {
+            return CommonErrors.Failure(
+                    "library.container.root.missing",
+                    "Для раздела не найден корневой контейнер библиотеки")
+                .ToErrors();
+        }
+
         var topic = Topic.Create(
             sectionId,
             nameResult.Value,
             command.Color,
             command.Icon);
 
-        topicsRepository.Add(
-            topic);
+        var containerId =
+            LibraryContainerId.Create(topic.Id.Value).Value;
+
+        var folderResult = LibraryContainer.CreateFolderWithId(
+            containerId,
+            rootResult.Value,
+            LegacyTopicFolderMapper.ToFolderName(topic.Name),
+            LegacyTopicFolderMapper.ToFolderColor(topic.Color),
+            LegacyTopicFolderMapper.ToFolderIcon(topic.Icon));
+
+        if (folderResult.IsFailure)
+        {
+            return folderResult.Error.ToErrors();
+        }
+
+        topicsRepository.Add(topic);
+        libraryContainersRepository.Add(folderResult.Value);
 
         var saveResult =
             await transactionManager.SaveChangesAsync(

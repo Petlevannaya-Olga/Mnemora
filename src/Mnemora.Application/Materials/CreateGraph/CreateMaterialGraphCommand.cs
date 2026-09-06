@@ -1,4 +1,4 @@
-using Mnemora.Domain.Materials;
+﻿using Mnemora.Domain.Materials;
 using Mnemora.Shared.Abstractions;
 
 namespace Mnemora.Application.Materials.CreateGraph;
@@ -9,7 +9,7 @@ namespace Mnemora.Application.Materials.CreateGraph;
 /// «Создать»: основной материал, новые вопросы и привязки готовых вопросов.
 /// </summary>
 public sealed record CreateMaterialGraphCommand(
-    Guid TopicId,
+    Guid ContainerId,
     MaterialType Type,
     string Title,
     MaterialDifficulty Difficulty,

@@ -1,3 +1,4 @@
+using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Materials;
 using Mnemora.Domain.Topics;
 using Xunit;
@@ -15,6 +16,55 @@ public sealed class MaterialTests
         Assert.Equal(MaterialIcon.DefaultArticle, article.Icon);
         Assert.Equal(1, article.LearningRevision);
         Assert.Equal(Material.DefaultDisplayOrder, article.DisplayOrder);
+    }
+
+    [Fact]
+    public void Article_CreateInContainer_UsesContainerId()
+    {
+        LibraryContainerId containerId = LibraryContainerId.New();
+
+        Article article = CreateArticleInContainer(containerId);
+
+        Assert.Equal(containerId, article.ContainerId);
+    }
+
+    [Fact]
+    public void Article_MoveToContainer_ChangesContainer()
+    {
+        Article article = CreateArticleInContainer(LibraryContainerId.New());
+        LibraryContainerId targetContainerId = LibraryContainerId.New();
+
+        var result = article.MoveToContainer(targetContainerId);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(targetContainerId, article.ContainerId);
+    }
+
+    [Fact]
+    public void Article_MoveToContainer_DoesNotRewriteLegacyTopicBridge()
+    {
+        TopicId topicId = TopicId.New();
+        Article article = CreateArticle(topicId);
+        LibraryContainerId targetContainerId = LibraryContainerId.New();
+
+        var result = article.MoveToContainer(targetContainerId);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(topicId, article.TopicId);
+        Assert.Equal(targetContainerId, article.ContainerId);
+    }
+
+    [Fact]
+    public void Article_ChangeTopic_SynchronizesContainerBridge()
+    {
+        Article article = CreateArticle(TopicId.New());
+        TopicId targetTopicId = TopicId.New();
+
+        var result = article.ChangeTopic(targetTopicId);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(targetTopicId, article.TopicId);
+        Assert.Equal(targetTopicId.Value, article.ContainerId.Value);
     }
 
     [Fact]
@@ -70,59 +120,61 @@ public sealed class MaterialTests
     }
 
     [Fact]
-    public void AttachToArticle_MovesQuestionToArticleTopicAndClearsTags()
+    public void AttachToArticle_MovesQuestionToArticleContainerAndClearsTags()
     {
-        Article article = CreateArticle(TopicId.New());
-        Question question = CreateStandaloneQuestion(
-            TopicId.New(),
+        Article article = CreateArticleInContainer(LibraryContainerId.New());
+        Question question = CreateStandaloneQuestionInContainer(
+            LibraryContainerId.New(),
             [Tag("standalone")]);
 
         var result = question.AttachToArticle(article);
 
         Assert.True(result.IsSuccess);
         Assert.Equal(article.Id, question.ArticleId);
-        Assert.Equal(article.TopicId, question.TopicId);
+        Assert.Equal(article.ContainerId, question.ContainerId);
         Assert.Empty(question.Tags);
     }
 
     [Fact]
     public void AttachedQuestion_CannotMoveIndependentlyOrAttachToAnotherArticle()
     {
-        Article firstArticle = CreateArticle(TopicId.New());
-        Article secondArticle = CreateArticle(TopicId.New());
-        Question question = CreateStandaloneQuestion(TopicId.New());
+        Article firstArticle = CreateArticleInContainer(LibraryContainerId.New());
+        Article secondArticle = CreateArticleInContainer(LibraryContainerId.New());
+        Question question = CreateStandaloneQuestionInContainer(LibraryContainerId.New());
         question.AttachToArticle(firstArticle);
 
-        var moveResult = question.ChangeTopic(TopicId.New());
+        var moveResult = question.MoveToContainer(LibraryContainerId.New());
         var attachResult = question.AttachToArticle(secondArticle);
 
         Assert.True(moveResult.IsFailure);
         Assert.True(attachResult.IsFailure);
         Assert.Equal(firstArticle.Id, question.ArticleId);
-        Assert.Equal(firstArticle.TopicId, question.TopicId);
+        Assert.Equal(firstArticle.ContainerId, question.ContainerId);
     }
 
     [Fact]
     public void DetachFromArticle_MakesQuestionStandaloneAgain()
     {
-        Article article = CreateArticle(TopicId.New());
-        Question question = CreateStandaloneQuestion(TopicId.New());
+        Article article = CreateArticleInContainer(LibraryContainerId.New());
+        Question question = CreateStandaloneQuestionInContainer(LibraryContainerId.New());
         question.AttachToArticle(article);
-        TopicId newTopicId = TopicId.New();
+        LibraryContainerId newContainerId = LibraryContainerId.New();
 
         var detachResult = question.DetachFromArticle();
-        var moveResult = question.ChangeTopic(newTopicId);
+        var moveResult = question.MoveToContainer(newContainerId);
 
         Assert.True(detachResult.IsSuccess);
         Assert.True(moveResult.IsSuccess);
         Assert.Null(question.ArticleId);
-        Assert.Equal(newTopicId, question.TopicId);
+        Assert.Equal(newContainerId, question.ContainerId);
     }
 
     [Fact]
-    public void CreateForArticle_DoesNotCopyQuestionTags()
+    public void CreateForArticle_DoesNotCopyQuestionTagsAndUsesArticleContainer()
     {
-        Article article = CreateArticle(TopicId.New(), tags: [Tag("article")]);
+        Article article = CreateArticleInContainer(
+            LibraryContainerId.New(),
+            tags: [Tag("article")]);
 
         var result = Question.CreateForArticle(
             article,
@@ -135,6 +187,7 @@ public sealed class MaterialTests
         Assert.True(result.IsSuccess);
         Assert.Empty(result.Value.Tags);
         Assert.Equal(article.Id, result.Value.ArticleId);
+        Assert.Equal(article.ContainerId, result.Value.ContainerId);
     }
 
     [Fact]
@@ -158,11 +211,34 @@ public sealed class MaterialTests
             Rewards(),
             tags).Value;
 
+    private static Article CreateArticleInContainer(
+        LibraryContainerId containerId,
+        MaterialIcon? icon = null,
+        IReadOnlyCollection<MaterialTag>? tags = null) =>
+        Article.CreateInContainer(
+            containerId,
+            Title("Article"),
+            MaterialDifficulty.Medium,
+            icon,
+            Rewards(),
+            tags).Value;
+
     private static Question CreateStandaloneQuestion(
         TopicId topicId,
         IReadOnlyCollection<MaterialTag>? tags = null) =>
         Question.CreateStandalone(
             topicId,
+            Title("Question"),
+            MaterialDifficulty.Medium,
+            null,
+            Rewards(),
+            tags).Value;
+
+    private static Question CreateStandaloneQuestionInContainer(
+        LibraryContainerId containerId,
+        IReadOnlyCollection<MaterialTag>? tags = null) =>
+        Question.CreateStandaloneInContainer(
+            containerId,
             Title("Question"),
             MaterialDifficulty.Medium,
             null,

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Mnemora.Application.Materials.Content;
+using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Materials;
 using Mnemora.Domain.Sections;
 using Mnemora.Domain.Topics;
@@ -14,30 +15,58 @@ public sealed class MaterialContentConsistencyServiceTests
     [Fact]
     public async Task CheckAndRepair_ReportsMissingContentAndQuarantinesOnlyRecoverableDirectories()
     {
-        using var temporaryDirectory = new TemporaryDirectory();
-        await using ServiceProvider provider = TestServiceProviderFactory.Create(temporaryDirectory.Path);
-        var factory = provider.GetRequiredService<IDbContextFactory<MnemoraDbContext>>();
+        CancellationToken ct = CancellationToken.None;
 
-        await using (MnemoraDbContext dbContext = await factory.CreateDbContextAsync())
+        using var temporaryDirectory = new TemporaryDirectory();
+
+        await using ServiceProvider provider =
+            TestServiceProviderFactory.Create(temporaryDirectory.Path);
+
+        var factory =
+            provider.GetRequiredService<IDbContextFactory<MnemoraDbContext>>();
+
+        await using (MnemoraDbContext dbContext =
+                     await factory.CreateDbContextAsync(ct))
         {
-            await dbContext.Database.EnsureCreatedAsync();
+            await dbContext.Database.EnsureCreatedAsync(ct);
+
             Section section = Section.Create(
                 SectionName.Create("Section").Value,
                 SectionColor.Teal,
                 SectionIcon.Folder);
+
+            LibraryContainer root =
+                LibraryContainer.CreateRoot(section.Id).Value;
+
             Topic topic = Topic.Create(
                 section.Id,
                 TopicName.Create("Topic").Value,
                 TopicColor.Teal,
                 TopicIcon.Bookmark);
+
+            LibraryContainer folder =
+                LibraryContainer.CreateFolderWithId(
+                    LibraryContainerId.Create(topic.Id.Value).Value,
+                    root,
+                    FolderName.Create(topic.Name.Value).Value,
+                    Enum.Parse<FolderColor>(topic.Color.ToString()),
+                    Enum.Parse<FolderIcon>(topic.Icon.ToString())).Value;
+
             Article article = Article.Create(
                 topic.Id,
                 MaterialTitle.Create("Article").Value,
                 MaterialDifficulty.Medium,
                 MaterialIcon.DefaultArticle,
                 MaterialExperienceRewards.Create(50, 20).Value).Value;
-            dbContext.AddRange(section, topic, article);
-            await dbContext.SaveChangesAsync();
+
+            dbContext.AddRange(
+                section,
+                root,
+                topic,
+                folder,
+                article);
+
+            await dbContext.SaveChangesAsync(ct);
         }
 
         string orphanDirectory = System.IO.Path.Combine(
@@ -45,28 +74,33 @@ public sealed class MaterialContentConsistencyServiceTests
             "materials",
             "articles",
             Guid.NewGuid().ToString("N"));
+
         string temporaryOperationDirectory = System.IO.Path.Combine(
             temporaryDirectory.Path,
             "materials",
             "questions",
             ".unfinished.tmp");
+
         string invalidDirectory = System.IO.Path.Combine(
             temporaryDirectory.Path,
             "materials",
             "questions",
             "invalid-name");
+
         Directory.CreateDirectory(orphanDirectory);
         Directory.CreateDirectory(temporaryOperationDirectory);
         Directory.CreateDirectory(invalidDirectory);
 
         IMaterialContentConsistencyService service =
             provider.GetRequiredService<IMaterialContentConsistencyService>();
-        var result = await service.CheckAndRepairAsync(CancellationToken.None);
+
+        var result = await service.CheckAndRepairAsync(ct);
 
         Assert.True(result.IsSuccess);
         Assert.Equal(1, result.Value.MissingContentCount);
         Assert.Equal(2, result.Value.QuarantinedDirectoryCount);
         Assert.Equal(1, result.Value.InvalidDirectoryCount);
+
         Assert.False(Directory.Exists(orphanDirectory));
         Assert.False(Directory.Exists(temporaryOperationDirectory));
         Assert.True(Directory.Exists(invalidDirectory));
@@ -76,6 +110,9 @@ public sealed class MaterialContentConsistencyServiceTests
             ".mnemora-data",
             "recovery",
             "material-content");
-        Assert.Equal(2, Directory.EnumerateDirectories(recoveryDirectory).Count());
+
+        Assert.Equal(
+            2,
+            Directory.EnumerateDirectories(recoveryDirectory).Count());
     }
 }

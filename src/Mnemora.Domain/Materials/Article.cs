@@ -1,4 +1,5 @@
-﻿using CSharpFunctionalExtensions;
+using CSharpFunctionalExtensions;
+using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Topics;
 using Mnemora.Shared;
 
@@ -33,7 +34,12 @@ public sealed class Article : Material
         IEnumerable<MaterialTag?>? tags = null)
     {
         var actualIcon = icon ?? MaterialIcon.DefaultArticle;
-        var validationResult = ValidateCommonData(topicId, title, difficulty, actualIcon, experienceRewards);
+        var validationResult = ValidateCommonData(
+            topicId,
+            title,
+            difficulty,
+            actualIcon,
+            experienceRewards);
 
         if (validationResult.IsFailure)
         {
@@ -47,7 +53,46 @@ public sealed class Article : Material
             return tagsResult.Error;
         }
 
-        return new Article(topicId!, title!, difficulty!.Value, actualIcon, experienceRewards!, tagsResult.Value);
+        return new Article(
+            topicId!,
+            title!,
+            difficulty!.Value,
+            actualIcon,
+            experienceRewards!,
+            tagsResult.Value);
+    }
+
+    /// <summary>
+    /// Переходная фабрика для новой модели библиотеки.
+    /// Используется, пока старые application-команды ещё работают с TopicId.
+    /// </summary>
+    public static Result<Article, Error> CreateInContainer(
+        LibraryContainerId? containerId,
+        MaterialTitle? title,
+        MaterialDifficulty? difficulty,
+        MaterialIcon? icon,
+        MaterialExperienceRewards? experienceRewards,
+        IEnumerable<MaterialTag?>? tags = null)
+    {
+        if (containerId is null)
+        {
+            return CommonErrors.IsRequired(nameof(containerId));
+        }
+
+        TopicId topicId = TopicId.Create(containerId.Value).Value;
+
+        return Create(
+            topicId,
+            title,
+            difficulty,
+            icon,
+            experienceRewards,
+            tags);
+    }
+
+    public UnitResult<Error> MoveToContainer(LibraryContainerId? containerId)
+    {
+        return ChangeContainerCore(containerId);
     }
 
     public UnitResult<Error> ChangeTopic(TopicId? topicId)

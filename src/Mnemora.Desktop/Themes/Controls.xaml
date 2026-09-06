@@ -3,6 +3,52 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
 
+    <!-- Единая поверхность outlined-полей Mnemora.
+         Сохраняем штатные Material Design templates/триггеры,
+         меняем только фон и спокойную обводку. -->
+
+    <Style
+        x:Key="Mnemora.BaseOutlinedTextBox"
+        TargetType="{x:Type TextBox}"
+        BasedOn="{StaticResource MaterialDesignOutlinedTextBox}" />
+
+    <Style
+        x:Key="MaterialDesignOutlinedTextBox"
+        TargetType="{x:Type TextBox}"
+        BasedOn="{StaticResource Mnemora.BaseOutlinedTextBox}">
+        <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Border}" />
+        <Setter Property="materialDesign:TextFieldAssist.TextFieldCornerRadius" Value="8" />
+    </Style>
+
+    <Style
+        x:Key="Mnemora.BaseOutlinedComboBox"
+        TargetType="{x:Type ComboBox}"
+        BasedOn="{StaticResource MaterialDesignOutlinedComboBox}" />
+
+    <Style
+        x:Key="MaterialDesignOutlinedComboBox"
+        TargetType="{x:Type ComboBox}"
+        BasedOn="{StaticResource Mnemora.BaseOutlinedComboBox}">
+        <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Border}" />
+        <Setter Property="materialDesign:TextFieldAssist.TextFieldCornerRadius" Value="8" />
+    </Style>
+
+    <Style
+        x:Key="Mnemora.BaseOutlinedPasswordBox"
+        TargetType="{x:Type PasswordBox}"
+        BasedOn="{StaticResource MaterialDesignOutlinedPasswordBox}" />
+
+    <Style
+        x:Key="MaterialDesignOutlinedPasswordBox"
+        TargetType="{x:Type PasswordBox}"
+        BasedOn="{StaticResource Mnemora.BaseOutlinedPasswordBox}">
+        <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Border}" />
+        <Setter Property="materialDesign:TextFieldAssist.TextFieldCornerRadius" Value="8" />
+    </Style>
+
     <!-- Светлая карточка Mnemora -->
 
     <Style
@@ -474,6 +520,85 @@
 
     </Style>
     
+    <!-- Единый заметный скролл больших списков библиотеки -->
+    <Style x:Key="Mnemora.LibraryScrollBarPageButtonStyle" TargetType="{x:Type RepeatButton}">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type RepeatButton}">
+                    <Border Background="Transparent" />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="Mnemora.LibraryVerticalScrollThumbStyle" TargetType="{x:Type Thumb}">
+        <Setter Property="Height" Value="48" />
+        <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Primary}" />
+        <Setter Property="Opacity" Value="0.78" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Thumb}">
+                    <Border Margin="2,0" Background="{TemplateBinding Background}" CornerRadius="5" />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Opacity" Value="1" />
+            </Trigger>
+            <Trigger Property="IsDragging" Value="True">
+                <Setter Property="Opacity" Value="1" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <ControlTemplate x:Key="Mnemora.LibraryVerticalScrollBarTemplate" TargetType="{x:Type ScrollBar}">
+        <Grid Background="Transparent" SnapsToDevicePixels="True">
+            <Border Margin="3,2" Background="{TemplateBinding Background}" CornerRadius="5" />
+            <Track x:Name="PART_Track" Margin="2" IsDirectionReversed="True" Orientation="Vertical" ViewportSize="NaN">
+                <Track.DecreaseRepeatButton>
+                    <RepeatButton Command="{x:Static ScrollBar.PageUpCommand}" Style="{StaticResource Mnemora.LibraryScrollBarPageButtonStyle}" />
+                </Track.DecreaseRepeatButton>
+                <Track.Thumb>
+                    <Thumb Style="{StaticResource Mnemora.LibraryVerticalScrollThumbStyle}" />
+                </Track.Thumb>
+                <Track.IncreaseRepeatButton>
+                    <RepeatButton Command="{x:Static ScrollBar.PageDownCommand}" Style="{StaticResource Mnemora.LibraryScrollBarPageButtonStyle}" />
+                </Track.IncreaseRepeatButton>
+            </Track>
+        </Grid>
+        <ControlTemplate.Triggers>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Opacity" Value="0.45" />
+            </Trigger>
+        </ControlTemplate.Triggers>
+    </ControlTemplate>
+
+    <Style x:Key="Mnemora.LibraryScrollBar" BasedOn="{StaticResource {x:Type ScrollBar}}" TargetType="{x:Type ScrollBar}">
+        <Style.Triggers>
+            <Trigger Property="Orientation" Value="Vertical">
+                <Setter Property="Width" Value="16" />
+                <Setter Property="MinWidth" Value="16" />
+                <Setter Property="Margin" Value="6,2,2,2" />
+                <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Border}" />
+                <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.Primary}" />
+                <Setter Property="Opacity" Value="0.9" />
+                <Setter Property="Template" Value="{StaticResource Mnemora.LibraryVerticalScrollBarTemplate}" />
+            </Trigger>
+            <MultiTrigger>
+                <MultiTrigger.Conditions>
+                    <Condition Property="Orientation" Value="Vertical" />
+                    <Condition Property="IsMouseOver" Value="True" />
+                </MultiTrigger.Conditions>
+                <Setter Property="Opacity" Value="1" />
+            </MultiTrigger>
+        </Style.Triggers>
+    </Style>
+
     <Style x:Key="Mnemora.DialogCloseButton"
            TargetType="{x:Type Button}">
         <Setter Property="Width" Value="36" />

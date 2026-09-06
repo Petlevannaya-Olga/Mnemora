@@ -3,8 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Mnemora.Application.Database;
 using Mnemora.Contracts;
+using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Materials;
-using Mnemora.Domain.Topics;
 using Mnemora.Shared;
 using Mnemora.Shared.Abstractions;
 
@@ -15,7 +15,6 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandler(
     ILogger<GetLibraryManagementMaterialsPageQueryHandler> logger)
     : IQueryHandler<LibraryManagementMaterialsPageDto, GetLibraryManagementMaterialsPageQuery>
 {
-
     public async Task<Result<LibraryManagementMaterialsPageDto, Errors>> Handle(
         GetLibraryManagementMaterialsPageQuery request,
         CancellationToken cancellationToken = default)
@@ -23,20 +22,37 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandler(
         try
         {
             int offset = Math.Max(0, request.Offset);
-            int pageSize = Math.Clamp(request.PageSize, 1, LibraryPagingDefaults.MaxQueryPageSize);
+            int pageSize = Math.Clamp(
+                request.PageSize,
+                1,
+                LibraryPagingDefaults.MaxQueryPageSize);
 
-            var topicIdResult = TopicId.Create(request.TopicId);
-            if (topicIdResult.IsFailure)
+            var containerIdResult = LibraryContainerId.Create(request.ContainerId);
+
+            if (containerIdResult.IsFailure)
             {
-                return topicIdResult.Error.ToErrors();
+                return containerIdResult.Error.ToErrors();
             }
 
-            TopicId topicId = topicIdResult.Value;
+            LibraryContainerId containerId = containerIdResult.Value;
 
-            // Top-level library items only. Linked questions belong to their article and
-            // must not consume slots in the 30-item page.
+            bool containerExists = await readDbContext.LibraryContainersRead
+                .AnyAsync(
+                    container => container.Id == containerId,
+                    cancellationToken);
+
+            if (!containerExists)
+            {
+                return CommonErrors.NotFound(
+                    "library.container.not.found",
+                    $"Контейнер библиотеки с идентификатором '{request.ContainerId}' не найден")
+                    .ToErrors();
+            }
+
+            // На верхнем уровне списка показываются статьи и самостоятельные вопросы.
+            // Связанные вопросы принадлежат статье и не занимают отдельные позиции.
             IQueryable<Material> sourceQuery = readDbContext.MaterialsRead
-                .Where(material => material.TopicId == topicId)
+                .Where(material => material.ContainerId == containerId)
                 .Where(material =>
                     material is Article ||
                     (material is Question && ((Question)material).ArticleId == null));
@@ -66,7 +82,8 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandler(
             };
 
             bool hasSearch = !string.IsNullOrEmpty(search);
-            bool hasTypeFilter = request.Filter != LibraryManagementMaterialPageFilter.All;
+            bool hasTypeFilter =
+                request.Filter != LibraryManagementMaterialPageFilter.All;
 
             int totalCount = !hasSearch && !hasTypeFilter
                 ? sourceTotalCount
@@ -104,6 +121,7 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandler(
 
             bool hasMore = loaded.Count > pageSize;
             Material[] pageMaterials = loaded.Take(pageSize).ToArray();
+
             MaterialId[] articleIds = pageMaterials
                 .OfType<Article>()
                 .Select(article => article.Id)
@@ -117,23 +135,34 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandler(
                         question.ArticleId != null &&
                         articleIds.Contains(question.ArticleId))
                     .GroupBy(question => question.ArticleId!)
-                    .Select(group => new { ArticleId = group.Key, Count = group.Count() })
-                    .ToDictionaryAsync(row => row.ArticleId, row => row.Count, cancellationToken);
+                    .Select(group => new
+                    {
+                        ArticleId = group.Key,
+                        Count = group.Count(),
+                    })
+                    .ToDictionaryAsync(
+                        row => row.ArticleId,
+                        row => row.Count,
+                        cancellationToken);
 
             var items = pageMaterials
-                .Select(material => new LibraryManagementMaterialOverviewDto(
-                    material.Id.Value,
-                    material.TopicId.Value,
-                    material.Title.Value,
-                    material.Type.ToString(),
-                    material.Difficulty.ToString(),
-                    material.Icon.Key,
-                    material.CreatedAt,
-                    material.UpdatedAt,
-                    material.DisplayOrder,
-                    material is Article
-                        ? questionCounts.GetValueOrDefault(material.Id)
-                        : 0))
+                .Select(material =>
+                    new LibraryManagementMaterialOverviewDto(
+                        material.Id.Value,
+                        material.TopicId.Value,
+                        material.Title.Value,
+                        material.Type.ToString(),
+                        material.Difficulty.ToString(),
+                        material.Icon.Key,
+                        material.CreatedAt,
+                        material.UpdatedAt,
+                        material.DisplayOrder,
+                        material is Article
+                            ? questionCounts.GetValueOrDefault(material.Id)
+                            : 0)
+                    {
+                        ContainerId = material.ContainerId.Value,
+                    })
                 .ToArray();
 
             return Result.Success<LibraryManagementMaterialsPageDto, Errors>(
@@ -144,15 +173,23 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandler(
                     totalCount,
                     sourceTotalCount));
         }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException)
+            when (cancellationToken.IsCancellationRequested)
         {
-            logger.LogInformation("Получение страницы материалов управления было отменено");
+            logger.LogInformation(
+                "Получение страницы материалов контейнера {ContainerId} было отменено",
+                request.ContainerId);
+
             return CommonErrors.OperationCancelled(
                 "library.management.materials.page.cancelled").ToErrors();
         }
         catch (Exception exception)
         {
-            logger.LogError(exception, "Не удалось получить страницу материалов управления");
+            logger.LogError(
+                exception,
+                "Не удалось получить страницу материалов контейнера {ContainerId}",
+                request.ContainerId);
+
             return CommonErrors.Db(
                 "library.management.materials.page.failed",
                 "Не удалось загрузить материалы").ToErrors();

@@ -1,4 +1,5 @@
 using CSharpFunctionalExtensions;
+using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Topics;
 using Mnemora.Shared;
 
@@ -36,7 +37,41 @@ public sealed class Question : Material
         MaterialExperienceRewards? experienceRewards,
         IEnumerable<MaterialTag?>? tags = null)
     {
-        return CreateCore(topicId, title, difficulty, icon, experienceRewards, tags, articleId: null);
+        return CreateCore(
+            topicId,
+            title,
+            difficulty,
+            icon,
+            experienceRewards,
+            tags,
+            articleId: null);
+    }
+
+    /// <summary>
+    /// Переходная фабрика самостоятельного вопроса в LibraryContainer.
+    /// </summary>
+    public static Result<Question, Error> CreateStandaloneInContainer(
+        LibraryContainerId? containerId,
+        MaterialTitle? title,
+        MaterialDifficulty? difficulty,
+        MaterialIcon? icon,
+        MaterialExperienceRewards? experienceRewards,
+        IEnumerable<MaterialTag?>? tags = null)
+    {
+        if (containerId is null)
+        {
+            return CommonErrors.IsRequired(nameof(containerId));
+        }
+
+        TopicId topicId = TopicId.Create(containerId.Value).Value;
+
+        return CreateStandalone(
+            topicId,
+            title,
+            difficulty,
+            icon,
+            experienceRewards,
+            tags);
     }
 
     public static Result<Question, Error> CreateForArticle(
@@ -54,7 +89,7 @@ public sealed class Question : Material
 
         // Связанный вопрос не хранит собственных тегов. Теги отображаются
         // через связанную статью и поэтому не копируются в Question.
-        return CreateCore(
+        var createResult = CreateCore(
             article.TopicId,
             title,
             difficulty,
@@ -62,6 +97,21 @@ public sealed class Question : Material
             experienceRewards,
             Array.Empty<MaterialTag>(),
             article.Id);
+
+        if (createResult.IsFailure)
+        {
+            return createResult.Error;
+        }
+
+        var containerResult =
+            createResult.Value.ChangeContainerCore(article.ContainerId);
+
+        if (containerResult.IsFailure)
+        {
+            return containerResult.Error;
+        }
+
+        return createResult.Value;
     }
 
     public UnitResult<Error> AttachToArticle(Article? article)
@@ -73,16 +123,15 @@ public sealed class Question : Material
 
         if (ArticleId == article.Id)
         {
-            var existingArticleTopicResult =
-                ChangeTopicCore(article.TopicId);
+            var existingArticleLocationResult =
+                SynchronizeLocationWithArticle(article);
 
-            if (existingArticleTopicResult.IsFailure)
+            if (existingArticleLocationResult.IsFailure)
             {
-                return existingArticleTopicResult.Error;
+                return existingArticleLocationResult.Error;
             }
 
-            return ReplaceTags(
-                Array.Empty<MaterialTag>());
+            return ReplaceTags(Array.Empty<MaterialTag>());
         }
 
         if (ArticleId is not null)
@@ -90,15 +139,14 @@ public sealed class Question : Material
             return MaterialErrors.QuestionAlreadyAttachedToAnotherArticle();
         }
 
-        var topicResult = ChangeTopicCore(article.TopicId);
+        var locationResult = SynchronizeLocationWithArticle(article);
 
-        if (topicResult.IsFailure)
+        if (locationResult.IsFailure)
         {
-            return topicResult.Error;
+            return locationResult.Error;
         }
 
-        var clearTagsResult =
-            ReplaceTags(Array.Empty<MaterialTag>());
+        var clearTagsResult = ReplaceTags(Array.Empty<MaterialTag>());
 
         if (clearTagsResult.IsFailure)
         {
@@ -120,8 +168,7 @@ public sealed class Question : Material
 
         // При отвязке вопрос становится самостоятельным без тегов. Старые
         // собственные теги не восстанавливаем и теги статьи не копируем.
-        var clearTagsResult =
-            ReplaceTags(Array.Empty<MaterialTag>());
+        var clearTagsResult = ReplaceTags(Array.Empty<MaterialTag>());
 
         if (clearTagsResult.IsFailure)
         {
@@ -132,6 +179,31 @@ public sealed class Question : Material
         Touch();
 
         return UnitResult.Success<Error>();
+    }
+
+    public UnitResult<Error> MoveToContainer(LibraryContainerId? containerId)
+    {
+        if (ArticleId is not null)
+        {
+            return MaterialErrors.AttachedQuestionTopicCannotBeChanged();
+        }
+
+        return ChangeContainerCore(containerId);
+    }
+
+    public UnitResult<Error> MoveToContainerWithArticle(Article? article)
+    {
+        if (article is null)
+        {
+            return CommonErrors.IsRequired(nameof(article));
+        }
+
+        if (ArticleId != article.Id)
+        {
+            return MaterialErrors.QuestionIsNotAttachedToArticle();
+        }
+
+        return SynchronizeLocationWithArticle(article);
     }
 
     public UnitResult<Error> ChangeTopic(TopicId? topicId)
@@ -156,7 +228,7 @@ public sealed class Question : Material
             return MaterialErrors.QuestionIsNotAttachedToArticle();
         }
 
-        return ChangeTopicCore(article.TopicId);
+        return SynchronizeLocationWithArticle(article);
     }
 
     public UnitResult<Error> ResetIcon()
@@ -169,6 +241,18 @@ public sealed class Question : Material
         return StartNewLearningRevisionCore();
     }
 
+    private UnitResult<Error> SynchronizeLocationWithArticle(Article article)
+    {
+        var topicResult = ChangeTopicCore(article.TopicId);
+
+        if (topicResult.IsFailure)
+        {
+            return topicResult.Error;
+        }
+
+        return ChangeContainerCore(article.ContainerId);
+    }
+
     private static Result<Question, Error> CreateCore(
         TopicId? topicId,
         MaterialTitle? title,
@@ -179,7 +263,12 @@ public sealed class Question : Material
         MaterialId? articleId)
     {
         var actualIcon = icon ?? MaterialIcon.DefaultQuestion;
-        var validationResult = ValidateCommonData(topicId, title, difficulty, actualIcon, experienceRewards);
+        var validationResult = ValidateCommonData(
+            topicId,
+            title,
+            difficulty,
+            actualIcon,
+            experienceRewards);
 
         if (validationResult.IsFailure)
         {
@@ -193,6 +282,13 @@ public sealed class Question : Material
             return tagsResult.Error;
         }
 
-        return new Question(topicId!, title!, difficulty!.Value, actualIcon, experienceRewards!, tagsResult.Value, articleId);
+        return new Question(
+            topicId!,
+            title!,
+            difficulty!.Value,
+            actualIcon,
+            experienceRewards!,
+            tagsResult.Value,
+            articleId);
     }
 }

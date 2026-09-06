@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Mnemora.Application.Materials.Articles.Create;
 using Mnemora.Application.Materials.Articles.Delete;
 using Mnemora.Application.Materials.Content;
+using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Materials;
 using Mnemora.Domain.Sections;
 using Mnemora.Domain.Topics;
@@ -164,20 +165,44 @@ public sealed class ArticleCommandHandlerTests
 
     private static async Task<Topic> CreateTopicAsync(ApplicationTestHost host)
     {
+        CancellationToken ct = CancellationToken.None;
+
         Section section = Section.Create(
             SectionName.Create("Section").Value,
             SectionColor.Teal,
             SectionIcon.Folder);
+
+        LibraryContainer root =
+            LibraryContainer.CreateRoot(section.Id).Value;
+
         Topic topic = Topic.Create(
             section.Id,
             TopicName.Create("Topic").Value,
             TopicColor.Teal,
             TopicIcon.Bookmark);
 
-        var factory = host.Services.GetRequiredService<IDbContextFactory<MnemoraDbContext>>();
-        await using MnemoraDbContext dbContext = await factory.CreateDbContextAsync();
-        dbContext.AddRange(section, topic);
-        await dbContext.SaveChangesAsync();
+        LibraryContainer folder =
+            LibraryContainer.CreateFolderWithId(
+                LibraryContainerId.Create(topic.Id.Value).Value,
+                root,
+                FolderName.Create(topic.Name.Value).Value,
+                Enum.Parse<FolderColor>(topic.Color.ToString()),
+                Enum.Parse<FolderIcon>(topic.Icon.ToString())).Value;
+
+        var factory =
+            host.Services.GetRequiredService<IDbContextFactory<MnemoraDbContext>>();
+
+        await using MnemoraDbContext dbContext =
+            await factory.CreateDbContextAsync(ct);
+
+        dbContext.AddRange(
+            section,
+            root,
+            topic,
+            folder);
+
+        await dbContext.SaveChangesAsync(ct);
+
         return topic;
     }
 }

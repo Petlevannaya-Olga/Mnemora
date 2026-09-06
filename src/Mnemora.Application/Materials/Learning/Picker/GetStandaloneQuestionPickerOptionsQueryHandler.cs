@@ -1,8 +1,9 @@
-using CSharpFunctionalExtensions;
+﻿using CSharpFunctionalExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Mnemora.Application.Database;
 using Mnemora.Contracts;
+using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Materials;
 using Mnemora.Shared;
 using Mnemora.Shared.Abstractions;
@@ -22,8 +23,6 @@ public sealed class GetStandaloneQuestionPickerOptionsQueryHandler(
     {
         try
         {
-            // Загружаем только самостоятельные вопросы. Разделы и темы нужны
-            // исключительно как навигационный контекст в окне выбора.
             List<Question> questions = await readDbContext.MaterialsRead
                 .OfType<Question>()
                 .Where(question => question.ArticleId == null)
@@ -36,25 +35,21 @@ public sealed class GetStandaloneQuestionPickerOptionsQueryHandler(
                     Errors>(Array.Empty<StandaloneQuestionPickerOptionDto>());
             }
 
-            var topics = await readDbContext.TopicsRead
+            List<LibraryContainer> containers = await readDbContext.LibraryContainersRead
                 .ToListAsync(cancellationToken);
 
             var sections = await readDbContext.SectionsRead
                 .ToListAsync(cancellationToken);
 
-            var topicsById = topics.ToDictionary(topic => topic.Id.Value);
+            var containersById = containers.ToDictionary(container => container.Id.Value);
             var sectionsById = sections.ToDictionary(section => section.Id.Value);
-
             var result = new List<StandaloneQuestionPickerOptionDto>(questions.Count);
 
             foreach (Question question in questions)
             {
-                if (!topicsById.TryGetValue(question.TopicId.Value, out var topic) ||
-                    !sectionsById.TryGetValue(topic.SectionId.Value, out var section))
+                if (!containersById.TryGetValue(question.ContainerId.Value, out LibraryContainer? container) ||
+                    !sectionsById.TryGetValue(container.SectionId.Value, out var section))
                 {
-                    // При нарушенной ссылочной целостности не показываем элемент
-                    // в picker: пользователь всё равно не сможет корректно понять,
-                    // откуда он будет перенесён.
                     continue;
                 }
 
@@ -65,8 +60,8 @@ public sealed class GetStandaloneQuestionPickerOptionsQueryHandler(
                         question.Difficulty.ToString(),
                         question.ExperienceRewards.StudyPoints,
                         question.ExperienceRewards.ReviewPoints,
-                        topic.Id.Value,
-                        topic.Name.Value,
+                        container.Id.Value,
+                        BuildContainerName(container, containersById),
                         section.Id.Value,
                         section.Name.Value));
             }
@@ -102,5 +97,36 @@ public sealed class GetStandaloneQuestionPickerOptionsQueryHandler(
                     "Не удалось загрузить самостоятельные вопросы")
                 .ToErrors();
         }
+    }
+
+    private static string BuildContainerName(
+        LibraryContainer container,
+        IReadOnlyDictionary<Guid, LibraryContainer> containersById)
+    {
+        if (container.IsRoot)
+        {
+            return "Без папки";
+        }
+
+        var names = new Stack<string>();
+        LibraryContainer? current = container;
+
+        while (current is not null && !current.IsRoot)
+        {
+            if (current.Name is not null)
+            {
+                names.Push(current.Name.Value);
+            }
+
+            if (current.ParentId is null ||
+                !containersById.TryGetValue(current.ParentId.Value, out current))
+            {
+                break;
+            }
+        }
+
+        return names.Count == 0
+            ? "Без папки"
+            : string.Join(" / ", names);
     }
 }
