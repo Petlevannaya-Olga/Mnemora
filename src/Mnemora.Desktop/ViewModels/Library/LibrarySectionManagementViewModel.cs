@@ -4,12 +4,16 @@ using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Mnemora.Application.Library.GetHierarchyFoldersPage;
-using Mnemora.Application.Library.GetManagementMaterialsPage;
+using Mnemora.Application.Library.GetSectionManagementItemsPage;
 using Mnemora.Application.Queries;
 using Mnemora.Contracts;
 using Mnemora.Contracts.Library;
 
 namespace Mnemora.Desktop.ViewModels.Library;
+
+public sealed record LibrarySectionManagementSortOption(
+    string Name,
+    LibrarySectionManagementItemSort Sort);
 
 public sealed partial class LibrarySectionManagementViewModel(
     IQueryDispatcher queryDispatcher)
@@ -19,13 +23,31 @@ public sealed partial class LibrarySectionManagementViewModel(
     private const int VisiblePageLimit = 7;
     private const int CachePageLimit = 10;
 
-    private readonly BoundedPagedWindow<LibraryManagementMaterialOverviewDto> _materialWindow =
+    private readonly BoundedPagedWindow<LibrarySectionManagementItemDto> _materialWindow =
         new(PageSize, VisiblePageLimit, CachePageLimit);
 
     private int _materialLoadVersion;
 
     public ObservableCollection<LibrarySectionManagementTreeNodeViewModel> Roots { get; } = [];
     public ObservableCollection<LibraryManagementOrderItemViewModel> Materials { get; } = [];
+
+    public IReadOnlyList<LibrarySectionManagementSortOption> SortOptions { get; } =
+    [
+        new("Мой порядок", LibrarySectionManagementItemSort.Custom),
+        new("Последняя активность", LibrarySectionManagementItemSort.RecentActivity),
+        new("По названию", LibrarySectionManagementItemSort.Name),
+        new("Сначала новые", LibrarySectionManagementItemSort.Newest),
+    ];
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasNoSearchResults))]
+    [NotifyPropertyChangedFor(nameof(IsSectionEmpty))]
+    private string? _searchText;
+
+    [ObservableProperty]
+    private LibrarySectionManagementSortOption _selectedSortOption =
+        new("Мой порядок", LibrarySectionManagementItemSort.Custom);
+
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSection))]
@@ -60,6 +82,7 @@ public sealed partial class LibrarySectionManagementViewModel(
     [NotifyPropertyChangedFor(nameof(HasMaterialsError))]
     [NotifyPropertyChangedFor(nameof(IsMaterialsEmpty))]
     [NotifyPropertyChangedFor(nameof(IsSectionEmpty))]
+    [NotifyPropertyChangedFor(nameof(HasNoSearchResults))]
     private string? _materialsErrorMessage;
 
     [ObservableProperty]
@@ -76,6 +99,7 @@ public sealed partial class LibrarySectionManagementViewModel(
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsMaterialsEmpty))]
     [NotifyPropertyChangedFor(nameof(IsSectionEmpty))]
+    [NotifyPropertyChangedFor(nameof(HasNoSearchResults))]
     private bool _isLoadingMaterials;
 
     [ObservableProperty]
@@ -95,13 +119,16 @@ public sealed partial class LibrarySectionManagementViewModel(
     public bool HasRootMaterials => RootMaterialsCount > 0;
     public bool IsSectionEmpty =>
         HasSection &&
-        !IsLoadingTree &&
-        !IsLoadingFolders &&
         !IsLoadingMaterials &&
-        !HasTreeError &&
         !HasMaterialsError &&
-        !HasFolders &&
-        !HasRootMaterials;
+        string.IsNullOrWhiteSpace(SearchText) &&
+        _materialWindow.TotalCount == 0;
+    public bool HasNoSearchResults =>
+        HasSection &&
+        !IsLoadingMaterials &&
+        !HasMaterialsError &&
+        !string.IsNullOrWhiteSpace(SearchText) &&
+        _materialWindow.TotalCount == 0;
     public bool HasTreeError => !string.IsNullOrWhiteSpace(TreeErrorMessage);
     public bool HasMaterialsError => !string.IsNullOrWhiteSpace(MaterialsErrorMessage);
     public bool HasMaterials => Materials.Count > 0;
@@ -136,12 +163,12 @@ public sealed partial class LibrarySectionManagementViewModel(
                 Math.Max(0, _materialWindow.TotalCount - _materialWindow.CurrentPageOffset));
 
             return LibraryRangeTextFormatter.FormatEntity(
-                "Материалы",
-                "Материалы не найдены",
+                "Элементы",
+                "Ничего не найдено",
                 _materialWindow.CurrentPageOffset,
                 visibleCount,
                 _materialWindow.TotalCount,
-                isSearchResult: false);
+                isSearchResult: !string.IsNullOrWhiteSpace(SearchText));
         }
     }
 
@@ -155,7 +182,6 @@ public sealed partial class LibrarySectionManagementViewModel(
         IsTreeCollapsed = false;
         TreeErrorMessage = null;
         MaterialsErrorMessage = null;
-        RootNode = null;
         RootMaterialsCount = 0;
         Roots.Clear();
         Materials.Clear();
@@ -167,38 +193,10 @@ public sealed partial class LibrarySectionManagementViewModel(
         root.IsExpanded = true;
         root.IsSelected = true;
         RootNode = root;
-        Roots.Add(root);
         SelectedNode = root;
+        Roots.Add(root);
 
-        IsLoadingTree = true;
-
-        try
-        {
-            Task foldersTask = root.ChildrenLoaded
-                ? Task.CompletedTask
-                : LoadFoldersPageAsync(root, 0, cancellationToken);
-
-            Task materialsTask = ReloadMaterialsAsync(root, cancellationToken);
-
-            await Task.WhenAll(foldersTask, materialsTask);
-        }
-        finally
-        {
-            IsLoadingTree = false;
-        }
-
-        if (!HasRootMaterials)
-        {
-            LibrarySectionManagementTreeNodeViewModel? firstFolder =
-                root.Children.FirstOrDefault(child => child.IsFolder);
-
-            if (firstFolder is not null)
-            {
-                await SelectNodeAsync(firstFolder, cancellationToken);
-            }
-        }
-
-        OnPropertyChanged(nameof(HasFolders));
+        await ReloadMaterialsAsync(root, cancellationToken);
         OnPropertyChanged(nameof(IsSectionEmpty));
     }
 
@@ -274,7 +272,7 @@ public sealed partial class LibrarySectionManagementViewModel(
     public async Task LoadNextMaterialsWindowAsync(
         CancellationToken cancellationToken = default)
     {
-        if (!MaterialsHasMore || SelectedNode?.ContainerId is not Guid containerId)
+        if (!MaterialsHasMore || Section is null)
         {
             return;
         }
@@ -284,7 +282,7 @@ public sealed partial class LibrarySectionManagementViewModel(
 
         if (_materialWindow.TryGetCachedPage(
                 offset,
-                out IReadOnlyList<LibraryManagementMaterialOverviewDto> cached))
+                out IReadOnlyList<LibrarySectionManagementItemDto> cached))
         {
             _materialWindow.ShowPage(offset, cached, PageWindowInsert.Append);
             RebuildMaterials();
@@ -300,8 +298,7 @@ public sealed partial class LibrarySectionManagementViewModel(
         {
             await YieldForPagingLoaderAsync(cancellationToken);
 
-            LibraryManagementMaterialsPageDto? page = await GetMaterialsPageAsync(
-                containerId,
+            LibrarySectionManagementItemsPageDto? page = await GetMaterialsPageAsync(
                 offset,
                 version,
                 cancellationToken);
@@ -329,7 +326,7 @@ public sealed partial class LibrarySectionManagementViewModel(
     public async Task LoadPreviousMaterialsWindowAsync(
         CancellationToken cancellationToken = default)
     {
-        if (!MaterialsHasPrevious || SelectedNode?.ContainerId is not Guid containerId)
+        if (!MaterialsHasPrevious || Section is null)
         {
             return;
         }
@@ -339,7 +336,7 @@ public sealed partial class LibrarySectionManagementViewModel(
 
         if (_materialWindow.TryGetCachedPage(
                 offset,
-                out IReadOnlyList<LibraryManagementMaterialOverviewDto> cached))
+                out IReadOnlyList<LibrarySectionManagementItemDto> cached))
         {
             _materialWindow.ShowPage(offset, cached, PageWindowInsert.Prepend);
             RebuildMaterials();
@@ -355,8 +352,7 @@ public sealed partial class LibrarySectionManagementViewModel(
         {
             await YieldForPagingLoaderAsync(cancellationToken);
 
-            LibraryManagementMaterialsPageDto? page = await GetMaterialsPageAsync(
-                containerId,
+            LibrarySectionManagementItemsPageDto? page = await GetMaterialsPageAsync(
                 offset,
                 version,
                 cancellationToken);
@@ -545,7 +541,7 @@ public sealed partial class LibrarySectionManagementViewModel(
         LibrarySectionManagementTreeNodeViewModel node,
         CancellationToken cancellationToken)
     {
-        if (node.ContainerId is not Guid containerId)
+        if (Section is null)
         {
             return;
         }
@@ -561,8 +557,7 @@ public sealed partial class LibrarySectionManagementViewModel(
 
         try
         {
-            LibraryManagementMaterialsPageDto? page = await GetMaterialsPageAsync(
-                containerId,
+            LibrarySectionManagementItemsPageDto? page = await GetMaterialsPageAsync(
                 0,
                 version,
                 cancellationToken);
@@ -573,11 +568,6 @@ public sealed partial class LibrarySectionManagementViewModel(
             }
 
             _materialWindow.SetTotalCount(page.TotalCount);
-
-            if (ReferenceEquals(node, RootNode))
-            {
-                RootMaterialsCount = page.TotalCount;
-            }
 
             if (page.Items.Count > 0)
             {
@@ -596,22 +586,21 @@ public sealed partial class LibrarySectionManagementViewModel(
         }
     }
 
-    private async Task<LibraryManagementMaterialsPageDto?> GetMaterialsPageAsync(
-        Guid containerId,
+    private async Task<LibrarySectionManagementItemsPageDto?> GetMaterialsPageAsync(
         int offset,
         int version,
         CancellationToken cancellationToken)
     {
-        if (version != _materialLoadVersion)
+        if (version != _materialLoadVersion || Section is null)
         {
             return null;
         }
 
         if (_materialWindow.TryGetCachedPage(
                 offset,
-                out IReadOnlyList<LibraryManagementMaterialOverviewDto> cached))
+                out IReadOnlyList<LibrarySectionManagementItemDto> cached))
         {
-            return new LibraryManagementMaterialsPageDto(
+            return new LibrarySectionManagementItemsPageDto(
                 cached,
                 offset + cached.Count,
                 offset + cached.Count < _materialWindow.TotalCount,
@@ -620,13 +609,12 @@ public sealed partial class LibrarySectionManagementViewModel(
         }
 
         var result = await queryDispatcher.SendAsync<
-            GetLibraryManagementMaterialsPageQuery,
-            LibraryManagementMaterialsPageDto>(
-            new GetLibraryManagementMaterialsPageQuery(
-                containerId,
-                Search: null,
-                LibraryManagementMaterialPageFilter.All,
-                LibraryManagementMaterialPageSort.Custom,
+            GetLibrarySectionManagementItemsPageQuery,
+            LibrarySectionManagementItemsPageDto>(
+            new GetLibrarySectionManagementItemsPageQuery(
+                Section.Id,
+                SearchText,
+                SelectedSortOption.Sort,
                 offset,
                 PageSize),
             cancellationToken);
@@ -639,7 +627,7 @@ public sealed partial class LibrarySectionManagementViewModel(
         if (result.IsFailure)
         {
             MaterialsErrorMessage = result.Error.FirstOrDefault()?.Message
-                                    ?? "Не удалось загрузить материалы";
+                                    ?? "Не удалось загрузить содержимое раздела";
             return null;
         }
 
@@ -655,7 +643,7 @@ public sealed partial class LibrarySectionManagementViewModel(
         {
             if (!_materialWindow.TryGetCachedPage(
                     offset,
-                    out IReadOnlyList<LibraryManagementMaterialOverviewDto> page))
+                    out IReadOnlyList<LibrarySectionManagementItemDto> page))
             {
                 continue;
             }
@@ -680,6 +668,7 @@ public sealed partial class LibrarySectionManagementViewModel(
         OnPropertyChanged(nameof(MaterialsWindowEndOffset));
         OnPropertyChanged(nameof(MaterialsShownCountText));
         OnPropertyChanged(nameof(IsSectionEmpty));
+        OnPropertyChanged(nameof(HasNoSearchResults));
     }
 
 
@@ -725,6 +714,39 @@ public sealed partial class LibrarySectionManagementViewModel(
             LibrarySectionManagementTreeNodeViewModel.CreateError(
                 parent,
                 message));
+    }
+
+    partial void OnSearchTextChanged(string? value)
+    {
+        if (Section is not null)
+        {
+            _ = ReloadFlatListFromUiAsync();
+        }
+    }
+
+    partial void OnSelectedSortOptionChanged(LibrarySectionManagementSortOption value)
+    {
+        if (Section is not null)
+        {
+            _ = ReloadFlatListFromUiAsync();
+        }
+    }
+
+    private async Task ReloadFlatListFromUiAsync()
+    {
+        try
+        {
+            await Task.Delay(250);
+
+            if (RootNode is not null)
+            {
+                await ReloadMaterialsAsync(RootNode, CancellationToken.None);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // ignore
+        }
     }
 
     private static async Task YieldForPagingLoaderAsync(CancellationToken cancellationToken)

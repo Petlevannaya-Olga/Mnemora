@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -23,6 +24,7 @@ public partial class LibraryManagementView : UserControl
     private bool _isSectionStructureMaterialsScrollPageLoadRunning;
     private bool _isSectionStructureTreeSelectionRunning;
     private bool _isSectionStructureTreePageLoadRunning;
+    private Window? _hostWindow;
 
     public LibraryManagementView()
     {
@@ -34,6 +36,7 @@ public partial class LibraryManagementView : UserControl
         RoutedEventArgs e)
     {
         CancelLoading();
+        AttachHostWindow();
 
         var cancellationTokenSource = new CancellationTokenSource();
         CancellationToken cancellationToken = cancellationTokenSource.Token;
@@ -58,6 +61,8 @@ public partial class LibraryManagementView : UserControl
         RoutedEventArgs e)
     {
         CancelLoading();
+        DetachHostWindow();
+        CloseColumnsPopups();
     }
 
     private async void SectionsScroll_OnScrollChanged(
@@ -1076,6 +1081,99 @@ public partial class LibraryManagementView : UserControl
         }
 
         return null;
+    }
+
+
+
+
+    private void AttachHostWindow()
+    {
+        Window? window = Window.GetWindow(this);
+
+        if (ReferenceEquals(_hostWindow, window))
+        {
+            return;
+        }
+
+        DetachHostWindow();
+        _hostWindow = window;
+
+        if (_hostWindow is not null)
+        {
+            _hostWindow.Deactivated += HostWindow_OnDeactivated;
+        }
+    }
+
+    private void DetachHostWindow()
+    {
+        if (_hostWindow is null)
+        {
+            return;
+        }
+
+        _hostWindow.Deactivated -= HostWindow_OnDeactivated;
+        _hostWindow = null;
+    }
+
+    private void HostWindow_OnDeactivated(object? sender, EventArgs e) =>
+        CloseColumnsPopups();
+
+    private void CloseColumnsPopups()
+    {
+        ManagementSectionColumnsPopup.IsOpen = false;
+        ManagementContentColumnsPopup.IsOpen = false;
+    }
+
+    private void LibraryManagementView_OnPreviewMouseLeftButtonDown(
+        object sender,
+        MouseButtonEventArgs e)
+    {
+        DependencyObject? source = e.OriginalSource as DependencyObject;
+        Button? clickedButton = FindAncestor<Button>(source);
+        bool isInsideSectionPopup = IsInsidePopup(ManagementSectionColumnsPopup, source);
+        bool isInsideContentPopup = IsInsidePopup(ManagementContentColumnsPopup, source);
+
+        if (!ReferenceEquals(clickedButton, ManagementSectionColumnsButton) && !isInsideSectionPopup)
+        {
+            ManagementSectionColumnsPopup.IsOpen = false;
+        }
+
+        if (!ReferenceEquals(clickedButton, ManagementContentColumnsButton) && !isInsideContentPopup)
+        {
+            ManagementContentColumnsPopup.IsOpen = false;
+        }
+    }
+
+    private static bool IsInsidePopup(Popup popup, DependencyObject? source)
+    {
+        if (!popup.IsOpen || source is null || popup.Child is not Visual popupRoot)
+        {
+            return false;
+        }
+
+        return ReferenceEquals(popupRoot, source) || popupRoot.IsAncestorOf(source);
+    }
+
+    private void ManagementSectionColumnsButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not UIElement target)
+        {
+            return;
+        }
+
+        ManagementSectionColumnsPopup.PlacementTarget = target;
+        ManagementSectionColumnsPopup.IsOpen = !ManagementSectionColumnsPopup.IsOpen;
+    }
+
+    private void ManagementContentColumnsButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not UIElement target)
+        {
+            return;
+        }
+
+        ManagementContentColumnsPopup.PlacementTarget = target;
+        ManagementContentColumnsPopup.IsOpen = !ManagementContentColumnsPopup.IsOpen;
     }
 
     private void CancelLoading()

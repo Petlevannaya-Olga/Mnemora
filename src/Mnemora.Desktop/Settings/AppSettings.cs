@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace Mnemora.Desktop.Settings;
 
@@ -89,6 +89,26 @@ public sealed class AppSettings
     public Dictionary<Guid, LibraryManagementSortMode> LibraryManagementTopicSortBySection { get; set; } = [];
 
     public Dictionary<Guid, LibraryManagementSortMode> LibraryManagementMaterialSortByTopic { get; set; } = [];
+
+    public HashSet<LibraryManagementSectionColumn> LibraryManagementSectionColumns { get; set; } =
+    [
+        LibraryManagementSectionColumn.Folders,
+        LibraryManagementSectionColumn.Materials,
+        LibraryManagementSectionColumn.Articles,
+        LibraryManagementSectionColumn.Questions,
+        LibraryManagementSectionColumn.Created,
+        LibraryManagementSectionColumn.Updated,
+        LibraryManagementSectionColumn.Activity,
+    ];
+
+    public HashSet<LibraryManagementContentColumn> LibraryManagementContentColumns { get; set; } =
+    [
+        LibraryManagementContentColumn.Type,
+        LibraryManagementContentColumn.Location,
+        LibraryManagementContentColumn.Questions,
+        LibraryManagementContentColumn.Difficulty,
+        LibraryManagementContentColumn.Updated,
+    ];
 
     [JsonPropertyName("libraryViewMode")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]

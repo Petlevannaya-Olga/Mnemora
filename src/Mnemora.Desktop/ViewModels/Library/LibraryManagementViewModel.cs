@@ -94,6 +94,8 @@ public sealed partial class LibraryManagementViewModel(
     private bool _isSimpleViewModeLoaded;
     private bool _isSimpleSortSettingsLoaded;
     private bool _isApplyingSimpleSortSettings;
+    private bool _isManagementColumnSettingsLoaded;
+    private bool _isApplyingManagementColumnSettings;
 
     // Сортировка тем зависит от раздела, а сортировка материалов — от темы.
     // Поэтому эти настройки хранятся отдельно для каждого родительского контекста.
@@ -107,6 +109,7 @@ public sealed partial class LibraryManagementViewModel(
     private int _contextLoadVersion;
     private Guid? _preferredSectionId;
     private Guid? _preferredTopicId;
+    private bool _isCreatingMaterialFromSectionStructure;
 
     public ObservableCollection<LibraryManagementOrderItemViewModel> Sections { get; } = [];
 
@@ -261,6 +264,42 @@ public sealed partial class LibraryManagementViewModel(
 
     [ObservableProperty]
     private string? _searchText;
+
+    [ObservableProperty]
+    private bool _showManagementSectionFoldersColumn = true;
+
+    [ObservableProperty]
+    private bool _showManagementSectionMaterialsColumn = true;
+
+    [ObservableProperty]
+    private bool _showManagementSectionArticlesColumn = true;
+
+    [ObservableProperty]
+    private bool _showManagementSectionQuestionsColumn = true;
+
+    [ObservableProperty]
+    private bool _showManagementSectionCreatedColumn = true;
+
+    [ObservableProperty]
+    private bool _showManagementSectionUpdatedColumn = true;
+
+    [ObservableProperty]
+    private bool _showManagementSectionActivityColumn = true;
+
+    [ObservableProperty]
+    private bool _showManagementContentTypeColumn = true;
+
+    [ObservableProperty]
+    private bool _showManagementContentLocationColumn = true;
+
+    [ObservableProperty]
+    private bool _showManagementContentQuestionsColumn = true;
+
+    [ObservableProperty]
+    private bool _showManagementContentDifficultyColumn = true;
+
+    [ObservableProperty]
+    private bool _showManagementContentUpdatedColumn = true;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsOrderMode))]
@@ -515,6 +554,7 @@ public sealed partial class LibraryManagementViewModel(
 
         await EnsureSimpleViewModeLoadedAsync(cancellationToken);
         await EnsureSimpleSortSettingsLoadedAsync(cancellationToken);
+        await EnsureManagementColumnSettingsLoadedAsync(cancellationToken);
 
         _isSimpleSectionsLoaded = true;
         LoadNextSimpleSectionPageCommand.NotifyCanExecuteChanged();
@@ -789,6 +829,69 @@ public sealed partial class LibraryManagementViewModel(
     }
 
     [RelayCommand]
+    private void StartCreateSectionStructureMaterial()
+    {
+        LibrarySectionManagementTreeNodeViewModel? root = SectionStructure.RootNode;
+        LibrarySectionOverviewDto? section = SectionStructure.Section;
+
+        if (root?.ContainerId is not Guid containerId || section is null)
+        {
+            return;
+        }
+
+        var context = new LibraryManagementOrderItemViewModel(
+            new LibraryManagementTopicOverviewDto(
+                containerId,
+                section.Id,
+                section.Name,
+                section.Color,
+                "FolderOutline",
+                section.CreatedAt,
+                section.UpdatedAt,
+                section.LastActivityAt,
+                0,
+                0,
+                0,
+                0),
+            position: 1);
+
+        _isCreatingMaterialFromSectionStructure = true;
+        CreateMaterial.Initialize(
+            context,
+            CancelCreateMaterial,
+            CompleteCreateMaterial);
+        IsCreatingMaterial = true;
+    }
+
+    [RelayCommand]
+    private async Task CreateSectionStructureFolderAsync(
+        CancellationToken cancellationToken)
+    {
+        LibrarySectionManagementTreeNodeViewModel? root = SectionStructure.RootNode;
+        LibrarySectionOverviewDto? section = SectionStructure.Section;
+
+        if (root?.ContainerId is not Guid rootContainerId || section is null)
+        {
+            return;
+        }
+
+        Guid? folderId = dialogService.Show<CreateLibraryFolderDialogViewModel, Guid?>(
+            viewModel => viewModel.Initialize(
+                rootContainerId,
+                section.Name,
+                section.Color));
+
+        if (folderId is null)
+        {
+            return;
+        }
+
+        notificationService.ShowSuccess("Папка создана");
+        await SectionStructure.RefreshSelectedMaterialsAsync(cancellationToken);
+        await ReloadSimpleSectionsCoreAsync(cancellationToken);
+    }
+
+    [RelayCommand]
     private async Task OpenSimpleTopicAsync(
         LibraryManagementOrderItemViewModel? item,
         CancellationToken cancellationToken)
@@ -848,6 +951,7 @@ public sealed partial class LibraryManagementViewModel(
     [RelayCommand]
     private void CancelCreateMaterial()
     {
+        _isCreatingMaterialFromSectionStructure = false;
         IsCreatingMaterial = false;
         CreateMaterial.Reset();
     }
@@ -859,9 +963,15 @@ public sealed partial class LibraryManagementViewModel(
                 ? "Вопрос создан"
                 : "Статья создана";
 
-        _preferredSectionId = SelectedSection?.Id;
-        _preferredTopicId = SelectedTopic?.Id;
+        bool refreshSectionStructure = _isCreatingMaterialFromSectionStructure;
 
+        if (!refreshSectionStructure)
+        {
+            _preferredSectionId = SelectedSection?.Id;
+            _preferredTopicId = SelectedTopic?.Id;
+        }
+
+        _isCreatingMaterialFromSectionStructure = false;
         IsCreatingMaterial = false;
         CreateMaterial.Reset();
 
@@ -869,6 +979,13 @@ public sealed partial class LibraryManagementViewModel(
 
         try
         {
+            if (refreshSectionStructure)
+            {
+                await SectionStructure.RefreshSelectedMaterialsAsync(CancellationToken.None);
+                await ReloadSimpleSectionsCoreAsync(CancellationToken.None);
+                return;
+            }
+
             await RefreshAfterMutationAsync(
                 CancellationToken.None);
         }
@@ -1260,6 +1377,20 @@ public sealed partial class LibraryManagementViewModel(
         await DeleteSectionAsync(orderItem, cancellationToken);
     }
 
+    partial void OnShowManagementSectionFoldersColumnChanged(bool value) => PersistManagementSectionColumns();
+    partial void OnShowManagementSectionMaterialsColumnChanged(bool value) => PersistManagementSectionColumns();
+    partial void OnShowManagementSectionArticlesColumnChanged(bool value) => PersistManagementSectionColumns();
+    partial void OnShowManagementSectionQuestionsColumnChanged(bool value) => PersistManagementSectionColumns();
+    partial void OnShowManagementSectionCreatedColumnChanged(bool value) => PersistManagementSectionColumns();
+    partial void OnShowManagementSectionUpdatedColumnChanged(bool value) => PersistManagementSectionColumns();
+    partial void OnShowManagementSectionActivityColumnChanged(bool value) => PersistManagementSectionColumns();
+
+    partial void OnShowManagementContentTypeColumnChanged(bool value) => PersistManagementContentColumns();
+    partial void OnShowManagementContentLocationColumnChanged(bool value) => PersistManagementContentColumns();
+    partial void OnShowManagementContentQuestionsColumnChanged(bool value) => PersistManagementContentColumns();
+    partial void OnShowManagementContentDifficultyColumnChanged(bool value) => PersistManagementContentColumns();
+    partial void OnShowManagementContentUpdatedColumnChanged(bool value) => PersistManagementContentColumns();
+
     partial void OnSearchTextChanged(string? value)
     {
         int searchVersion = Interlocked.Increment(ref _simpleSectionSearchVersion);
@@ -1506,6 +1637,130 @@ public sealed partial class LibraryManagementViewModel(
         {
             // View was unloaded.
         }
+    }
+
+    private async Task EnsureManagementColumnSettingsLoadedAsync(CancellationToken cancellationToken)
+    {
+        if (_isManagementColumnSettingsLoaded)
+        {
+            return;
+        }
+
+        try
+        {
+            AppSettings settings = await settingsService.LoadAsync(cancellationToken);
+            HashSet<LibraryManagementSectionColumn> sectionColumns =
+                settings.LibraryManagementSectionColumns ?? [];
+            HashSet<LibraryManagementContentColumn> contentColumns =
+                settings.LibraryManagementContentColumns ?? [];
+
+            _isApplyingManagementColumnSettings = true;
+
+            ShowManagementSectionFoldersColumn = sectionColumns.Contains(LibraryManagementSectionColumn.Folders);
+            ShowManagementSectionMaterialsColumn = sectionColumns.Contains(LibraryManagementSectionColumn.Materials);
+            ShowManagementSectionArticlesColumn = sectionColumns.Contains(LibraryManagementSectionColumn.Articles);
+            ShowManagementSectionQuestionsColumn = sectionColumns.Contains(LibraryManagementSectionColumn.Questions);
+            ShowManagementSectionCreatedColumn = sectionColumns.Contains(LibraryManagementSectionColumn.Created);
+            ShowManagementSectionUpdatedColumn = sectionColumns.Contains(LibraryManagementSectionColumn.Updated);
+            ShowManagementSectionActivityColumn = sectionColumns.Contains(LibraryManagementSectionColumn.Activity);
+
+            ShowManagementContentTypeColumn = contentColumns.Contains(LibraryManagementContentColumn.Type);
+            ShowManagementContentLocationColumn = contentColumns.Contains(LibraryManagementContentColumn.Location);
+            ShowManagementContentQuestionsColumn = contentColumns.Contains(LibraryManagementContentColumn.Questions);
+            ShowManagementContentDifficultyColumn = contentColumns.Contains(LibraryManagementContentColumn.Difficulty);
+            ShowManagementContentUpdatedColumn = contentColumns.Contains(LibraryManagementContentColumn.Updated);
+
+            _isManagementColumnSettingsLoaded = true;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Не удалось загрузить настройки колонок управления библиотекой");
+            _isManagementColumnSettingsLoaded = true;
+        }
+        finally
+        {
+            _isApplyingManagementColumnSettings = false;
+        }
+    }
+
+    private void PersistManagementSectionColumns()
+    {
+        if (!_isManagementColumnSettingsLoaded || _isApplyingManagementColumnSettings)
+        {
+            return;
+        }
+
+        _ = SaveManagementSectionColumnsAsync();
+    }
+
+    private async Task SaveManagementSectionColumnsAsync()
+    {
+        try
+        {
+            await settingsService.SaveLibraryManagementSectionColumnsAsync(
+                BuildManagementSectionColumns(),
+                CancellationToken.None);
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Не удалось сохранить настройки колонок разделов");
+        }
+    }
+
+    private IReadOnlyCollection<LibraryManagementSectionColumn> BuildManagementSectionColumns()
+    {
+        var columns = new List<LibraryManagementSectionColumn>(7);
+
+        if (ShowManagementSectionFoldersColumn) columns.Add(LibraryManagementSectionColumn.Folders);
+        if (ShowManagementSectionMaterialsColumn) columns.Add(LibraryManagementSectionColumn.Materials);
+        if (ShowManagementSectionArticlesColumn) columns.Add(LibraryManagementSectionColumn.Articles);
+        if (ShowManagementSectionQuestionsColumn) columns.Add(LibraryManagementSectionColumn.Questions);
+        if (ShowManagementSectionCreatedColumn) columns.Add(LibraryManagementSectionColumn.Created);
+        if (ShowManagementSectionUpdatedColumn) columns.Add(LibraryManagementSectionColumn.Updated);
+        if (ShowManagementSectionActivityColumn) columns.Add(LibraryManagementSectionColumn.Activity);
+
+        return columns;
+    }
+
+    private void PersistManagementContentColumns()
+    {
+        if (!_isManagementColumnSettingsLoaded || _isApplyingManagementColumnSettings)
+        {
+            return;
+        }
+
+        _ = SaveManagementContentColumnsAsync();
+    }
+
+    private async Task SaveManagementContentColumnsAsync()
+    {
+        try
+        {
+            await settingsService.SaveLibraryManagementContentColumnsAsync(
+                BuildManagementContentColumns(),
+                CancellationToken.None);
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Не удалось сохранить настройки колонок содержимого раздела");
+        }
+    }
+
+    private IReadOnlyCollection<LibraryManagementContentColumn> BuildManagementContentColumns()
+    {
+        var columns = new List<LibraryManagementContentColumn>(5);
+
+        if (ShowManagementContentTypeColumn) columns.Add(LibraryManagementContentColumn.Type);
+        if (ShowManagementContentLocationColumn) columns.Add(LibraryManagementContentColumn.Location);
+        if (ShowManagementContentQuestionsColumn) columns.Add(LibraryManagementContentColumn.Questions);
+        if (ShowManagementContentDifficultyColumn) columns.Add(LibraryManagementContentColumn.Difficulty);
+        if (ShowManagementContentUpdatedColumn) columns.Add(LibraryManagementContentColumn.Updated);
+
+        return columns;
     }
 
     private async Task EnsureSimpleViewModeLoadedAsync(CancellationToken cancellationToken)

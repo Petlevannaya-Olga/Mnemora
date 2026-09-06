@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -271,6 +271,30 @@ public sealed class JsonSettingsService :
                 settings.LibraryManagementMaterialSortByTopic ??= [];
                 settings.LibraryManagementMaterialSortByTopic[topicId] = sortMode;
             },
+            cancellationToken);
+    }
+
+    public Task SaveLibraryManagementSectionColumnsAsync(
+        IReadOnlyCollection<LibraryManagementSectionColumn> columns,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        ArgumentNullException.ThrowIfNull(columns);
+
+        return UpdateAsync(
+            settings => settings.LibraryManagementSectionColumns = [.. columns],
+            cancellationToken);
+    }
+
+    public Task SaveLibraryManagementContentColumnsAsync(
+        IReadOnlyCollection<LibraryManagementContentColumn> columns,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        ArgumentNullException.ThrowIfNull(columns);
+
+        return UpdateAsync(
+            settings => settings.LibraryManagementContentColumns = [.. columns],
             cancellationToken);
     }
 

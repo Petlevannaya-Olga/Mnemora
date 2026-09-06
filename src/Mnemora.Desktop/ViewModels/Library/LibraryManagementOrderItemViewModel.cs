@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using MaterialDesignThemes.Wpf;
 using Mnemora.Application.Library.Order;
 using Mnemora.Contracts;
@@ -90,6 +90,30 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
         _position = position;
     }
 
+
+    /// <summary>
+    /// Плоский элемент управления разделом: папка или материал.
+    /// </summary>
+    public LibraryManagementOrderItemViewModel(
+        LibrarySectionManagementItemDto item,
+        int position)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+
+        SectionManagementItem = item;
+        Id = item.Id;
+        Name = item.Name;
+        Details = item.Kind == LibrarySectionManagementItemKind.Folder
+            ? "Папка"
+            : string.Equals(item.MaterialType, "Question", StringComparison.OrdinalIgnoreCase)
+                ? "Вопрос"
+                : "Статья";
+        Target = LibraryOrderTarget.Materials;
+        ArticleQuestionCount = item.ArticleQuestionCount;
+        IconKind = ResolveIcon(item.Icon, Target, Details);
+        _position = position;
+    }
+
     public Guid Id { get; }
 
     public string Name { get; }
@@ -107,13 +131,14 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
     public LibrarySectionOverviewDto? SectionOverview { get; }
     public LibraryManagementTopicOverviewDto? TopicOverview { get; }
     public LibraryManagementMaterialOverviewDto? MaterialOverview { get; }
+    public LibrarySectionManagementItemDto? SectionManagementItem { get; }
 
     public int ArticleQuestionCount { get; }
 
-    private string? MaterialType => MaterialOverview?.Type ?? Material?.Type;
-    private string? MaterialDifficulty => MaterialOverview?.Difficulty ?? Material?.Difficulty;
-    private DateTime? MaterialUpdatedAt => MaterialOverview?.UpdatedAt ?? Material?.UpdatedAt;
-    private DateTime? MaterialCreatedAt => MaterialOverview?.CreatedAt ?? Material?.CreatedAt;
+    private string? MaterialType => SectionManagementItem?.MaterialType ?? MaterialOverview?.Type ?? Material?.Type;
+    private string? MaterialDifficulty => SectionManagementItem?.Difficulty ?? MaterialOverview?.Difficulty ?? Material?.Difficulty;
+    private DateTime? MaterialUpdatedAt => SectionManagementItem?.UpdatedAt ?? MaterialOverview?.UpdatedAt ?? Material?.UpdatedAt;
+    private DateTime? MaterialCreatedAt => SectionManagementItem?.CreatedAt ?? MaterialOverview?.CreatedAt ?? Material?.CreatedAt;
 
     public bool IsArticle =>
         string.Equals(MaterialType, "Article", StringComparison.OrdinalIgnoreCase);
@@ -124,8 +149,27 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
         Material?.ArticleId is not null;
 
     public bool IsTopLevelMaterial =>
+        (SectionManagementItem is not null && !IsManagementFolder) ||
         MaterialOverview is not null ||
         (Material is not null && !IsLinkedQuestion);
+
+    public bool IsManagementFolder =>
+        SectionManagementItem?.Kind == LibrarySectionManagementItemKind.Folder;
+
+    public string ManagementItemTypeText => IsManagementFolder
+        ? "Папка"
+        : MaterialTypeText;
+
+    public string ManagementLocationText =>
+        SectionManagementItem?.Location ?? string.Empty;
+
+    public string ManagementDifficultyText => IsManagementFolder
+        ? "—"
+        : DifficultyText;
+
+    public string ManagementQuestionCountText => IsManagementFolder
+        ? "—"
+        : ArticleQuestionCountText;
 
     public string ArticleQuestionCountText =>
         IsArticle

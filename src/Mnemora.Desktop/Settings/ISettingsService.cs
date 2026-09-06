@@ -1,4 +1,4 @@
-namespace Mnemora.Desktop.Settings;
+﻿namespace Mnemora.Desktop.Settings;
 
 public interface ISettingsService
 {
@@ -60,6 +60,14 @@ public interface ISettingsService
     Task SaveLibraryManagementMaterialSortAsync(
         Guid topicId,
         LibraryManagementSortMode sortMode,
+        CancellationToken cancellationToken = default);
+
+    Task SaveLibraryManagementSectionColumnsAsync(
+        IReadOnlyCollection<LibraryManagementSectionColumn> columns,
+        CancellationToken cancellationToken = default);
+
+    Task SaveLibraryManagementContentColumnsAsync(
+        IReadOnlyCollection<LibraryManagementContentColumn> columns,
         CancellationToken cancellationToken = default);
 
     Task CompleteOnboardingAsync(
