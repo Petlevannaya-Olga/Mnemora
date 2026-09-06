@@ -2013,15 +2013,18 @@
                 </StackPanel>
 
                 <Border Grid.Row="2"
+                        Background="{DynamicResource Mnemora.Brush.Surface}"
+                        BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                        BorderThickness="1"
                         ClipToBounds="True"
-                        CornerRadius="13"
+                        CornerRadius="14"
                         Visibility="{Binding SectionStructure.HasMaterials, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <Grid>
                         <DataGrid x:Name="SectionStructureMaterialsTable"
                               AutoGenerateColumns="False"
-                              Background="{DynamicResource Mnemora.Brush.Surface}"
-                              BorderBrush="{DynamicResource Mnemora.Brush.Border}"
-                              BorderThickness="1"
+                              Background="Transparent"
+                              BorderThickness="0"
+                              CellStyle="{StaticResource SimpleSectionTableCellStyle}"
                               CanUserAddRows="False"
                               CanUserDeleteRows="False"
                               CanUserReorderColumns="False"
@@ -2030,18 +2033,23 @@
                               CanUserResizeRows="False"
                               CanUserSortColumns="False"
                               ColumnHeaderStyle="{StaticResource SimpleSectionTableColumnHeaderStyle}"
+                              EnableColumnVirtualization="True"
+                              EnableRowVirtualization="True"
+                              GridLinesVisibility="None"
                               HeadersVisibility="Column"
-                              HorizontalGridLinesBrush="{DynamicResource Mnemora.Brush.Border}"
                               IsReadOnly="True"
                               ItemsSource="{Binding SectionStructure.Materials}"
                               RowHeaderWidth="0"
                               RowStyle="{StaticResource SimpleSectionTableRowStyle}"
-                              SelectionMode="Single"
-                              SelectionUnit="FullRow"
-                              VerticalGridLinesBrush="Transparent"
+                              ScrollViewer.CanContentScroll="True"
                               ScrollViewer.HorizontalScrollBarVisibility="Auto"
                               ScrollViewer.ScrollChanged="SectionStructureMaterialsScroll_OnScrollChanged"
-                              ScrollViewer.VerticalScrollBarVisibility="Auto">
+                              ScrollViewer.VerticalScrollBarVisibility="Auto"
+                              SelectionMode="Single"
+                              SelectionUnit="FullRow"
+                              SizeChanged="SimpleSectionsTable_OnSizeChanged"
+                              VirtualizingPanel.IsVirtualizing="True"
+                              VirtualizingPanel.VirtualizationMode="Recycling">
                         <DataGrid.Columns>
                             <DataGridTemplateColumn Width="2*"
                                                     MinWidth="240"
@@ -2103,7 +2111,9 @@
                                                 MinWidth="160"
                                                 Binding="{Binding ManagementLocationText}"
                                                 CellStyle="{StaticResource SimpleSectionTableCellStyle}"
+                                                ElementStyle="{StaticResource SimpleSectionTableTextStyle}"
                                                 Header="Расположение"
+                                                HeaderStyle="{StaticResource SimpleSectionTableColumnHeaderStyle}"
                                                 Visibility="{Binding Data.ShowManagementContentLocationColumn, Source={StaticResource ManagementViewModelProxy}, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
                             <DataGridTemplateColumn Width="140"
@@ -2138,6 +2148,7 @@
                                                 MinWidth="100"
                                                 Binding="{Binding UpdatedAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
                                                 CellStyle="{StaticResource SimpleSectionTableDateCellStyle}"
+                                                ElementStyle="{StaticResource SimpleSectionTableTextStyle}"
                                                 Header="Изменён"
                                                 HeaderStyle="{StaticResource SimpleSectionTableColumnHeaderStyle}"
                                                 Visibility="{Binding Data.ShowManagementContentUpdatedColumn, Source={StaticResource ManagementViewModelProxy}, Converter={StaticResource BooleanToVisibilityConverter}}" />
@@ -2199,7 +2210,6 @@
                                                FontWeight="SemiBold"
                                                Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
                                                Text="Колонки" />
-                                    <CheckBox Margin="2,0" Content="Название" IsChecked="True" IsEnabled="False" ToolTip="Основная колонка всегда отображается" />
                                     <CheckBox Margin="2,0" Content="Тип" IsChecked="{Binding ShowManagementContentTypeColumn, Mode=TwoWay}" />
                                     <CheckBox Margin="2,0" Content="Расположение" IsChecked="{Binding ShowManagementContentLocationColumn, Mode=TwoWay}" />
                                     <CheckBox Margin="2,0" Content="Вопросы" IsChecked="{Binding ShowManagementContentQuestionsColumn, Mode=TwoWay}" />
