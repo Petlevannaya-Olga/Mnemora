@@ -812,32 +812,28 @@
                     </DockPanel>
                 </Border>
 
-                <Border
-                    Padding="16"
-                    Background="{DynamicResource Mnemora.Brush.Surface}"
-                    BorderBrush="{DynamicResource Mnemora.Brush.Border}"
-                    BorderThickness="1"
-                    CornerRadius="14"
+                <StackPanel
+                    MaxWidth="520"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
                     Visibility="{Binding IsFoldersEmpty, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <materialDesign:PackIcon
-                            Width="20"
-                            Height="20"
-                            VerticalAlignment="Center"
-                            Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                            Kind="FolderOutline" />
-                        <TextBlock
-                            Grid.Column="1"
-                            Margin="10,0,0,0"
-                            VerticalAlignment="Center"
-                            Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                            Text="{Binding FoldersEmptyMessage}" />
-                    </Grid>
-                </Border>
+                    <materialDesign:PackIcon Width="52"
+                                             Height="52"
+                                             HorizontalAlignment="Center"
+                                             Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                             Kind="Magnify" />
+                    <TextBlock Margin="0,14,0,0"
+                               HorizontalAlignment="Center"
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                               Text="Ничего не найдено" />
+                    <TextBlock Margin="0,6,0,0"
+                               HorizontalAlignment="Center"
+                               FontSize="13"
+                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                               Text="{Binding FoldersEmptyMessage}" />
+                </StackPanel>
 
                 <!-- Крупные папки -->
                 <ScrollViewer
@@ -1191,32 +1187,28 @@
                     </DockPanel>
                 </Border>
 
-                <Border
-                    Padding="22"
-                    Background="{DynamicResource Mnemora.Brush.Surface}"
-                    BorderBrush="{DynamicResource Mnemora.Brush.Border}"
-                    BorderThickness="1"
-                    CornerRadius="14"
+                <StackPanel
+                    MaxWidth="520"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
                     Visibility="{Binding IsMaterialsEmpty, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <materialDesign:PackIcon
-                            Width="20"
-                            Height="20"
-                            VerticalAlignment="Center"
-                            Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                            Kind="FileDocumentOutline" />
-                        <TextBlock
-                            Grid.Column="1"
-                            Margin="10,0,0,0"
-                            VerticalAlignment="Center"
-                            Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                            Text="{Binding MaterialsEmptyMessage}" />
-                    </Grid>
-                </Border>
+                    <materialDesign:PackIcon Width="52"
+                                             Height="52"
+                                             HorizontalAlignment="Center"
+                                             Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                             Kind="Magnify" />
+                    <TextBlock Margin="0,14,0,0"
+                               HorizontalAlignment="Center"
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                               Text="Ничего не найдено" />
+                    <TextBlock Margin="0,6,0,0"
+                               HorizontalAlignment="Center"
+                               FontSize="13"
+                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                               Text="{Binding MaterialsEmptyMessage}" />
+                </StackPanel>
 
                 <!-- Материалы таблицей -->
                 <!-- Материалы крупными плитками -->
@@ -1498,7 +1490,8 @@
                     <TextBlock Style="{StaticResource SectionHeaderTextStyle}" Text="Содержимое" />
                     <TextBlock
                         Style="{StaticResource RangeTextStyle}"
-                        Text="{Binding MixedShownCountText, Converter={StaticResource LibraryRangeCounterTextConverter}}" />
+                        Text="{Binding MixedShownCountText, Converter={StaticResource LibraryRangeCounterTextConverter}}"
+                        Visibility="{Binding HasMixedItems, Converter={StaticResource BooleanToVisibilityConverter}}" />
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center" Orientation="Horizontal">
@@ -1531,32 +1524,28 @@
                     </DockPanel>
                 </Border>
 
-                <Border
-                    Padding="22"
-                    Background="{DynamicResource Mnemora.Brush.Surface}"
-                    BorderBrush="{DynamicResource Mnemora.Brush.Border}"
-                    BorderThickness="1"
-                    CornerRadius="14"
+                <StackPanel
+                    MaxWidth="520"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
                     Visibility="{Binding IsMixedEmpty, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <materialDesign:PackIcon
-                            Width="20"
-                            Height="20"
-                            VerticalAlignment="Center"
-                            Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                            Kind="FolderMultipleOutline" />
-                        <TextBlock
-                            Grid.Column="1"
-                            Margin="10,0,0,0"
-                            VerticalAlignment="Center"
-                            Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                            Text="{Binding MixedEmptyMessage}" />
-                    </Grid>
-                </Border>
+                    <materialDesign:PackIcon Width="52"
+                                             Height="52"
+                                             HorizontalAlignment="Center"
+                                             Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                             Kind="Magnify" />
+                    <TextBlock Margin="0,14,0,0"
+                               HorizontalAlignment="Center"
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                               Text="Ничего не найдено" />
+                    <TextBlock Margin="0,6,0,0"
+                               HorizontalAlignment="Center"
+                               FontSize="13"
+                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                               Text="{Binding MixedEmptyMessage}" />
+                </StackPanel>
 
                 <!-- Смешанное содержимое крупными плитками: сначала папки, затем материалы -->
                 <ScrollViewer

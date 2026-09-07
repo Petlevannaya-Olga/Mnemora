@@ -162,6 +162,11 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
     private bool _isLoadingPreviousFoldersPage;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsFoldersEmpty))]
+    [NotifyPropertyChangedFor(nameof(FoldersShownCountText))]
+    private bool _hasCompletedInitialFoldersLoad;
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsMaterialsEmpty))]
     [NotifyPropertyChangedFor(nameof(IsMaterialsPaging))]
     [NotifyCanExecuteChangedFor(nameof(LoadNextMaterialsPageCommand))]
@@ -394,6 +399,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
     public string EmptyStateTitle => IsRoot ? "В разделе пока ничего нет" : "В этой папке пока ничего нет";
 
     public bool IsFoldersEmpty =>
+        HasCompletedInitialFoldersLoad &&
         !IsLoadingFolders &&
         !HasFoldersError &&
         !HasFolders;
@@ -477,6 +483,11 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
     {
         get
         {
+            if (!HasCompletedInitialFoldersLoad)
+            {
+                return string.Empty;
+            }
+
             int visibleCount = Math.Min(
                 FolderPageSize,
                 Math.Max(0, FoldersTotalCount - FoldersCurrentPageOffset));
@@ -947,6 +958,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
         FoldersCurrentPageOffset = 0;
         FoldersTotalCount = 0;
         FoldersHasMore = false;
+        HasCompletedInitialFoldersLoad = false;
         IsLoadingFolders = false;
         IsLoadingNextFoldersPage = false;
         IsLoadingPreviousFoldersPage = false;
@@ -1077,6 +1089,12 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
             _folderWindow.ShowPage(offset, cached, insert);
             RebuildFolders();
             SyncFolderWindowState();
+
+            if (isInitialPage)
+            {
+                HasCompletedInitialFoldersLoad = true;
+            }
+
             return;
         }
 
@@ -1152,6 +1170,11 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
         {
             if (version == _foldersLoadVersion)
             {
+                if (isInitialPage)
+                {
+                    HasCompletedInitialFoldersLoad = true;
+                }
+
                 IsLoadingFolders = false;
                 IsLoadingNextFoldersPage = false;
                 IsLoadingPreviousFoldersPage = false;

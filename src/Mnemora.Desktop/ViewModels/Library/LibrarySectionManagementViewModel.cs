@@ -147,14 +147,14 @@ public sealed partial class LibrarySectionManagementViewModel(
         !HasMaterialsError &&
         string.IsNullOrWhiteSpace(SearchText) &&
         !HasActiveContentFilter &&
-        _materialWindow.TotalCount == 0;
+        !HasMaterials;
     public bool HasNoSearchResults =>
         HasSection &&
         HasCompletedInitialLoad &&
         !IsLoadingMaterials &&
         !HasMaterialsError &&
         (!string.IsNullOrWhiteSpace(SearchText) || HasActiveContentFilter) &&
-        _materialWindow.TotalCount == 0;
+        !HasMaterials;
     public bool HasTreeError => !string.IsNullOrWhiteSpace(TreeErrorMessage);
     public bool HasMaterialsError => !string.IsNullOrWhiteSpace(MaterialsErrorMessage);
     public bool HasMaterials => Materials.Count > 0;

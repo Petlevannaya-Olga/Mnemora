@@ -516,32 +516,29 @@
             </Border>
 
             <StackPanel
+                MaxWidth="520"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Visibility="{Binding HasNoSearchResults, Converter={StaticResource BooleanToVisibilityConverter}}">
-
                 <materialDesign:PackIcon
-                    Width="56"
-                    Height="56"
+                    Width="52"
+                    Height="52"
                     HorizontalAlignment="Center"
                     Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
                     Kind="Magnify" />
-
                 <TextBlock
-                    Margin="0,18,0,0"
-                    HorizontalAlignment="Stretch"
-                    TextAlignment="Center"
-                    FontSize="21"
+                    Margin="0,14,0,0"
+                    HorizontalAlignment="Center"
+                    FontSize="18"
                     FontWeight="SemiBold"
                     Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                    Text="Разделы не найдены" />
-
+                    Text="Ничего не найдено" />
                 <TextBlock
-                    Margin="0,8,0,0"
-                    HorizontalAlignment="Stretch"
-                    TextAlignment="Center"
+                    Margin="0,6,0,0"
+                    HorizontalAlignment="Center"
+                    FontSize="13"
                     Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                    Text="Попробуйте изменить поисковый запрос." />
+                    Text="По запросу ничего не найдено." />
             </StackPanel>
 
             <Grid>
