@@ -27,6 +27,7 @@ public sealed partial class LibrarySectionManagementViewModel(
         new(PageSize, VisiblePageLimit, CachePageLimit);
 
     private int _materialLoadVersion;
+    private CancellationTokenSource? _flatListReloadCancellationTokenSource;
 
     public ObservableCollection<LibrarySectionManagementTreeNodeViewModel> Roots { get; } = [];
     public ObservableCollection<LibraryManagementOrderItemViewModel> Materials { get; } = [];
@@ -47,6 +48,18 @@ public sealed partial class LibrarySectionManagementViewModel(
     [ObservableProperty]
     private LibrarySectionManagementSortOption _selectedSortOption =
         new("Мой порядок", LibrarySectionManagementItemSort.Custom);
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsAllContentFilter))]
+    [NotifyPropertyChangedFor(nameof(IsFoldersContentFilter))]
+    [NotifyPropertyChangedFor(nameof(IsArticlesContentFilter))]
+    [NotifyPropertyChangedFor(nameof(IsQuestionsContentFilter))]
+    [NotifyPropertyChangedFor(nameof(HasActiveContentFilter))]
+    [NotifyPropertyChangedFor(nameof(IsSectionEmpty))]
+    [NotifyPropertyChangedFor(nameof(HasNoSearchResults))]
+    [NotifyPropertyChangedFor(nameof(EmptyResultsDescription))]
+    private LibrarySectionManagementItemFilter _selectedContentFilter =
+        LibrarySectionManagementItemFilter.All;
 
 
     [ObservableProperty]
@@ -103,6 +116,11 @@ public sealed partial class LibrarySectionManagementViewModel(
     private bool _isLoadingMaterials;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSectionEmpty))]
+    [NotifyPropertyChangedFor(nameof(HasNoSearchResults))]
+    private bool _hasCompletedInitialLoad;
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsMaterialsPaging))]
     private bool _isLoadingNextMaterialsPage;
 
@@ -117,17 +135,25 @@ public sealed partial class LibrarySectionManagementViewModel(
                               (RootNode.ChildFoldersCount > 0 ||
                                RootNode.Children.Any(child => child.IsFolder));
     public bool HasRootMaterials => RootMaterialsCount > 0;
+    public bool IsAllContentFilter => SelectedContentFilter == LibrarySectionManagementItemFilter.All;
+    public bool IsFoldersContentFilter => SelectedContentFilter == LibrarySectionManagementItemFilter.Folders;
+    public bool IsArticlesContentFilter => SelectedContentFilter == LibrarySectionManagementItemFilter.Articles;
+    public bool IsQuestionsContentFilter => SelectedContentFilter == LibrarySectionManagementItemFilter.Questions;
+    public bool HasActiveContentFilter => !IsAllContentFilter;
     public bool IsSectionEmpty =>
         HasSection &&
+        HasCompletedInitialLoad &&
         !IsLoadingMaterials &&
         !HasMaterialsError &&
         string.IsNullOrWhiteSpace(SearchText) &&
+        !HasActiveContentFilter &&
         _materialWindow.TotalCount == 0;
     public bool HasNoSearchResults =>
         HasSection &&
+        HasCompletedInitialLoad &&
         !IsLoadingMaterials &&
         !HasMaterialsError &&
-        !string.IsNullOrWhiteSpace(SearchText) &&
+        (!string.IsNullOrWhiteSpace(SearchText) || HasActiveContentFilter) &&
         _materialWindow.TotalCount == 0;
     public bool HasTreeError => !string.IsNullOrWhiteSpace(TreeErrorMessage);
     public bool HasMaterialsError => !string.IsNullOrWhiteSpace(MaterialsErrorMessage);
@@ -149,6 +175,22 @@ public sealed partial class LibrarySectionManagementViewModel(
         ? "Создайте материал или выберите другое место в структуре."
         : "Создайте материал прямо в разделе или выберите папку.";
 
+    public string EmptyResultsDescription
+    {
+        get
+        {
+            bool hasSearch = !string.IsNullOrWhiteSpace(SearchText);
+
+            return (hasSearch, HasActiveContentFilter) switch
+            {
+                (true, true) => "Попробуйте изменить запрос или фильтр.",
+                (true, false) => "Попробуйте изменить запрос.",
+                (false, true) => "По выбранному фильтру ничего не найдено.",
+                _ => string.Empty,
+            };
+        }
+    }
+
     public string MaterialsShownCountText
     {
         get
@@ -168,7 +210,7 @@ public sealed partial class LibrarySectionManagementViewModel(
                 _materialWindow.CurrentPageOffset,
                 visibleCount,
                 _materialWindow.TotalCount,
-                isSearchResult: !string.IsNullOrWhiteSpace(SearchText));
+                isSearchResult: !string.IsNullOrWhiteSpace(SearchText) || HasActiveContentFilter);
         }
     }
 
@@ -178,6 +220,13 @@ public sealed partial class LibrarySectionManagementViewModel(
     {
         ArgumentNullException.ThrowIfNull(section);
 
+        _flatListReloadCancellationTokenSource?.Cancel();
+        _flatListReloadCancellationTokenSource?.Dispose();
+        _flatListReloadCancellationTokenSource = null;
+        Interlocked.Increment(ref _materialLoadVersion);
+
+        HasCompletedInitialLoad = false;
+        IsLoadingMaterials = true;
         Section = section;
         IsTreeCollapsed = false;
         TreeErrorMessage = null;
@@ -376,6 +425,22 @@ public sealed partial class LibrarySectionManagementViewModel(
             }
         }
     }
+
+    [RelayCommand]
+    private void SelectAllContent() =>
+        SelectedContentFilter = LibrarySectionManagementItemFilter.All;
+
+    [RelayCommand]
+    private void SelectFoldersContent() =>
+        SelectedContentFilter = LibrarySectionManagementItemFilter.Folders;
+
+    [RelayCommand]
+    private void SelectArticlesContent() =>
+        SelectedContentFilter = LibrarySectionManagementItemFilter.Articles;
+
+    [RelayCommand]
+    private void SelectQuestionsContent() =>
+        SelectedContentFilter = LibrarySectionManagementItemFilter.Questions;
 
     [RelayCommand]
     private void ToggleTree()
@@ -580,6 +645,7 @@ public sealed partial class LibrarySectionManagementViewModel(
         {
             if (version == _materialLoadVersion)
             {
+                HasCompletedInitialLoad = true;
                 IsLoadingMaterials = false;
                 NotifyMaterialsStateChanged();
             }
@@ -614,6 +680,7 @@ public sealed partial class LibrarySectionManagementViewModel(
             new GetLibrarySectionManagementItemsPageQuery(
                 Section.Id,
                 SearchText,
+                SelectedContentFilter,
                 SelectedSortOption.Sort,
                 offset,
                 PageSize),
@@ -718,29 +785,61 @@ public sealed partial class LibrarySectionManagementViewModel(
 
     partial void OnSearchTextChanged(string? value)
     {
-        if (Section is not null)
-        {
-            _ = ReloadFlatListFromUiAsync();
-        }
+        OnPropertyChanged(nameof(EmptyResultsDescription));
+        ScheduleFlatListReload(useDebounce: true);
     }
 
-    partial void OnSelectedSortOptionChanged(LibrarySectionManagementSortOption value)
+    partial void OnSelectedContentFilterChanged(LibrarySectionManagementItemFilter value)
     {
-        if (Section is not null)
-        {
-            _ = ReloadFlatListFromUiAsync();
-        }
+        OnPropertyChanged(nameof(MaterialsShownCountText));
+        OnPropertyChanged(nameof(EmptyResultsDescription));
+        ScheduleFlatListReload(useDebounce: false);
     }
 
-    private async Task ReloadFlatListFromUiAsync()
+    partial void OnSelectedSortOptionChanged(LibrarySectionManagementSortOption value) =>
+        ScheduleFlatListReload(useDebounce: false);
+
+    private void ScheduleFlatListReload(bool useDebounce)
+    {
+        if (Section is null || RootNode is null)
+        {
+            return;
+        }
+
+        _flatListReloadCancellationTokenSource?.Cancel();
+        _flatListReloadCancellationTokenSource?.Dispose();
+        _flatListReloadCancellationTokenSource = new CancellationTokenSource();
+        Interlocked.Increment(ref _materialLoadVersion);
+
+        // Empty-state must never be evaluated between changing UI parameters
+        // and starting the actual reload.
+        IsLoadingMaterials = true;
+        IsLoadingNextMaterialsPage = false;
+        IsLoadingPreviousMaterialsPage = false;
+        NotifyMaterialsStateChanged();
+
+        _ = ReloadFlatListFromUiAsync(
+            _flatListReloadCancellationTokenSource.Token,
+            useDebounce);
+    }
+
+    private async Task ReloadFlatListFromUiAsync(
+        CancellationToken cancellationToken,
+        bool useDebounce)
     {
         try
         {
-            await Task.Delay(250);
+            if (useDebounce)
+            {
+                await Task.Delay(250, cancellationToken);
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+            await YieldForPagingLoaderAsync(cancellationToken);
 
             if (RootNode is not null)
             {
-                await ReloadMaterialsAsync(RootNode, CancellationToken.None);
+                await ReloadMaterialsAsync(RootNode, cancellationToken);
             }
         }
         catch (OperationCanceledException)

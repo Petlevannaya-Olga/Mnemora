@@ -1,4 +1,4 @@
-using Mnemora.Shared.Abstractions;
+﻿using Mnemora.Shared.Abstractions;
 
 namespace Mnemora.Application.Library.GetSectionManagementItemsPage;
 
@@ -10,9 +10,18 @@ public enum LibrarySectionManagementItemSort
     Newest,
 }
 
+public enum LibrarySectionManagementItemFilter
+{
+    All,
+    Folders,
+    Articles,
+    Questions,
+}
+
 public sealed record GetLibrarySectionManagementItemsPageQuery(
     Guid SectionId,
     string? Search,
+    LibrarySectionManagementItemFilter Filter,
     LibrarySectionManagementItemSort Sort,
     int Offset,
     int PageSize)

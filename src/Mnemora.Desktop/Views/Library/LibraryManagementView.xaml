@@ -252,10 +252,10 @@
         </Style>
 
         <Style x:Key="MaterialFilterButtonStyle" TargetType="ToggleButton">
-            <Setter Property="Height" Value="46" />
-            <Setter Property="MinWidth" Value="90" />
-            <Setter Property="Margin" Value="8,0,0,0" />
-            <Setter Property="Padding" Value="16,0" />
+            <Setter Property="Height" Value="38" />
+            <Setter Property="MinWidth" Value="74" />
+            <Setter Property="Margin" Value="6,0,0,0" />
+            <Setter Property="Padding" Value="13,0" />
             <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
             <Setter Property="BorderBrush" Value="{DynamicResource Mnemora.Brush.Border}" />
             <Setter Property="BorderThickness" Value="1" />
@@ -270,7 +270,7 @@
                                 Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="9">
+                                CornerRadius="8">
                             <ContentPresenter HorizontalAlignment="Center"
                                               VerticalAlignment="Center" />
                         </Border>
@@ -1871,7 +1871,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="24" />
+                <RowDefinition Height="1" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="18" />
                 <RowDefinition Height="*" />
@@ -1996,21 +1996,49 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <StackPanel Grid.Row="0"
-                            Margin="0,0,0,12"
-                            Orientation="Horizontal">
-                    <TextBlock VerticalAlignment="Center"
-                               FontSize="16"
-                               FontWeight="SemiBold"
-                               Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                               Text="Содержимое" />
-                    <TextBlock Margin="10,2,0,0"
-                               VerticalAlignment="Center"
-                               FontSize="11"
-                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                               Opacity="0.72"
-                               Text="{Binding SectionStructure.MaterialsShownCountText, Converter={StaticResource LibraryRangeCounterTextConverter}}" />
-                </StackPanel>
+                <Grid Grid.Row="0" Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                   Text="Содержимое" />
+                        <TextBlock Margin="10,2,0,0"
+                                   VerticalAlignment="Center"
+                                   FontSize="11"
+                                   Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                   Opacity="0.72"
+                                   Text="{Binding SectionStructure.MaterialsShownCountText, Converter={StaticResource LibraryRangeCounterTextConverter}}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Orientation="Horizontal">
+                        <ToggleButton Margin="0"
+                                      Command="{Binding SectionStructure.SelectAllContentCommand}"
+                                      Content="Все"
+                                      IsChecked="{Binding SectionStructure.IsAllContentFilter, Mode=OneWay}"
+                                      Style="{StaticResource MaterialFilterButtonStyle}" />
+                        <ToggleButton Command="{Binding SectionStructure.SelectFoldersContentCommand}"
+                                      Content="Папки"
+                                      IsChecked="{Binding SectionStructure.IsFoldersContentFilter, Mode=OneWay}"
+                                      Style="{StaticResource MaterialFilterButtonStyle}" />
+                        <ToggleButton Command="{Binding SectionStructure.SelectArticlesContentCommand}"
+                                      Content="Статьи"
+                                      IsChecked="{Binding SectionStructure.IsArticlesContentFilter, Mode=OneWay}"
+                                      Style="{StaticResource MaterialFilterButtonStyle}" />
+                        <ToggleButton Command="{Binding SectionStructure.SelectQuestionsContentCommand}"
+                                      Content="Вопросы"
+                                      IsChecked="{Binding SectionStructure.IsQuestionsContentFilter, Mode=OneWay}"
+                                      Style="{StaticResource MaterialFilterButtonStyle}" />
+                    </StackPanel>
+                </Grid>
 
                 <Border Grid.Row="2"
                         Background="{DynamicResource Mnemora.Brush.Surface}"
@@ -2294,7 +2322,7 @@
                                HorizontalAlignment="Center"
                                FontSize="13"
                                Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                               Text="Попробуйте изменить запрос." />
+                               Text="{Binding SectionStructure.EmptyResultsDescription}" />
                 </StackPanel>
 
                 <Border Grid.Row="2"

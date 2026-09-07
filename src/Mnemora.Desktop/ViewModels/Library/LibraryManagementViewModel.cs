@@ -823,9 +823,11 @@ public sealed partial class LibraryManagementViewModel(
 
         SelectedTopic = null;
         SelectedSection = new LibraryManagementOrderItemViewModel(item.Source, position: 1);
+
+        Task initializationTask = SectionStructure.InitializeAsync(item.Source, cancellationToken);
         SimplePage = LibraryManagementSimplePage.SectionStructure;
 
-        await SectionStructure.InitializeAsync(item.Source, cancellationToken);
+        await initializationTask;
     }
 
     [RelayCommand]

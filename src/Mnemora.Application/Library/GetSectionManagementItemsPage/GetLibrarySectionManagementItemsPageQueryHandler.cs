@@ -1,4 +1,4 @@
-using CSharpFunctionalExtensions;
+﻿using CSharpFunctionalExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Mnemora.Application.Database;
@@ -47,6 +47,11 @@ public sealed class GetLibrarySectionManagementItemsPageQueryHandler(
             int pageSize = Math.Clamp(request.PageSize, 1, LibraryPagingDefaults.MaxQueryPageSize);
             string? search = request.Search?.Trim();
 
+            bool includeFolders = request.Filter is
+                LibrarySectionManagementItemFilter.All or
+                LibrarySectionManagementItemFilter.Folders;
+            bool includeMaterials = request.Filter is not LibrarySectionManagementItemFilter.Folders;
+
             IQueryable<LibraryContainer> sourceFolders = readDbContext.LibraryContainersRead
                 .Where(container => container.SectionId == sectionId && container.ParentId != null);
 
@@ -55,8 +60,19 @@ public sealed class GetLibrarySectionManagementItemsPageQueryHandler(
                     container.Id == material.ContainerId &&
                     container.SectionId == sectionId));
 
-            int sourceFoldersCount = await sourceFolders.CountAsync(cancellationToken);
-            int sourceMaterialsCount = await sourceMaterials.CountAsync(cancellationToken);
+            sourceMaterials = request.Filter switch
+            {
+                LibrarySectionManagementItemFilter.Articles => sourceMaterials.OfType<Article>(),
+                LibrarySectionManagementItemFilter.Questions => sourceMaterials.OfType<Question>(),
+                _ => sourceMaterials,
+            };
+
+            int sourceFoldersCount = includeFolders
+                ? await sourceFolders.CountAsync(cancellationToken)
+                : 0;
+            int sourceMaterialsCount = includeMaterials
+                ? await sourceMaterials.CountAsync(cancellationToken)
+                : 0;
             int sourceTotalCount = sourceFoldersCount + sourceMaterialsCount;
 
             IQueryable<LibraryContainer> folders = sourceFolders;
@@ -64,24 +80,34 @@ public sealed class GetLibrarySectionManagementItemsPageQueryHandler(
 
             if (!string.IsNullOrWhiteSpace(search))
             {
-                folders = folders.Where(folder =>
-                    MnemoraDbFunctions.UnicodeContains(
-                        EF.Property<string>(folder, nameof(LibraryContainer.Name)),
-                        search));
+                if (includeFolders)
+                {
+                    folders = folders.Where(folder =>
+                        MnemoraDbFunctions.UnicodeContains(
+                            EF.Property<string>(folder, nameof(LibraryContainer.Name)),
+                            search));
+                }
 
-                materials = materials.Where(material =>
-                    MnemoraDbFunctions.UnicodeContains(
-                        EF.Property<string>(material, nameof(Material.Title)),
-                        search));
+                if (includeMaterials)
+                {
+                    materials = materials.Where(material =>
+                        MnemoraDbFunctions.UnicodeContains(
+                            EF.Property<string>(material, nameof(Material.Title)),
+                            search));
+                }
             }
 
-            int foldersCount = string.IsNullOrWhiteSpace(search)
-                ? sourceFoldersCount
-                : await folders.CountAsync(cancellationToken);
+            int foldersCount = !includeFolders
+                ? 0
+                : string.IsNullOrWhiteSpace(search)
+                    ? sourceFoldersCount
+                    : await folders.CountAsync(cancellationToken);
 
-            int materialsCount = string.IsNullOrWhiteSpace(search)
-                ? sourceMaterialsCount
-                : await materials.CountAsync(cancellationToken);
+            int materialsCount = !includeMaterials
+                ? 0
+                : string.IsNullOrWhiteSpace(search)
+                    ? sourceMaterialsCount
+                    : await materials.CountAsync(cancellationToken);
 
             int totalCount = foldersCount + materialsCount;
             int remaining = pageSize;
