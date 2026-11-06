@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -139,7 +139,7 @@ public partial class CreateMaterialView
 
             preview.Title = viewModel.SummaryTitle;
             preview.TypeLabel = viewModel.SummaryMaterialTypeText;
-            preview.TopicName = viewModel.SummaryTopicName;
+            preview.LocationName = viewModel.SummaryTopicName;
             preview.Difficulty = viewModel.SummaryDifficultyText;
             preview.IconKind = viewModel.SelectedIconKind;
             preview.IsQuestion = viewModel.IsQuestionMaterial;

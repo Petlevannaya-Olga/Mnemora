@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Mnemora.Application.Database;
 using Mnemora.Application.Materials.Content;
 using Mnemora.Contracts;
+using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Materials;
 using Mnemora.Shared;
 using Mnemora.Shared.Abstractions;
@@ -16,6 +17,8 @@ public sealed class GetMaterialDetailsQueryHandler(
     ILogger<GetMaterialDetailsQueryHandler> logger)
     : IQueryHandler<MaterialDetailsDto, GetMaterialDetailsQuery>
 {
+    private const string RootLocationName = "Без папки";
+
     public async Task<Result<MaterialDetailsDto, Errors>> Handle(
         GetMaterialDetailsQuery query,
         CancellationToken cancellationToken = default)
@@ -43,36 +46,42 @@ public sealed class GetMaterialDetailsQueryHandler(
                     nameof(query.MaterialId)).ToErrors();
             }
 
-            var topic = await readDbContext.TopicsRead
-                .SingleOrDefaultAsync(
-                    topic => topic.Id == material.TopicId,
-                    cancellationToken);
+            var containerRow = await (
+                    from container in readDbContext.LibraryContainersRead
+                    join section in readDbContext.SectionsRead
+                        on container.SectionId equals section.Id
+                    where container.Id == material.ContainerId
+                    select new
+                    {
+                        Container = container,
+                        Section = section,
+                    })
+                .SingleOrDefaultAsync(cancellationToken);
 
-            if (topic is null)
+            if (containerRow is null)
             {
                 return CommonErrors.Failure(
-                    "material.topic.not.found",
-                    "Не удалось определить тему материала").ToErrors();
+                    "material.container.not.found",
+                    "Не удалось определить расположение материала").ToErrors();
             }
 
-            var section = await readDbContext.SectionsRead
-                .SingleOrDefaultAsync(
-                    section => section.Id == topic.SectionId,
-                    cancellationToken);
+            string? containerPath = await BuildContainerPathAsync(
+                containerRow.Container,
+                cancellationToken);
 
-            if (section is null)
+            if (containerPath is null)
             {
                 return CommonErrors.Failure(
-                    "material.section.not.found",
-                    "Не удалось определить раздел материала").ToErrors();
+                    "material.container.path.invalid",
+                    "Не удалось определить папку материала").ToErrors();
             }
 
             var metadata = new MaterialMetadataDto(
                 material.Id.Value,
-                topic.Id.Value,
-                topic.Name.Value,
-                section.Id.Value,
-                section.Name.Value,
+                containerRow.Container.Id.Value,
+                containerPath,
+                containerRow.Section.Id.Value,
+                containerRow.Section.Name.Value,
                 material.Title.Value,
                 material.Type.ToString(),
                 material.Difficulty.ToString(),
@@ -124,6 +133,56 @@ public sealed class GetMaterialDetailsQueryHandler(
                 "material.get.failed",
                 "Не удалось загрузить материал").ToErrors();
         }
+    }
+
+    private async Task<string?> BuildContainerPathAsync(
+        LibraryContainer container,
+        CancellationToken cancellationToken)
+    {
+        if (container.IsRoot)
+        {
+            return RootLocationName;
+        }
+
+        var names = new Stack<string>();
+        LibraryContainer current = container;
+
+        for (int level = 0; level < LibraryContainer.MaxFolderDepth; level++)
+        {
+            if (current.IsRoot)
+            {
+                break;
+            }
+
+            if (current.Name is null || current.ParentId is null)
+            {
+                return null;
+            }
+
+            names.Push(current.Name.Value);
+
+            LibraryContainerId parentId = current.ParentId!;
+            LibraryContainer? parent = await readDbContext.LibraryContainersRead
+                .SingleOrDefaultAsync(
+                    candidate => candidate.Id == parentId,
+                    cancellationToken);
+
+            if (parent is null || parent.SectionId != container.SectionId)
+            {
+                return null;
+            }
+
+            current = parent;
+        }
+
+        if (!current.IsRoot)
+        {
+            return null;
+        }
+
+        return names.Count == 0
+            ? RootLocationName
+            : string.Join(" / ", names);
     }
 
     private async Task<Result<MaterialDetailsDto, Errors>> CreateArticleDetailsAsync(

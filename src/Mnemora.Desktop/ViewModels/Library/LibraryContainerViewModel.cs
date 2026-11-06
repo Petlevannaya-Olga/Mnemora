@@ -44,6 +44,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
     private readonly IQueryDispatcher _queryDispatcher;
     private readonly IPageNavigationService _pageNavigationService;
     private readonly ISettingsService _settingsService;
+    private readonly IMaterialNavigationService _materialNavigationService;
     private readonly ILogger<LibraryContainerViewModel> _logger;
 
     private readonly BoundedPagedWindow<LibraryFolderDto> _folderWindow =
@@ -69,11 +70,13 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
         IQueryDispatcher queryDispatcher,
         IPageNavigationService pageNavigationService,
         ISettingsService settingsService,
+        IMaterialNavigationService materialNavigationService,
         ILogger<LibraryContainerViewModel> logger)
     {
         _queryDispatcher = queryDispatcher;
         _pageNavigationService = pageNavigationService;
         _settingsService = settingsService;
+        _materialNavigationService = materialNavigationService;
         _logger = logger;
 
         FilterOptions =
@@ -649,6 +652,23 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
 
         NavigateToContainer(folder.Id);
     }
+
+    [RelayCommand(CanExecute = nameof(CanOpenArticle))]
+    private void OpenArticle(LibraryMaterialListItemViewModel? material)
+    {
+        if (material is null)
+        {
+            return;
+        }
+
+        _materialNavigationService.OpenArticle(
+            material.Id,
+            LibraryArticleOpenOrigin.Overview);
+    }
+
+    private static bool CanOpenArticle(
+        LibraryMaterialListItemViewModel? material) =>
+        material?.IsArticle == true;
 
     [RelayCommand]
     private async Task ReloadAsync(CancellationToken cancellationToken)

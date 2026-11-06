@@ -837,6 +837,32 @@ public partial class LibraryManagementView : UserControl
         }
     }
 
+    private void SectionStructureContentTableRow_OnMouseLeftButtonUp(
+        object sender,
+        MouseButtonEventArgs e)
+    {
+        if (sender is not DataGridRow row ||
+            row.DataContext is not LibraryManagementOrderItemViewModel item ||
+            DataContext is not LibraryManagementViewModel viewModel)
+        {
+            return;
+        }
+
+        if (e.OriginalSource is DependencyObject source &&
+            FindAncestor<Button>(source) is not null)
+        {
+            return;
+        }
+
+        if (!viewModel.SectionStructure.OpenArticleCommand.CanExecute(item))
+        {
+            return;
+        }
+
+        viewModel.SectionStructure.OpenArticleCommand.Execute(item);
+        e.Handled = true;
+    }
+
     private void SimpleTopicTableRow_OnMouseLeftButtonUp(
         object sender,
         MouseButtonEventArgs e)

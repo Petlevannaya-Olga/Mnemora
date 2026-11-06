@@ -170,6 +170,8 @@ public partial class App : System.Windows.Application
         services.AddSingleton<OnboardingState>();
         services.AddSingleton<ISettingsService, JsonSettingsService>();
         services.AddSingleton<IMarkdownEditorService, MarkdownEditorService>();
+        services.AddSingleton<IMaterialEditorService, MaterialEditorService>();
+        services.AddSingleton<IMaterialNavigationService, MaterialNavigationService>();
         services.AddSingleton<IStoragePathProvider, StoragePathProvider>();
         services.AddSingleton(TimeProvider.System);
 
@@ -202,6 +204,7 @@ public partial class App : System.Windows.Application
         services.AddTransient<LibraryTopicViewModel>();
         services.AddTransient<LibrarySectionViewModel>();
         services.AddTransient<LibraryContainerViewModel>();
+        services.AddTransient<ArticleViewModel>();
         services.AddTransient<AllMaterialsViewModel>();
         services.AddTransient<LibraryOverviewViewModel>();
         services.AddTransient<CreateMaterialViewModel>();

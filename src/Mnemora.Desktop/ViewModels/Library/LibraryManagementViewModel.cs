@@ -10,6 +10,7 @@ using Mnemora.Application.Queries;
 using Mnemora.Contracts;
 using Mnemora.Contracts.Library;
 using Mnemora.Desktop.Dialogs;
+using Mnemora.Desktop.Navigation;
 using Mnemora.Desktop.Notifications;
 using Mnemora.Desktop.Settings;
 using Mnemora.Desktop.ViewModels.Common;
@@ -63,6 +64,7 @@ public sealed partial class LibraryManagementViewModel(
     IDialogService dialogService,
     ISettingsService settingsService,
     INotificationService notificationService,
+    IMaterialNavigationService materialNavigationService,
     CreateMaterialViewModel createMaterialViewModel,
     ILogger<LibraryManagementViewModel> logger)
     : ViewModelBase
@@ -74,7 +76,7 @@ public sealed partial class LibraryManagementViewModel(
     public CreateMaterialViewModel CreateMaterial { get; } = createMaterialViewModel;
 
     public LibrarySectionManagementViewModel SectionStructure { get; } =
-        new(queryDispatcher);
+        new(queryDispatcher, materialNavigationService);
 
     private const int SimpleSectionPageSize = LibraryPagingDefaults.PageSize;
     private const int SimpleMaterialPageSize = LibraryPagingDefaults.PageSize;

@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -61,17 +61,17 @@ public partial class MaterialPreviewView : UserControl
         set => SetValue(TypeLabelProperty, value);
     }
 
-    public static readonly DependencyProperty TopicNameProperty =
+    public static readonly DependencyProperty LocationNameProperty =
         DependencyProperty.Register(
-            nameof(TopicName),
+            nameof(LocationName),
             typeof(string),
             typeof(MaterialPreviewView),
             new PropertyMetadata(string.Empty));
 
-    public string TopicName
+    public string LocationName
     {
-        get => (string)GetValue(TopicNameProperty);
-        set => SetValue(TopicNameProperty, value);
+        get => (string)GetValue(LocationNameProperty);
+        set => SetValue(LocationNameProperty, value);
     }
 
     public static readonly DependencyProperty DifficultyProperty =
@@ -1609,7 +1609,7 @@ public partial class MaterialPreviewView : UserControl
         {
             Title = Title,
             TypeLabel = TypeLabel,
-            TopicName = TopicName,
+            LocationName = LocationName,
             Difficulty = Difficulty,
             IconKind = IconKind,
             IsQuestion = IsQuestion,

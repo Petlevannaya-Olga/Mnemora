@@ -1,0 +1,195 @@
+﻿<UserControl
+    x:Class="Mnemora.Desktop.Views.Library.ArticleView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:library="clr-namespace:Mnemora.Desktop.Views.Library"
+    xmlns:loading="clr-namespace:Mnemora.Desktop.Controls.Loading"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Loaded="ArticleView_OnLoaded"
+    Unloaded="ArticleView_OnUnloaded"
+    SnapsToDevicePixels="True"
+    TextOptions.TextFormattingMode="Display"
+    TextOptions.TextRenderingMode="ClearType"
+    UseLayoutRounding="True"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+
+        <Style x:Key="BreadcrumbButtonStyle" TargetType="Button">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.Secondary}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Opacity" Value="0.72" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="32,24,32,28">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="18" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                <Button Command="{Binding NavigateLibraryCommand}" Style="{StaticResource BreadcrumbButtonStyle}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Width="17" Height="17" Margin="0,0,5,0" VerticalAlignment="Center" Kind="HomeOutline" />
+                        <TextBlock VerticalAlignment="Center" FontSize="14" Text="Библиотека" />
+                    </StackPanel>
+                </Button>
+
+                <ItemsControl ItemsSource="{Binding Breadcrumbs}"
+                              Visibility="{Binding HasArticle, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Width="17"
+                                                         Height="17"
+                                                         Margin="7,0"
+                                                         VerticalAlignment="Center"
+                                                         Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                                         Kind="ChevronRight" />
+
+                                <Grid VerticalAlignment="Center">
+                                    <Button Command="{Binding DataContext.NavigateBreadcrumbCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                            CommandParameter="{Binding}">
+                                        <TextBlock FontSize="14" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                        <Button.Style>
+                                            <Style BasedOn="{StaticResource BreadcrumbButtonStyle}" TargetType="Button">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsCurrent}" Value="True">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+
+                                    <TextBlock VerticalAlignment="Center"
+                                               FontSize="14"
+                                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                               Text="{Binding Name}"
+                                               TextTrimming="CharacterEllipsis">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsCurrent}" Value="True">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+
+            <Button Grid.Column="1"
+                    Height="42"
+                    MinWidth="150"
+                    Padding="16,0"
+                    Command="{Binding EditCommand}"
+                    Style="{StaticResource Mnemora.PrimaryButton}"
+                    Visibility="{Binding HasArticle, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Width="18"
+                                             Height="18"
+                                             VerticalAlignment="Center"
+                                             Kind="PencilOutline" />
+                    <TextBlock Margin="8,0,0,0"
+                               VerticalAlignment="Center"
+                               Text="Редактировать" />
+                </StackPanel>
+            </Button>
+        </Grid>
+
+        <Grid Grid.Row="2">
+            <library:MaterialPreviewView Title="{Binding Title}"
+                                         LocationName="{Binding FolderPath}"
+                                         Difficulty="{Binding DifficultyText}"
+                                         IconKind="{Binding IconKind}"
+                                         Tags="{Binding Tags}"
+                                         BodyMarkdown="{Binding BodyMarkdown}"
+                                         TypeLabel="Статья"
+                                         IsQuestion="False"
+                                         Visibility="{Binding HasArticle, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
+            <loading:LoadingIndicator HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      ShowDelay="0"
+                                      IndicatorLength="320"
+                                      IndicatorThickness="7"
+                                      Message="Загружаем статью..."
+                                      Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
+            <Border MaxWidth="520"
+                    Padding="28"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Background="{DynamicResource Mnemora.Brush.Surface}"
+                    BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                    BorderThickness="1"
+                    CornerRadius="16"
+                    Visibility="{Binding HasError, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <StackPanel>
+                    <materialDesign:PackIcon Width="46"
+                                             Height="46"
+                                             HorizontalAlignment="Center"
+                                             Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                             Kind="AlertCircleOutline" />
+                    <TextBlock Margin="0,16,0,0"
+                               HorizontalAlignment="Center"
+                               FontSize="20"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                               Text="Не удалось открыть статью" />
+                    <TextBlock Margin="0,8,0,0"
+                               HorizontalAlignment="Center"
+                               TextAlignment="Center"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                               Text="{Binding ErrorMessage}" />
+                    <Button Margin="0,18,0,0"
+                            Height="42"
+                            MinWidth="130"
+                            HorizontalAlignment="Center"
+                            Command="{Binding RetryCommand}"
+                            Content="Повторить"
+                            Style="{StaticResource Mnemora.SecondaryButton}" />
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

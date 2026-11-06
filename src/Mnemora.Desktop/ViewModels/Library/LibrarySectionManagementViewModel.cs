@@ -8,6 +8,7 @@ using Mnemora.Application.Library.GetSectionManagementItemsPage;
 using Mnemora.Application.Queries;
 using Mnemora.Contracts;
 using Mnemora.Contracts.Library;
+using Mnemora.Desktop.Navigation;
 
 namespace Mnemora.Desktop.ViewModels.Library;
 
@@ -16,7 +17,8 @@ public sealed record LibrarySectionManagementSortOption(
     LibrarySectionManagementItemSort Sort);
 
 public sealed partial class LibrarySectionManagementViewModel(
-    IQueryDispatcher queryDispatcher)
+    IQueryDispatcher queryDispatcher,
+    IMaterialNavigationService? materialNavigationService = null)
     : ObservableObject
 {
     private const int PageSize = LibraryPagingDefaults.PageSize;
@@ -456,6 +458,24 @@ public sealed partial class LibrarySectionManagementViewModel(
             await SelectNodeAsync(RootNode, cancellationToken);
         }
     }
+
+    [RelayCommand(CanExecute = nameof(CanOpenArticle))]
+    private void OpenArticle(LibraryManagementOrderItemViewModel? item)
+    {
+        if (item is null || materialNavigationService is null)
+        {
+            return;
+        }
+
+        materialNavigationService.OpenArticle(
+            item.Id,
+            LibraryArticleOpenOrigin.Management);
+    }
+
+    private bool CanOpenArticle(
+        LibraryManagementOrderItemViewModel? item) =>
+        materialNavigationService is not null &&
+        item is { IsManagementFolder: false, IsArticle: true };
 
     [RelayCommand]
     private async Task RetryMaterialsAsync(CancellationToken cancellationToken)

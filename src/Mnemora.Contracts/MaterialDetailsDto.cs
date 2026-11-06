@@ -2,8 +2,8 @@
 
 public sealed record MaterialMetadataDto(
     Guid Id,
-    Guid TopicId,
-    string TopicName,
+    Guid ContainerId,
+    string ContainerPath,
     Guid SectionId,
     string SectionName,
     string Title,

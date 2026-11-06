@@ -176,6 +176,28 @@
             <Setter Property="CornerRadius" Value="13" />
         </Style>
 
+        <Style x:Key="MaterialLargeCardStyle"
+               BasedOn="{StaticResource LargeCardStyle}"
+               TargetType="Border">
+            <EventSetter Event="MouseLeftButtonUp" Handler="MaterialCard_OnMouseLeftButtonUp" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsArticle}" Value="True">
+                    <Setter Property="Cursor" Value="Hand" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="MaterialCompactCardStyle"
+               BasedOn="{StaticResource CompactCardStyle}"
+               TargetType="Border">
+            <EventSetter Event="MouseLeftButtonUp" Handler="MaterialCard_OnMouseLeftButtonUp" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsArticle}" Value="True">
+                    <Setter Property="Cursor" Value="Hand" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
         <Style x:Key="SectionHeaderTextStyle" TargetType="TextBlock">
             <Setter Property="FontSize" Value="18" />
             <Setter Property="FontWeight" Value="SemiBold" />
@@ -284,6 +306,17 @@
             </Setter>
         </Style>
 
+        <Style x:Key="ArticleMaterialTableRowStyle"
+               BasedOn="{StaticResource MaterialTableRowStyle}"
+               TargetType="DataGridRow">
+            <EventSetter Event="MouseLeftButtonUp" Handler="MaterialTableRow_OnMouseLeftButtonUp" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsArticle}" Value="True">
+                    <Setter Property="Cursor" Value="Hand" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
         <Style x:Key="FolderTableRowStyle" BasedOn="{StaticResource MaterialTableRowStyle}" TargetType="DataGridRow">
             <EventSetter Event="MouseLeftButtonUp" Handler="FolderTableRow_OnMouseLeftButtonUp" />
             <Setter Property="Cursor" Value="Hand" />
@@ -293,6 +326,9 @@
             <EventSetter Event="MouseLeftButtonUp" Handler="MixedContentTableRow_OnMouseLeftButtonUp" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsFolder}" Value="True">
+                    <Setter Property="Cursor" Value="Hand" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsArticle}" Value="True">
                     <Setter Property="Cursor" Value="Hand" />
                 </DataTrigger>
             </Style.Triggers>
@@ -382,7 +418,7 @@
         </Style>
         <!-- Плитки материалов: те же режимы, что и у папок -->
         <DataTemplate x:Key="MaterialLargeTileTemplate">
-            <Border Style="{StaticResource LargeCardStyle}">
+            <Border Style="{StaticResource MaterialLargeCardStyle}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -425,7 +461,7 @@
         </DataTemplate>
 
         <DataTemplate x:Key="MaterialCompactTileTemplate">
-            <Border Style="{StaticResource CompactCardStyle}">
+            <Border Style="{StaticResource MaterialCompactCardStyle}">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
@@ -488,7 +524,7 @@
                         </Grid>
                     </Border>
                 </Button>
-                <Border Style="{StaticResource LargeCardStyle}" Visibility="{Binding IsMaterial, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <Border Style="{StaticResource MaterialLargeCardStyle}" Visibility="{Binding IsMaterial, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -531,7 +567,7 @@
                         </Grid>
                     </Border>
                 </Button>
-                <Border Style="{StaticResource CompactCardStyle}" Visibility="{Binding IsMaterial, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <Border Style="{StaticResource MaterialCompactCardStyle}" Visibility="{Binding IsMaterial, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <Grid>
                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                         <Border Width="40" Height="40" VerticalAlignment="Center" CornerRadius="10">
@@ -1290,7 +1326,7 @@
                         HeadersVisibility="Column"
                         IsReadOnly="True"
                         RowHeaderWidth="0"
-                        RowStyle="{StaticResource MaterialTableRowStyle}"
+                        RowStyle="{StaticResource ArticleMaterialTableRowStyle}"
                         ScrollViewer.CanContentScroll="True"
                         ScrollViewer.HorizontalScrollBarVisibility="Auto"
                         ScrollViewer.ScrollChanged="MaterialsScroll_OnScrollChanged"

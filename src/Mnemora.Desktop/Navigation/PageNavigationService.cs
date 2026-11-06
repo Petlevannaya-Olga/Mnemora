@@ -5,7 +5,11 @@ namespace Mnemora.Desktop.Navigation;
 
 public sealed class PageNavigationService(IServiceProvider serviceProvider) : IPageNavigationService
 {
+    private ViewModelBase? _previousPageViewModel;
+
     public ViewModelBase? CurrentPageViewModel { get; private set; }
+
+    public bool CanNavigateBack => _previousPageViewModel is not null;
 
     public event EventHandler? CurrentPageViewModelChanged;
 
@@ -19,10 +23,19 @@ public sealed class PageNavigationService(IServiceProvider serviceProvider) : IP
         ArgumentNullException.ThrowIfNull(initialize);
 
         var viewModel = serviceProvider.GetRequiredService<TViewModel>();
-
         initialize(viewModel);
 
+        _previousPageViewModel = CurrentPageViewModel;
         CurrentPageViewModel = viewModel;
+        CurrentPageViewModelChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void NavigateBack()
+    {
+        if (_previousPageViewModel is null) return;
+
+        CurrentPageViewModel = _previousPageViewModel;
+        _previousPageViewModel = null;
         CurrentPageViewModelChanged?.Invoke(this, EventArgs.Empty);
     }
 }

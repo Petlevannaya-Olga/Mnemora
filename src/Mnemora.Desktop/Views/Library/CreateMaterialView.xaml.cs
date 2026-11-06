@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -62,7 +62,7 @@ public partial class CreateMaterialView : UserControl
         if (FindName("ReviewMaterialPreview") is MaterialPreviewView preview)
         {
             preview.Title = string.Empty;
-            preview.TopicName = string.Empty;
+            preview.LocationName = string.Empty;
             preview.Difficulty = string.Empty;
             preview.Tags = Array.Empty<string>();
             preview.BodyMarkdown = string.Empty;
@@ -336,7 +336,7 @@ public partial class CreateMaterialView : UserControl
                     : "Статья";
             preview.IsQuestion =
                 isQuestion;
-            preview.TopicName =
+            preview.LocationName =
                 viewModel.SelectedTopic?.Name
                 ?? string.Empty;
             preview.Difficulty =

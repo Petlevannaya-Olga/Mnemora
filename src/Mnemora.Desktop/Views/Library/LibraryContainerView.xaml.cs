@@ -497,6 +497,45 @@ public partial class LibraryContainerView : UserControl
                 GridUnitType.Star);
     }
 
+    private void MaterialCard_OnMouseLeftButtonUp(
+        object sender,
+        MouseButtonEventArgs e)
+    {
+        if (sender is not FrameworkElement element ||
+            DataContext is not LibraryContainerViewModel viewModel)
+        {
+            return;
+        }
+
+        LibraryMaterialListItemViewModel? material =
+            element.DataContext switch
+            {
+                LibraryMaterialListItemViewModel directMaterial =>
+                    directMaterial,
+                LibraryContentListItemViewModel { Material: { } mixedMaterial } =>
+                    mixedMaterial,
+                _ => null,
+            };
+
+        TryOpenArticle(viewModel, material, e);
+    }
+
+    private void MaterialTableRow_OnMouseLeftButtonUp(
+        object sender,
+        MouseButtonEventArgs e)
+    {
+        if (sender is not DataGridRow
+            {
+                DataContext: LibraryMaterialListItemViewModel material,
+            } ||
+            DataContext is not LibraryContainerViewModel viewModel)
+        {
+            return;
+        }
+
+        TryOpenArticle(viewModel, material, e);
+    }
+
     private void FolderTableRow_OnMouseLeftButtonUp(
         object sender,
         MouseButtonEventArgs e)
@@ -521,19 +560,36 @@ public partial class LibraryContainerView : UserControl
     {
         if (sender is not DataGridRow
             {
-                DataContext: LibraryContentListItemViewModel
-                {
-                    IsFolder: true,
-                    Folder: { } folder,
-                },
+                DataContext: LibraryContentListItemViewModel item,
             } ||
-            DataContext is not LibraryContainerViewModel viewModel ||
-            !viewModel.OpenFolderCommand.CanExecute(folder))
+            DataContext is not LibraryContainerViewModel viewModel)
         {
             return;
         }
 
-        viewModel.OpenFolderCommand.Execute(folder);
+        if (item is { IsFolder: true, Folder: { } folder } &&
+            viewModel.OpenFolderCommand.CanExecute(folder))
+        {
+            viewModel.OpenFolderCommand.Execute(folder);
+            e.Handled = true;
+            return;
+        }
+
+        TryOpenArticle(viewModel, item.Material, e);
+    }
+
+    private static void TryOpenArticle(
+        LibraryContainerViewModel viewModel,
+        LibraryMaterialListItemViewModel? material,
+        MouseButtonEventArgs e)
+    {
+        if (material is null ||
+            !viewModel.OpenArticleCommand.CanExecute(material))
+        {
+            return;
+        }
+
+        viewModel.OpenArticleCommand.Execute(material);
         e.Handled = true;
     }
 

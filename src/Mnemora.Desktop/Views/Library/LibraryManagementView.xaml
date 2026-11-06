@@ -770,6 +770,17 @@
             </Setter>
         </Style>
 
+        <Style x:Key="ManagementContentTableRowStyle"
+               BasedOn="{StaticResource SimpleSectionTableRowStyle}"
+               TargetType="DataGridRow">
+            <EventSetter Event="MouseLeftButtonUp" Handler="SectionStructureContentTableRow_OnMouseLeftButtonUp" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsArticle}" Value="True">
+                    <Setter Property="Cursor" Value="Hand" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
         <Style x:Key="SimpleSectionTableCellStyle" TargetType="DataGridCell">
             <Setter Property="Padding" Value="16,9" />
             <Setter Property="Background" Value="Transparent" />
@@ -1270,6 +1281,7 @@
         </Style>
 
         <Style x:Key="SimpleMaterialTableRowStyle" TargetType="DataGridRow">
+            <EventSetter Event="MouseLeftButtonUp" Handler="SectionStructureContentTableRow_OnMouseLeftButtonUp" />
             <Setter Property="MinHeight" Value="64" />
             <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
             <Setter Property="BorderThickness" Value="0" />
@@ -1303,6 +1315,11 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsArticle}" Value="True">
+                    <Setter Property="Cursor" Value="Hand" />
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
 
         <Style
@@ -2068,7 +2085,7 @@
                               IsReadOnly="True"
                               ItemsSource="{Binding SectionStructure.Materials}"
                               RowHeaderWidth="0"
-                              RowStyle="{StaticResource SimpleSectionTableRowStyle}"
+                              RowStyle="{StaticResource ManagementContentTableRowStyle}"
                               ScrollViewer.CanContentScroll="True"
                               ScrollViewer.HorizontalScrollBarVisibility="Auto"
                               ScrollViewer.ScrollChanged="SectionStructureMaterialsScroll_OnScrollChanged"

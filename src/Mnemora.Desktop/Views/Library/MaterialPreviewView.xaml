@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     x:Class="Mnemora.Desktop.Views.Library.MaterialPreviewView"
     x:Name="Root"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -160,7 +160,7 @@
                                 <TextBlock VerticalAlignment="Center"
                                            FontSize="12"
                                            Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                                           Text="{Binding TopicName, ElementName=Root}" />
+                                           Text="{Binding LocationName, ElementName=Root}" />
                             </StackPanel>
                         </Border>
 
