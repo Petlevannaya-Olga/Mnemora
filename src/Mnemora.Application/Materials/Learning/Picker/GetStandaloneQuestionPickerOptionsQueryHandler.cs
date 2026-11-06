@@ -68,7 +68,7 @@ public sealed class GetStandaloneQuestionPickerOptionsQueryHandler(
 
             IReadOnlyList<StandaloneQuestionPickerOptionDto> ordered = result
                 .OrderBy(option => option.SectionName, StringComparer.CurrentCultureIgnoreCase)
-                .ThenBy(option => option.TopicName, StringComparer.CurrentCultureIgnoreCase)
+                .ThenBy(option => option.ContainerName, StringComparer.CurrentCultureIgnoreCase)
                 .ThenBy(option => option.Title, StringComparer.CurrentCultureIgnoreCase)
                 .ToArray();
 

@@ -217,11 +217,11 @@ public sealed partial class CreateMaterialViewModel(
 
     public bool HasQuestionsMovingToArticleTopic =>
         AvailableQuestions.Any(question =>
-            question.MovesToArticleTopic);
+            question.MovesToArticleContainer);
 
     public int QuestionsMovingToArticleTopicCount =>
         AvailableQuestions.Count(question =>
-            question.MovesToArticleTopic);
+            question.MovesToArticleContainer);
 
     public string QuestionsMovingToArticleTopicText =>
         QuestionsMovingToArticleTopicCount == 0
@@ -740,7 +740,7 @@ public sealed partial class CreateMaterialViewModel(
                  in selectedQuestions
                      .OrderBy(option => option.SectionName,
                          StringComparer.CurrentCultureIgnoreCase)
-                     .ThenBy(option => option.TopicName,
+                     .ThenBy(option => option.ContainerName,
                          StringComparer.CurrentCultureIgnoreCase)
                      .ThenBy(option => option.Title,
                          StringComparer.CurrentCultureIgnoreCase))
@@ -1181,8 +1181,8 @@ public sealed class LearningQuestionOptionViewModel
 {
     public LearningQuestionOptionViewModel(
         StandaloneQuestionPickerOptionDto option,
-        Guid targetTopicId,
-        string targetTopicName)
+        Guid targetContainerId,
+        string targetContainerName)
     {
         ArgumentNullException.ThrowIfNull(option);
 
@@ -1191,12 +1191,12 @@ public sealed class LearningQuestionOptionViewModel
         Difficulty = FormatDifficulty(option.Difficulty);
         StudyPoints = option.StudyPoints;
         ReviewPoints = option.ReviewPoints;
-        TopicId = option.TopicId;
-        TopicName = option.TopicName;
+        ContainerId = option.ContainerId;
+        ContainerName = option.ContainerName;
         SectionId = option.SectionId;
         SectionName = option.SectionName;
-        TargetTopicId = targetTopicId;
-        TargetTopicName = targetTopicName;
+        TargetContainerId = targetContainerId;
+        TargetContainerName = targetContainerName;
     }
 
     public Guid Id { get; }
@@ -1209,27 +1209,27 @@ public sealed class LearningQuestionOptionViewModel
 
     public int ReviewPoints { get; }
 
-    public Guid TopicId { get; }
+    public Guid ContainerId { get; }
 
-    public string TopicName { get; }
+    public string ContainerName { get; }
 
     public Guid SectionId { get; }
 
     public string SectionName { get; }
 
-    public Guid TargetTopicId { get; }
+    public Guid TargetContainerId { get; }
 
-    public string TargetTopicName { get; }
+    public string TargetContainerName { get; }
 
-    public bool MovesToArticleTopic =>
-        TopicId != TargetTopicId;
+    public bool MovesToArticleContainer =>
+        ContainerId != TargetContainerId;
 
     public string OriginText =>
-        $"{SectionName} → {TopicName}";
+        $"{SectionName} → {ContainerName}";
 
     public string MoveText =>
-        MovesToArticleTopic
-            ? $"Будет перенесён в «{TargetTopicName}»"
+        MovesToArticleContainer
+            ? $"Будет перенесён в «{TargetContainerName}»"
             : "Уже находится там же, где статья";
 
     public string ExperienceText =>

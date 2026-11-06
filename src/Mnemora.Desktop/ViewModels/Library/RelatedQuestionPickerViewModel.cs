@@ -7,8 +7,8 @@ namespace Mnemora.Desktop.ViewModels.Library;
 public sealed partial class RelatedQuestionPickerViewModel : ObservableObject
 {
     private readonly List<StandaloneQuestionPickerItemViewModel> _allQuestions;
-    private readonly Guid _targetTopicId;
-    private readonly string _targetTopicName;
+    private readonly Guid _targetContainerId;
+    private readonly string _targetContainerName;
 
     [ObservableProperty]
     private string? _searchText;
@@ -16,14 +16,14 @@ public sealed partial class RelatedQuestionPickerViewModel : ObservableObject
     public RelatedQuestionPickerViewModel(
         IReadOnlyList<StandaloneQuestionPickerOptionDto> options,
         IReadOnlyCollection<Guid> selectedQuestionIds,
-        Guid targetTopicId,
-        string targetTopicName)
+        Guid targetContainerId,
+        string targetContainerName)
     {
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(selectedQuestionIds);
 
-        _targetTopicId = targetTopicId;
-        _targetTopicName = targetTopicName;
+        _targetContainerId = targetContainerId;
+        _targetContainerName = targetContainerName;
 
         HashSet<Guid> selected = selectedQuestionIds.ToHashSet();
 
@@ -31,7 +31,7 @@ public sealed partial class RelatedQuestionPickerViewModel : ObservableObject
             .Select(option =>
                 new StandaloneQuestionPickerItemViewModel(
                     option,
-                    targetTopicId,
+                    targetContainerId,
                     OnSelectionChanged))
             .ToList();
 
@@ -46,14 +46,14 @@ public sealed partial class RelatedQuestionPickerViewModel : ObservableObject
 
         // Чаще всего нужные вопросы находятся рядом со статьёй. Если в выбранном месте
         // нет самостоятельных вопросов, сразу показываем всю библиотеку.
-        var targetTopic = Sections
-            .SelectMany(section => section.Topics)
-            .FirstOrDefault(topic => topic.Id == targetTopicId);
+        var targetContainer = Sections
+            .SelectMany(section => section.Containers)
+            .FirstOrDefault(container => container.Id == targetContainerId);
 
-        if (targetTopic is not null &&
-            _allQuestions.Any(question => question.TopicId == targetTopicId))
+        if (targetContainer is not null &&
+            _allQuestions.Any(question => question.ContainerId == targetContainerId))
         {
-            SelectTopic(targetTopicId);
+            SelectContainer(targetContainerId);
         }
         else
         {
@@ -72,7 +72,7 @@ public sealed partial class RelatedQuestionPickerViewModel : ObservableObject
     public bool IsAllSelected =>
         Sections.All(section =>
             !section.IsSelected &&
-            section.Topics.All(topic => !topic.IsSelected));
+            section.Containers.All(container => !container.IsSelected));
 
     public bool HasQuestions =>
         VisibleQuestions.Count > 0;
@@ -95,19 +95,19 @@ public sealed partial class RelatedQuestionPickerViewModel : ObservableObject
             ? "Ничего не выбрано"
             : $"Выбрано: {FormatCount(SelectedCount, "вопрос", "вопроса", "вопросов")}";
 
-    public int CrossTopicSelectedCount =>
+    public int CrossContainerSelectedCount =>
         _allQuestions.Count(question =>
             question.IsSelected &&
-            question.TopicId != _targetTopicId);
+            question.ContainerId != _targetContainerId);
 
-    public bool HasCrossTopicSelection =>
-        CrossTopicSelectedCount > 0;
+    public bool HasCrossContainerSelection =>
+        CrossContainerSelectedCount > 0;
 
     public string MoveWarningText =>
-        CrossTopicSelectedCount == 0
+        CrossContainerSelectedCount == 0
             ? string.Empty
-            : $"В других местах выбрано: {CrossTopicSelectedCount}. " +
-              $"После создания статьи эти вопросы будут перенесены в «{_targetTopicName}».";
+            : $"В других местах выбрано: {CrossContainerSelectedCount}. " +
+              $"После создания статьи эти вопросы будут перенесены в «{_targetContainerName}».";
 
     public IReadOnlyList<StandaloneQuestionPickerOptionDto>
         GetSelectedOptions() =>
@@ -127,9 +127,9 @@ public sealed partial class RelatedQuestionPickerViewModel : ObservableObject
         {
             section.IsSelected = false;
 
-            foreach (StandaloneQuestionPickerTopicViewModel topic in section.Topics)
+            foreach (StandaloneQuestionPickerContainerViewModel container in section.Containers)
             {
-                topic.IsSelected = false;
+                container.IsSelected = false;
             }
         }
 
@@ -143,9 +143,9 @@ public sealed partial class RelatedQuestionPickerViewModel : ObservableObject
         {
             section.IsSelected = section.Id == sectionId;
 
-            foreach (StandaloneQuestionPickerTopicViewModel topic in section.Topics)
+            foreach (StandaloneQuestionPickerContainerViewModel container in section.Containers)
             {
-                topic.IsSelected = false;
+                container.IsSelected = false;
             }
         }
 
@@ -153,15 +153,15 @@ public sealed partial class RelatedQuestionPickerViewModel : ObservableObject
         ApplyFilter();
     }
 
-    public void SelectTopic(Guid topicId)
+    public void SelectContainer(Guid containerId)
     {
         foreach (StandaloneQuestionPickerSectionViewModel section in Sections)
         {
             section.IsSelected = false;
 
-            foreach (StandaloneQuestionPickerTopicViewModel topic in section.Topics)
+            foreach (StandaloneQuestionPickerContainerViewModel container in section.Containers)
             {
-                topic.IsSelected = topic.Id == topicId;
+                container.IsSelected = container.Id == containerId;
             }
         }
 
@@ -180,15 +180,15 @@ public sealed partial class RelatedQuestionPickerViewModel : ObservableObject
                 sectionGroup.Key.SectionId,
                 sectionGroup.Key.SectionName);
 
-            foreach (var topicGroup in sectionGroup
-                         .GroupBy(option => new { option.TopicId, option.TopicName })
-                         .OrderBy(group => group.Key.TopicName, StringComparer.CurrentCultureIgnoreCase))
+            foreach (var containerGroup in sectionGroup
+                         .GroupBy(option => new { option.ContainerId, option.ContainerName })
+                         .OrderBy(group => group.Key.ContainerName, StringComparer.CurrentCultureIgnoreCase))
             {
-                section.Topics.Add(
-                    new StandaloneQuestionPickerTopicViewModel(
-                        topicGroup.Key.TopicId,
-                        topicGroup.Key.TopicName,
-                        topicGroup.Count()));
+                section.Containers.Add(
+                    new StandaloneQuestionPickerContainerViewModel(
+                        containerGroup.Key.ContainerId,
+                        containerGroup.Key.ContainerName,
+                        containerGroup.Count()));
             }
 
             Sections.Add(section);
@@ -203,9 +203,9 @@ public sealed partial class RelatedQuestionPickerViewModel : ObservableObject
             .FirstOrDefault(section => section.IsSelected)
             ?.Id;
 
-        Guid? selectedTopicId = Sections
-            .SelectMany(section => section.Topics)
-            .FirstOrDefault(topic => topic.IsSelected)
+        Guid? selectedContainerId = Sections
+            .SelectMany(section => section.Containers)
+            .FirstOrDefault(container => container.IsSelected)
             ?.Id;
 
         IEnumerable<StandaloneQuestionPickerItemViewModel> query = _allQuestions;
@@ -216,12 +216,12 @@ public sealed partial class RelatedQuestionPickerViewModel : ObservableObject
         {
             query = query.Where(question =>
                 question.Title.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                question.TopicName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                question.ContainerName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
                 question.SectionName.Contains(search, StringComparison.OrdinalIgnoreCase));
         }
-        else if (selectedTopicId is not null)
+        else if (selectedContainerId is not null)
         {
-            query = query.Where(question => question.TopicId == selectedTopicId.Value);
+            query = query.Where(question => question.ContainerId == selectedContainerId.Value);
         }
         else if (selectedSectionId is not null)
         {
@@ -249,8 +249,8 @@ public sealed partial class RelatedQuestionPickerViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(SelectedCount));
         OnPropertyChanged(nameof(SelectedCountText));
-        OnPropertyChanged(nameof(CrossTopicSelectedCount));
-        OnPropertyChanged(nameof(HasCrossTopicSelection));
+        OnPropertyChanged(nameof(CrossContainerSelectedCount));
+        OnPropertyChanged(nameof(HasCrossContainerSelection));
         OnPropertyChanged(nameof(MoveWarningText));
     }
 
@@ -278,7 +278,7 @@ public sealed partial class RelatedQuestionPickerViewModel : ObservableObject
 
 public sealed partial class StandaloneQuestionPickerItemViewModel(
     StandaloneQuestionPickerOptionDto option,
-    Guid targetTopicId,
+    Guid targetContainerId,
     Action selectionChanged)
     : ObservableObject
 {
@@ -288,16 +288,16 @@ public sealed partial class StandaloneQuestionPickerItemViewModel(
 
     public string Title => Option.Title;
 
-    public Guid TopicId => Option.TopicId;
+    public Guid ContainerId => Option.ContainerId;
 
-    public string TopicName => Option.TopicName;
+    public string ContainerName => Option.ContainerName;
 
     public Guid SectionId => Option.SectionId;
 
     public string SectionName => Option.SectionName;
 
     public string PathText =>
-        $"{SectionName} → {TopicName}";
+        $"{SectionName} → {ContainerName}";
 
     public string DifficultyText =>
         Option.Difficulty switch
@@ -311,8 +311,8 @@ public sealed partial class StandaloneQuestionPickerItemViewModel(
     public string ExperienceText =>
         $"{Option.StudyPoints} / {Option.ReviewPoints} XP";
 
-    public bool MovesToArticleTopic =>
-        TopicId != targetTopicId;
+    public bool MovesToArticleContainer =>
+        ContainerId != targetContainerId;
 
     [ObservableProperty]
     private bool _isSelected;
@@ -332,14 +332,14 @@ public sealed partial class StandaloneQuestionPickerSectionViewModel(
 
     public string Name { get; } = name;
 
-    public ObservableCollection<StandaloneQuestionPickerTopicViewModel>
-        Topics { get; } = [];
+    public ObservableCollection<StandaloneQuestionPickerContainerViewModel>
+        Containers { get; } = [];
 
     [ObservableProperty]
     private bool _isSelected;
 }
 
-public sealed partial class StandaloneQuestionPickerTopicViewModel(
+public sealed partial class StandaloneQuestionPickerContainerViewModel(
     Guid id,
     string name,
     int questionCount)

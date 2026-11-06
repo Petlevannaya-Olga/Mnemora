@@ -1,4 +1,4 @@
-namespace Mnemora.Contracts;
+﻿namespace Mnemora.Contracts;
 
 public sealed record StandaloneQuestionPickerOptionDto(
     Guid Id,
@@ -6,7 +6,7 @@ public sealed record StandaloneQuestionPickerOptionDto(
     string Difficulty,
     int StudyPoints,
     int ReviewPoints,
-    Guid TopicId,
-    string TopicName,
+    Guid ContainerId,
+    string ContainerName,
     Guid SectionId,
     string SectionName);

@@ -240,11 +240,11 @@
                                                 </Button>
 
                                                 <ItemsControl Margin="18,3,0,0"
-                                                              ItemsSource="{Binding Topics}">
+                                                              ItemsSource="{Binding Containers}">
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate>
                                                             <Button Tag="{Binding Id}"
-                                                                    Click="SelectTopic_OnClick"
+                                                                    Click="SelectContainer_OnClick"
                                                                     Style="{StaticResource Picker.NavigationButton}">
                                                                 <Grid>
                                                                     <Grid.ColumnDefinitions>
@@ -379,7 +379,7 @@
                                                             <Style TargetType="Border">
                                                                 <Setter Property="Visibility" Value="Collapsed" />
                                                                 <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding MovesToArticleTopic}"
+                                                                    <DataTrigger Binding="{Binding MovesToArticleContainer}"
                                                                                  Value="True">
                                                                         <Setter Property="Visibility" Value="Visible" />
                                                                     </DataTrigger>
@@ -456,7 +456,7 @@
                             <Style TargetType="Border">
                                 <Setter Property="Visibility" Value="Collapsed" />
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding HasCrossTopicSelection}"
+                                    <DataTrigger Binding="{Binding HasCrossContainerSelection}"
                                                  Value="True">
                                         <Setter Property="Visibility" Value="Visible" />
                                     </DataTrigger>

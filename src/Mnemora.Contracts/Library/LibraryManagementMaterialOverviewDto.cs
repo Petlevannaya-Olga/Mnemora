@@ -1,8 +1,8 @@
-namespace Mnemora.Contracts;
+﻿namespace Mnemora.Contracts;
 
 public sealed record LibraryManagementMaterialOverviewDto(
     Guid Id,
-    Guid TopicId,
+    Guid ContainerId,
     string Title,
     string Type,
     string Difficulty,
@@ -10,10 +10,4 @@ public sealed record LibraryManagementMaterialOverviewDto(
     DateTime CreatedAt,
     DateTime UpdatedAt,
     int DisplayOrder,
-    int ArticleQuestionCount)
-{
-    /// <summary>
-    /// Фактическое расположение материала. TopicId остаётся legacy-полем.
-    /// </summary>
-    public Guid ContainerId { get; init; } = TopicId;
-}
+    int ArticleQuestionCount);

@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Mnemora.Desktop.ViewModels.Library;
@@ -36,13 +36,13 @@ public partial class RelatedQuestionPickerWindow : Window
         }
     }
 
-    private void SelectTopic_OnClick(
+    private void SelectContainer_OnClick(
         object sender,
         RoutedEventArgs e)
     {
-        if (sender is Button { Tag: Guid topicId })
+        if (sender is Button { Tag: Guid containerId })
         {
-            ViewModel.SelectTopic(topicId);
+            ViewModel.SelectContainer(containerId);
         }
     }
 

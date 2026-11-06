@@ -1,4 +1,4 @@
-using CSharpFunctionalExtensions;
+﻿using CSharpFunctionalExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Mnemora.Application.Database;
@@ -159,10 +159,7 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandler(
                         material.DisplayOrder,
                         material is Article
                             ? questionCounts.GetValueOrDefault(material.Id)
-                            : 0)
-                    {
-                        ContainerId = material.ContainerId.Value,
-                    })
+                            : 0))
                 .ToArray();
 
             return Result.Success<LibraryManagementMaterialsPageDto, Errors>(

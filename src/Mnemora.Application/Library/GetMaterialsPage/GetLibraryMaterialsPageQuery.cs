@@ -11,6 +11,4 @@ public sealed record GetLibraryMaterialsPageQuery(
     int PageSize)
     : IQueryValidation
 {
-    // Переходный alias для старого UI-кода. Удалим вместе с Topic-моделью.
-    public Guid TopicId => ContainerId;
 }

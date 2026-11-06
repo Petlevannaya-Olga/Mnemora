@@ -2591,7 +2591,7 @@
                                                                             <Style TargetType="TextBlock">
                                                                                 <Setter Property="Visibility" Value="Collapsed"/>
                                                                                 <Style.Triggers>
-                                                                                    <DataTrigger Binding="{Binding MovesToArticleTopic}" Value="True">
+                                                                                    <DataTrigger Binding="{Binding MovesToArticleContainer}" Value="True">
                                                                                         <Setter Property="Visibility" Value="Visible"/>
                                                                                     </DataTrigger>
                                                                                 </Style.Triggers>

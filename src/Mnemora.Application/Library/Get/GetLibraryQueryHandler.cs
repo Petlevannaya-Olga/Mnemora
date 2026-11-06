@@ -1,4 +1,4 @@
-using CSharpFunctionalExtensions;
+﻿using CSharpFunctionalExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Mnemora.Application.Database;
@@ -164,9 +164,6 @@ public sealed class GetLibraryQueryHandler(
             tags,
             articleId,
             material.CreatedAt,
-            material.UpdatedAt)
-        {
-            ContainerId = material.ContainerId.Value,
-        };
+            material.UpdatedAt);
     }
 }
