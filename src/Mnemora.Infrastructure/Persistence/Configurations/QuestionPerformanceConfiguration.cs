@@ -15,7 +15,7 @@ public sealed class QuestionPerformanceConfiguration : IEntityTypeConfiguration<
         builder.HasIndex(question => question.ArticleId)
             .HasDatabaseName("ix_materials_article_id");
 
-        builder.HasIndex(question => new { question.TopicId, question.ArticleId })
-            .HasDatabaseName("ix_materials_topic_id_article_id");
+        builder.HasIndex(question => new { question.ContainerId, question.ArticleId })
+            .HasDatabaseName("ix_materials_container_id_article_id");
     }
 }

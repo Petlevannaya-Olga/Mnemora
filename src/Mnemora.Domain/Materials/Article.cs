@@ -1,6 +1,5 @@
 using CSharpFunctionalExtensions;
 using Mnemora.Domain.LibraryContainers;
-using Mnemora.Domain.Topics;
 using Mnemora.Shared;
 
 namespace Mnemora.Domain.Materials;
@@ -15,18 +14,18 @@ public sealed class Article : Material
     }
 
     private Article(
-        TopicId topicId,
+        LibraryContainerId containerId,
         MaterialTitle title,
         MaterialDifficulty difficulty,
         MaterialIcon icon,
         MaterialExperienceRewards experienceRewards,
         IReadOnlyCollection<MaterialTag> tags)
-        : base(topicId, title, difficulty, icon, experienceRewards, tags)
+        : base(containerId, title, difficulty, icon, experienceRewards, tags)
     {
     }
 
-    public static Result<Article, Error> Create(
-        TopicId? topicId,
+    public static Result<Article, Error> CreateInContainer(
+        LibraryContainerId? containerId,
         MaterialTitle? title,
         MaterialDifficulty? difficulty,
         MaterialIcon? icon,
@@ -35,7 +34,7 @@ public sealed class Article : Material
     {
         var actualIcon = icon ?? MaterialIcon.DefaultArticle;
         var validationResult = ValidateCommonData(
-            topicId,
+            containerId,
             title,
             difficulty,
             actualIcon,
@@ -54,7 +53,7 @@ public sealed class Article : Material
         }
 
         return new Article(
-            topicId!,
+            containerId!,
             title!,
             difficulty!.Value,
             actualIcon,
@@ -62,42 +61,9 @@ public sealed class Article : Material
             tagsResult.Value);
     }
 
-    /// <summary>
-    /// Переходная фабрика для новой модели библиотеки.
-    /// Используется, пока старые application-команды ещё работают с TopicId.
-    /// </summary>
-    public static Result<Article, Error> CreateInContainer(
-        LibraryContainerId? containerId,
-        MaterialTitle? title,
-        MaterialDifficulty? difficulty,
-        MaterialIcon? icon,
-        MaterialExperienceRewards? experienceRewards,
-        IEnumerable<MaterialTag?>? tags = null)
-    {
-        if (containerId is null)
-        {
-            return CommonErrors.IsRequired(nameof(containerId));
-        }
-
-        TopicId topicId = TopicId.Create(containerId.Value).Value;
-
-        return Create(
-            topicId,
-            title,
-            difficulty,
-            icon,
-            experienceRewards,
-            tags);
-    }
-
     public UnitResult<Error> MoveToContainer(LibraryContainerId? containerId)
     {
         return ChangeContainerCore(containerId);
-    }
-
-    public UnitResult<Error> ChangeTopic(TopicId? topicId)
-    {
-        return ChangeTopicCore(topicId);
     }
 
     public UnitResult<Error> ResetIcon()

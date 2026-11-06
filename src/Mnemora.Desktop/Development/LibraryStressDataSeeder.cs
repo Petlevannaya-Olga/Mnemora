@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Materials;
 using Mnemora.Domain.Sections;
-using Mnemora.Domain.Topics;
 using Mnemora.Infrastructure.Persistence;
 
 namespace Mnemora.Desktop.Development;
@@ -21,7 +20,6 @@ public sealed class LibraryStressDataSeeder(
 
     private const string SeederVersion = "v5-library-containers";
     private const string SectionPrefix = "STRESS V5 — ";
-    private const string CompatibilityTopicName = "STRESS V5 compatibility topic";
     private const int BatchSize = 1_000;
     private const int MixedFolderCount = 5_000;
     private const int MixedMaterialCount = 5_000;
@@ -122,17 +120,15 @@ public sealed class LibraryStressDataSeeder(
     {
         Section section = await GetSectionAsync(dbContext, RootMaterialsSectionName, cancellationToken);
         LibraryContainer root = await GetRootAsync(dbContext, section, cancellationToken);
-        Topic topic = await GetOrCreateCompatibilityTopicAsync(dbContext, section, cancellationToken);
-        await EnsureArticlesAsync(dbContext, topic.Id, root, TargetCount, "STRESS V5 Материал root", "50k root materials", cancellationToken);
+        await EnsureArticlesAsync(dbContext, root, TargetCount, "STRESS V5 Материал root", "50k root materials", cancellationToken);
     }
 
     private async Task SeedMixedScenarioAsync(MnemoraDbContext dbContext, CancellationToken cancellationToken)
     {
         Section section = await GetSectionAsync(dbContext, MixedSectionName, cancellationToken);
         LibraryContainer root = await GetRootAsync(dbContext, section, cancellationToken);
-        Topic topic = await GetOrCreateCompatibilityTopicAsync(dbContext, section, cancellationToken);
         await EnsureFoldersAsync(dbContext, root, MixedFolderCount, "STRESS V5 Mixed Папка", "mixed folders", cancellationToken);
-        await EnsureArticlesAsync(dbContext, topic.Id, root, MixedMaterialCount, "STRESS V5 Mixed Материал", "mixed materials", cancellationToken);
+        await EnsureArticlesAsync(dbContext, root, MixedMaterialCount, "STRESS V5 Mixed Материал", "mixed materials", cancellationToken);
     }
 
     private async Task SeedDepthScenarioAsync(
@@ -150,10 +146,8 @@ public sealed class LibraryStressDataSeeder(
             current = await GetOrCreateFolderAsync(dbContext, current, $"Уровень {level}", 0, cancellationToken);
         }
 
-        Topic topic = await GetOrCreateCompatibilityTopicAsync(dbContext, section, cancellationToken);
         await EnsureArticlesAsync(
             dbContext,
-            topic.Id,
             current,
             materialCount,
             $"STRESS V5 L{depth} Материал",
@@ -165,10 +159,9 @@ public sealed class LibraryStressDataSeeder(
     {
         Section section = await GetSectionAsync(dbContext, TypesSectionName, cancellationToken);
         LibraryContainer root = await GetRootAsync(dbContext, section, cancellationToken);
-        Topic topic = await GetOrCreateCompatibilityTopicAsync(dbContext, section, cancellationToken);
 
-        await EnsureArticlesAsync(dbContext, topic.Id, root, TypeCount, "STRESS V5 Статья", "type articles", cancellationToken);
-        await EnsureStandaloneQuestionsAsync(dbContext, topic.Id, root, TypeCount, "STRESS V5 Вопрос", "standalone questions", cancellationToken);
+        await EnsureArticlesAsync(dbContext, root, TypeCount, "STRESS V5 Статья", "type articles", cancellationToken);
+        await EnsureStandaloneQuestionsAsync(dbContext, root, TypeCount, "STRESS V5 Вопрос", "standalone questions", cancellationToken);
         await EnsureLinkedQuestionsAsync(dbContext, root, LinkedQuestionCount, cancellationToken);
     }
 
@@ -183,8 +176,7 @@ public sealed class LibraryStressDataSeeder(
     {
         Section section = await GetSectionAsync(dbContext, FiveMaterialsSectionName, cancellationToken);
         LibraryContainer root = await GetRootAsync(dbContext, section, cancellationToken);
-        Topic topic = await GetOrCreateCompatibilityTopicAsync(dbContext, section, cancellationToken);
-        await EnsureArticlesAsync(dbContext, topic.Id, root, 5, "STRESS V5 Пять материалов", "five materials", cancellationToken);
+        await EnsureArticlesAsync(dbContext, root, 5, "STRESS V5 Пять материалов", "five materials", cancellationToken);
     }
 
     private async Task SeedFolderBoundaryScenariosAsync(MnemoraDbContext dbContext, CancellationToken cancellationToken)
@@ -220,8 +212,7 @@ public sealed class LibraryStressDataSeeder(
     {
         Section section = await GetSectionAsync(dbContext, sectionName, cancellationToken);
         LibraryContainer root = await GetRootAsync(dbContext, section, cancellationToken);
-        Topic topic = await GetOrCreateCompatibilityTopicAsync(dbContext, section, cancellationToken);
-        await EnsureArticlesAsync(dbContext, topic.Id, root, count, $"STRESS V5 Boundary {count} Материал", $"{count} materials", cancellationToken);
+        await EnsureArticlesAsync(dbContext, root, count, $"STRESS V5 Boundary {count} Материал", $"{count} materials", cancellationToken);
     }
 
     private async Task EnsureFoldersAsync(
@@ -270,7 +261,6 @@ public sealed class LibraryStressDataSeeder(
 
     private async Task EnsureArticlesAsync(
         MnemoraDbContext dbContext,
-        TopicId legacyTopicId,
         LibraryContainer targetContainer,
         int targetCount,
         string titlePrefix,
@@ -295,14 +285,13 @@ public sealed class LibraryStressDataSeeder(
 
             for (int index = start; index < end; index++)
             {
-                Article article = Article.Create(
-                    legacyTopicId,
+                Article article = Article.CreateInContainer(
+                    targetContainer.Id,
                     MaterialTitle.Create($"{titlePrefix} {index:D5}").Value,
                     MaterialDifficulty.Medium,
                     MaterialIcon.DefaultArticle,
                     CreateRewards(),
                     Array.Empty<MaterialTag>()).Value;
-                MoveToContainer(article, targetContainer.Id);
                 article.ChangeDisplayOrder(index);
                 batch.Add(article);
             }
@@ -317,7 +306,6 @@ public sealed class LibraryStressDataSeeder(
 
     private async Task EnsureStandaloneQuestionsAsync(
         MnemoraDbContext dbContext,
-        TopicId legacyTopicId,
         LibraryContainer targetContainer,
         int targetCount,
         string titlePrefix,
@@ -342,14 +330,13 @@ public sealed class LibraryStressDataSeeder(
 
             for (int index = start; index < end; index++)
             {
-                Question question = Question.CreateStandalone(
-                    legacyTopicId,
+                Question question = Question.CreateStandaloneInContainer(
+                    targetContainer.Id,
                     MaterialTitle.Create($"{titlePrefix} {index:D5}").Value,
                     MaterialDifficulty.Medium,
                     MaterialIcon.DefaultQuestion,
                     CreateRewards(),
                     Array.Empty<MaterialTag>()).Value;
-                MoveToContainer(question, targetContainer.Id);
                 question.ChangeDisplayOrder(index);
                 batch.Add(question);
             }
@@ -478,53 +465,8 @@ public sealed class LibraryStressDataSeeder(
         return folder;
     }
 
-    private static async Task<Topic> GetOrCreateCompatibilityTopicAsync(
-        MnemoraDbContext dbContext,
-        Section section,
-        CancellationToken cancellationToken)
-    {
-        Guid sectionId = section.Id.Value;
-        Topic? existing = await dbContext.Topics
-            .FromSqlInterpolated($"SELECT * FROM topics WHERE section_id = {sectionId} AND name = {CompatibilityTopicName}")
-            .AsNoTracking()
-            .SingleOrDefaultAsync(cancellationToken);
-
-        if (existing is not null)
-        {
-            return existing;
-        }
-
-        Topic topic = Topic.Create(
-            section.Id,
-            TopicName.Create(CompatibilityTopicName).Value,
-            Enum.GetValues<TopicColor>()[0],
-            Enum.GetValues<TopicIcon>()[0]);
-        dbContext.Topics.Add(topic);
-        await dbContext.SaveChangesAsync(cancellationToken);
-        dbContext.ChangeTracker.Clear();
-        return topic;
-    }
-
     private static MaterialExperienceRewards CreateRewards() =>
         MaterialExperienceRewards.Create(50, 20).Value;
-
-    private static void MoveToContainer(Article article, LibraryContainerId containerId)
-    {
-        var result = article.MoveToContainer(containerId);
-        if (result.IsFailure)
-        {
-            throw new InvalidOperationException(result.Error.Message);
-        }
-    }
-
-    private static void MoveToContainer(Question question, LibraryContainerId containerId)
-    {
-        var result = question.MoveToContainer(containerId);
-        if (result.IsFailure)
-        {
-            throw new InvalidOperationException(result.Error.Message);
-        }
-    }
 
     private static string GetSectionName(int index) => index switch
     {

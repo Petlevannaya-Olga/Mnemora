@@ -1,4 +1,4 @@
-﻿using Mnemora.Shared;
+using Mnemora.Shared;
 
 namespace Mnemora.Domain.Materials;
 
@@ -51,10 +51,10 @@ public static class MaterialErrors
             "question.already.attached.to.another.article",
             "Вопрос уже связан с другой статьёй. Сначала его нужно открепить.");
 
-    public static Error AttachedQuestionTopicCannotBeChanged() =>
+    public static Error AttachedQuestionContainerCannotBeChanged() =>
         CommonErrors.Conflict(
-            "question.topic.cannot.be.changed.while.attached",
-            "Нельзя отдельно изменить тему связанного вопроса. Тема изменяется вместе со статьёй.");
+            "question.container.cannot.be.changed.while.attached",
+            "Нельзя отдельно переместить связанный вопрос. Его расположение определяется статьёй.");
 
     public static Error QuestionIsNotAttachedToArticle() =>
         CommonErrors.Conflict(

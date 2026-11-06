@@ -61,8 +61,8 @@ public sealed class ArticleCommandHandlerTests
     {
         await using var host = await ApplicationTestHost.CreateAsync();
         Topic topic = await CreateTopicAsync(host);
-        Article article = Article.Create(
-            topic.Id,
+        Article article = Article.CreateInContainer(
+            LibraryContainerId.Create(topic.Id.Value).Value,
             MaterialTitle.Create("Article").Value,
             MaterialDifficulty.Medium,
             MaterialIcon.DefaultArticle,
@@ -124,8 +124,8 @@ public sealed class ArticleCommandHandlerTests
     {
         await using var host = await ApplicationTestHost.CreateAsync();
         Topic topic = await CreateTopicAsync(host);
-        Article article = Article.Create(
-            topic.Id,
+        Article article = Article.CreateInContainer(
+            LibraryContainerId.Create(topic.Id.Value).Value,
             MaterialTitle.Create("Article").Value,
             MaterialDifficulty.Medium,
             MaterialIcon.DefaultArticle,

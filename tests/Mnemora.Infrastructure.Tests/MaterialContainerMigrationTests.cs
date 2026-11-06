@@ -108,7 +108,6 @@ public sealed class MaterialContainerMigrationTests
                 current => current.Id == expectedMaterialId,
                 ct);
 
-        Assert.Equal(topic.Id, material.TopicId);
         Assert.Equal(topic.Id.Value, material.ContainerId.Value);
 
         LibraryContainer folder = await dbContext.LibraryContainers

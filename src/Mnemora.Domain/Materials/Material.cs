@@ -1,6 +1,5 @@
 using CSharpFunctionalExtensions;
 using Mnemora.Domain.LibraryContainers;
-using Mnemora.Domain.Topics;
 using Mnemora.Shared;
 
 namespace Mnemora.Domain.Materials;
@@ -14,11 +13,6 @@ public abstract class Material
 
     public MaterialId Id { get; private set; } = null!;
 
-    // Переходное поле для старого Application. Удалим его после полного
-    // перевода запросов и команд с Topic на LibraryContainer.
-    public TopicId TopicId { get; private set; } = null!;
-
-    // Новый источник расположения материала.
     public LibraryContainerId ContainerId { get; private set; } = null!;
 
     public MaterialTitle Title { get; private set; } = null!;
@@ -53,7 +47,7 @@ public abstract class Material
     }
 
     protected Material(
-        TopicId topicId,
+        LibraryContainerId containerId,
         MaterialTitle title,
         MaterialDifficulty difficulty,
         MaterialIcon icon,
@@ -63,8 +57,7 @@ public abstract class Material
         var now = DateTime.UtcNow;
 
         Id = MaterialId.New();
-        TopicId = topicId;
-        ContainerId = LibraryContainerId.Create(topicId.Value).Value;
+        ContainerId = containerId;
         Title = title;
         Difficulty = difficulty;
         Icon = icon;
@@ -237,32 +230,6 @@ public abstract class Material
         return UnitResult.Success<Error>();
     }
 
-    protected UnitResult<Error> ChangeTopicCore(TopicId? topicId)
-    {
-        if (topicId is null)
-        {
-            return CommonErrors.IsRequired(nameof(topicId));
-        }
-
-        LibraryContainerId containerId =
-            LibraryContainerId.Create(topicId.Value).Value;
-
-        if (TopicId == topicId &&
-            ContainerId == containerId)
-        {
-            return UnitResult.Success<Error>();
-        }
-
-        // Старые команды ещё меняют Topic. Пока они существуют, считаем это
-        // перемещением в соответствующую папку первого уровня и синхронно
-        // обновляем новый источник расположения.
-        TopicId = topicId;
-        ContainerId = containerId;
-        Touch();
-
-        return UnitResult.Success<Error>();
-    }
-
     protected UnitResult<Error> StartNewLearningRevisionCore()
     {
         LearningRevision++;
@@ -272,15 +239,15 @@ public abstract class Material
     }
 
     protected static UnitResult<Error> ValidateCommonData(
-        TopicId? topicId,
+        LibraryContainerId? containerId,
         MaterialTitle? title,
         MaterialDifficulty? difficulty,
         MaterialIcon? icon,
         MaterialExperienceRewards? experienceRewards)
     {
-        if (topicId is null)
+        if (containerId is null)
         {
-            return CommonErrors.IsRequired(nameof(topicId));
+            return CommonErrors.IsRequired(nameof(containerId));
         }
 
         if (title is null)

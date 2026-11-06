@@ -52,8 +52,8 @@ public sealed class MaterialContentConsistencyServiceTests
                     Enum.Parse<FolderColor>(topic.Color.ToString()),
                     Enum.Parse<FolderIcon>(topic.Icon.ToString())).Value;
 
-            Article article = Article.Create(
-                topic.Id,
+            Article article = Article.CreateInContainer(
+                folder.Id,
                 MaterialTitle.Create("Article").Value,
                 MaterialDifficulty.Medium,
                 MaterialIcon.DefaultArticle,

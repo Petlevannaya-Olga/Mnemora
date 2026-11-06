@@ -1,8 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Materials;
-using Mnemora.Domain.Topics;
 
 namespace Mnemora.Infrastructure.Persistence.Configurations;
 
@@ -22,13 +21,6 @@ public sealed class MaterialConfiguration
                 value => MaterialId.Create(value).Value)
             .HasColumnName("id")
             .ValueGeneratedNever();
-
-        builder.Property(material => material.TopicId)
-            .HasConversion(
-                id => id.Value,
-                value => TopicId.Create(value).Value)
-            .HasColumnName("topic_id")
-            .IsRequired();
 
         builder.Property(material => material.ContainerId)
             .HasConversion(
@@ -86,9 +78,6 @@ public sealed class MaterialConfiguration
             .HasForeignKey(material => material.ContainerId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasIndex(material => material.TopicId)
-            .HasDatabaseName("ix_materials_topic_id");
-
         builder.HasIndex(material => material.ContainerId)
             .HasDatabaseName("ix_materials_container_id");
 
@@ -106,21 +95,6 @@ public sealed class MaterialConfiguration
 
         builder.HasIndex(material => new { material.ContainerId, material.Title, material.Id })
             .HasDatabaseName("ix_materials_container_id_title_id");
-
-        builder.HasIndex(nameof(Material.TopicId), "type")
-            .HasDatabaseName("ix_materials_topic_id_type");
-
-        builder.HasIndex(material => new { material.TopicId, material.DisplayOrder, material.Id })
-            .HasDatabaseName("ix_materials_topic_id_display_order_id");
-
-        builder.HasIndex(material => new { material.TopicId, material.UpdatedAt, material.Id })
-            .HasDatabaseName("ix_materials_topic_id_updated_at_id");
-
-        builder.HasIndex(material => new { material.TopicId, material.CreatedAt, material.Id })
-            .HasDatabaseName("ix_materials_topic_id_created_at_id");
-
-        builder.HasIndex(material => new { material.TopicId, material.Title, material.Id })
-            .HasDatabaseName("ix_materials_topic_id_title_id");
     }
 
     private static void ConfigureDiscriminator(

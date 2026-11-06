@@ -3,7 +3,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Materials;
 using Mnemora.Domain.Sections;
-using Mnemora.Domain.Topics;
 using Mnemora.Infrastructure.Persistence;
 using Xunit;
 
@@ -12,7 +11,7 @@ namespace Mnemora.Infrastructure.Tests;
 public sealed class MaterialContainerPersistenceTests
 {
     [Fact]
-    public async Task Material_PersistsContainerIndependentlyFromLegacyTopicBridge()
+    public async Task Material_PersistsRootAndNestedFolderWithoutTopic()
     {
         CancellationToken ct = CancellationToken.None;
 
@@ -23,67 +22,52 @@ public sealed class MaterialContainerPersistenceTests
 
         var factory = scope.ServiceProvider
             .GetRequiredService<IDbContextFactory<MnemoraDbContext>>();
-
         await using MnemoraDbContext dbContext =
             await factory.CreateDbContextAsync(ct);
 
         await dbContext.Database.EnsureCreatedAsync(ct);
 
         Section section = CreateSection("C#");
-        LibraryContainer root =
-            LibraryContainer.CreateRoot(section.Id).Value;
+        LibraryContainer root = LibraryContainer.CreateRoot(section.Id).Value;
+        LibraryContainer folder = LibraryContainer.CreateFolder(
+            root,
+            FolderName.Create("Memory").Value,
+            FolderColor.Teal,
+            FolderIcon.Folder).Value;
 
-        Topic topic = Topic.Create(
-            section.Id,
-            TopicName.Create("CLR").Value,
-            TopicColor.Purple,
-            TopicIcon.DotNet);
-
-        LibraryContainer topicFolder =
-            LibraryContainer.CreateFolderWithId(
-                LibraryContainerId.Create(topic.Id.Value).Value,
-                root,
-                FolderName.Create("CLR").Value,
-                FolderColor.Purple,
-                FolderIcon.DotNet).Value;
-
-        LibraryContainer nestedFolder =
-            LibraryContainer.CreateFolder(
-                topicFolder,
-                FolderName.Create("Memory").Value,
-                FolderColor.Teal,
-                FolderIcon.Folder).Value;
-
-        Article article = Article.Create(
-            topic.Id,
+        Article article = Article.CreateInContainer(
+            root.Id,
             MaterialTitle.Create("Garbage Collector").Value,
             MaterialDifficulty.Medium,
             null,
             MaterialExperienceRewards.Create(50, 20).Value).Value;
 
-        var moveResult = article.MoveToContainer(nestedFolder.Id);
+        Assert.True(article.MoveToContainer(folder.Id).IsSuccess);
 
-        Assert.True(moveResult.IsSuccess);
-        Assert.Equal(topic.Id, article.TopicId);
-        Assert.Equal(nestedFolder.Id, article.ContainerId);
+        Question question = Question.CreateStandaloneInContainer(
+            root.Id,
+            MaterialTitle.Create("Independent question").Value,
+            MaterialDifficulty.Medium,
+            null,
+            MaterialExperienceRewards.Create(50, 20).Value).Value;
 
         dbContext.Sections.Add(section);
-        dbContext.Topics.Add(topic);
-        dbContext.LibraryContainers.AddRange(
-            root,
-            topicFolder,
-            nestedFolder);
-        dbContext.Materials.Add(article);
+        dbContext.LibraryContainers.AddRange(root, folder);
+        dbContext.Materials.AddRange(article, question);
 
         await dbContext.SaveChangesAsync(ct);
         dbContext.ChangeTracker.Clear();
 
-        Material persistedMaterial = await dbContext.Materials
+        Material persistedArticle = await dbContext.Materials
             .AsNoTracking()
             .SingleAsync(material => material.Id == article.Id, ct);
+        Material persistedQuestion = await dbContext.Materials
+            .AsNoTracking()
+            .SingleAsync(material => material.Id == question.Id, ct);
 
-        Assert.Equal(topic.Id, persistedMaterial.TopicId);
-        Assert.Equal(nestedFolder.Id, persistedMaterial.ContainerId);
+        Assert.Equal(folder.Id, persistedArticle.ContainerId);
+        Assert.Equal(root.Id, persistedQuestion.ContainerId);
+        Assert.Empty(await dbContext.Topics.AsNoTracking().ToListAsync(ct));
     }
 
     private static Section CreateSection(string name) =>

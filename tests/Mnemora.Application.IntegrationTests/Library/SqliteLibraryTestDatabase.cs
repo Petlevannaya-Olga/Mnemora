@@ -119,8 +119,8 @@ internal sealed class SqliteLibraryTestDatabase : IAsyncDisposable
         TopicId topicId,
         string title)
     {
-        return Article.Create(
-            topicId,
+        return Article.CreateInContainer(
+            LibraryContainerId.Create(topicId.Value).Value,
             MaterialTitle.Create(title).Value,
             MaterialDifficulty.Medium,
             MaterialIcon.DefaultArticle,
@@ -132,8 +132,8 @@ internal sealed class SqliteLibraryTestDatabase : IAsyncDisposable
         TopicId topicId,
         string title)
     {
-        return Question.CreateStandalone(
-            topicId,
+        return Question.CreateStandaloneInContainer(
+            LibraryContainerId.Create(topicId.Value).Value,
             MaterialTitle.Create(title).Value,
             MaterialDifficulty.Medium,
             MaterialIcon.DefaultQuestion,

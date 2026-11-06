@@ -1,6 +1,5 @@
 using CSharpFunctionalExtensions;
 using Mnemora.Domain.LibraryContainers;
-using Mnemora.Domain.Topics;
 using Mnemora.Shared;
 
 namespace Mnemora.Domain.Materials;
@@ -17,39 +16,18 @@ public sealed class Question : Material
     }
 
     private Question(
-        TopicId topicId,
+        LibraryContainerId containerId,
         MaterialTitle title,
         MaterialDifficulty difficulty,
         MaterialIcon icon,
         MaterialExperienceRewards experienceRewards,
         IReadOnlyCollection<MaterialTag> tags,
         MaterialId? articleId)
-        : base(topicId, title, difficulty, icon, experienceRewards, tags)
+        : base(containerId, title, difficulty, icon, experienceRewards, tags)
     {
         ArticleId = articleId;
     }
 
-    public static Result<Question, Error> CreateStandalone(
-        TopicId? topicId,
-        MaterialTitle? title,
-        MaterialDifficulty? difficulty,
-        MaterialIcon? icon,
-        MaterialExperienceRewards? experienceRewards,
-        IEnumerable<MaterialTag?>? tags = null)
-    {
-        return CreateCore(
-            topicId,
-            title,
-            difficulty,
-            icon,
-            experienceRewards,
-            tags,
-            articleId: null);
-    }
-
-    /// <summary>
-    /// Переходная фабрика самостоятельного вопроса в LibraryContainer.
-    /// </summary>
     public static Result<Question, Error> CreateStandaloneInContainer(
         LibraryContainerId? containerId,
         MaterialTitle? title,
@@ -58,20 +36,14 @@ public sealed class Question : Material
         MaterialExperienceRewards? experienceRewards,
         IEnumerable<MaterialTag?>? tags = null)
     {
-        if (containerId is null)
-        {
-            return CommonErrors.IsRequired(nameof(containerId));
-        }
-
-        TopicId topicId = TopicId.Create(containerId.Value).Value;
-
-        return CreateStandalone(
-            topicId,
+        return CreateCore(
+            containerId,
             title,
             difficulty,
             icon,
             experienceRewards,
-            tags);
+            tags,
+            articleId: null);
     }
 
     public static Result<Question, Error> CreateForArticle(
@@ -90,7 +62,7 @@ public sealed class Question : Material
         // Связанный вопрос не хранит собственных тегов. Теги отображаются
         // через связанную статью и поэтому не копируются в Question.
         var createResult = CreateCore(
-            article.TopicId,
+            article.ContainerId,
             title,
             difficulty,
             icon,
@@ -101,14 +73,6 @@ public sealed class Question : Material
         if (createResult.IsFailure)
         {
             return createResult.Error;
-        }
-
-        var containerResult =
-            createResult.Value.ChangeContainerCore(article.ContainerId);
-
-        if (containerResult.IsFailure)
-        {
-            return containerResult.Error;
         }
 
         return createResult.Value;
@@ -185,38 +149,13 @@ public sealed class Question : Material
     {
         if (ArticleId is not null)
         {
-            return MaterialErrors.AttachedQuestionTopicCannotBeChanged();
+            return MaterialErrors.AttachedQuestionContainerCannotBeChanged();
         }
 
         return ChangeContainerCore(containerId);
     }
 
     public UnitResult<Error> MoveToContainerWithArticle(Article? article)
-    {
-        if (article is null)
-        {
-            return CommonErrors.IsRequired(nameof(article));
-        }
-
-        if (ArticleId != article.Id)
-        {
-            return MaterialErrors.QuestionIsNotAttachedToArticle();
-        }
-
-        return SynchronizeLocationWithArticle(article);
-    }
-
-    public UnitResult<Error> ChangeTopic(TopicId? topicId)
-    {
-        if (ArticleId is not null)
-        {
-            return MaterialErrors.AttachedQuestionTopicCannotBeChanged();
-        }
-
-        return ChangeTopicCore(topicId);
-    }
-
-    public UnitResult<Error> ChangeTopicWithArticle(Article? article)
     {
         if (article is null)
         {
@@ -243,18 +182,11 @@ public sealed class Question : Material
 
     private UnitResult<Error> SynchronizeLocationWithArticle(Article article)
     {
-        var topicResult = ChangeTopicCore(article.TopicId);
-
-        if (topicResult.IsFailure)
-        {
-            return topicResult.Error;
-        }
-
         return ChangeContainerCore(article.ContainerId);
     }
 
     private static Result<Question, Error> CreateCore(
-        TopicId? topicId,
+        LibraryContainerId? containerId,
         MaterialTitle? title,
         MaterialDifficulty? difficulty,
         MaterialIcon? icon,
@@ -264,7 +196,7 @@ public sealed class Question : Material
     {
         var actualIcon = icon ?? MaterialIcon.DefaultQuestion;
         var validationResult = ValidateCommonData(
-            topicId,
+            containerId,
             title,
             difficulty,
             actualIcon,
@@ -283,7 +215,7 @@ public sealed class Question : Material
         }
 
         return new Question(
-            topicId!,
+            containerId!,
             title!,
             difficulty!.Value,
             actualIcon,

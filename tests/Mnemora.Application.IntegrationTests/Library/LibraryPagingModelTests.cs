@@ -22,19 +22,19 @@ public sealed class LibraryPagingModelTests
             .ToArray();
 
         materialIndexes.Should().Contain(index =>
-            index.SequenceEqual(new[] { nameof(Material.TopicId), nameof(Material.DisplayOrder), nameof(Material.Id) }));
+            index.SequenceEqual(new[] { nameof(Material.ContainerId), nameof(Material.DisplayOrder), nameof(Material.Id) }));
         materialIndexes.Should().Contain(index =>
-            index.SequenceEqual(new[] { nameof(Material.TopicId), nameof(Material.UpdatedAt), nameof(Material.Id) }));
+            index.SequenceEqual(new[] { nameof(Material.ContainerId), nameof(Material.UpdatedAt), nameof(Material.Id) }));
         materialIndexes.Should().Contain(index =>
-            index.SequenceEqual(new[] { nameof(Material.TopicId), nameof(Material.CreatedAt), nameof(Material.Id) }));
+            index.SequenceEqual(new[] { nameof(Material.ContainerId), nameof(Material.CreatedAt), nameof(Material.Id) }));
         materialIndexes.Should().Contain(index =>
-            index.SequenceEqual(new[] { nameof(Material.TopicId), nameof(Material.Title), nameof(Material.Id) }));
+            index.SequenceEqual(new[] { nameof(Material.ContainerId), nameof(Material.Title), nameof(Material.Id) }));
 
         question.GetIndexes()
             .Should().Contain(index => index.Properties.Count == 1 &&
                                        index.Properties[0].Name == nameof(Question.ArticleId));
         question.GetIndexes()
             .Should().Contain(index => index.Properties.Select(property => property.Name)
-                .SequenceEqual(new[] { nameof(Material.TopicId), nameof(Question.ArticleId) }));
+                .SequenceEqual(new[] { nameof(Material.ContainerId), nameof(Question.ArticleId) }));
     }
 }

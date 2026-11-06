@@ -1,6 +1,5 @@
 using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Materials;
-using Mnemora.Domain.Topics;
 using Xunit;
 
 namespace Mnemora.Domain.Tests;
@@ -10,7 +9,7 @@ public sealed class MaterialTests
     [Fact]
     public void Article_Create_UsesDefaultsAndStartsFirstLearningRevision()
     {
-        Article article = CreateArticle(TopicId.New(), icon: null);
+        Article article = CreateArticle(LibraryContainerId.New(), icon: null);
 
         Assert.Equal(MaterialType.Article, article.Type);
         Assert.Equal(MaterialIcon.DefaultArticle, article.Icon);
@@ -23,7 +22,7 @@ public sealed class MaterialTests
     {
         LibraryContainerId containerId = LibraryContainerId.New();
 
-        Article article = CreateArticleInContainer(containerId);
+        Article article = CreateArticle(containerId);
 
         Assert.Equal(containerId, article.ContainerId);
     }
@@ -31,7 +30,7 @@ public sealed class MaterialTests
     [Fact]
     public void Article_MoveToContainer_ChangesContainer()
     {
-        Article article = CreateArticleInContainer(LibraryContainerId.New());
+        Article article = CreateArticle(LibraryContainerId.New());
         LibraryContainerId targetContainerId = LibraryContainerId.New();
 
         var result = article.MoveToContainer(targetContainerId);
@@ -41,37 +40,36 @@ public sealed class MaterialTests
     }
 
     [Fact]
-    public void Article_MoveToContainer_DoesNotRewriteLegacyTopicBridge()
+    public void Article_CreateInContainer_RejectsMissingContainer()
     {
-        TopicId topicId = TopicId.New();
-        Article article = CreateArticle(topicId);
-        LibraryContainerId targetContainerId = LibraryContainerId.New();
+        var result = Article.CreateInContainer(
+            null,
+            Title("Article"),
+            MaterialDifficulty.Medium,
+            null,
+            Rewards());
 
-        var result = article.MoveToContainer(targetContainerId);
-
-        Assert.True(result.IsSuccess);
-        Assert.Equal(topicId, article.TopicId);
-        Assert.Equal(targetContainerId, article.ContainerId);
+        Assert.True(result.IsFailure);
     }
 
     [Fact]
-    public void Article_ChangeTopic_SynchronizesContainerBridge()
+    public void Question_CreateStandaloneInContainer_RejectsMissingContainer()
     {
-        Article article = CreateArticle(TopicId.New());
-        TopicId targetTopicId = TopicId.New();
+        var result = Question.CreateStandaloneInContainer(
+            null,
+            Title("Question"),
+            MaterialDifficulty.Medium,
+            null,
+            Rewards());
 
-        var result = article.ChangeTopic(targetTopicId);
-
-        Assert.True(result.IsSuccess);
-        Assert.Equal(targetTopicId, article.TopicId);
-        Assert.Equal(targetTopicId.Value, article.ContainerId.Value);
+        Assert.True(result.IsFailure);
     }
 
     [Fact]
     public void Article_Create_RejectsDuplicateTagsIgnoringCase()
     {
-        var result = Article.Create(
-            TopicId.New(),
+        var result = Article.CreateInContainer(
+            LibraryContainerId.New(),
             Title("Article"),
             MaterialDifficulty.Medium,
             MaterialIcon.DefaultArticle,
@@ -86,7 +84,7 @@ public sealed class MaterialTests
     public void ReplaceTags_RejectsMoreThanTenTagsAndPreservesExistingTags()
     {
         Article article = CreateArticle(
-            TopicId.New(),
+            LibraryContainerId.New(),
             tags: [Tag("original")]);
 
         var result = article.ReplaceTags(
@@ -101,7 +99,7 @@ public sealed class MaterialTests
     [Fact]
     public void ChangeDifficulty_RejectsUndefinedEnumValue()
     {
-        Article article = CreateArticle(TopicId.New());
+        Article article = CreateArticle(LibraryContainerId.New());
 
         var result = article.ChangeDifficulty((MaterialDifficulty)999);
 
@@ -112,7 +110,7 @@ public sealed class MaterialTests
     [Fact]
     public void StartNewLearningRevision_IncrementsRevision()
     {
-        Article article = CreateArticle(TopicId.New());
+        Article article = CreateArticle(LibraryContainerId.New());
 
         article.StartNewLearningRevision();
 
@@ -122,8 +120,8 @@ public sealed class MaterialTests
     [Fact]
     public void AttachToArticle_MovesQuestionToArticleContainerAndClearsTags()
     {
-        Article article = CreateArticleInContainer(LibraryContainerId.New());
-        Question question = CreateStandaloneQuestionInContainer(
+        Article article = CreateArticle(LibraryContainerId.New());
+        Question question = CreateStandaloneQuestion(
             LibraryContainerId.New(),
             [Tag("standalone")]);
 
@@ -138,9 +136,9 @@ public sealed class MaterialTests
     [Fact]
     public void AttachedQuestion_CannotMoveIndependentlyOrAttachToAnotherArticle()
     {
-        Article firstArticle = CreateArticleInContainer(LibraryContainerId.New());
-        Article secondArticle = CreateArticleInContainer(LibraryContainerId.New());
-        Question question = CreateStandaloneQuestionInContainer(LibraryContainerId.New());
+        Article firstArticle = CreateArticle(LibraryContainerId.New());
+        Article secondArticle = CreateArticle(LibraryContainerId.New());
+        Question question = CreateStandaloneQuestion(LibraryContainerId.New());
         question.AttachToArticle(firstArticle);
 
         var moveResult = question.MoveToContainer(LibraryContainerId.New());
@@ -155,8 +153,8 @@ public sealed class MaterialTests
     [Fact]
     public void DetachFromArticle_MakesQuestionStandaloneAgain()
     {
-        Article article = CreateArticleInContainer(LibraryContainerId.New());
-        Question question = CreateStandaloneQuestionInContainer(LibraryContainerId.New());
+        Article article = CreateArticle(LibraryContainerId.New());
+        Question question = CreateStandaloneQuestion(LibraryContainerId.New());
         question.AttachToArticle(article);
         LibraryContainerId newContainerId = LibraryContainerId.New();
 
@@ -172,7 +170,7 @@ public sealed class MaterialTests
     [Fact]
     public void CreateForArticle_DoesNotCopyQuestionTagsAndUsesArticleContainer()
     {
-        Article article = CreateArticleInContainer(
+        Article article = CreateArticle(
             LibraryContainerId.New(),
             tags: [Tag("article")]);
 
@@ -193,25 +191,13 @@ public sealed class MaterialTests
     [Fact]
     public void ChangeDisplayOrder_RejectsNegativeValue()
     {
-        Article article = CreateArticle(TopicId.New());
+        Article article = CreateArticle(LibraryContainerId.New());
 
         Assert.Throws<ArgumentOutOfRangeException>(
             () => article.ChangeDisplayOrder(-1));
     }
 
     private static Article CreateArticle(
-        TopicId topicId,
-        MaterialIcon? icon = null,
-        IReadOnlyCollection<MaterialTag>? tags = null) =>
-        Article.Create(
-            topicId,
-            Title("Article"),
-            MaterialDifficulty.Medium,
-            icon,
-            Rewards(),
-            tags).Value;
-
-    private static Article CreateArticleInContainer(
         LibraryContainerId containerId,
         MaterialIcon? icon = null,
         IReadOnlyCollection<MaterialTag>? tags = null) =>
@@ -224,17 +210,6 @@ public sealed class MaterialTests
             tags).Value;
 
     private static Question CreateStandaloneQuestion(
-        TopicId topicId,
-        IReadOnlyCollection<MaterialTag>? tags = null) =>
-        Question.CreateStandalone(
-            topicId,
-            Title("Question"),
-            MaterialDifficulty.Medium,
-            null,
-            Rewards(),
-            tags).Value;
-
-    private static Question CreateStandaloneQuestionInContainer(
         LibraryContainerId containerId,
         IReadOnlyCollection<MaterialTag>? tags = null) =>
         Question.CreateStandaloneInContainer(
