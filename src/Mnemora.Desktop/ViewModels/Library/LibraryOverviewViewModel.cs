@@ -34,6 +34,7 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
     private int _searchVersion;
     private bool _isLoaded;
     private bool _isViewModeLoaded;
+    private (int Offset, bool IsPreviousPage)? _failedPageRequest;
 
     public ObservableCollection<LibrarySectionRowViewModel> CompactSectionRows { get; } = [];
 
@@ -69,18 +70,21 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(HasNoSearchResults))]
     [NotifyCanExecuteChangedFor(nameof(LoadNextPageCommand))]
     [NotifyCanExecuteChangedFor(nameof(LoadPreviousPageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(RetryPageCommand))]
     private bool _isLoading;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsPaging))]
     [NotifyCanExecuteChangedFor(nameof(LoadNextPageCommand))]
     [NotifyCanExecuteChangedFor(nameof(LoadPreviousPageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(RetryPageCommand))]
     private bool _isLoadingNextPage;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsPaging))]
     [NotifyCanExecuteChangedFor(nameof(LoadNextPageCommand))]
     [NotifyCanExecuteChangedFor(nameof(LoadPreviousPageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(RetryPageCommand))]
     private bool _isLoadingPreviousPage;
 
     [ObservableProperty]
@@ -94,12 +98,15 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(HasNoSearchResults))]
     [NotifyCanExecuteChangedFor(nameof(LoadNextPageCommand))]
     [NotifyCanExecuteChangedFor(nameof(LoadPreviousPageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(RetryPageCommand))]
     private string? _errorMessage;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasNextPageError))]
+    [NotifyPropertyChangedFor(nameof(HasPageError))]
     [NotifyCanExecuteChangedFor(nameof(LoadNextPageCommand))]
-    private string? _nextPageErrorMessage;
+    [NotifyCanExecuteChangedFor(nameof(LoadPreviousPageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(RetryPageCommand))]
+    private string? _pageErrorMessage;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsEmpty))]
@@ -138,7 +145,7 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
 
     public bool HasError => !string.IsNullOrWhiteSpace(ErrorMessage);
 
-    public bool HasNextPageError => !string.IsNullOrWhiteSpace(NextPageErrorMessage);
+    public bool HasPageError => !string.IsNullOrWhiteSpace(PageErrorMessage);
 
     public bool IsPaging => IsLoadingNextPage || IsLoadingPreviousPage;
     public bool SectionsHasPrevious => _sectionWindow.HasPrevious;
@@ -223,16 +230,29 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
         return LoadPreviousPageWithLinkedCancellationAsync(cancellationToken);
     }
 
-    [RelayCommand]
-    private async Task RetryNextPageAsync(CancellationToken cancellationToken)
+    [RelayCommand(CanExecute = nameof(CanRetryPage))]
+    private async Task RetryPageAsync(CancellationToken cancellationToken)
     {
-        NextPageErrorMessage = null;
+        if (_failedPageRequest is not { } request)
+        {
+            return;
+        }
+
+        int loadVersion = _loadVersion;
+        _failedPageRequest = null;
+        PageErrorMessage = null;
 
         using var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
             _viewCancellationToken,
             cancellationToken);
 
-        await LoadNextPageWithLinkedCancellationAsync(linkedCancellationTokenSource.Token);
+        await ShowSectionPageAsync(
+            request.Offset,
+            request.IsPreviousPage ? PageWindowInsert.Prepend : PageWindowInsert.Append,
+            loadVersion,
+            linkedCancellationTokenSource.Token,
+            isInitialPage: false,
+            isPreviousPage: request.IsPreviousPage);
     }
 
     [RelayCommand]
@@ -328,6 +348,14 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
         }
     }
 
+    private bool CanRetryPage() =>
+        _isLoaded &&
+        _failedPageRequest is not null &&
+        HasPageError &&
+        !IsLoading &&
+        !IsPaging &&
+        !HasError;
+
     private bool CanLoadNextPage() =>
         _isLoaded &&
         _sectionWindow.HasNext &&
@@ -335,7 +363,7 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
         !IsLoadingNextPage &&
         !IsLoadingPreviousPage &&
         !HasError &&
-        !HasNextPageError;
+        !HasPageError;
 
     private bool CanLoadPreviousPage() =>
         _isLoaded &&
@@ -343,7 +371,8 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
         !IsLoading &&
         !IsLoadingNextPage &&
         !IsLoadingPreviousPage &&
-        !HasError;
+        !HasError &&
+        !HasPageError;
 
     private async Task LoadNextPageWithLinkedCancellationAsync(CancellationToken cancellationToken)
     {
@@ -394,7 +423,8 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
         TotalCount = 0;
         HasMore = false;
         ErrorMessage = null;
-        NextPageErrorMessage = null;
+        _failedPageRequest = null;
+        PageErrorMessage = null;
         IsLoadingNextPage = false;
         IsLoadingPreviousPage = false;
 
@@ -442,14 +472,19 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
             IsLoading = true;
             ErrorMessage = null;
         }
-        else if (isPreviousPage)
-        {
-            IsLoadingPreviousPage = true;
-        }
         else
         {
-            IsLoadingNextPage = true;
-            NextPageErrorMessage = null;
+            _failedPageRequest = null;
+            PageErrorMessage = null;
+
+            if (isPreviousPage)
+            {
+                IsLoadingPreviousPage = true;
+            }
+            else
+            {
+                IsLoadingNextPage = true;
+            }
         }
 
         if (!isInitialPage)
@@ -487,7 +522,7 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
                 }
                 else
                 {
-                    NextPageErrorMessage = message;
+                    SetPageLoadError(offset, isPreviousPage, message);
                 }
 
                 return;
@@ -517,7 +552,7 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
             }
             else
             {
-                NextPageErrorMessage = "Не удалось загрузить страницу разделов";
+                SetPageLoadError(offset, isPreviousPage, "Не удалось загрузить страницу разделов");
             }
         }
         finally
@@ -530,6 +565,12 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
                 SyncSectionWindowState();
             }
         }
+    }
+
+    private void SetPageLoadError(int offset, bool isPreviousPage, string message)
+    {
+        _failedPageRequest = (offset, isPreviousPage);
+        PageErrorMessage = message;
     }
 
     private static async Task YieldForPagingLoaderAsync(CancellationToken cancellationToken)

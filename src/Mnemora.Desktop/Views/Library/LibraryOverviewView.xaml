@@ -584,7 +584,7 @@
                             <Style TargetType="TextBlock">
                                 <Setter Property="Visibility" Value="Visible" />
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding HasNextPageError}" Value="True">
+                                    <DataTrigger Binding="{Binding HasPageError}" Value="True">
                                         <Setter Property="Visibility" Value="Collapsed" />
                                     </DataTrigger>
                                 </Style.Triggers>
@@ -1005,13 +1005,13 @@
                         TrackBrush="#40FFFFFF" />
                 </Border>
 
-                <!-- Ошибка догрузки остаётся отдельной служебной строкой -->
+                <!-- Ошибка догрузки в любом направлении: повторяем исходную страницу -->
                 <Grid Grid.Row="2" MinHeight="72">
                     <Grid.Style>
                         <Style TargetType="Grid">
                             <Setter Property="Visibility" Value="Collapsed" />
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding HasNextPageError}" Value="True">
+                                <DataTrigger Binding="{Binding HasPageError}" Value="True">
                                     <Setter Property="Visibility" Value="Visible" />
                                 </DataTrigger>
                             </Style.Triggers>
@@ -1022,16 +1022,16 @@
                         HorizontalAlignment="Left"
                         VerticalAlignment="Center"
                         Orientation="Horizontal"
-                        Visibility="{Binding HasNextPageError, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        Visibility="{Binding HasPageError, Converter={StaticResource BooleanToVisibilityConverter}}">
 
                         <TextBlock
                             Margin="0,0,16,0"
                             VerticalAlignment="Center"
                             Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                            Text="{Binding NextPageErrorMessage}" />
+                            Text="{Binding PageErrorMessage}" />
 
                         <Button
-                            Command="{Binding RetryNextPageCommand}"
+                            Command="{Binding RetryPageCommand}"
                             Content="Повторить"
                             Style="{StaticResource Mnemora.SecondaryButton}" />
                     </StackPanel>
