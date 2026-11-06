@@ -1,16 +1,16 @@
-using CSharpFunctionalExtensions;
+﻿using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
 using Mnemora.Application.Database;
-using Mnemora.Application.Topics;
+using Mnemora.Application.LibraryContainers;
 using Mnemora.Domain.Materials;
-using Mnemora.Domain.Topics;
+using Mnemora.Domain.LibraryContainers;
 using Mnemora.Shared;
 using Mnemora.Shared.Abstractions;
 
 namespace Mnemora.Application.Materials.Questions.Update;
 
 public sealed class UpdateQuestionCommandHandler(
-    ITopicsRepository topicsRepository,
+    ILibraryContainersRepository libraryContainersRepository,
     IMaterialsRepository materialsRepository,
     ITransactionManager transactionManager,
     ILogger<UpdateQuestionCommandHandler> logger)
@@ -18,16 +18,16 @@ public sealed class UpdateQuestionCommandHandler(
 {
     public async Task<Result<Guid, Errors>> Handle(UpdateQuestionCommand command, CancellationToken cancellationToken)
     {
-        if (command.ArticleId is null && command.TopicId is null)
+        if (command.ArticleId is null && command.ContainerId is null)
         {
-            return CommonErrors.IsRequired(nameof(command.TopicId)).ToErrors();
+            return CommonErrors.IsRequired(nameof(command.ContainerId)).ToErrors();
         }
 
-        if (command.ArticleId is not null && command.TopicId is not null)
+        if (command.ArticleId is not null && command.ContainerId is not null)
         {
             return CommonErrors.Validation(
                 "question.relationship.target.is.ambiguous",
-                "Нельзя одновременно указать тему и связанную статью.",
+                "Нельзя одновременно указать контейнер и связанную статью.",
                 nameof(command.ArticleId)).ToErrors();
         }
 
@@ -124,30 +124,30 @@ public sealed class UpdateQuestionCommandHandler(
         }
         else
         {
-            var topicIdResult = TopicId.Create(command.TopicId!.Value);
+            var containerIdResult = LibraryContainerId.Create(command.ContainerId!.Value);
 
-            if (topicIdResult.IsFailure)
+            if (containerIdResult.IsFailure)
             {
-                return topicIdResult.Error.ToErrors();
+                return containerIdResult.Error.ToErrors();
             }
 
-            var topicExistsResult = await topicsRepository.ExistsAsync(
-                topic => topic.Id == topicIdResult.Value,
+            var containerExistsResult = await libraryContainersRepository.ExistsAsync(
+                container => container.Id == containerIdResult.Value,
                 cancellationToken);
 
-            if (topicExistsResult.IsFailure)
+            if (containerExistsResult.IsFailure)
             {
-                return topicExistsResult.Error.ToErrors();
+                return containerExistsResult.Error.ToErrors();
             }
 
-            if (!topicExistsResult.Value)
+            if (!containerExistsResult.Value)
             {
                 return CommonErrors.NotFound(
-                    "topic.not.found",
-                    $"Тема с идентификатором '{command.TopicId}' не найдена").ToErrors();
+                    "container.not.found",
+                    $"Контейнер с идентификатором '{command.ContainerId}' не найден").ToErrors();
             }
 
-            relationshipResult = MakeStandalone(question, topicIdResult.Value);
+            relationshipResult = MakeStandalone(question, containerIdResult.Value);
         }
 
         if (relationshipResult.IsFailure)
@@ -205,9 +205,9 @@ public sealed class UpdateQuestionCommandHandler(
         }
 
         logger.LogInformation(
-            "Изменён вопрос {QuestionId}. Тема: {TopicId}. Статья: {ArticleId}",
+            "Изменён вопрос {QuestionId}. Контейнер: {ContainerId}. Статья: {ArticleId}",
             question.Id.Value,
-            question.TopicId.Value,
+            question.ContainerId.Value,
             question.ArticleId?.Value);
 
         return question.Id.Value;
@@ -217,7 +217,7 @@ public sealed class UpdateQuestionCommandHandler(
     {
         if (question.ArticleId == article.Id)
         {
-            return question.ChangeTopicWithArticle(article);
+            return question.MoveToContainerWithArticle(article);
         }
 
         if (question.ArticleId is not null)
@@ -233,7 +233,7 @@ public sealed class UpdateQuestionCommandHandler(
         return question.AttachToArticle(article);
     }
 
-    private static UnitResult<Error> MakeStandalone(Question question, TopicId topicId)
+    private static UnitResult<Error> MakeStandalone(Question question, LibraryContainerId containerId)
     {
         if (question.ArticleId is not null)
         {
@@ -245,7 +245,7 @@ public sealed class UpdateQuestionCommandHandler(
             }
         }
 
-        return question.ChangeTopic(topicId);
+        return question.MoveToContainer(containerId);
     }
 
     private static UnitResult<Error> ApplyCommonChanges(

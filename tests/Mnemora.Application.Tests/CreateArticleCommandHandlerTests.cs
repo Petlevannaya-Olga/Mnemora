@@ -5,9 +5,10 @@ using Mnemora.Application.Database;
 using Mnemora.Application.Materials;
 using Mnemora.Application.Materials.Articles.Create;
 using Mnemora.Application.Materials.Content;
-using Mnemora.Application.Topics;
+using Mnemora.Application.LibraryContainers;
 using Mnemora.Domain.Materials;
-using Mnemora.Domain.Topics;
+using Mnemora.Domain.LibraryContainers;
+using Mnemora.Domain.Sections;
 using Mnemora.Shared;
 using Xunit;
 
@@ -18,12 +19,12 @@ public sealed class CreateArticleCommandHandlerTests
     [Fact]
     public async Task SaveFailure_DeletesPreviouslyCreatedMarkdownContent()
     {
-        var topicsRepository = new ExistingTopicRepository();
+        var containersRepository = new ExistingContainerRepository();
         var materialsRepository = new RecordingMaterialsRepository();
         var contentStore = new RecordingContentStore();
         var transactionManager = new FailingTransactionManager();
         var handler = new CreateArticleCommandHandler(
-            topicsRepository,
+            containersRepository,
             materialsRepository,
             contentStore,
             transactionManager,
@@ -46,19 +47,24 @@ public sealed class CreateArticleCommandHandlerTests
         Assert.Equal(MaterialType.Article, contentStore.DeletedMaterialType);
     }
 
-    private sealed class ExistingTopicRepository : ITopicsRepository
+    private sealed class ExistingContainerRepository : ILibraryContainersRepository
     {
-        public void Add(Topic topic) => throw new NotSupportedException();
+        public void Add(LibraryContainer container) => throw new NotSupportedException();
 
-        public void Remove(Topic topic) => throw new NotSupportedException();
+        public void Remove(LibraryContainer container) => throw new NotSupportedException();
 
-        public Task<Result<Topic?, Error>> GetByIdAsync(
-            TopicId topicId,
+        public Task<Result<LibraryContainer?, Error>> GetByIdAsync(
+            LibraryContainerId containerId,
+            CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<Result<LibraryContainer?, Error>> GetRootBySectionIdAsync(
+            SectionId sectionId,
             CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 
         public Task<Result<bool, Error>> ExistsAsync(
-            Expression<Func<Topic, bool>> predicate,
+            Expression<Func<LibraryContainer, bool>> predicate,
             CancellationToken cancellationToken) =>
             Task.FromResult(Result.Success<bool, Error>(true));
     }

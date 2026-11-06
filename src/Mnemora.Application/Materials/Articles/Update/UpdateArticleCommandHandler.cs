@@ -1,16 +1,16 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
 using Mnemora.Application.Database;
-using Mnemora.Application.Topics;
+using Mnemora.Application.LibraryContainers;
 using Mnemora.Domain.Materials;
-using Mnemora.Domain.Topics;
+using Mnemora.Domain.LibraryContainers;
 using Mnemora.Shared;
 using Mnemora.Shared.Abstractions;
 
 namespace Mnemora.Application.Materials.Articles.Update;
 
 public sealed class UpdateArticleCommandHandler(
-    ITopicsRepository topicsRepository,
+    ILibraryContainersRepository libraryContainersRepository,
     IMaterialsRepository materialsRepository,
     ITransactionManager transactionManager,
     ILogger<UpdateArticleCommandHandler> logger)
@@ -27,11 +27,11 @@ public sealed class UpdateArticleCommandHandler(
             return articleIdResult.Error.ToErrors();
         }
 
-        var topicIdResult = TopicId.Create(command.TopicId);
+        var containerIdResult = LibraryContainerId.Create(command.ContainerId);
 
-        if (topicIdResult.IsFailure)
+        if (containerIdResult.IsFailure)
         {
-            return topicIdResult.Error.ToErrors();
+            return containerIdResult.Error.ToErrors();
         }
 
         var titleResult = MaterialTitle.Create(command.Title);
@@ -86,26 +86,26 @@ public sealed class UpdateArticleCommandHandler(
                 nameof(command.ArticleId)).ToErrors();
         }
 
-        TopicId newTopicId = topicIdResult.Value;
-        var topicChanged = article.TopicId != newTopicId;
+        LibraryContainerId newContainerId = containerIdResult.Value;
+        var containerChanged = article.ContainerId != newContainerId;
         IReadOnlyCollection<Question> linkedQuestions = Array.Empty<Question>();
 
-        if (topicChanged)
+        if (containerChanged)
         {
-            var topicExistsResult = await topicsRepository.ExistsAsync(
-                topic => topic.Id == newTopicId,
+            var containerExistsResult = await libraryContainersRepository.ExistsAsync(
+                container => container.Id == newContainerId,
                 cancellationToken);
 
-            if (topicExistsResult.IsFailure)
+            if (containerExistsResult.IsFailure)
             {
-                return topicExistsResult.Error.ToErrors();
+                return containerExistsResult.Error.ToErrors();
             }
 
-            if (!topicExistsResult.Value)
+            if (!containerExistsResult.Value)
             {
                 return CommonErrors.NotFound(
-                    "topic.not.found",
-                    $"Тема с идентификатором '{command.TopicId}' не найдена").ToErrors();
+                    "container.not.found",
+                    $"Контейнер с идентификатором '{command.ContainerId}' не найден").ToErrors();
             }
 
             var questionsResult = await materialsRepository.GetQuestionsByArticleIdAsync(article.Id, cancellationToken);
@@ -121,7 +121,7 @@ public sealed class UpdateArticleCommandHandler(
         var updateResult = ApplyChanges(
             article,
             linkedQuestions,
-            newTopicId,
+            newContainerId,
             titleResult.Value,
             command.Difficulty,
             iconResult.Value,
@@ -146,9 +146,9 @@ public sealed class UpdateArticleCommandHandler(
         }
 
         logger.LogInformation(
-            "Изменена статья {ArticleId}. Тема: {TopicId}. Перемещено связанных вопросов: {QuestionCount}",
+            "Изменена статья {ArticleId}. Контейнер: {ContainerId}. Перемещено связанных вопросов: {QuestionCount}",
             article.Id.Value,
-            article.TopicId.Value,
+            article.ContainerId.Value,
             linkedQuestions.Count);
 
         return article.Id.Value;
@@ -157,23 +157,23 @@ public sealed class UpdateArticleCommandHandler(
     private static UnitResult<Error> ApplyChanges(
         Article article,
         IReadOnlyCollection<Question> linkedQuestions,
-        TopicId topicId,
+        LibraryContainerId containerId,
         MaterialTitle title,
         MaterialDifficulty difficulty,
         MaterialIcon icon,
         MaterialExperienceRewards rewards,
         IReadOnlyCollection<MaterialTag> tags)
     {
-        var changeTopicResult = article.ChangeTopic(topicId);
+        var changeContainerResult = article.MoveToContainer(containerId);
 
-        if (changeTopicResult.IsFailure)
+        if (changeContainerResult.IsFailure)
         {
-            return changeTopicResult.Error;
+            return changeContainerResult.Error;
         }
 
         foreach (Question question in linkedQuestions)
         {
-            var questionResult = question.ChangeTopicWithArticle(article);
+            var questionResult = question.MoveToContainerWithArticle(article);
 
             if (questionResult.IsFailure)
             {

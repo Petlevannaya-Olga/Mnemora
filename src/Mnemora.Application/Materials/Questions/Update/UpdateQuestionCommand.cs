@@ -5,7 +5,7 @@ namespace Mnemora.Application.Materials.Questions.Update;
 
 public sealed record UpdateQuestionCommand(
     Guid QuestionId,
-    Guid? TopicId,
+    Guid? ContainerId,
     Guid? ArticleId,
     string Title,
     MaterialDifficulty Difficulty,

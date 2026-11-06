@@ -2,16 +2,16 @@
 using Microsoft.Extensions.Logging;
 using Mnemora.Application.Database;
 using Mnemora.Application.Materials.Content;
-using Mnemora.Application.Topics;
+using Mnemora.Application.LibraryContainers;
 using Mnemora.Domain.Materials;
-using Mnemora.Domain.Topics;
+using Mnemora.Domain.LibraryContainers;
 using Mnemora.Shared;
 using Mnemora.Shared.Abstractions;
 
 namespace Mnemora.Application.Materials.Questions.CreateStandalone;
 
 public sealed class CreateStandaloneQuestionCommandHandler(
-    ITopicsRepository topicsRepository,
+    ILibraryContainersRepository libraryContainersRepository,
     IMaterialsRepository materialsRepository,
     IMaterialContentStore materialContentStore,
     ITransactionManager transactionManager,
@@ -22,11 +22,11 @@ public sealed class CreateStandaloneQuestionCommandHandler(
         CreateStandaloneQuestionCommand command,
         CancellationToken cancellationToken)
     {
-        var topicIdResult = TopicId.Create(command.TopicId);
+        var containerIdResult = LibraryContainerId.Create(command.ContainerId);
 
-        if (topicIdResult.IsFailure)
+        if (containerIdResult.IsFailure)
         {
-            return topicIdResult.Error.ToErrors();
+            return containerIdResult.Error.ToErrors();
         }
 
         var titleResult = MaterialTitle.Create(command.Title);
@@ -64,24 +64,24 @@ public sealed class CreateStandaloneQuestionCommandHandler(
             return contentResult.Error.ToErrors();
         }
 
-        var topicExistsResult = await topicsRepository.ExistsAsync(
-            topic => topic.Id == topicIdResult.Value,
+        var containerExistsResult = await libraryContainersRepository.ExistsAsync(
+            container => container.Id == containerIdResult.Value,
             cancellationToken);
 
-        if (topicExistsResult.IsFailure)
+        if (containerExistsResult.IsFailure)
         {
-            return topicExistsResult.Error.ToErrors();
+            return containerExistsResult.Error.ToErrors();
         }
 
-        if (!topicExistsResult.Value)
+        if (!containerExistsResult.Value)
         {
             return CommonErrors.NotFound(
-                "topic.not.found",
-                $"Тема с идентификатором '{command.TopicId}' не найдена").ToErrors();
+                "container.not.found",
+                $"Контейнер с идентификатором '{command.ContainerId}' не найден").ToErrors();
         }
 
-        var questionResult = Question.CreateStandalone(
-            topicIdResult.Value,
+        var questionResult = Question.CreateStandaloneInContainer(
+            containerIdResult.Value,
             titleResult.Value,
             command.Difficulty,
             iconResult.Value,
@@ -130,10 +130,10 @@ public sealed class CreateStandaloneQuestionCommandHandler(
         }
 
         logger.LogInformation(
-            "Создан самостоятельный вопрос {QuestionId} с названием {QuestionTitle} в теме {TopicId}",
+            "Создан самостоятельный вопрос {QuestionId} с названием {QuestionTitle} в контейнере {ContainerId}",
             question.Id.Value,
             question.Title.Value,
-            question.TopicId.Value);
+            question.ContainerId.Value);
 
         return question.Id.Value;
     }

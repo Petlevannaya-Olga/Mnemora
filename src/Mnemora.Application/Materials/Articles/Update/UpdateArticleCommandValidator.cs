@@ -1,6 +1,6 @@
 ﻿using FluentValidation;
 using Mnemora.Domain.Materials;
-using Mnemora.Domain.Topics;
+using Mnemora.Domain.LibraryContainers;
 using Mnemora.Shared.Extensions;
 
 namespace Mnemora.Application.Materials.Articles.Update;
@@ -10,7 +10,7 @@ public sealed class UpdateArticleCommandValidator : AbstractValidator<UpdateArti
     public UpdateArticleCommandValidator()
     {
         RuleFor(command => command.ArticleId).MustBeValueObject(MaterialId.Create);
-        RuleFor(command => command.TopicId).MustBeValueObject(TopicId.Create);
+        RuleFor(command => command.ContainerId).MustBeValueObject(LibraryContainerId.Create);
         RuleFor(command => command.Title).MustBeValueObject(MaterialTitle.Create);
 
         RuleFor(command => command.Difficulty)

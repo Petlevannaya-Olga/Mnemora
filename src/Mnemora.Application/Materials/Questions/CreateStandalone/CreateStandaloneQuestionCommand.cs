@@ -4,7 +4,7 @@ using Mnemora.Shared.Abstractions;
 namespace Mnemora.Application.Materials.Questions.CreateStandalone;
 
 public sealed record CreateStandaloneQuestionCommand(
-    Guid TopicId,
+    Guid ContainerId,
     string Title,
     MaterialDifficulty Difficulty,
     string? IconKey,

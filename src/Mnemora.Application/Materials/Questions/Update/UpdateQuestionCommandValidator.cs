@@ -1,6 +1,6 @@
 ﻿using FluentValidation;
 using Mnemora.Domain.Materials;
-using Mnemora.Domain.Topics;
+using Mnemora.Domain.LibraryContainers;
 using Mnemora.Shared.Extensions;
 
 namespace Mnemora.Application.Materials.Questions.Update;
@@ -13,18 +13,18 @@ public sealed class UpdateQuestionCommandValidator : AbstractValidator<UpdateQue
 
         When(command => command.ArticleId is null, () =>
         {
-            RuleFor(command => command.TopicId)
+            RuleFor(command => command.ContainerId)
                 .Cascade(CascadeMode.Stop)
                 .NotNull()
-                .WithMessage("Для отдельного вопроса необходимо указать тему.")
-                .Must(topicId => TopicId.Create(topicId!.Value).IsSuccess)
-                .WithMessage("Указан недопустимый идентификатор темы.");
+                .WithMessage("Для отдельного вопроса необходимо указать контейнер.")
+                .Must(containerId => LibraryContainerId.Create(containerId!.Value).IsSuccess)
+                .WithMessage("Указан недопустимый идентификатор контейнера.");
         });
 
-        RuleFor(command => command.TopicId)
+        RuleFor(command => command.ContainerId)
             .Null()
             .When(command => command.ArticleId is not null)
-            .WithMessage("Для связанного вопроса тема определяется выбранной статьёй.");
+            .WithMessage("Для связанного вопроса контейнер определяется выбранной статьёй.");
 
         RuleFor(command => command.ArticleId)
             .Must(articleId => MaterialId.Create(articleId!.Value).IsSuccess)

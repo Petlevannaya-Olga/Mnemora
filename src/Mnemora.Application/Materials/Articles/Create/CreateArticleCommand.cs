@@ -4,7 +4,7 @@ using Mnemora.Shared.Abstractions;
 namespace Mnemora.Application.Materials.Articles.Create;
 
 public sealed record CreateArticleCommand(
-    Guid TopicId,
+    Guid ContainerId,
     string Title,
     MaterialDifficulty Difficulty,
     string? IconKey,

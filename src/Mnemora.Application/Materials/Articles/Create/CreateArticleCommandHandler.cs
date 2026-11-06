@@ -2,16 +2,16 @@
 using Microsoft.Extensions.Logging;
 using Mnemora.Application.Database;
 using Mnemora.Application.Materials.Content;
-using Mnemora.Application.Topics;
+using Mnemora.Application.LibraryContainers;
 using Mnemora.Domain.Materials;
-using Mnemora.Domain.Topics;
+using Mnemora.Domain.LibraryContainers;
 using Mnemora.Shared;
 using Mnemora.Shared.Abstractions;
 
 namespace Mnemora.Application.Materials.Articles.Create;
 
 public sealed class CreateArticleCommandHandler(
-    ITopicsRepository topicsRepository,
+    ILibraryContainersRepository libraryContainersRepository,
     IMaterialsRepository materialsRepository,
     IMaterialContentStore materialContentStore,
     ITransactionManager transactionManager,
@@ -22,11 +22,11 @@ public sealed class CreateArticleCommandHandler(
         CreateArticleCommand command,
         CancellationToken cancellationToken)
     {
-        var topicIdResult = TopicId.Create(command.TopicId);
+        var containerIdResult = LibraryContainerId.Create(command.ContainerId);
 
-        if (topicIdResult.IsFailure)
+        if (containerIdResult.IsFailure)
         {
-            return topicIdResult.Error.ToErrors();
+            return containerIdResult.Error.ToErrors();
         }
 
         var titleResult = MaterialTitle.Create(command.Title);
@@ -67,28 +67,28 @@ public sealed class CreateArticleCommandHandler(
             return contentResult.Error.ToErrors();
         }
 
-        var topicExistsResult =
-            await topicsRepository.ExistsAsync(
-                topic =>
-                    topic.Id == topicIdResult.Value,
+        var containerExistsResult =
+            await libraryContainersRepository.ExistsAsync(
+                container =>
+                    container.Id == containerIdResult.Value,
                 cancellationToken);
 
-        if (topicExistsResult.IsFailure)
+        if (containerExistsResult.IsFailure)
         {
-            return topicExistsResult.Error.ToErrors();
+            return containerExistsResult.Error.ToErrors();
         }
 
-        if (!topicExistsResult.Value)
+        if (!containerExistsResult.Value)
         {
             return CommonErrors.NotFound(
-                    "topic.not.found",
-                    $"Тема с идентификатором '{command.TopicId}' не найдена")
+                    "container.not.found",
+                    $"Контейнер с идентификатором '{command.ContainerId}' не найден")
                 .ToErrors();
         }
 
         var articleResult =
-            Article.Create(
-                topicIdResult.Value,
+            Article.CreateInContainer(
+                containerIdResult.Value,
                 titleResult.Value,
                 command.Difficulty,
                 iconResult.Value,
@@ -141,10 +141,10 @@ public sealed class CreateArticleCommandHandler(
         }
 
         logger.LogInformation(
-            "Создана статья {ArticleId} с названием {ArticleTitle} в теме {TopicId}",
+            "Создана статья {ArticleId} с названием {ArticleTitle} в контейнере {ContainerId}",
             article.Id.Value,
             article.Title.Value,
-            article.TopicId.Value);
+            article.ContainerId.Value);
 
         return article.Id.Value;
     }
