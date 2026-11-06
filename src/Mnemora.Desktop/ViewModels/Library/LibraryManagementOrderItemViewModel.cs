@@ -51,10 +51,10 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
     }
 
     /// <summary>
-    /// Lightweight topic item for the paged browse mode.
+    /// Lightweight first-level folder item for the paged browse mode.
     /// </summary>
     public LibraryManagementOrderItemViewModel(
-        LibraryManagementTopicOverviewDto topic,
+        LibraryManagementFolderOverviewDto topic,
         int position)
     {
         ArgumentNullException.ThrowIfNull(topic);
@@ -62,7 +62,7 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
         TopicOverview = topic;
         Id = topic.Id;
         Name = topic.Name;
-        Details = "Тема";
+        Details = "Папка";
         Target = LibraryOrderTarget.Topics;
         IconKind = ResolveIcon(topic.Icon, Target, Details);
         _position = position;
@@ -129,7 +129,7 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
 
     // Lightweight DTOs are used for normal paged browsing.
     public LibrarySectionOverviewDto? SectionOverview { get; }
-    public LibraryManagementTopicOverviewDto? TopicOverview { get; }
+    public LibraryManagementFolderOverviewDto? TopicOverview { get; }
     public LibraryManagementMaterialOverviewDto? MaterialOverview { get; }
     public LibrarySectionManagementItemDto? SectionManagementItem { get; }
 

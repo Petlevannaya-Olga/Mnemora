@@ -364,7 +364,7 @@ public sealed partial class LibraryManagementViewModel(
         ActiveOrderTarget switch
         {
             LibraryOrderTarget.Sections => "Настроить порядок разделов",
-            LibraryOrderTarget.Topics => "Настроить порядок тем",
+            LibraryOrderTarget.Topics => "Настроить порядок папок",
             LibraryOrderTarget.Materials => "Настроить порядок материалов",
             _ => "Настроить порядок",
         };
@@ -373,8 +373,8 @@ public sealed partial class LibraryManagementViewModel(
         ActiveOrderTarget switch
         {
             LibraryOrderTarget.Sections => "Перетащите разделы в нужном порядке.",
-            LibraryOrderTarget.Topics => "Перетащите темы внутри выбранного раздела.",
-            LibraryOrderTarget.Materials => "Перетащите материалы внутри выбранной темы.",
+            LibraryOrderTarget.Topics => "Перетащите папки внутри выбранного раздела.",
+            LibraryOrderTarget.Materials => "Перетащите материалы внутри выбранной папки.",
             _ => string.Empty,
         };
 
@@ -464,8 +464,8 @@ public sealed partial class LibraryManagementViewModel(
                 Math.Max(0, _simpleTopicsTotalCount - SimpleTopicCurrentPageOffset));
 
             return LibraryRangeTextFormatter.FormatEntity(
-                "Темы",
-                "Темы не найдены",
+                "Папки",
+                "Папки не найдены",
                 SimpleTopicCurrentPageOffset,
                 visibleCount,
                 _simpleTopicsTotalCount,
@@ -844,7 +844,7 @@ public sealed partial class LibraryManagementViewModel(
         }
 
         var context = new LibraryManagementOrderItemViewModel(
-            new LibraryManagementTopicOverviewDto(
+            new LibraryManagementFolderOverviewDto(
                 containerId,
                 section.Id,
                 section.Name,
@@ -1120,7 +1120,7 @@ public sealed partial class LibraryManagementViewModel(
 
         _preferredSectionId = section.Id;
         _preferredTopicId = topicId.Value;
-        notificationService.ShowSuccess("Тема создана");
+        notificationService.ShowSuccess("Папка создана");
         await RefreshAfterMutationAsync(cancellationToken);
     }
 
@@ -1151,7 +1151,7 @@ public sealed partial class LibraryManagementViewModel(
         }
 
         _preferredTopicId = topic.Id;
-        notificationService.ShowSuccess("Изменения темы сохранены");
+        notificationService.ShowSuccess("Изменения папки сохранены");
         await RefreshAfterMutationAsync(cancellationToken);
     }
 
@@ -1183,7 +1183,7 @@ public sealed partial class LibraryManagementViewModel(
 
         _pendingMaterialOrders.Remove(topic.Id);
         _preferredTopicId = null;
-        notificationService.ShowSuccess($"Тема «{topic.Name}» удалена");
+        notificationService.ShowSuccess($"Папка «{topic.Name}» удалена");
         await RefreshAfterMutationAsync(cancellationToken);
     }
 
@@ -1341,7 +1341,7 @@ public sealed partial class LibraryManagementViewModel(
 
         _preferredSectionId = item.Id;
         _preferredTopicId = topicId.Value;
-        notificationService.ShowSuccess("Тема создана");
+        notificationService.ShowSuccess("Папка создана");
         await RefreshAfterMutationAsync(cancellationToken);
     }
 
@@ -2462,8 +2462,8 @@ public sealed partial class LibraryManagementViewModel(
         }
         catch (Exception exception)
         {
-            logger.LogError(exception, "Не удалось сменить тему управления библиотекой");
-            ErrorMessage = "Не удалось загрузить выбранную тему";
+            logger.LogError(exception, "Не удалось сменить папку управления библиотекой");
+            ErrorMessage = "Не удалось загрузить выбранную папку";
         }
         finally
         {

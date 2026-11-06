@@ -88,13 +88,13 @@
                             FontSize="21"
                             FontWeight="SemiBold"
                             Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
-                            Text="Редактирование темы" />
+                            Text="Редактирование папки" />
 
                         <TextBlock
                             Margin="0,3,0,0"
                             FontSize="13"
                             Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
-                            Text="Измените название и оформление темы" />
+                            Text="Измените название и оформление папки" />
 
                     </StackPanel>
 
@@ -132,7 +132,7 @@
                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
                             Text="{Binding Name,
                                 UpdateSourceTrigger=PropertyChanged}"
-                            materialDesign:HintAssist.Hint="Название темы"
+                            materialDesign:HintAssist.Hint="Название папки"
                             materialDesign:TextFieldAssist.HasClearButton="True" />
 
                         <!-- Цвет -->

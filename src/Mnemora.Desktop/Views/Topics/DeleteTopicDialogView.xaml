@@ -81,7 +81,7 @@
                             FontSize="21"
                             FontWeight="SemiBold"
                             Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
-                            Text="Удалить тему?" />
+                            Text="Удалить папку?" />
 
                         <TextBlock
                             Margin="0,3,0,0"
@@ -115,7 +115,7 @@
                     FontSize="15"
                     Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
                     LineHeight="23"
-                    Text="Тема будет удалена без возможности восстановления."
+                    Text="Папка будет удалена без возможности восстановления."
                     TextWrapping="Wrap" />
 
                 <!-- Ошибка команды -->
@@ -212,7 +212,7 @@
 
                                 <Setter
                                     Property="Content"
-                                    Value="Удалить тему" />
+                                    Value="Удалить папку" />
 
                                 <Style.Triggers>
 

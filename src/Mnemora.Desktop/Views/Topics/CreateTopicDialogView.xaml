@@ -90,13 +90,13 @@
                             FontSize="21"
                             FontWeight="SemiBold"
                             Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                            Text="Новая тема" />
+                            Text="Новая папка" />
 
                         <TextBlock
                             Margin="0,3,0,0"
                             FontSize="13"
                             Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                            Text="Добавьте тему и выберите её оформление" />
+                            Text="Добавьте папку и выберите её оформление" />
 
                     </StackPanel>
 
@@ -182,7 +182,7 @@
                             Text="{Binding Name,
                                 UpdateSourceTrigger=PropertyChanged}"
                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                            materialDesign:HintAssist.Hint="Название темы"
+                            materialDesign:HintAssist.Hint="Название папки"
                             materialDesign:TextFieldAssist.HasClearButton="True" />
 
                         <!-- Цвет -->
@@ -496,7 +496,7 @@
 
                                         <Setter
                                             Property="Text"
-                                            Value="Создать тему" />
+                                            Value="Создать папку" />
 
                                         <Style.Triggers>
 

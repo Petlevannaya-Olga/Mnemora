@@ -167,7 +167,7 @@ public sealed partial class CreateTopicDialogViewModel(
             if (cancellationToken.IsCancellationRequested)
             {
                 ErrorMessage =
-                    "Создание темы было отменено";
+                    "Создание папки было отменено";
 
                 return;
             }
@@ -176,7 +176,7 @@ public sealed partial class CreateTopicDialogViewModel(
             {
                 ErrorMessage =
                     result.Error.FirstOrDefault()?.Message
-                    ?? "Не удалось создать тему";
+                    ?? "Не удалось создать папку";
 
                 return;
             }
@@ -191,7 +191,7 @@ public sealed partial class CreateTopicDialogViewModel(
             when (cancellationToken.IsCancellationRequested)
         {
             ErrorMessage =
-                "Создание темы было отменено";
+                "Создание папки было отменено";
         }
         finally
         {

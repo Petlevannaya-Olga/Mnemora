@@ -97,7 +97,7 @@
                             Margin="0,3,0,0"
                             FontSize="13"
                             Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
-                            Text="Иконка поможет быстрее находить тему в библиотеке" />
+                            Text="Иконка поможет быстрее находить папку в библиотеке" />
 
                     </StackPanel>
 

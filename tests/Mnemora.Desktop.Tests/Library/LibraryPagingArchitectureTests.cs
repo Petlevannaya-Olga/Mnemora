@@ -28,7 +28,7 @@ public sealed class LibraryPagingArchitectureTests
             BindingFlags.Instance | BindingFlags.NonPublic);
 
         field.Should().NotBeNull();
-        field!.FieldType.Should().Be(typeof(BoundedPagedWindow<LibraryManagementTopicOverviewDto>));
+        field!.FieldType.Should().Be(typeof(BoundedPagedWindow<LibraryManagementFolderOverviewDto>));
     }
 
     [Fact]

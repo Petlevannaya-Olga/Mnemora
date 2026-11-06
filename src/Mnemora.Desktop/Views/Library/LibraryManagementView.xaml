@@ -1065,7 +1065,7 @@
                 <Button Command="{Binding DataContext.OpenSimpleTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                         CommandParameter="{Binding}"
                         Style="{StaticResource SectionNavigationButtonStyle}"
-                        ToolTip="Открыть тему">
+                        ToolTip="Открыть папку">
                     <Border Style="{StaticResource SimpleTopicCardStyle}">
                         <Grid>
                             <Grid.RowDefinitions>
@@ -1135,14 +1135,14 @@
                     <Button Command="{Binding DataContext.EditTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                             CommandParameter="{Binding}"
                             Style="{StaticResource SmallIconButtonStyle}"
-                            ToolTip="Редактировать тему">
+                            ToolTip="Редактировать папку">
                         <materialDesign:PackIcon Width="17" Height="17" Kind="PencilOutline" />
                     </Button>
                     <Button Command="{Binding DataContext.DeleteTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                             CommandParameter="{Binding}"
                             Foreground="#C62828"
                             Style="{StaticResource SmallIconButtonStyle}"
-                            ToolTip="Удалить тему">
+                            ToolTip="Удалить папку">
                         <materialDesign:PackIcon Width="17" Height="17" Kind="DeleteOutline" />
                     </Button>
                 </StackPanel>
@@ -1154,7 +1154,7 @@
                 <Button Command="{Binding DataContext.OpenSimpleTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                         CommandParameter="{Binding}"
                         Style="{StaticResource SectionNavigationButtonStyle}"
-                        ToolTip="Открыть тему">
+                        ToolTip="Открыть папку">
                     <Border Style="{StaticResource SimpleSectionCompactCardStyle}">
                         <Grid>
                             <Grid.RowDefinitions>
@@ -1226,7 +1226,7 @@
                             Command="{Binding DataContext.EditTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                             CommandParameter="{Binding}"
                             Style="{StaticResource SmallIconButtonStyle}"
-                            ToolTip="Редактировать тему">
+                            ToolTip="Редактировать папку">
                         <materialDesign:PackIcon Width="15" Height="15" Kind="PencilOutline" />
                     </Button>
                     <Button Width="27"
@@ -1235,7 +1235,7 @@
                             CommandParameter="{Binding}"
                             Foreground="#C62828"
                             Style="{StaticResource SmallIconButtonStyle}"
-                            ToolTip="Удалить тему">
+                            ToolTip="Удалить папку">
                         <materialDesign:PackIcon Width="15" Height="15" Kind="DeleteOutline" />
                     </Button>
                 </StackPanel>
@@ -2436,7 +2436,7 @@
                     <TextBlock Margin="0,5,0,0"
                                FontSize="14"
                                Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                               Text="Темы раздела" />
+                               Text="Папки раздела" />
                 </StackPanel>
             </Grid>
 
@@ -2455,7 +2455,7 @@
                 <TextBox Height="52"
                          VerticalContentAlignment="Center"
                          Text="{Binding SimpleTopicSearchText, UpdateSourceTrigger=PropertyChanged}"
-                         materialDesign:HintAssist.Hint="Поиск по названию темы..."
+                         materialDesign:HintAssist.Hint="Поиск по названию папки..."
                          materialDesign:TextFieldAssist.HasClearButton="True"
                          Style="{StaticResource MaterialDesignOutlinedTextBox}" />
 
@@ -2551,7 +2551,7 @@
 
                                 <Button Grid.Column="0"
                                         Command="{Binding DataContext.AddTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
-                                        ToolTip="Создать тему">
+                                        ToolTip="Создать папку">
                                     <Button.Style>
                                         <Style TargetType="Button" BasedOn="{StaticResource CreateLargeEntityTileButtonStyle}">
                                             <Setter Property="Visibility" Value="Collapsed" />
@@ -2570,7 +2570,7 @@
                                         </Border>
                                         <TextBlock Margin="0,12,0,0" HorizontalAlignment="Center"
                                                    FontSize="16" FontWeight="SemiBold"
-                                                   Foreground="White" Text="Создать тему" />
+                                                   Foreground="White" Text="Создать папку" />
                                     </StackPanel>
                                 </Button>
 
@@ -2660,7 +2660,7 @@
 
                                 <Button Grid.Column="0"
                                         Command="{Binding DataContext.AddTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
-                                        ToolTip="Создать тему">
+                                        ToolTip="Создать папку">
                                     <Button.Style>
                                         <Style TargetType="Button" BasedOn="{StaticResource CreateCompactEntityTileButtonStyle}">
                                             <Setter Property="Visibility" Value="Collapsed" />
@@ -2677,7 +2677,7 @@
                                                                  Foreground="White" Kind="BookPlusOutline" />
                                         <TextBlock Margin="9,0,0,0" VerticalAlignment="Center"
                                                    FontSize="14" FontWeight="SemiBold"
-                                                   Foreground="White" Text="Создать тему" />
+                                                   Foreground="White" Text="Создать папку" />
                                     </StackPanel>
                                 </Button>
 
@@ -2773,7 +2773,7 @@
                               VirtualizingPanel.IsVirtualizing="True"
                               VirtualizingPanel.VirtualizationMode="Recycling">
                         <DataGrid.Columns>
-                            <DataGridTemplateColumn Width="*" MinWidth="270" Header="Тема">
+                            <DataGridTemplateColumn Width="*" MinWidth="270" Header="Папка">
                                 <DataGridTemplateColumn.CellStyle>
                                     <Style TargetType="DataGridCell" BasedOn="{StaticResource SimpleSectionTableCellStyle}">
                                         <Setter Property="Padding" Value="16,8,14,8" />
@@ -2888,14 +2888,14 @@
                                             <Button Command="{Binding DataContext.EditTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                                     CommandParameter="{Binding}"
                                                     Style="{StaticResource SmallIconButtonStyle}"
-                                                    ToolTip="Редактировать тему">
+                                                    ToolTip="Редактировать папку">
                                                 <materialDesign:PackIcon Width="16" Height="16" Kind="PencilOutline" />
                                             </Button>
                                             <Button Command="{Binding DataContext.DeleteTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                                     CommandParameter="{Binding}"
                                                     Foreground="#C62828"
                                                     Style="{StaticResource SmallIconButtonStyle}"
-                                                    ToolTip="Удалить тему">
+                                                    ToolTip="Удалить папку">
                                                 <materialDesign:PackIcon Width="16" Height="16" Kind="DeleteOutline" />
                                             </Button>
                                         </StackPanel>
@@ -2930,12 +2930,12 @@
                                FontSize="21"
                                FontWeight="SemiBold"
                                Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                               Text="В разделе пока нет тем" />
+                               Text="В разделе пока нет папок" />
                     <TextBlock Margin="0,8,0,0"
                                HorizontalAlignment="Center"
                                FontSize="14"
                                Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                               Text="Создайте первую тему в этом разделе" />
+                               Text="Создайте первую папку в этом разделе" />
                     <Button Height="42"
                             Margin="0,20,0,0"
                             HorizontalAlignment="Center"
@@ -2943,7 +2943,7 @@
                             Style="{StaticResource Mnemora.PrimaryButton}">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Width="18" Height="18" Kind="BookPlusOutline" />
-                            <TextBlock Margin="8,0,0,0" Text="Создать первую тему" />
+                            <TextBlock Margin="8,0,0,0" Text="Создать первую папку" />
                         </StackPanel>
                     </Button>
                 </StackPanel>
@@ -2961,7 +2961,7 @@
                                FontSize="18"
                                FontWeight="SemiBold"
                                Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                               Text="Темы не найдены" />
+                               Text="Папки не найдены" />
                     <TextBlock Margin="0,7,0,0"
                                HorizontalAlignment="Center"
                                FontSize="13"
@@ -2980,7 +2980,7 @@
                         Visibility="{Binding IsContextLoading, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <loading:LoadingIndicator IndicatorLength="360"
                                               IndicatorThickness="8"
-                                              Message="Загружаем темы..."
+                                              Message="Загружаем папки..."
                                               MessageForeground="White"
                                               TrackBrush="#40FFFFFF" />
                 </Border>
@@ -3003,7 +3003,7 @@
                         Visibility="{Binding IsSimpleTopicsPaging, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <loading:LoadingIndicator ShowDelay="0" IndicatorLength="200"
                                               IndicatorThickness="6"
-                                              Message="Загружаем темы..."
+                                              Message="Загружаем папки..."
                                               MessageForeground="White"
                                               TrackBrush="#40FFFFFF" />
                 </Border>
@@ -3028,7 +3028,7 @@
                     </Button.Style>
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Width="18" Height="18" Kind="BookPlusOutline" />
-                        <TextBlock Margin="8,0,0,0" Text="Создать тему" />
+                        <TextBlock Margin="8,0,0,0" Text="Создать папку" />
                     </StackPanel>
                 </Button>
             </Grid>
@@ -3063,7 +3063,7 @@
                     <TextBlock Margin="4,0,0,0"
                                VerticalAlignment="Center"
                                FontSize="14"
-                               Text="Темы" />
+                               Text="Папки" />
                 </StackPanel>
             </Button>
 
@@ -3097,7 +3097,7 @@
                     <TextBlock Margin="0,5,0,0"
                                FontSize="14"
                                Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                               Text="Материалы темы" />
+                               Text="Материалы папки" />
                 </StackPanel>
             </Grid>
 
@@ -3322,12 +3322,12 @@
                                FontSize="22"
                                FontWeight="SemiBold"
                                Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                               Text="В теме пока нет материалов" />
+                               Text="В папке пока нет материалов" />
                     <TextBlock Margin="0,8,0,0"
                                HorizontalAlignment="Center"
                                FontSize="14"
                                Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                               Text="Создайте первый материал в этой теме" />
+                               Text="Создайте первый материал в этой папке" />
                     <Button Margin="0,20,0,0"
                             Height="44"
                             MinWidth="220"

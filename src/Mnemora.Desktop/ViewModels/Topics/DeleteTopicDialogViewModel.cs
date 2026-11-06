@@ -105,7 +105,7 @@ public sealed partial class DeleteTopicDialogViewModel(
 
             if (cancellationToken.IsCancellationRequested)
             {
-                ErrorMessage = "Удаление темы было отменено";
+                ErrorMessage = "Удаление папки было отменено";
 
                 return;
             }
@@ -116,7 +116,7 @@ public sealed partial class DeleteTopicDialogViewModel(
                     result.Error
                         .FirstOrDefault()
                         ?.Message
-                    ?? "Не удалось удалить тему";
+                    ?? "Не удалось удалить папку";
 
                 return;
             }
@@ -130,7 +130,7 @@ public sealed partial class DeleteTopicDialogViewModel(
         catch (OperationCanceledException)
             when (cancellationToken.IsCancellationRequested)
         {
-            ErrorMessage = "Удаление темы было отменено";
+            ErrorMessage = "Удаление папки было отменено";
         }
         finally
         {

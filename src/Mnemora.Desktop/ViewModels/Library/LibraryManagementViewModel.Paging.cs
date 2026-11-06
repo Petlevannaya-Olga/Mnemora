@@ -5,7 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using Mnemora.Application.Library.GetManagementMaterialsPage;
 using Mnemora.Application.Library.GetManagementSectionsPage;
-using Mnemora.Application.Library.GetManagementTopicsPage;
+using Mnemora.Application.Library.GetManagementFoldersPage;
 using Mnemora.Contracts;
 using Mnemora.Contracts.Library;
 
@@ -27,10 +27,10 @@ public sealed partial class LibraryManagementViewModel
     private readonly Dictionary<int, Task<LibraryManagementSectionsPageDto?>> _simpleSectionInFlight = [];
     private readonly object _simpleSectionInFlightGate = new();
 
-    private readonly BoundedPagedWindow<LibraryManagementTopicOverviewDto> _simpleTopicWindow =
+    private readonly BoundedPagedWindow<LibraryManagementFolderOverviewDto> _simpleTopicWindow =
         new(SimpleTopicPageSize, SimpleTopicVisiblePageLimit, SimpleTopicCachePageLimit);
 
-    private readonly Dictionary<int, Task<LibraryManagementTopicsPageDto?>> _simpleTopicInFlight = [];
+    private readonly Dictionary<int, Task<LibraryManagementFoldersPageDto?>> _simpleTopicInFlight = [];
     private readonly object _simpleTopicInFlightGate = new();
 
     private readonly BoundedPageCache<LibraryManagementMaterialOverviewDto> _simpleMaterialPageCache =
@@ -499,7 +499,7 @@ public sealed partial class LibraryManagementViewModel
 
         try
         {
-            LibraryManagementTopicsPageDto? page = await GetSimpleTopicPageAsync(
+            LibraryManagementFoldersPageDto? page = await GetSimpleTopicPageAsync(
                 offset: 0,
                 loadVersion,
                 _simpleTopicContextCancellation!.Token,
@@ -537,7 +537,7 @@ public sealed partial class LibraryManagementViewModel
 
         if (_simpleTopicWindow.TryGetCachedPage(
                 offset,
-                out IReadOnlyList<LibraryManagementTopicOverviewDto> cached))
+                out IReadOnlyList<LibraryManagementFolderOverviewDto> cached))
         {
             _simpleTopicWindow.ShowPage(offset, cached, PageWindowInsert.Append);
             RebuildSimpleTopicWindow();
@@ -557,7 +557,7 @@ public sealed partial class LibraryManagementViewModel
 
             await YieldForPagingLoaderAsync(linked.Token);
 
-            LibraryManagementTopicsPageDto? page = await GetSimpleTopicPageAsync(
+            LibraryManagementFoldersPageDto? page = await GetSimpleTopicPageAsync(
                 offset,
                 loadVersion,
                 linked.Token,
@@ -607,7 +607,7 @@ public sealed partial class LibraryManagementViewModel
 
         if (_simpleTopicWindow.TryGetCachedPage(
                 offset,
-                out IReadOnlyList<LibraryManagementTopicOverviewDto> cached))
+                out IReadOnlyList<LibraryManagementFolderOverviewDto> cached))
         {
             _simpleTopicWindow.ShowPage(offset, cached, PageWindowInsert.Prepend);
             RebuildSimpleTopicWindow();
@@ -627,7 +627,7 @@ public sealed partial class LibraryManagementViewModel
 
             await YieldForPagingLoaderAsync(linked.Token);
 
-            LibraryManagementTopicsPageDto? page = await GetSimpleTopicPageAsync(
+            LibraryManagementFoldersPageDto? page = await GetSimpleTopicPageAsync(
                 offset,
                 loadVersion,
                 linked.Token,
@@ -720,7 +720,7 @@ public sealed partial class LibraryManagementViewModel
         NotifySimpleTopicsStateChanged();
     }
 
-    private async Task<LibraryManagementTopicsPageDto?> GetSimpleTopicPageAsync(
+    private async Task<LibraryManagementFoldersPageDto?> GetSimpleTopicPageAsync(
         int offset,
         int loadVersion,
         CancellationToken cancellationToken,
@@ -733,16 +733,16 @@ public sealed partial class LibraryManagementViewModel
 
         if (_simpleTopicWindow.TryGetCachedPage(
                 offset,
-                out IReadOnlyList<LibraryManagementTopicOverviewDto> cached))
+                out IReadOnlyList<LibraryManagementFolderOverviewDto> cached))
         {
-            return new LibraryManagementTopicsPageDto(
+            return new LibraryManagementFoldersPageDto(
                 cached,
                 offset + cached.Count,
                 offset + cached.Count < _simpleTopicsTotalCount,
                 _simpleTopicsTotalCount);
         }
 
-        Task<LibraryManagementTopicsPageDto?> task;
+        Task<LibraryManagementFoldersPageDto?> task;
 
         lock (_simpleTopicInFlightGate)
         {
@@ -766,7 +766,7 @@ public sealed partial class LibraryManagementViewModel
 
         try
         {
-            LibraryManagementTopicsPageDto? page = await task;
+            LibraryManagementFoldersPageDto? page = await task;
 
             if (page is null ||
                 loadVersion != _simpleTopicLoadVersion ||
@@ -784,7 +784,7 @@ public sealed partial class LibraryManagementViewModel
             {
                 if (_simpleTopicInFlight.TryGetValue(
                         offset,
-                        out Task<LibraryManagementTopicsPageDto?>? current) &&
+                        out Task<LibraryManagementFoldersPageDto?>? current) &&
                     ReferenceEquals(current, task))
                 {
                     _simpleTopicInFlight.Remove(offset);
@@ -793,7 +793,7 @@ public sealed partial class LibraryManagementViewModel
         }
     }
 
-    private async Task<LibraryManagementTopicsPageDto?> QuerySimpleTopicPageAsync(
+    private async Task<LibraryManagementFoldersPageDto?> QuerySimpleTopicPageAsync(
         Guid sectionId,
         string? search,
         LibraryManagementTopicSort sort,
@@ -803,7 +803,7 @@ public sealed partial class LibraryManagementViewModel
     {
         try
         {
-            var query = new GetLibraryManagementTopicsPageQuery(
+            var query = new GetLibraryManagementFoldersPageQuery(
                 sectionId,
                 search,
                 ToTopicPageSort(sort),
@@ -811,8 +811,8 @@ public sealed partial class LibraryManagementViewModel
                 SimpleTopicPageSize);
 
             var result = await queryDispatcher.SendAsync<
-                GetLibraryManagementTopicsPageQuery,
-                LibraryManagementTopicsPageDto>(
+                GetLibraryManagementFoldersPageQuery,
+                LibraryManagementFoldersPageDto>(
                 query,
                 cancellationToken);
 
@@ -851,7 +851,7 @@ public sealed partial class LibraryManagementViewModel
         }
     }
 
-    private void ApplyTopicPageTotals(LibraryManagementTopicsPageDto page)
+    private void ApplyTopicPageTotals(LibraryManagementFoldersPageDto page)
     {
         _simpleTopicsTotalCount = page.TotalCount;
         _simpleTopicWindow.SetTotalCount(page.TotalCount);
@@ -872,14 +872,14 @@ public sealed partial class LibraryManagementViewModel
         {
             if (!_simpleTopicWindow.TryGetCachedPage(
                     offset,
-                    out IReadOnlyList<LibraryManagementTopicOverviewDto> page))
+                    out IReadOnlyList<LibraryManagementFolderOverviewDto> page))
             {
                 continue;
             }
 
             int position = offset + 1;
 
-            foreach (LibraryManagementTopicOverviewDto topic in page)
+            foreach (LibraryManagementFolderOverviewDto topic in page)
             {
                 SimpleTopics.Add(new LibraryManagementOrderItemViewModel(topic, position++));
             }
@@ -1389,14 +1389,14 @@ public sealed partial class LibraryManagementViewModel
             !string.IsNullOrWhiteSpace(SimpleMaterialSearchText));
     }
 
-    private static LibraryManagementTopicPageSort ToTopicPageSort(LibraryManagementTopicSort sort) =>
+    private static LibraryManagementFolderPageSort ToTopicPageSort(LibraryManagementTopicSort sort) =>
         sort switch
         {
-            LibraryManagementTopicSort.Custom => LibraryManagementTopicPageSort.Custom,
-            LibraryManagementTopicSort.RecentActivity => LibraryManagementTopicPageSort.RecentActivity,
-            LibraryManagementTopicSort.Name => LibraryManagementTopicPageSort.Name,
-            LibraryManagementTopicSort.Newest => LibraryManagementTopicPageSort.Newest,
-            _ => LibraryManagementTopicPageSort.Custom,
+            LibraryManagementTopicSort.Custom => LibraryManagementFolderPageSort.Custom,
+            LibraryManagementTopicSort.RecentActivity => LibraryManagementFolderPageSort.RecentActivity,
+            LibraryManagementTopicSort.Name => LibraryManagementFolderPageSort.Name,
+            LibraryManagementTopicSort.Newest => LibraryManagementFolderPageSort.Newest,
+            _ => LibraryManagementFolderPageSort.Custom,
         };
 
     private static LibraryManagementMaterialPageFilter ToMaterialPageFilter(LibraryManagementMaterialFilter filter) =>
