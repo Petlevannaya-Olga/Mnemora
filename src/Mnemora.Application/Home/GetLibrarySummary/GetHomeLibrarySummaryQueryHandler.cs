@@ -29,12 +29,14 @@ public sealed class GetHomeLibrarySummaryQueryHandler(
                     new HomeLibrarySummaryDto(0, 0, null));
             }
 
-            int topicsCount = await readDbContext.TopicsRead
-                .CountAsync(cancellationToken);
+            int topicsCount = await readDbContext.LibraryContainersRead
+                .CountAsync(container => container.Depth == 1, cancellationToken);
 
             Section? suggestedSection = await readDbContext.SectionsRead
-                .Where(section => !readDbContext.TopicsRead
-                    .Any(topic => topic.SectionId == section.Id))
+                .Where(section => !readDbContext.LibraryContainersRead
+                    .Any(container =>
+                        container.SectionId == section.Id &&
+                        container.Depth == 1))
                 .OrderBy(section => section.CreatedAt)
                 .ThenBy(section => section.Id)
                 .FirstOrDefaultAsync(cancellationToken);

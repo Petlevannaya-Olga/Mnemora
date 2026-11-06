@@ -155,7 +155,13 @@ public sealed class LibraryOverviewPagingRetryTests
     {
         public ViewModelBase? CurrentPageViewModel => null;
         public bool CanNavigateBack => false;
-        public event EventHandler? CurrentPageViewModelChanged { add { } remove { } }
+        private EventHandler? _currentPageViewModelChangedHandlers;
+
+        public event EventHandler? CurrentPageViewModelChanged
+        {
+            add => _currentPageViewModelChangedHandlers += value;
+            remove => _currentPageViewModelChangedHandlers -= value;
+        }
         public void NavigateTo<TViewModel>() where TViewModel : ViewModelBase =>
             throw new NotSupportedException();
         public void NavigateTo<TViewModel>(Action<TViewModel> initialize)

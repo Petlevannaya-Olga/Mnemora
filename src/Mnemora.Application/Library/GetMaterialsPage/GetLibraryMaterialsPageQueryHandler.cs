@@ -138,18 +138,6 @@ public sealed class GetLibraryMaterialsPageQueryHandler(
                 ? section.Icon.ToString()
                 : container.Icon!.Value.ToString();
 
-            // Compatibility header for the current Desktop view model.
-            // Its values now describe the current container, not necessarily a legacy Topic.
-            var compatibilityTopicHeader = new LibraryTopicHeaderDto(
-                container.Id.Value,
-                section.Id.Value,
-                section.Name.Value,
-                displayName,
-                displayColor,
-                displayIcon,
-                container.CreatedAt,
-                container.UpdatedAt);
-
             var containerHeader = new LibraryContainerHeaderDto(
                 container.Id.Value,
                 section.Id.Value,
@@ -163,14 +151,11 @@ public sealed class GetLibraryMaterialsPageQueryHandler(
                 container.UpdatedAt);
 
             var result = new LibraryMaterialsPageDto(
-                compatibilityTopicHeader,
+                containerHeader,
                 items,
                 request.Offset + items.Length,
                 hasMore,
-                totalCount)
-            {
-                Container = containerHeader,
-            };
+                totalCount);
 
             return Result.Success<LibraryMaterialsPageDto, Errors>(result);
         }
@@ -210,7 +195,7 @@ public sealed class GetLibraryMaterialsPageQueryHandler(
 
         return new LibraryMaterialDto(
             material.Id.Value,
-            material.TopicId.Value,
+            material.ContainerId.Value,
             material.Title.Value,
             material.Type.ToString(),
             material.Difficulty.ToString(),

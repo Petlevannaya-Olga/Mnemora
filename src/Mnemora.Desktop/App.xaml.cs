@@ -201,8 +201,6 @@ public partial class App : System.Windows.Application
         services.AddTransient<LibraryStressDataSeeder>();
 #endif
 
-        services.AddTransient<LibraryTopicViewModel>();
-        services.AddTransient<LibrarySectionViewModel>();
         services.AddTransient<LibraryContainerViewModel>();
         services.AddTransient<ArticleViewModel>();
         services.AddTransient<AllMaterialsViewModel>();

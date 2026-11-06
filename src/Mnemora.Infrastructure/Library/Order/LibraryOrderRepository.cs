@@ -5,7 +5,6 @@ using Mnemora.Application.Library.Order;
 using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Materials;
 using Mnemora.Domain.Sections;
-using Mnemora.Domain.Topics;
 using Mnemora.Infrastructure.Persistence;
 using Mnemora.Shared;
 
@@ -29,21 +28,6 @@ internal sealed class LibraryOrderRepository(
             cancellationToken);
     }
 
-    public Task<Result<IReadOnlyList<Topic>, Error>> GetTopicsAsync(
-        SectionId sectionId,
-        CancellationToken cancellationToken)
-    {
-        return ExecuteAsync(
-            async () => await dbContext.Topics
-                .Where(topic => topic.SectionId == sectionId)
-                .OrderBy(topic => topic.DisplayOrder)
-                .ThenBy(topic => topic.CreatedAt)
-                .ThenBy(topic => topic.Id)
-                .ToListAsync(cancellationToken),
-            "темы",
-            cancellationToken);
-    }
-
     public Task<Result<IReadOnlyList<LibraryContainer>, Error>> GetFirstLevelFoldersAsync(
         SectionId sectionId,
         CancellationToken cancellationToken)
@@ -62,12 +46,12 @@ internal sealed class LibraryOrderRepository(
     }
 
     public Task<Result<IReadOnlyList<Material>, Error>> GetMaterialsAsync(
-        TopicId topicId,
+        LibraryContainerId containerId,
         CancellationToken cancellationToken)
     {
         return ExecuteAsync(
             async () => await dbContext.Materials
-                .Where(material => material.TopicId == topicId)
+                .Where(material => material.ContainerId == containerId)
                 .OrderBy(material => material.DisplayOrder)
                 .ThenBy(material => material.CreatedAt)
                 .ThenBy(material => material.Id)

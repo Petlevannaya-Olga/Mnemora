@@ -134,20 +134,12 @@
         <library:AllMaterialsView />
     </DataTemplate>
 
-    <DataTemplate DataType="{x:Type libraryViewModels:LibrarySectionViewModel}">
-        <library:LibrarySectionView />
-    </DataTemplate>
-
     <DataTemplate DataType="{x:Type libraryViewModels:LibraryContainerViewModel}">
         <library:LibraryContainerView />
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type libraryViewModels:ArticleViewModel}">
         <library:ArticleView />
-    </DataTemplate>
-    
-    <DataTemplate DataType="{x:Type libraryViewModels:LibraryTopicViewModel}">
-        <library:LibraryTopicView />
     </DataTemplate>
     
     <DataTemplate DataType="{x:Type onboardingViewModels:EditorSetupViewModel}">

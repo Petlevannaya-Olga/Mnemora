@@ -91,19 +91,18 @@ public sealed class GetLibraryMaterialsPageTotalCountTests
         rootResult.Value.Container.Should().NotBeNull();
         rootResult.Value.Container!.IsRoot.Should().BeTrue();
         rootResult.Value.Container.Name.Should().Be(section.Name.Value);
-        rootResult.Value.Topic.Name.Should().Be(section.Name.Value);
+        rootResult.Value.Container.Name.Should().Be(section.Name.Value);
 
         nestedResult.IsSuccess.Should().BeTrue();
         nestedResult.Value.Items.Should().ContainSingle();
         nestedResult.Value.Items[0].Id.Should().Be(nestedArticle.Id.Value);
         nestedResult.Value.Items[0].ContainerId.Should().Be(nestedFolder.Id.Value);
-        nestedResult.Value.Items[0].TopicId.Should().Be(topic.Id.Value);
         nestedResult.Value.Container.Should().NotBeNull();
         nestedResult.Value.Container!.Id.Should().Be(nestedFolder.Id.Value);
         nestedResult.Value.Container.ParentId.Should().Be(topicFolder.Id.Value);
         nestedResult.Value.Container.Depth.Should().Be(2);
         nestedResult.Value.Container.Name.Should().Be("Memory");
-        nestedResult.Value.Topic.Name.Should().Be("Memory");
+        nestedResult.Value.Container.Name.Should().Be("Memory");
     }
 
     [Fact]

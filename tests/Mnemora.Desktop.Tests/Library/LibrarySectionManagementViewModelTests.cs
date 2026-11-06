@@ -1,7 +1,7 @@
 using CSharpFunctionalExtensions;
 using FluentAssertions;
 using Mnemora.Application.Library.GetHierarchyFoldersPage;
-using Mnemora.Application.Library.GetManagementMaterialsPage;
+using Mnemora.Application.Library.GetSectionManagementItemsPage;
 using Mnemora.Application.Queries;
 using Mnemora.Contracts;
 using Mnemora.Contracts.Library;
@@ -15,7 +15,7 @@ namespace Mnemora.Desktop.Tests.Library;
 public sealed class LibrarySectionManagementViewModelTests
 {
     [Fact]
-    public async Task InitializeAsync_LoadsOnlySelectedSectionRoot()
+    public async Task InitializeAsync_LoadsSectionItemsWithoutExpandingFolderTree()
     {
         Guid sectionId = Guid.NewGuid();
         Guid rootId = Guid.NewGuid();
@@ -26,13 +26,11 @@ public sealed class LibrarySectionManagementViewModelTests
 
         var dispatcher = new StubQueryDispatcher(query => query switch
         {
-            GetLibraryHierarchyFoldersPageQuery folders when folders.ContainerId == rootId =>
-                new LibraryHierarchyFoldersPageDto(
-                    [CreateFolder(folderId, sectionId, rootId, "EF Core", 0)],
-                    1,
-                    false),
-            GetLibraryManagementMaterialsPageQuery materials when materials.ContainerId == rootId =>
-                CreateMaterialsPage(materialId, rootId, "Root material"),
+            GetLibrarySectionManagementItemsPageQuery items when
+                items.SectionId == sectionId && items.Offset == 0 =>
+                CreateItemsPage(
+                    CreateFolderItem(folderId, rootId, "EF Core"),
+                    CreateMaterialItem(materialId, rootId, "Root material")),
             _ => throw Unexpected(query),
         });
 
@@ -40,12 +38,15 @@ public sealed class LibrarySectionManagementViewModelTests
 
         await viewModel.InitializeAsync(section);
 
-        LibrarySectionManagementTreeNodeViewModel root = viewModel.Roots.Should().ContainSingle().Subject;
+        LibrarySectionManagementTreeNodeViewModel root = viewModel.Roots.Should()
+            .ContainSingle().Subject;
         root.IsSection.Should().BeTrue();
         root.ContainerId.Should().Be(rootId);
-        root.Children.Where(node => node.IsFolder).Should().ContainSingle();
+        root.Children.Should().ContainSingle(child => child.IsPlaceholder);
         viewModel.SelectedNode.Should().BeSameAs(root);
-        viewModel.Materials.Should().ContainSingle(item => item.Id == materialId);
+        viewModel.Materials.Should().HaveCount(2);
+        viewModel.Materials.Should().ContainSingle(item => item.Id == folderId && item.IsManagementFolder);
+        viewModel.Materials.Should().ContainSingle(item => item.Id == materialId && !item.IsManagementFolder);
     }
 
     [Fact]
@@ -61,6 +62,8 @@ public sealed class LibrarySectionManagementViewModelTests
 
         var dispatcher = new StubQueryDispatcher(query => query switch
         {
+            GetLibrarySectionManagementItemsPageQuery items when items.SectionId == sectionId =>
+                EmptyItemsPage(),
             GetLibraryHierarchyFoldersPageQuery folders when folders.ContainerId == rootId =>
                 new LibraryHierarchyFoldersPageDto(
                     [CreateFolder(folderId, sectionId, rootId, "EF Core", 1)],
@@ -73,8 +76,6 @@ public sealed class LibrarySectionManagementViewModelTests
                     nestedFolderId,
                     sectionId,
                     folderId),
-            GetLibraryManagementMaterialsPageQuery materials when materials.ContainerId == rootId =>
-                EmptyMaterialsPage(),
             _ => throw Unexpected(query),
         });
 
@@ -82,6 +83,11 @@ public sealed class LibrarySectionManagementViewModelTests
         await viewModel.InitializeAsync(section);
 
         LibrarySectionManagementTreeNodeViewModel root = viewModel.Roots.Single();
+        root.Children.Should().ContainSingle(child => child.IsPlaceholder);
+        nestedRequests.Should().Be(0);
+
+        // Дерево загружается по требованию: сначала корневые папки, затем выбранная папка.
+        await viewModel.ExpandAsync(root);
         LibrarySectionManagementTreeNodeViewModel folder = root.Children.Single(node => node.IsFolder);
 
         nestedRequests.Should().Be(0);
@@ -95,46 +101,42 @@ public sealed class LibrarySectionManagementViewModelTests
     }
 
     [Fact]
-    public async Task SelectNodeAsync_LoadsMaterialsForSelectedFolder()
+    public async Task SelectNodeAsync_ChangesSelectionAndReloadsSectionItems()
     {
         Guid sectionId = Guid.NewGuid();
         Guid rootId = Guid.NewGuid();
         Guid folderId = Guid.NewGuid();
-        Guid rootMaterialId = Guid.NewGuid();
-        Guid folderMaterialId = Guid.NewGuid();
-        var requestedContainers = new List<Guid>();
+        Guid materialId = Guid.NewGuid();
+        var requestedSections = new List<Guid>();
 
         LibrarySectionOverviewDto section = CreateSection(sectionId, rootId, foldersCount: 1);
 
         var dispatcher = new StubQueryDispatcher(query => query switch
         {
+            GetLibrarySectionManagementItemsPageQuery items =>
+                TrackItemsRequest(items, requestedSections, materialId, rootId),
             GetLibraryHierarchyFoldersPageQuery folders when folders.ContainerId == rootId =>
                 new LibraryHierarchyFoldersPageDto(
                     [CreateFolder(folderId, sectionId, rootId, "EF Core", 0)],
                     1,
                     false),
-            GetLibraryManagementMaterialsPageQuery materials =>
-                TrackMaterialsRequest(
-                    materials,
-                    requestedContainers,
-                    rootId,
-                    rootMaterialId,
-                    folderId,
-                    folderMaterialId),
             _ => throw Unexpected(query),
         });
 
         var viewModel = new LibrarySectionManagementViewModel(dispatcher);
         await viewModel.InitializeAsync(section);
 
-        LibrarySectionManagementTreeNodeViewModel folder = viewModel.Roots[0]
-            .Children.Single(node => node.IsFolder);
+        LibrarySectionManagementTreeNodeViewModel root = viewModel.Roots.Single();
+        await viewModel.ExpandAsync(root);
+        LibrarySectionManagementTreeNodeViewModel folder = root.Children.Single(node => node.IsFolder);
 
         await viewModel.SelectNodeAsync(folder);
 
-        requestedContainers.Should().Equal(rootId, folderId);
+        // Плоский список управления относится к разделу, а не к выбранной папке.
+        requestedSections.Should().Equal(sectionId, sectionId);
         viewModel.SelectedNode.Should().BeSameAs(folder);
-        viewModel.Materials.Should().ContainSingle(item => item.Id == folderMaterialId);
+        viewModel.SelectedContainerName.Should().Be("EF Core");
+        viewModel.Materials.Should().ContainSingle(item => item.Id == materialId);
     }
 
     private static LibrarySectionOverviewDto CreateSection(
@@ -186,54 +188,60 @@ public sealed class LibrarySectionManagementViewModelTests
             false);
     }
 
-    private static LibraryManagementMaterialsPageDto TrackMaterialsRequest(
-        GetLibraryManagementMaterialsPageQuery query,
-        ICollection<Guid> requestedContainers,
-        Guid rootId,
-        Guid rootMaterialId,
-        Guid folderId,
-        Guid folderMaterialId)
+    private static LibrarySectionManagementItemsPageDto TrackItemsRequest(
+        GetLibrarySectionManagementItemsPageQuery query,
+        ICollection<Guid> requestedSections,
+        Guid materialId,
+        Guid rootId)
     {
-        requestedContainers.Add(query.ContainerId);
-
-        return query.ContainerId switch
-        {
-            var id when id == rootId => CreateMaterialsPage(rootMaterialId, rootId, "Root material"),
-            var id when id == folderId => CreateMaterialsPage(folderMaterialId, folderId, "Folder material"),
-            _ => EmptyMaterialsPage(),
-        };
+        requestedSections.Add(query.SectionId);
+        return CreateItemsPage(CreateMaterialItem(materialId, rootId, "Root material"));
     }
 
-    private static LibraryManagementMaterialsPageDto CreateMaterialsPage(
+    private static LibrarySectionManagementItemDto CreateFolderItem(
+        Guid folderId,
+        Guid rootId,
+        string name) =>
+        new(
+            folderId,
+            LibrarySectionManagementItemKind.Folder,
+            name,
+            "Раздел",
+            "Folder",
+            null,
+            null,
+            0,
+            DateTime.UtcNow,
+            DateTime.UtcNow,
+            0,
+            folderId,
+            rootId);
+
+    private static LibrarySectionManagementItemDto CreateMaterialItem(
         Guid materialId,
         Guid containerId,
-        string title)
-    {
-        var material = new LibraryManagementMaterialOverviewDto(
+        string title) =>
+        new(
             materialId,
-            Guid.NewGuid(),
+            LibrarySectionManagementItemKind.Material,
             title,
+            "Раздел",
+            "FileDocumentOutline",
             "Article",
             "Medium",
-            "FileDocumentOutline",
+            0,
             DateTime.UtcNow,
             DateTime.UtcNow,
-            1,
-            0)
-        {
-            ContainerId = containerId,
-        };
+            0,
+            containerId,
+            null);
 
-        return new LibraryManagementMaterialsPageDto(
-            [material],
-            1,
-            false,
-            1,
-            1);
-    }
+    private static LibrarySectionManagementItemsPageDto CreateItemsPage(
+        params LibrarySectionManagementItemDto[] items) =>
+        new(items, items.Length, false, items.Length, items.Length);
 
-    private static LibraryManagementMaterialsPageDto EmptyMaterialsPage() =>
-        new([], 0, false, 0, 0);
+    private static LibrarySectionManagementItemsPageDto EmptyItemsPage() =>
+        CreateItemsPage();
 
     private static Exception Unexpected(object query) =>
         new InvalidOperationException($"Неожиданный запрос {query.GetType().Name}");

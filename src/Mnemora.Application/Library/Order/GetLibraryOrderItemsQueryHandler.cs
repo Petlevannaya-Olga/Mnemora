@@ -6,7 +6,7 @@ using Mnemora.Contracts;
 using Mnemora.Contracts.Library;
 using Mnemora.Domain.Materials;
 using Mnemora.Domain.Sections;
-using Mnemora.Domain.Topics;
+using Mnemora.Domain.LibraryContainers;
 using Mnemora.Shared;
 using Mnemora.Shared.Abstractions;
 
@@ -57,7 +57,9 @@ public sealed class GetLibraryOrderItemsQueryHandler(
             .ThenBy(section => section.CreatedAt)
             .ThenBy(section => section.Id)
             .ToListAsync(cancellationToken);
-        var topics = await readDbContext.TopicsRead.ToListAsync(cancellationToken);
+        var topics = await readDbContext.LibraryContainersRead
+            .Where(container => container.Depth == 1)
+            .ToListAsync(cancellationToken);
         var counts = topics.GroupBy(topic => topic.SectionId.Value)
             .ToDictionary(group => group.Key, group => group.Count());
         return Result.Success<IReadOnlyList<LibraryOrderItemDto>, Errors>(
@@ -82,8 +84,8 @@ public sealed class GetLibraryOrderItemsQueryHandler(
             return sectionIdResult.Error.ToErrors();
         }
 
-        var topics = await readDbContext.TopicsRead
-            .Where(topic => topic.SectionId == sectionIdResult.Value)
+        var topics = await readDbContext.LibraryContainersRead
+            .Where(topic => topic.SectionId == sectionIdResult.Value && topic.Depth == 1)
             .OrderBy(topic => topic.DisplayOrder)
             .ThenBy(topic => topic.CreatedAt)
             .ThenBy(topic => topic.Id)
@@ -92,16 +94,16 @@ public sealed class GetLibraryOrderItemsQueryHandler(
         List<Material> materials = topicIds.Length == 0
             ? []
             : await readDbContext.MaterialsRead
-                .Where(material => topicIds.Contains(material.TopicId))
+                .Where(material => topicIds.Contains(material.ContainerId))
                 .ToListAsync(cancellationToken);
-        var counts = materials.GroupBy(material => material.TopicId.Value)
+        var counts = materials.GroupBy(material => material.ContainerId.Value)
             .ToDictionary(group => group.Key, group => group.Count());
         return Result.Success<IReadOnlyList<LibraryOrderItemDto>, Errors>(
             topics.Select(topic => new LibraryOrderItemDto(
                     topic.Id.Value,
-                    topic.Name.Value,
-                    topic.Icon.ToString(),
-                    topic.Color.ToString(),
+                    topic.Name!.Value,
+                    topic.Icon!.Value.ToString(),
+                    topic.Color!.Value.ToString(),
                     FormatCount(counts.GetValueOrDefault(topic.Id.Value), "материал", "материала", "материалов"),
                     topic.DisplayOrder))
                 .ToArray());
@@ -111,7 +113,7 @@ public sealed class GetLibraryOrderItemsQueryHandler(
         Guid? parentId,
         CancellationToken cancellationToken)
     {
-        var topicIdResult = CreateTopicId(parentId);
+        var topicIdResult = CreateContainerId(parentId);
 
         if (topicIdResult.IsFailure)
         {
@@ -119,7 +121,7 @@ public sealed class GetLibraryOrderItemsQueryHandler(
         }
 
         var materials = await readDbContext.MaterialsRead
-            .Where(material => material.TopicId == topicIdResult.Value)
+            .Where(material => material.ContainerId == topicIdResult.Value)
             .OrderBy(material => material.DisplayOrder)
             .ThenBy(material => material.CreatedAt)
             .ThenBy(material => material.Id)
@@ -142,11 +144,11 @@ public sealed class GetLibraryOrderItemsQueryHandler(
             : CommonErrors.IsRequired("sectionId");
     }
 
-    private static Result<TopicId, Error> CreateTopicId(Guid? value)
+    private static Result<LibraryContainerId, Error> CreateContainerId(Guid? value)
     {
         return value.HasValue
-            ? TopicId.Create(value.Value)
-            : CommonErrors.IsRequired("topicId");
+            ? LibraryContainerId.Create(value.Value)
+            : CommonErrors.IsRequired("containerId");
     }
 
     private static string FormatCount(int count, string one, string few, string many)

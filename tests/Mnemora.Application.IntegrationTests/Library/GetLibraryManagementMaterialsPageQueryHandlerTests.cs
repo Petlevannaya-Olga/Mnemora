@@ -94,13 +94,11 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandlerTests
         rootResult.Value.Items.Should().ContainSingle();
         rootResult.Value.Items[0].Id.Should().Be(rootArticle.Id.Value);
         rootResult.Value.Items[0].ContainerId.Should().Be(root.Id.Value);
-        rootResult.Value.Items[0].TopicId.Should().Be(topic.Id.Value);
 
         nestedResult.IsSuccess.Should().BeTrue();
         nestedResult.Value.Items.Should().ContainSingle();
         nestedResult.Value.Items[0].Id.Should().Be(nestedArticle.Id.Value);
         nestedResult.Value.Items[0].ContainerId.Should().Be(nestedFolder.Id.Value);
-        nestedResult.Value.Items[0].TopicId.Should().Be(topic.Id.Value);
         nestedResult.Value.Items[0].ArticleQuestionCount.Should().Be(1);
         nestedResult.Value.SourceTotalCount.Should().Be(1);
     }

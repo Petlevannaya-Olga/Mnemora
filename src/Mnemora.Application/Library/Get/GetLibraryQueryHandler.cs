@@ -32,17 +32,21 @@ public sealed class GetLibraryQueryHandler(
                     Array.Empty<LibrarySectionDto>());
             }
 
-            var topics = await readDbContext.TopicsRead
-                .OrderBy(topic => topic.CreatedAt)
+            var topics = await readDbContext.LibraryContainersRead
+                .Where(container => container.Depth == 1)
+                .OrderBy(container => container.CreatedAt)
                 .ToListAsync(cancellationToken);
+
+            var sectionIdByContainerId = await readDbContext.LibraryContainersRead
+                .Select(container => new { container.Id, container.SectionId })
+                .ToDictionaryAsync(
+                    container => container.Id.Value,
+                    container => container.SectionId.Value,
+                    cancellationToken);
 
             var materials = await readDbContext.MaterialsRead
                 .OrderBy(material => material.CreatedAt)
                 .ToListAsync(cancellationToken);
-
-            var sectionIdByTopicId = topics.ToDictionary(
-                topic => topic.Id.Value,
-                topic => topic.SectionId.Value);
 
             var lastTopicActivityBySection = topics
                 .GroupBy(topic => topic.SectionId.Value)
@@ -51,14 +55,14 @@ public sealed class GetLibraryQueryHandler(
                     group => group.Max(topic => topic.UpdatedAt));
 
             var lastMaterialActivityBySection = materials
-                .Where(material => sectionIdByTopicId.ContainsKey(material.TopicId.Value))
-                .GroupBy(material => sectionIdByTopicId[material.TopicId.Value])
+                .Where(material => sectionIdByContainerId.ContainsKey(material.ContainerId.Value))
+                .GroupBy(material => sectionIdByContainerId[material.ContainerId.Value])
                 .ToDictionary(
                     group => group.Key,
                     group => group.Max(material => material.UpdatedAt));
 
             var materialsByTopic = materials
-                .GroupBy(material => material.TopicId.Value)
+                .GroupBy(material => material.ContainerId.Value)
                 .ToDictionary(
                     group => group.Key,
                     group => group.Select(MapMaterial).ToArray());
@@ -70,9 +74,9 @@ public sealed class GetLibraryQueryHandler(
                     group => group
                         .Select(topic => new LibraryTopicDto(
                             topic.Id.Value,
-                            topic.Name.Value,
-                            topic.Color.ToString(),
-                            topic.Icon.ToString(),
+                            topic.Name!.Value,
+                            topic.Color!.Value.ToString(),
+                            topic.Icon!.Value.ToString(),
                             topic.CreatedAt,
                             topic.UpdatedAt)
                         {
@@ -149,7 +153,7 @@ public sealed class GetLibraryQueryHandler(
 
         return new LibraryMaterialDto(
             material.Id.Value,
-            material.TopicId.Value,
+            material.ContainerId.Value,
             material.Title.Value,
             material.Type.ToString(),
             material.Difficulty.ToString(),

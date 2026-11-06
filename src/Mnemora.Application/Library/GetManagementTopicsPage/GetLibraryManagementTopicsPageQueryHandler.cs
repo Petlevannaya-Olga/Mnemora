@@ -5,7 +5,7 @@ using Mnemora.Application.Database;
 using Mnemora.Contracts;
 using Mnemora.Domain.Materials;
 using Mnemora.Domain.Sections;
-using Mnemora.Domain.Topics;
+using Mnemora.Domain.LibraryContainers;
 using Mnemora.Shared;
 using Mnemora.Shared.Abstractions;
 
@@ -36,10 +36,11 @@ public sealed class GetLibraryManagementTopicsPageQueryHandler(
                 return sectionIdResult.Error.ToErrors();
             }
 
-            IQueryable<Topic> topicsQuery =
-                readDbContext.TopicsRead
-                    .Where(topic =>
-                        topic.SectionId == sectionIdResult.Value);
+            IQueryable<LibraryContainer> topicsQuery =
+                readDbContext.LibraryContainersRead
+                    .Where(container =>
+                        container.SectionId == sectionIdResult.Value &&
+                        container.Depth == 1);
 
             string? search = request.Search?.Trim();
 
@@ -49,7 +50,7 @@ public sealed class GetLibraryManagementTopicsPageQueryHandler(
                     MnemoraDbFunctions.UnicodeContains(
                         EF.Property<string>(
                             topic,
-                            nameof(Topic.Name)),
+                            nameof(LibraryContainer.Name)),
                         search));
             }
 
@@ -64,7 +65,7 @@ public sealed class GetLibraryManagementTopicsPageQueryHandler(
                 let lastMaterialActivityAt =
                     readDbContext.MaterialsRead
                         .Where(material =>
-                            material.TopicId == topic.Id)
+                            material.ContainerId == topic.Id)
                         .Max(material =>
                             (DateTime?)material.UpdatedAt)
                 let materialOrTopicActivityAt =
@@ -114,44 +115,44 @@ public sealed class GetLibraryManagementTopicsPageQueryHandler(
                 .Take(pageSize)
                 .ToArray();
 
-            TopicId[] topicIds = pageRows
+            LibraryContainerId[] topicIds = pageRows
                 .Select(row => row.Topic.Id)
                 .ToArray();
 
-            Dictionary<TopicId, int> articleCounts =
+            Dictionary<LibraryContainerId, int> articleCounts =
                 topicIds.Length == 0
                     ? []
                     : await readDbContext.MaterialsRead
                         .OfType<Article>()
                         .Where(article =>
-                            topicIds.Contains(article.TopicId))
-                        .GroupBy(article => article.TopicId)
+                            topicIds.Contains(article.ContainerId))
+                        .GroupBy(article => article.ContainerId)
                         .Select(group => new
                         {
-                            TopicId = group.Key,
+                            ContainerId = group.Key,
                             Count = group.Count(),
                         })
                         .ToDictionaryAsync(
-                            row => row.TopicId,
+                            row => row.ContainerId,
                             row => row.Count,
                             cancellationToken);
 
-            Dictionary<TopicId, int> questionCounts =
+            Dictionary<LibraryContainerId, int> questionCounts =
                 topicIds.Length == 0
                     ? []
                     : await readDbContext.MaterialsRead
                         .OfType<Question>()
                         .Where(question =>
-                            topicIds.Contains(question.TopicId) &&
+                            topicIds.Contains(question.ContainerId) &&
                             question.ArticleId == null)
-                        .GroupBy(question => question.TopicId)
+                        .GroupBy(question => question.ContainerId)
                         .Select(group => new
                         {
-                            TopicId = group.Key,
+                            ContainerId = group.Key,
                             Count = group.Count(),
                         })
                         .ToDictionaryAsync(
-                            row => row.TopicId,
+                            row => row.ContainerId,
                             row => row.Count,
                             cancellationToken);
 
@@ -169,9 +170,9 @@ public sealed class GetLibraryManagementTopicsPageQueryHandler(
                     return new LibraryManagementTopicOverviewDto(
                         row.Topic.Id.Value,
                         row.Topic.SectionId.Value,
-                        row.Topic.Name.Value,
-                        row.Topic.Color.ToString(),
-                        row.Topic.Icon.ToString(),
+                        row.Topic.Name!.Value,
+                        row.Topic.Color!.Value.ToString(),
+                        row.Topic.Icon!.Value.ToString(),
                         row.Topic.CreatedAt,
                         row.Topic.UpdatedAt,
                         row.LastActivityAt,

@@ -29,6 +29,30 @@ public sealed class GetHomeLibrarySummaryQueryHandlerTests
     }
 
     [Fact]
+    public async Task Summary_CountsFoldersWithoutLegacyTopicRecords()
+    {
+        await using var db = await SqliteLibraryTestDatabase.CreateAsync();
+        Section section = CreateSection("Containers only");
+        LibraryContainer root = db.AddSectionWithRoot(section);
+        LibraryContainer folder = LibraryContainer.CreateFolder(
+            root,
+            FolderName.Create("C#").Value,
+            FolderColor.Teal,
+            FolderIcon.Bookmark).Value;
+        db.Context.LibraryContainers.Add(folder);
+        await db.Context.SaveChangesAsync();
+        db.Context.ChangeTracker.Clear();
+
+        var result = await CreateHandler(db.Context)
+            .Handle(new GetHomeLibrarySummaryQuery());
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.SectionsCount.Should().Be(1);
+        result.Value.TopicsCount.Should().Be(1);
+        result.Value.SuggestedSection!.Id.Should().Be(section.Id.Value);
+    }
+
+    [Fact]
     public async Task SectionWithoutTopics_IsPreferredForSuggestedSection()
     {
         await using var db = await SqliteLibraryTestDatabase.CreateAsync();
@@ -92,7 +116,7 @@ public sealed class GetHomeLibrarySummaryQueryHandlerTests
 
     [Fact]
     [Trait("Category", "LargeLoad")]
-    public async Task LargeLoad_50000SectionsAndTopics_RemainsAggregateBounded()
+    public async Task LargeLoad_50000SectionsAndFolders_RemainsAggregateBounded()
     {
         const int targetCount = 50_000;
         const int batchSize = 2_000;
@@ -120,21 +144,26 @@ public sealed class GetHomeLibrarySummaryQueryHandlerTests
 
         hotSectionId.Should().NotBeNull();
 
+        LibraryContainer root = LibraryContainer.CreateRoot(hotSectionId!).Value;
+        db.Context.LibraryContainers.Add(root);
+        await db.Context.SaveChangesAsync();
+        db.Context.ChangeTracker.Clear();
+
         for (int start = 0; start < targetCount; start += batchSize)
         {
             int end = Math.Min(start + batchSize, targetCount);
-            var batch = new List<Topic>(end - start);
+            var batch = new List<LibraryContainer>(end - start);
 
             for (int index = start; index < end; index++)
             {
-                batch.Add(Topic.Create(
-                    hotSectionId!,
-                    TopicName.Create($"Topic {index:D5}").Value,
-                    Enum.GetValues<TopicColor>()[0],
-                    Enum.GetValues<TopicIcon>()[0]));
+                batch.Add(LibraryContainer.CreateFolder(
+                    root,
+                    FolderName.Create($"Folder {index:D5}").Value,
+                    FolderColor.Teal,
+                    FolderIcon.Bookmark).Value);
             }
 
-            db.Context.Topics.AddRange(batch);
+            db.Context.LibraryContainers.AddRange(batch);
             await db.Context.SaveChangesAsync();
             db.Context.ChangeTracker.Clear();
         }

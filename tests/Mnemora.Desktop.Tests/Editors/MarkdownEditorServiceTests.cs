@@ -136,6 +136,16 @@ public sealed class MarkdownEditorServiceTests
             CancellationToken cancellationToken = default) =>
             Task.CompletedTask;
 
+        public Task SaveLibraryTilesPerRowAsync(
+            int? tilesPerRow,
+            CancellationToken cancellationToken = default) =>
+            Task.CompletedTask;
+
+        public Task SaveLibraryContainerFoldersPaneRatioAsync(
+            double foldersPaneRatio,
+            CancellationToken cancellationToken = default) =>
+            Task.CompletedTask;
+
         public Task SaveLibraryManagementSectionSortAsync(
             LibraryManagementSortMode sortMode,
             CancellationToken cancellationToken = default) =>
@@ -150,6 +160,16 @@ public sealed class MarkdownEditorServiceTests
         public Task SaveLibraryManagementMaterialSortAsync(
             Guid topicId,
             LibraryManagementSortMode sortMode,
+            CancellationToken cancellationToken = default) =>
+            Task.CompletedTask;
+
+        public Task SaveLibraryManagementSectionColumnsAsync(
+            IReadOnlyCollection<LibraryManagementSectionColumn> columns,
+            CancellationToken cancellationToken = default) =>
+            Task.CompletedTask;
+
+        public Task SaveLibraryManagementContentColumnsAsync(
+            IReadOnlyCollection<LibraryManagementContentColumn> columns,
             CancellationToken cancellationToken = default) =>
             Task.CompletedTask;
 

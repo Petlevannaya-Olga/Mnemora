@@ -1,7 +1,6 @@
-using Mnemora.Application.Library.GetFoldersPage;
+﻿using Mnemora.Application.Library.GetFoldersPage;
 using Mnemora.Application.Library.GetMaterialsPage;
 using Mnemora.Application.Library.GetSectionsPage;
-using Mnemora.Application.Library.GetTopicsPage;
 using Mnemora.Application.Materials.GetDetails;
 using Mnemora.Shared.Abstractions;
 using Xunit;
@@ -15,8 +14,6 @@ public sealed class LibraryQueryValidationTests
     {
         Assert.IsAssignableFrom<IQueryValidation>(
             new GetLibrarySectionsPageQuery(null, LibrarySectionSort.Name, 0, 30));
-        Assert.IsAssignableFrom<IQueryValidation>(
-            new GetLibraryTopicsPageQuery(Guid.NewGuid(), null, LibraryTopicSort.Name, 0, 30));
         Assert.IsAssignableFrom<IQueryValidation>(
             new GetLibraryFoldersPageQuery(
                 Guid.NewGuid(),
@@ -52,22 +49,6 @@ public sealed class LibraryQueryValidationTests
         Assert.Contains(result.Errors, error => error.PropertyName == nameof(query.Sort));
         Assert.Contains(result.Errors, error => error.PropertyName == nameof(query.Offset));
         Assert.Contains(result.Errors, error => error.PropertyName == nameof(query.PageSize));
-    }
-
-    [Fact]
-    public void TopicsPageValidator_RejectsEmptySectionId()
-    {
-        var query = new GetLibraryTopicsPageQuery(
-            Guid.Empty,
-            null,
-            LibraryTopicSort.Name,
-            0,
-            30);
-
-        var result = new GetLibraryTopicsPageQueryValidator().Validate(query);
-
-        Assert.False(result.IsValid);
-        Assert.Contains(result.Errors, error => error.PropertyName == "sectionId");
     }
 
     [Fact]

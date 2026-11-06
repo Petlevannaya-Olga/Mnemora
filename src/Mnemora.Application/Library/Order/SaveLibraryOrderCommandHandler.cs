@@ -4,7 +4,6 @@ using Mnemora.Application.Database;
 using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Materials;
 using Mnemora.Domain.Sections;
-using Mnemora.Domain.Topics;
 using Mnemora.Shared;
 using Mnemora.Shared.Abstractions;
 
@@ -79,15 +78,6 @@ public sealed class SaveLibraryOrderCommandHandler(
             return sectionIdResult.Error;
         }
 
-        var topicsResult = await libraryOrderRepository.GetTopicsAsync(
-            sectionIdResult.Value,
-            cancellationToken);
-
-        if (topicsResult.IsFailure)
-        {
-            return topicsResult.Error;
-        }
-
         var foldersResult = await libraryOrderRepository.GetFirstLevelFoldersAsync(
             sectionIdResult.Value,
             cancellationToken);
@@ -95,17 +85,6 @@ public sealed class SaveLibraryOrderCommandHandler(
         if (foldersResult.IsFailure)
         {
             return foldersResult.Error;
-        }
-
-        var topicOrderResult = ApplyOrder(
-            topicsResult.Value,
-            orderedIds,
-            topic => topic.Id.Value,
-            (topic, position) => topic.ChangeDisplayOrder(position));
-
-        if (topicOrderResult.IsFailure)
-        {
-            return topicOrderResult.Error;
         }
 
         return ApplyOrder(
@@ -120,16 +99,16 @@ public sealed class SaveLibraryOrderCommandHandler(
         IReadOnlyList<Guid> orderedIds,
         CancellationToken cancellationToken)
     {
-        var topicIdResult = parentId.HasValue
-            ? TopicId.Create(parentId.Value)
-            : Result.Failure<TopicId, Error>(CommonErrors.IsRequired("topicId"));
+        var containerIdResult = parentId.HasValue
+            ? LibraryContainerId.Create(parentId.Value)
+            : Result.Failure<LibraryContainerId, Error>(CommonErrors.IsRequired("containerId"));
 
-        if (topicIdResult.IsFailure)
+        if (containerIdResult.IsFailure)
         {
-            return topicIdResult.Error;
+            return containerIdResult.Error;
         }
 
-        var materialsResult = await libraryOrderRepository.GetMaterialsAsync(topicIdResult.Value, cancellationToken);
+        var materialsResult = await libraryOrderRepository.GetMaterialsAsync(containerIdResult.Value, cancellationToken);
 
         if (materialsResult.IsFailure)
         {

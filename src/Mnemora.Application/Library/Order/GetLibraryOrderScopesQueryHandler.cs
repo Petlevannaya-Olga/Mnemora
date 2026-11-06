@@ -25,17 +25,18 @@ public sealed class GetLibraryOrderScopesQueryHandler(
                 .ThenBy(section => section.CreatedAt)
                 .ThenBy(section => section.Id)
                 .ToListAsync(cancellationToken);
-            var topics = await readDbContext.TopicsRead
-                .OrderBy(topic => topic.DisplayOrder)
-                .ThenBy(topic => topic.CreatedAt)
-                .ThenBy(topic => topic.Id)
+            var topics = await readDbContext.LibraryContainersRead
+                .Where(container => container.Depth == 1)
+                .OrderBy(container => container.DisplayOrder)
+                .ThenBy(container => container.CreatedAt)
+                .ThenBy(container => container.Id)
                 .ToListAsync(cancellationToken);
             var topicsBySection = topics
                 .GroupBy(topic => topic.SectionId.Value)
                 .ToDictionary(
                     group => group.Key,
                     group => (IReadOnlyList<LibraryOrderTopicScopeDto>)group
-                        .Select(topic => new LibraryOrderTopicScopeDto(topic.Id.Value, topic.Name.Value))
+                        .Select(topic => new LibraryOrderTopicScopeDto(topic.Id.Value, topic.Name!.Value))
                         .ToArray());
             var result = new LibraryOrderScopesDto(
                 sections

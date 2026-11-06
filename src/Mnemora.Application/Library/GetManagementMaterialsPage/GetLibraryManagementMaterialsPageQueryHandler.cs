@@ -149,7 +149,7 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandler(
                 .Select(material =>
                     new LibraryManagementMaterialOverviewDto(
                         material.Id.Value,
-                        material.TopicId.Value,
+                        material.ContainerId.Value,
                         material.Title.Value,
                         material.Type.ToString(),
                         material.Difficulty.ToString(),

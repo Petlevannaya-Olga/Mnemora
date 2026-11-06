@@ -150,13 +150,14 @@ public sealed class GetLibrarySectionsPageQueryHandler(
                             row => row.Count,
                             cancellationToken);
 
-            // Временный legacy-счётчик нужен старому UI до перехода на folders.
             Dictionary<SectionId, int> topicsCountBySection =
                 sectionIds.Length == 0
                     ? []
-                    : await readDbContext.TopicsRead
-                        .Where(topic => sectionIds.Contains(topic.SectionId))
-                        .GroupBy(topic => topic.SectionId)
+                    : await readDbContext.LibraryContainersRead
+                        .Where(container =>
+                            container.Depth == 1 &&
+                            sectionIds.Contains(container.SectionId))
+                        .GroupBy(container => container.SectionId)
                         .Select(group => new
                         {
                             SectionId = group.Key,
