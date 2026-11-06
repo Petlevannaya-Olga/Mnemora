@@ -1,7 +1,7 @@
-﻿using CSharpFunctionalExtensions;
+using CSharpFunctionalExtensions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Mnemora.Application.Database;
-using Mnemora.Application.Topics;
 using Mnemora.Domain.Sections;
 using Mnemora.Shared;
 using Mnemora.Shared.Abstractions;
@@ -10,7 +10,7 @@ namespace Mnemora.Application.Sections.Delete;
 
 public sealed class DeleteSectionCommandHandler(
     ISectionsRepository sectionsRepository,
-    ITopicsRepository topicsRepository,
+    IReadDbContext readDbContext,
     ITransactionManager transactionManager,
     ILogger<DeleteSectionCommandHandler> logger)
     : ICommandHandler<Guid, DeleteSectionCommand>
@@ -19,63 +19,101 @@ public sealed class DeleteSectionCommandHandler(
         DeleteSectionCommand command,
         CancellationToken cancellationToken)
     {
-        var sectionId =  SectionId.Create(command.SectionId).Value;
+        var sectionIdResult = SectionId.Create(command.SectionId);
 
-        var sectionResult =
-            await sectionsRepository.GetByIdAsync(
-                sectionId,
-                cancellationToken);
+        if (sectionIdResult.IsFailure)
+        {
+            return sectionIdResult.Error.ToErrors();
+        }
+
+        SectionId sectionId = sectionIdResult.Value;
+
+        var sectionResult = await sectionsRepository.GetByIdAsync(
+            sectionId,
+            cancellationToken);
 
         if (sectionResult.IsFailure)
         {
             return sectionResult.Error.ToErrors();
         }
 
-        var section = sectionResult.Value;
+        Section? section = sectionResult.Value;
 
         if (section is null)
         {
-            return new Error(
+            return CommonErrors.NotFound(
                     "section.not.found",
-                    "Раздел не найден",
-                    ErrorType.NOT_FOUND,
-                    nameof(command.SectionId))
+                    "Раздел не найден")
                 .ToErrors();
         }
 
-        var hasTopicsResult =
-            await topicsRepository.ExistsAsync(
-                topic =>
-                    topic.SectionId == sectionId,
-                cancellationToken);
-
-        if (hasTopicsResult.IsFailure)
+        try
         {
-            return hasTopicsResult.Error.ToErrors();
+            // Не используем legacy Topics: новые папки могут существовать
+            // без соответствующей записи в таблице topics.
+            bool hasFolders = await readDbContext.LibraryContainersRead
+                .AnyAsync(
+                    container =>
+                        container.SectionId == sectionId &&
+                        container.ParentId != null,
+                    cancellationToken);
+
+            if (hasFolders)
+            {
+                return CommonErrors.Conflict(
+                        "section.delete.has.folders",
+                        "Нельзя удалить раздел, пока в нём есть папки")
+                    .ToErrors();
+            }
+
+            // Материалы могут находиться непосредственно в корне раздела,
+            // даже если пользовательских папок нет.
+            var sectionContainerIds = readDbContext.LibraryContainersRead
+                .Where(container => container.SectionId == sectionId)
+                .Select(container => container.Id);
+
+            bool hasMaterials = await readDbContext.MaterialsRead
+                .AnyAsync(
+                    material => sectionContainerIds.Contains(material.ContainerId),
+                    cancellationToken);
+
+            if (hasMaterials)
+            {
+                return CommonErrors.Conflict(
+                        "section.delete.has.materials",
+                        "Нельзя удалить раздел, пока в нём есть материалы")
+                    .ToErrors();
+            }
         }
-
-        if (hasTopicsResult.Value)
+        catch (OperationCanceledException)
+            when (cancellationToken.IsCancellationRequested)
         {
-            return new Error(
-                    "section.delete.has.topics",
-                    "Нельзя удалить раздел, пока в нём есть темы",
-                    ErrorType.CONFLICT,
-                    nameof(command.SectionId))
+            return CommonErrors.OperationCancelled(
+                    "section.delete.check.cancelled")
+                .ToErrors();
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(
+                exception,
+                "Не удалось проверить содержимое раздела {SectionId} перед удалением",
+                sectionId.Value);
+
+            return CommonErrors.Db(
+                    "section.delete.check.failed",
+                    "Не удалось проверить содержимое раздела")
                 .ToErrors();
         }
 
-        sectionsRepository.Remove(
-            section);
+        sectionsRepository.Remove(section);
 
-        var saveResult =
-            await transactionManager.SaveChangesAsync(
-                cancellationToken);
+        var saveResult = await transactionManager.SaveChangesAsync(
+            cancellationToken);
 
         if (saveResult.IsFailure)
         {
             logger.LogWarning(
-                "Не удалось удалить раздел {SectionId}. " +
-                "Код ошибки: {ErrorCode}",
+                "Не удалось удалить раздел {SectionId}. Код ошибки: {ErrorCode}",
                 section.Id.Value,
                 saveResult.Error.Code);
 

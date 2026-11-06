@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Input;
 using Mnemora.Application.Commands;
 using Mnemora.Application.Sections.Delete;
 using Mnemora.Contracts;
@@ -19,7 +19,7 @@ public sealed partial class DeleteSectionDialogViewModel(
     private string _sectionName =
         string.Empty;
 
-    private int _topicsCount;
+    private int _foldersCount;
 
     private string? _errorMessage;
 
@@ -39,39 +39,39 @@ public sealed partial class DeleteSectionDialogViewModel(
                 value);
     }
 
-    public int TopicsCount
+    public int FoldersCount
     {
-        get => _topicsCount;
+        get => _foldersCount;
 
         private set
         {
             if (!SetProperty(
-                    ref _topicsCount,
+                    ref _foldersCount,
                     value))
             {
                 return;
             }
 
             OnPropertyChanged(
-                nameof(HasTopics));
+                nameof(HasFolders));
 
             OnPropertyChanged(
-                nameof(TopicsMessage));
+                nameof(FoldersMessage));
 
             DeleteCommand.NotifyCanExecuteChanged();
         }
     }
 
-    public bool HasTopics =>
-        TopicsCount > 0;
+    public bool HasFolders =>
+        FoldersCount > 0;
 
-    public string TopicsMessage =>
-        $"В разделе {TopicsCount} " +
+    public string FoldersMessage =>
+        $"В разделе {FoldersCount} " +
         $"{DeclensionGenerator.Generate(
-            TopicsCount,
-            "тема",
-            "темы",
-            "тем")}. " +
+            FoldersCount,
+            "папка",
+            "папки",
+            "папок")}. " +
         "Сначала перенесите или удалите их.";
 
     public string? ErrorMessage
@@ -132,7 +132,7 @@ public sealed partial class DeleteSectionDialogViewModel(
         SectionName =
             section.Name;
 
-        TopicsCount =
+        FoldersCount =
             section.Topics.Count;
 
         ErrorMessage = null;
@@ -201,7 +201,7 @@ public sealed partial class DeleteSectionDialogViewModel(
     private bool CanDelete()
     {
         return !IsDeleting &&
-               !HasTopics &&
+               !HasFolders &&
                _sectionId != Guid.Empty;
     }
 
