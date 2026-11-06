@@ -114,6 +114,24 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
+
+                <!-- Текущий элемент пути — статья, а не её родительская папка. -->
+                <StackPanel Orientation="Horizontal"
+                            Visibility="{Binding HasArticle, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <materialDesign:PackIcon Width="17"
+                                             Height="17"
+                                             Margin="7,0"
+                                             VerticalAlignment="Center"
+                                             Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                             Kind="ChevronRight" />
+                    <TextBlock MaxWidth="260"
+                               VerticalAlignment="Center"
+                               FontSize="14"
+                               Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                               Text="{Binding Title}"
+                               TextTrimming="CharacterEllipsis"
+                               ToolTip="{Binding Title}" />
+                </StackPanel>
             </StackPanel>
 
             <Button Grid.Column="1"

@@ -188,14 +188,15 @@ public sealed partial class ArticleViewModel(
 
             if (path.Count == 0) return;
 
-            for (int index = 0; index < path.Count; index++)
+            // Статья — текущий элемент пути. Все её папки должны оставаться кликабельными.
+            foreach (LibraryContainerContentsDto pathItem in path)
             {
-                LibraryContainerHeaderDto container = path[index].Container;
+                LibraryContainerHeaderDto container = pathItem.Container;
                 Breadcrumbs.Add(new LibraryBreadcrumbItemViewModel(
                     container.Id,
                     container.Name,
                     container.Depth,
-                    index == path.Count - 1));
+                    false));
             }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)

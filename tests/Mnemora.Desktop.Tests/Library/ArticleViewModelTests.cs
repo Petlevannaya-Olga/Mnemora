@@ -44,11 +44,11 @@ public sealed class ArticleViewModelTests
         viewModel.ErrorMessage.Should().BeNull();
         viewModel.Breadcrumbs.Select(item => item.Name)
             .Should().Equal("Backend", "C#", "Entity Framework");
-        viewModel.Breadcrumbs[^1].IsCurrent.Should().BeTrue();
+        viewModel.Breadcrumbs.Should().OnlyContain(item => !item.IsCurrent);
     }
 
     [Fact]
-    public async Task LoadAsync_UsesSectionAsCurrentBreadcrumbForSectionRoot()
+    public async Task LoadAsync_LeavesSectionRootClickableForArticle()
     {
         Guid articleId = Guid.NewGuid();
         ArticleDetailsDto details = CreateArticle(articleId, "Text", "Без папки");
@@ -63,7 +63,8 @@ public sealed class ArticleViewModelTests
 
         viewModel.Breadcrumbs.Select(item => item.Name)
             .Should().Equal("Backend");
-        viewModel.Breadcrumbs[0].IsCurrent.Should().BeTrue();
+        viewModel.Breadcrumbs[0].IsCurrent.Should().BeFalse();
+        viewModel.Title.Should().Be("EF Core");
     }
 
     [Fact]
