@@ -4,29 +4,46 @@ namespace Mnemora.Infrastructure.Migrations;
 
 /// <summary>
 /// Remove the legacy topics table after the container migration and material.topic_id removal.
-/// Fail before DROP TABLE if any Topic has no migrated folder with the same ID and section.
+/// Preserve legacy rows that have no current folder, rather than blocking startup or
+/// silently discarding metadata for a deleted/unmigrated topic.
 /// </summary>
 public partial class RemoveLegacyTopics : Migration
 {
     protected override void Up(MigrationBuilder migrationBuilder)
     {
+        // Legacy Topic was a mirror of a top-level folder at the time of the
+        // original backfill. Since then, folders may have been moved or deleted,
+        // and older databases may store GUID text in a different case.
+        // This table is intentionally not in the EF model. It is a recovery archive
+        // for old metadata only; the app continues using library_containers.
         migrationBuilder.Sql(
             """
-            CREATE TEMP TABLE __mnemora_topic_folder_guard
+            CREATE TABLE IF NOT EXISTS legacy_topic_archive
             (
-                is_valid INTEGER NOT NULL CHECK (is_valid = 1)
+                id TEXT NOT NULL PRIMARY KEY,
+                section_id TEXT NOT NULL,
+                name TEXT NOT NULL,
+                color TEXT NOT NULL,
+                icon TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                display_order INTEGER NOT NULL,
+                archived_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             );
 
-            INSERT INTO __mnemora_topic_folder_guard (is_valid)
-            SELECT CASE WHEN EXISTS
+            INSERT OR IGNORE INTO legacy_topic_archive
+                (id, section_id, name, color, icon, created_at, updated_at, display_order)
+            SELECT t.id, t.section_id, t.name, t.color, t.icon,
+                   t.created_at, t.updated_at, t.display_order
+            FROM topics AS t
+            WHERE NOT EXISTS
             (
-                SELECT 1 FROM topics AS t
-                LEFT JOIN library_containers AS c
-                  ON c.id = t.id AND c.section_id = t.section_id AND c.depth = 1
-                WHERE c.id IS NULL
-            ) THEN 0 ELSE 1 END;
-
-            DROP TABLE __mnemora_topic_folder_guard;
+                SELECT 1
+                FROM library_containers AS c
+                WHERE upper(c.id) = upper(t.id)
+                  AND upper(c.section_id) = upper(t.section_id)
+                  AND c.depth BETWEEN 1 AND 3
+            );
             """);
 
         // No current table references topics (the material FK was detached earlier).
@@ -76,6 +93,18 @@ public partial class RemoveLegacyTopics : Migration
                    created_at, updated_at, display_order
             FROM library_containers
             WHERE depth = 1;
+            """);
+
+        // A downgrade should also recover the legacy rows preserved on upgrade.
+        // Ignore a row only if its id/name is already occupied by a current folder.
+        // The archive is retained on downgrade so that re-upgrade remains safe.
+        migrationBuilder.Sql(
+            """
+            INSERT OR IGNORE INTO topics
+                (id, section_id, name, color, icon, created_at, updated_at, display_order)
+            SELECT id, section_id, name, color, icon,
+                   created_at, updated_at, display_order
+            FROM legacy_topic_archive;
             """);
     }
 }
