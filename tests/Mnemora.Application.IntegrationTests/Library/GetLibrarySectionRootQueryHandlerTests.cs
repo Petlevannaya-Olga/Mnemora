@@ -13,7 +13,7 @@ public sealed class GetLibrarySectionRootQueryHandlerTests
     public async Task ExistingSection_ReturnsActualRootContainerId()
     {
         await using var db = await SqliteLibraryTestDatabase.CreateAsync();
-        (var section, _) = await db.CreateSectionAndTopicAsync();
+        (var section, _) = await db.CreateSectionAndFolderAsync();
 
         LibraryContainer root = await db.Context.LibraryContainers
             .AsNoTracking()

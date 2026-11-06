@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.DependencyInjection;
 using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Sections;
-using Mnemora.Domain.Topics;
 using Mnemora.Infrastructure.Persistence;
 using Xunit;
 
@@ -105,31 +104,19 @@ public sealed class LibraryContainerMigrationTests
 
         Section section = CreateSection("C#");
 
-        Topic clr = Topic.Create(
-            section.Id,
-            TopicName.Create("CLR").Value,
-            TopicColor.Purple,
-            TopicIcon.DotNet);
-
-        clr.ChangeDisplayOrder(3);
-
-        Topic aspNet = Topic.Create(
-            section.Id,
-            TopicName.Create("ASP.NET").Value,
-            TopicColor.Teal,
-            TopicIcon.AspNet);
-
-        aspNet.ChangeDisplayOrder(7);
-
+        Guid clrId = Guid.NewGuid();
+        Guid aspNetId = Guid.NewGuid();
         dbContext.Sections.Add(section);
-        dbContext.Topics.AddRange(clr, aspNet);
-
         await dbContext.SaveChangesAsync(ct);
 
-        int topicsBeforeMigration = await dbContext.Topics
-            .AsNoTracking()
-            .CountAsync(ct);
+        await LegacyTopicSqlFixture.InsertAsync(
+            dbContext, section.Id, clrId, "CLR", "Purple", "DotNet", ct, 3);
+        await LegacyTopicSqlFixture.InsertAsync(
+            dbContext, section.Id, aspNetId, "ASP.NET", "Teal", "AspNet", ct, 7);
 
+        int topicsBeforeMigration = await dbContext.Database
+            .SqlQueryRaw<int>("SELECT COUNT(*) AS Value FROM topics")
+            .SingleAsync(ct);
         Assert.Equal(2, topicsBeforeMigration);
 
         await migrator.MigrateAsync(
@@ -180,7 +167,7 @@ public sealed class LibraryContainerMigrationTests
             folders,
             folder => folder.Name?.Value == "CLR");
 
-        Assert.Equal(clr.Id.Value, clrFolder.Id.Value);
+        Assert.Equal(clrId, clrFolder.Id.Value);
         Assert.Equal(FolderColor.Purple, clrFolder.Color);
         Assert.Equal(FolderIcon.DotNet, clrFolder.Icon);
         Assert.Equal(3, clrFolder.DisplayOrder);
@@ -189,7 +176,7 @@ public sealed class LibraryContainerMigrationTests
             folders,
             folder => folder.Name?.Value == "ASP.NET");
 
-        Assert.Equal(aspNet.Id.Value, aspNetFolder.Id.Value);
+        Assert.Equal(aspNetId, aspNetFolder.Id.Value);
         Assert.Equal(FolderColor.Teal, aspNetFolder.Color);
         Assert.Equal(FolderIcon.AspNet, aspNetFolder.Icon);
         Assert.Equal(7, aspNetFolder.DisplayOrder);

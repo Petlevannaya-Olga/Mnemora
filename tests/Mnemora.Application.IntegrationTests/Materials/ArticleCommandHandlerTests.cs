@@ -6,7 +6,6 @@ using Mnemora.Application.Materials.Content;
 using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Materials;
 using Mnemora.Domain.Sections;
-using Mnemora.Domain.Topics;
 using Mnemora.Infrastructure.Persistence;
 using Mnemora.Shared.Abstractions;
 using Xunit;
@@ -19,13 +18,13 @@ public sealed class ArticleCommandHandlerTests
     public async Task CreateArticle_PersistsDatabaseRowAndMarkdownContent()
     {
         await using var host = await ApplicationTestHost.CreateAsync();
-        Topic topic = await CreateTopicAsync(host);
+        LibraryContainer folder = await CreateFolderAsync(host);
 
         await using AsyncServiceScope scope = host.Services.CreateAsyncScope();
         var handler = scope.ServiceProvider
             .GetRequiredService<ICommandHandler<Guid, CreateArticleCommand>>();
         var command = new CreateArticleCommand(
-            topic.Id.Value,
+            folder.Id.Value,
             "EF Core tracking",
             MaterialDifficulty.Medium,
             IconKey: null,
@@ -60,9 +59,9 @@ public sealed class ArticleCommandHandlerTests
     public async Task DeleteArticle_WithLinkedQuestions_ReturnsConflictAndPreservesData()
     {
         await using var host = await ApplicationTestHost.CreateAsync();
-        Topic topic = await CreateTopicAsync(host);
+        LibraryContainer folder = await CreateFolderAsync(host);
         Article article = Article.CreateInContainer(
-            LibraryContainerId.Create(topic.Id.Value).Value,
+            folder.Id,
             MaterialTitle.Create("Article").Value,
             MaterialDifficulty.Medium,
             MaterialIcon.DefaultArticle,
@@ -123,9 +122,9 @@ public sealed class ArticleCommandHandlerTests
     public async Task DeleteArticle_WithoutLinkedQuestions_DeletesDatabaseRowAndContent()
     {
         await using var host = await ApplicationTestHost.CreateAsync();
-        Topic topic = await CreateTopicAsync(host);
+        LibraryContainer folder = await CreateFolderAsync(host);
         Article article = Article.CreateInContainer(
-            LibraryContainerId.Create(topic.Id.Value).Value,
+            folder.Id,
             MaterialTitle.Create("Article").Value,
             MaterialDifficulty.Medium,
             MaterialIcon.DefaultArticle,
@@ -163,46 +162,23 @@ public sealed class ArticleCommandHandlerTests
             CancellationToken.None)).IsFailure);
     }
 
-    private static async Task<Topic> CreateTopicAsync(ApplicationTestHost host)
+    private static async Task<LibraryContainer> CreateFolderAsync(ApplicationTestHost host)
     {
         CancellationToken ct = CancellationToken.None;
-
         Section section = Section.Create(
             SectionName.Create("Section").Value,
             SectionColor.Teal,
             SectionIcon.Folder);
-
-        LibraryContainer root =
-            LibraryContainer.CreateRoot(section.Id).Value;
-
-        Topic topic = Topic.Create(
-            section.Id,
-            TopicName.Create("Topic").Value,
-            TopicColor.Teal,
-            TopicIcon.Bookmark);
-
-        LibraryContainer folder =
-            LibraryContainer.CreateFolderWithId(
-                LibraryContainerId.Create(topic.Id.Value).Value,
-                root,
-                FolderName.Create(topic.Name.Value).Value,
-                Enum.Parse<FolderColor>(topic.Color.ToString()),
-                Enum.Parse<FolderIcon>(topic.Icon.ToString())).Value;
-
-        var factory =
-            host.Services.GetRequiredService<IDbContextFactory<MnemoraDbContext>>();
-
-        await using MnemoraDbContext dbContext =
-            await factory.CreateDbContextAsync(ct);
-
-        dbContext.AddRange(
-            section,
+        LibraryContainer root = LibraryContainer.CreateRoot(section.Id).Value;
+        LibraryContainer folder = LibraryContainer.CreateFolder(
             root,
-            topic,
-            folder);
-
+            FolderName.Create("Folder").Value,
+            FolderColor.Teal,
+            FolderIcon.Bookmark).Value;
+        var factory = host.Services.GetRequiredService<IDbContextFactory<MnemoraDbContext>>();
+        await using MnemoraDbContext dbContext = await factory.CreateDbContextAsync(ct);
+        dbContext.AddRange(section, root, folder);
         await dbContext.SaveChangesAsync(ct);
-
-        return topic;
+        return folder;
     }
 }

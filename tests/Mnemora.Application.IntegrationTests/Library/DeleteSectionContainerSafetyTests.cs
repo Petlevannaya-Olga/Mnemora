@@ -48,7 +48,8 @@ public sealed class DeleteSectionContainerSafetyTests
         await db.Context.SaveChangesAsync();
         db.Context.ChangeTracker.Clear();
 
-        Assert.False(await db.Context.Topics.AnyAsync());
+        Assert.Equal(0, await db.Context.Database.SqlQueryRaw<int>(
+            "SELECT count(*) AS Value FROM sqlite_master WHERE type = 'table' AND name = 'topics'").SingleAsync());
         var handler = CreateHandler(db);
         var result = await handler.Handle(new DeleteSectionCommand(section.Id.Value),
             CancellationToken.None);

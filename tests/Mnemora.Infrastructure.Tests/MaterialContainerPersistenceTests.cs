@@ -67,7 +67,8 @@ public sealed class MaterialContainerPersistenceTests
 
         Assert.Equal(folder.Id, persistedArticle.ContainerId);
         Assert.Equal(root.Id, persistedQuestion.ContainerId);
-        Assert.Empty(await dbContext.Topics.AsNoTracking().ToListAsync(ct));
+        Assert.Equal(0, await dbContext.Database.SqlQueryRaw<int>(
+            "SELECT count(*) AS Value FROM sqlite_master WHERE type = 'table' AND name = 'topics'").SingleAsync(ct));
     }
 
     private static Section CreateSection(string name) =>

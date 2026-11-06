@@ -7,7 +7,6 @@ using Mnemora.Contracts.Library;
 using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Materials;
 using Mnemora.Domain.Sections;
-using Mnemora.Domain.Topics;
 using Xunit;
 
 namespace Mnemora.Application.IntegrationTests.Library;
@@ -55,8 +54,8 @@ public sealed class GetLibraryManagementSectionsPageQueryHandlerTests
         await using var db =
             await SqliteLibraryTestDatabase.CreateAsync();
 
-        (Section section, Topic topic) =
-            await db.CreateSectionAndTopicAsync();
+        (Section section, LibraryContainer folder) =
+            await db.CreateSectionAndFolderAsync();
 
         LibraryContainer root =
             await db.Context.LibraryContainers.SingleAsync(
@@ -68,7 +67,7 @@ public sealed class GetLibraryManagementSectionsPageQueryHandlerTests
             await db.Context.LibraryContainers.SingleAsync(
                 container =>
                     container.Id ==
-                    LibraryContainerId.Create(topic.Id.Value).Value);
+                    folder.Id);
 
         LibraryContainer nested =
             LibraryContainer.CreateFolder(
@@ -82,12 +81,12 @@ public sealed class GetLibraryManagementSectionsPageQueryHandlerTests
         db.Context.ChangeTracker.Clear();
 
         Article article =
-            db.CreateArticle(topic.Id, "Article");
+            db.CreateArticle(folder.Id, "Article");
         article.MoveToContainer(root.Id)
             .IsSuccess.Should().BeTrue();
 
         Question standalone =
-            db.CreateStandaloneQuestion(topic.Id, "Standalone");
+            db.CreateStandaloneQuestion(folder.Id, "Standalone");
         standalone.MoveToContainer(nested.Id)
             .IsSuccess.Should().BeTrue();
 
@@ -124,10 +123,10 @@ public sealed class GetLibraryManagementSectionsPageQueryHandlerTests
         await using var db =
             await SqliteLibraryTestDatabase.CreateAsync();
 
-        (Section sourceSection, Topic sourceTopic) =
-            await db.CreateSectionAndTopicAsync(
+        (Section sourceSection, LibraryContainer sourceFolder) =
+            await db.CreateSectionAndFolderAsync(
                 sectionName: "Source",
-                topicName: "Legacy topic");
+                folderName: "Legacy folder");
 
         Section targetSection = Section.Create(
             SectionName.Create("Target").Value,
@@ -141,7 +140,7 @@ public sealed class GetLibraryManagementSectionsPageQueryHandlerTests
         db.Context.ChangeTracker.Clear();
 
         Article movedArticle =
-            db.CreateArticle(sourceTopic.Id, "Moved article");
+            db.CreateArticle(sourceFolder.Id, "Moved article");
 
         movedArticle.MoveToContainer(targetRoot.Id)
             .IsSuccess.Should().BeTrue();

@@ -7,7 +7,6 @@ using Mnemora.Contracts.Library;
 using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Materials;
 using Mnemora.Domain.Sections;
-using Mnemora.Domain.Topics;
 using Xunit;
 
 namespace Mnemora.Application.IntegrationTests.Library;
@@ -55,8 +54,8 @@ public sealed class GetLibrarySectionsPageQueryHandlerTests
         await using var db =
             await SqliteLibraryTestDatabase.CreateAsync();
 
-        (Section section, Topic topic) =
-            await db.CreateSectionAndTopicAsync();
+        (Section section, LibraryContainer folder) =
+            await db.CreateSectionAndFolderAsync();
 
         LibraryContainer root =
             await db.Context.LibraryContainers.SingleAsync(
@@ -68,7 +67,7 @@ public sealed class GetLibrarySectionsPageQueryHandlerTests
             await db.Context.LibraryContainers.SingleAsync(
                 container =>
                     container.Id ==
-                    LibraryContainerId.Create(topic.Id.Value).Value);
+                    folder.Id);
 
         LibraryContainer level2 =
             LibraryContainer.CreateFolder(
@@ -82,12 +81,12 @@ public sealed class GetLibrarySectionsPageQueryHandlerTests
         db.Context.ChangeTracker.Clear();
 
         Article rootArticle =
-            db.CreateArticle(topic.Id, "Root article");
+            db.CreateArticle(folder.Id, "Root article");
         rootArticle.MoveToContainer(root.Id)
             .IsSuccess.Should().BeTrue();
 
         Question nestedStandalone =
-            db.CreateStandaloneQuestion(topic.Id, "Nested standalone");
+            db.CreateStandaloneQuestion(folder.Id, "Nested standalone");
         nestedStandalone.MoveToContainer(level2.Id)
             .IsSuccess.Should().BeTrue();
 
@@ -111,7 +110,7 @@ public sealed class GetLibrarySectionsPageQueryHandlerTests
         item.RootContainerId.Should().Be(root.Id.Value);
         item.FoldersCount.Should().Be(2);
         item.TopicsCount.Should().Be(1,
-            "legacy Topic count remains available until the old UI is removed");
+            "backward-compatible count of first-level folders");
         item.ArticlesCount.Should().Be(1);
         item.QuestionsCount.Should().Be(1);
         item.MaterialsCount.Should().Be(2);
@@ -123,10 +122,10 @@ public sealed class GetLibrarySectionsPageQueryHandlerTests
         await using var db =
             await SqliteLibraryTestDatabase.CreateAsync();
 
-        (Section sourceSection, Topic sourceTopic) =
-            await db.CreateSectionAndTopicAsync(
+        (Section sourceSection, LibraryContainer sourceFolder) =
+            await db.CreateSectionAndFolderAsync(
                 sectionName: "Source",
-                topicName: "Legacy topic");
+                folderName: "Legacy folder");
 
         Section targetSection = Section.Create(
             SectionName.Create("Target").Value,
@@ -140,7 +139,7 @@ public sealed class GetLibrarySectionsPageQueryHandlerTests
         db.Context.ChangeTracker.Clear();
 
         Article movedArticle =
-            db.CreateArticle(sourceTopic.Id, "Moved article");
+            db.CreateArticle(sourceFolder.Id, "Moved article");
 
         movedArticle.MoveToContainer(targetRoot.Id)
             .IsSuccess.Should().BeTrue();

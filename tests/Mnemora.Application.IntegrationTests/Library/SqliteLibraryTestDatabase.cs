@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Materials;
 using Mnemora.Domain.Sections;
-using Mnemora.Domain.Topics;
 using Mnemora.Infrastructure.Persistence;
 
 namespace Mnemora.Application.IntegrationTests.Library;
@@ -77,69 +76,47 @@ internal sealed class SqliteLibraryTestDatabase : IAsyncDisposable
         return root;
     }
 
-    public async Task<(Section Section, Topic Topic)> CreateSectionAndTopicAsync(
+    public async Task<(Section Section, LibraryContainer Folder)> CreateSectionAndFolderAsync(
         string sectionName = "Section",
-        string topicName = "Topic",
+        string folderName = "Folder",
         CancellationToken cancellationToken = default)
     {
         Section section = Section.Create(
             SectionName.Create(sectionName).Value,
             Enum.GetValues<SectionColor>()[0],
             Enum.GetValues<SectionIcon>()[0]);
-
-        LibraryContainer root =
-            LibraryContainer.CreateRoot(section.Id).Value;
-
-        Topic topic = Topic.Create(
-            section.Id,
-            TopicName.Create(topicName).Value,
-            Enum.GetValues<TopicColor>()[0],
-            Enum.GetValues<TopicIcon>()[0]);
-
-        LibraryContainer folder =
-            LibraryContainer.CreateFolderWithId(
-                LibraryContainerId.Create(topic.Id.Value).Value,
-                root,
-                FolderName.Create(topic.Name.Value).Value,
-                Enum.Parse<FolderColor>(topic.Color.ToString()),
-                Enum.Parse<FolderIcon>(topic.Icon.ToString())).Value;
+        LibraryContainer root = LibraryContainer.CreateRoot(section.Id).Value;
+        LibraryContainer folder = LibraryContainer.CreateFolder(
+            root,
+            FolderName.Create(folderName).Value,
+            FolderColor.Teal,
+            FolderIcon.Bookmark).Value;
 
         Context.Sections.Add(section);
         Context.LibraryContainers.AddRange(root, folder);
-        Context.Topics.Add(topic);
-
         await Context.SaveChangesAsync(cancellationToken);
         Context.ChangeTracker.Clear();
         CommandCounter.Reset();
-
-        return (section, topic);
+        return (section, folder);
     }
 
-    public Article CreateArticle(
-        TopicId topicId,
-        string title)
-    {
-        return Article.CreateInContainer(
-            LibraryContainerId.Create(topicId.Value).Value,
+    public Article CreateArticle(LibraryContainerId containerId, string title) =>
+        Article.CreateInContainer(
+            containerId,
             MaterialTitle.Create(title).Value,
             MaterialDifficulty.Medium,
             MaterialIcon.DefaultArticle,
             MaterialExperienceRewards.Create(50, 20).Value,
             Array.Empty<MaterialTag>()).Value;
-    }
 
-    public Question CreateStandaloneQuestion(
-        TopicId topicId,
-        string title)
-    {
-        return Question.CreateStandaloneInContainer(
-            LibraryContainerId.Create(topicId.Value).Value,
+    public Question CreateStandaloneQuestion(LibraryContainerId containerId, string title) =>
+        Question.CreateStandaloneInContainer(
+            containerId,
             MaterialTitle.Create(title).Value,
             MaterialDifficulty.Medium,
             MaterialIcon.DefaultQuestion,
             MaterialExperienceRewards.Create(50, 20).Value,
             Array.Empty<MaterialTag>()).Value;
-    }
 
     public Question CreateLinkedQuestion(
         Article article,

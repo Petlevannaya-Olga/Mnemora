@@ -48,25 +48,6 @@ public sealed class LibraryContainerTests
 
 
     [Fact]
-    public void CreateFolderWithId_PreservesProvidedId()
-    {
-        LibraryContainer root = CreateRoot();
-        LibraryContainerId id = LibraryContainerId.New();
-
-        var result = LibraryContainer.CreateFolderWithId(
-            id,
-            root,
-            FolderName.Create("CLR").Value,
-            FolderColor.Teal,
-            FolderIcon.DotNet);
-
-        Assert.True(result.IsSuccess);
-        Assert.Equal(id, result.Value.Id);
-        Assert.Equal(root.Id, result.Value.ParentId);
-        Assert.Equal(1, result.Value.Depth);
-    }
-
-    [Fact]
     public void CreateFolder_AllowsThreeFolderLevels()
     {
         LibraryContainer root = CreateRoot();

@@ -23,15 +23,15 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandlerTests
         bool expectedHasMore)
     {
         await using var db = await SqliteLibraryTestDatabase.CreateAsync();
-        (_, var topic) = await db.CreateSectionAndTopicAsync();
+        (_, var folder) = await db.CreateSectionAndFolderAsync();
 
         Material[] materials = Enumerable.Range(0, materialCount)
-            .Select(index => (Material)db.CreateArticle(topic.Id, $"Article {index:D5}"))
+            .Select(index => (Material)db.CreateArticle(folder.Id, $"Article {index:D5}"))
             .ToArray();
         await db.AddMaterialsAsync(materials);
 
         var sut = CreateHandler(db);
-        var result = await sut.Handle(Query(topic.Id.Value));
+        var result = await sut.Handle(Query(folder.Id.Value));
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Items.Should().HaveCount(expectedItems);
@@ -46,7 +46,7 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandlerTests
     public async Task ContainerId_ScopesRootAndNestedFolderIndependently()
     {
         await using var db = await SqliteLibraryTestDatabase.CreateAsync();
-        (var section, var topic) = await db.CreateSectionAndTopicAsync();
+        (var section, var folder) = await db.CreateSectionAndFolderAsync();
 
         LibraryContainer root = await db.Context.LibraryContainers
             .SingleAsync(container =>
@@ -55,7 +55,7 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandlerTests
 
         LibraryContainer topicFolder = await db.Context.LibraryContainers
             .SingleAsync(container =>
-                container.Id == LibraryContainerId.Create(topic.Id.Value).Value);
+                container.Id == folder.Id);
 
         LibraryContainer nestedFolder = LibraryContainer.CreateFolder(
             topicFolder,
@@ -67,12 +67,12 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandlerTests
         await db.Context.SaveChangesAsync();
         db.Context.ChangeTracker.Clear();
 
-        Article rootArticle = db.CreateArticle(topic.Id, "Root article");
+        Article rootArticle = db.CreateArticle(folder.Id, "Root article");
         rootArticle.MoveToContainer(root.Id).IsSuccess.Should().BeTrue();
 
-        Article topicArticle = db.CreateArticle(topic.Id, "Topic folder article");
+        Article topicArticle = db.CreateArticle(folder.Id, "LibraryContainer folder article");
 
-        Article nestedArticle = db.CreateArticle(topic.Id, "Nested article");
+        Article nestedArticle = db.CreateArticle(folder.Id, "Nested article");
         nestedArticle.MoveToContainer(nestedFolder.Id).IsSuccess.Should().BeTrue();
 
         Question linkedQuestion = db.CreateLinkedQuestion(
@@ -107,13 +107,13 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandlerTests
     public async Task LinkedQuestions_AreExcludedBeforePaginationAndFromTotals()
     {
         await using var db = await SqliteLibraryTestDatabase.CreateAsync();
-        (_, var topic) = await db.CreateSectionAndTopicAsync();
+        (_, var folder) = await db.CreateSectionAndFolderAsync();
 
         var articles = Enumerable.Range(0, 30)
-            .Select(index => db.CreateArticle(topic.Id, $"Article {index:D3}"))
+            .Select(index => db.CreateArticle(folder.Id, $"Article {index:D3}"))
             .ToArray();
         var standalone = Enumerable.Range(0, 10)
-            .Select(index => db.CreateStandaloneQuestion(topic.Id, $"Standalone {index:D3}"))
+            .Select(index => db.CreateStandaloneQuestion(folder.Id, $"Standalone {index:D3}"))
             .ToArray();
         var linked = Enumerable.Range(0, 100)
             .Select(index => db.CreateLinkedQuestion(articles[index % articles.Length], $"Linked {index:D3}"))
@@ -126,8 +126,8 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandlerTests
                 .ToArray());
 
         var sut = CreateHandler(db);
-        var first = await sut.Handle(Query(topic.Id.Value, offset: 0));
-        var second = await sut.Handle(Query(topic.Id.Value, offset: 30));
+        var first = await sut.Handle(Query(folder.Id.Value, offset: 0));
+        var second = await sut.Handle(Query(folder.Id.Value, offset: 30));
 
         first.IsSuccess.Should().BeTrue();
         second.IsSuccess.Should().BeTrue();
@@ -145,10 +145,10 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandlerTests
     public async Task ArticleQuestionCount_IsCalculatedInOneGroupedQuery_NotNPlusOne()
     {
         await using var db = await SqliteLibraryTestDatabase.CreateAsync();
-        (_, var topic) = await db.CreateSectionAndTopicAsync();
+        (_, var folder) = await db.CreateSectionAndFolderAsync();
 
         var articles = Enumerable.Range(0, 30)
-            .Select(index => db.CreateArticle(topic.Id, $"Article {index:D3}"))
+            .Select(index => db.CreateArticle(folder.Id, $"Article {index:D3}"))
             .ToArray();
         var linked = articles
             .SelectMany((article, articleIndex) => Enumerable.Range(0, articleIndex % 7)
@@ -161,7 +161,7 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandlerTests
         db.CommandCounter.Reset();
 
         var sut = CreateHandler(db);
-        var result = await sut.Handle(Query(topic.Id.Value));
+        var result = await sut.Handle(Query(folder.Id.Value));
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Items.Should().HaveCount(30);
@@ -186,16 +186,16 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandlerTests
         string expectedType)
     {
         await using var db = await SqliteLibraryTestDatabase.CreateAsync();
-        (_, var topic) = await db.CreateSectionAndTopicAsync();
+        (_, var folder) = await db.CreateSectionAndFolderAsync();
 
         var articles = Enumerable.Range(0, 12)
-            .Select(index => db.CreateArticle(topic.Id, $"Article {index:D2}"));
+            .Select(index => db.CreateArticle(folder.Id, $"Article {index:D2}"));
         var questions = Enumerable.Range(0, 7)
-            .Select(index => db.CreateStandaloneQuestion(topic.Id, $"Question {index:D2}"));
+            .Select(index => db.CreateStandaloneQuestion(folder.Id, $"Question {index:D2}"));
         await db.AddMaterialsAsync(articles.Cast<Material>().Concat(questions).ToArray());
 
         var sut = CreateHandler(db);
-        var result = await sut.Handle(Query(topic.Id.Value, filter: filter));
+        var result = await sut.Handle(Query(folder.Id.Value, filter: filter));
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Items.Should().HaveCount(expectedCount);
@@ -208,15 +208,15 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandlerTests
     public async Task UnicodeSearch_IsCaseInsensitiveAndDoesNotChangeSourceTotalCount()
     {
         await using var db = await SqliteLibraryTestDatabase.CreateAsync();
-        (_, var topic) = await db.CreateSectionAndTopicAsync();
+        (_, var folder) = await db.CreateSectionAndFolderAsync();
 
         await db.AddMaterialsAsync(
-            db.CreateArticle(topic.Id, "Отслеживание сущностей EF Core"),
-            db.CreateArticle(topic.Id, "Индексы PostgreSQL"),
-            db.CreateStandaloneQuestion(topic.Id, "Что такое ChangeTracker?"));
+            db.CreateArticle(folder.Id, "Отслеживание сущностей EF Core"),
+            db.CreateArticle(folder.Id, "Индексы PostgreSQL"),
+            db.CreateStandaloneQuestion(folder.Id, "Что такое ChangeTracker?"));
 
         var sut = CreateHandler(db);
-        var result = await sut.Handle(Query(topic.Id.Value, search: "СУЩНОСТЕЙ"));
+        var result = await sut.Handle(Query(folder.Id.Value, search: "СУЩНОСТЕЙ"));
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Items.Should().ContainSingle();
@@ -234,10 +234,10 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandlerTests
         LibraryManagementMaterialPageSort sort)
     {
         await using var db = await SqliteLibraryTestDatabase.CreateAsync();
-        (_, var topic) = await db.CreateSectionAndTopicAsync();
+        (_, var folder) = await db.CreateSectionAndFolderAsync();
 
         var materials = Enumerable.Range(0, 61)
-            .Select(_ => db.CreateArticle(topic.Id, "Same title"))
+            .Select(_ => db.CreateArticle(folder.Id, "Same title"))
             .ToArray();
         await db.AddMaterialsAsync(materials.Cast<Material>().ToArray());
 
@@ -249,7 +249,7 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandlerTests
 
         var sut = CreateHandler(db);
         var full = await sut.Handle(Query(
-            topic.Id.Value,
+            folder.Id.Value,
             offset: 0,
             pageSize: 100,
             sort: sort));
@@ -260,7 +260,7 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandlerTests
         foreach (int offset in new[] { 0, 30, 60 })
         {
             var result = await sut.Handle(Query(
-                topic.Id.Value,
+                folder.Id.Value,
                 offset: offset,
                 sort: sort));
             result.IsSuccess.Should().BeTrue();
@@ -275,15 +275,15 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandlerTests
     public async Task NegativeOffset_IsNormalizedAndOversizedPage_IsCappedAt100()
     {
         await using var db = await SqliteLibraryTestDatabase.CreateAsync();
-        (_, var topic) = await db.CreateSectionAndTopicAsync();
+        (_, var folder) = await db.CreateSectionAndFolderAsync();
 
         await db.AddMaterialsAsync(Enumerable.Range(0, 150)
-            .Select(index => (Material)db.CreateArticle(topic.Id, $"Article {index:D3}"))
+            .Select(index => (Material)db.CreateArticle(folder.Id, $"Article {index:D3}"))
             .ToArray());
 
         var sut = CreateHandler(db);
         var result = await sut.Handle(new GetLibraryManagementMaterialsPageQuery(
-            topic.Id.Value,
+            folder.Id.Value,
             Search: null,
             LibraryManagementMaterialPageFilter.All,
             LibraryManagementMaterialPageSort.Name,
@@ -300,15 +300,15 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandlerTests
     public async Task DeepOffset_5000Items_ReturnsOnlyRequestedWindow()
     {
         await using var db = await SqliteLibraryTestDatabase.CreateAsync();
-        (_, var topic) = await db.CreateSectionAndTopicAsync();
+        (_, var folder) = await db.CreateSectionAndFolderAsync();
 
         await db.AddMaterialsInBatchesAsync(Enumerable.Range(0, 5_000)
-            .Select(index => (Material)db.CreateArticle(topic.Id, $"Material {index:D6}")));
+            .Select(index => (Material)db.CreateArticle(folder.Id, $"Material {index:D6}")));
 
         db.CommandCounter.Reset();
         var sut = CreateHandler(db);
         var result = await sut.Handle(Query(
-            topic.Id.Value,
+            folder.Id.Value,
             offset: 4_980,
             sort: LibraryManagementMaterialPageSort.Name));
 
@@ -329,13 +329,13 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandlerTests
         const int topLevelCount = 50_000;
 
         await using var db = await SqliteLibraryTestDatabase.CreateAsync();
-        (_, var topic) = await db.CreateSectionAndTopicAsync();
+        (_, var folder) = await db.CreateSectionAndFolderAsync();
 
         IEnumerable<Material> Build()
         {
             for (int index = 0; index < topLevelCount; index++)
             {
-                Article article = db.CreateArticle(topic.Id, $"Material {index:D7}");
+                Article article = db.CreateArticle(folder.Id, $"Material {index:D7}");
                 yield return article;
 
                 if ((index & 1) == 0)
@@ -350,7 +350,7 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandlerTests
 
         var sut = CreateHandler(db);
         var result = await sut.Handle(Query(
-            topic.Id.Value,
+            folder.Id.Value,
             offset: 49_950,
             sort: LibraryManagementMaterialPageSort.Name));
 

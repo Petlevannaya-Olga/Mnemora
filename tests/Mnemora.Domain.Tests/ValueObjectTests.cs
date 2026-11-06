@@ -1,6 +1,6 @@
 using Mnemora.Domain.Materials;
 using Mnemora.Domain.Sections;
-using Mnemora.Domain.Topics;
+using Mnemora.Domain.LibraryContainers;
 using Xunit;
 
 namespace Mnemora.Domain.Tests;
@@ -29,9 +29,9 @@ public sealed class ValueObjectTests
     }
 
     [Fact]
-    public void TopicName_Create_RejectsValueLongerThanMaximum()
+    public void FolderName_Create_RejectsValueLongerThanMaximum()
     {
-        var result = TopicName.Create(new string('T', TopicName.MAXLENGTH + 1));
+        var result = FolderName.Create(new string('T', FolderName.MAXLENGTH + 1));
 
         Assert.True(result.IsFailure);
         Assert.Equal("name.length.is.wrong", result.Error.Code);

@@ -40,7 +40,8 @@ public sealed class MaterialContainerCommandsTests
         Article article = await db.Materials.OfType<Article>()
             .SingleAsync(a => a.Id == MaterialId.Create(result.Value).Value);
         Assert.Equal(rootId, article.ContainerId.Value);
-        Assert.False(await db.Topics.AnyAsync());
+        Assert.False(await db.Database.SqlQueryRaw<int>(
+            "SELECT count(*) AS Value FROM sqlite_master WHERE type = 'table' AND name = 'topics'").SingleAsync() > 0);
 
         var store = host.Services.GetRequiredService<IMaterialContentStore>();
         var content = await store.ReadArticleAsync(article.Id, CancellationToken.None);
@@ -69,7 +70,8 @@ public sealed class MaterialContainerCommandsTests
             .SingleAsync(q => q.Id == MaterialId.Create(result.Value).Value);
         Assert.Equal(folderId, question.ContainerId.Value);
         Assert.Null(question.ArticleId);
-        Assert.False(await db.Topics.AnyAsync());
+        Assert.False(await db.Database.SqlQueryRaw<int>(
+            "SELECT count(*) AS Value FROM sqlite_master WHERE type = 'table' AND name = 'topics'").SingleAsync() > 0);
     }
 
     [Fact]

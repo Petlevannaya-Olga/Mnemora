@@ -3,7 +3,6 @@ using Mnemora.Application.Database;
 using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Materials;
 using Mnemora.Domain.Sections;
-using Mnemora.Domain.Topics;
 
 namespace Mnemora.Infrastructure.Persistence;
 
@@ -12,8 +11,6 @@ public sealed class MnemoraDbContext(DbContextOptions<MnemoraDbContext> options)
     public DbSet<Section> Sections => Set<Section>();
 
     public DbSet<LibraryContainer> LibraryContainers => Set<LibraryContainer>();
-
-    public DbSet<Topic> Topics => Set<Topic>();
 
     public DbSet<Material> Materials => Set<Material>();
 

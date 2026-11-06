@@ -6,7 +6,6 @@ using Mnemora.Application.Database;
 using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Materials;
 using Mnemora.Domain.Sections;
-using Mnemora.Domain.Topics;
 using Mnemora.Infrastructure.Persistence;
 using Xunit;
 
@@ -41,15 +40,11 @@ public sealed class MaterialContainerMigrationTests
             ct);
 
         Section section = CreateSection("C#");
-        Topic topic = Topic.Create(
-            section.Id,
-            TopicName.Create("CLR").Value,
-            TopicColor.Purple,
-            TopicIcon.DotNet);
-
+        Guid topicId = Guid.NewGuid();
         dbContext.Sections.Add(section);
-        dbContext.Topics.Add(topic);
         await dbContext.SaveChangesAsync(ct);
+        await LegacyTopicSqlFixture.InsertAsync(
+            dbContext, section.Id, topicId, "CLR", "Purple", "DotNet", ct);
 
         // Текущая EF-модель уже знает о container_id, а старая схема ещё нет,
         // поэтому старый Material намеренно вставляем SQL-ом в историческую схему.
@@ -78,7 +73,7 @@ public sealed class MaterialContainerMigrationTests
             VALUES
             (
                 {materialId},
-                {topic.Id.Value},
+                {topicId},
                 {"Garbage Collector"},
                 {(int)MaterialDifficulty.Medium},
                 {MaterialIcon.DefaultArticle.Key},
@@ -108,7 +103,7 @@ public sealed class MaterialContainerMigrationTests
                 current => current.Id == expectedMaterialId,
                 ct);
 
-        Assert.Equal(topic.Id.Value, material.ContainerId.Value);
+        Assert.Equal(topicId, material.ContainerId.Value);
 
         LibraryContainer folder = await dbContext.LibraryContainers
             .AsNoTracking()
@@ -142,34 +137,30 @@ public sealed class MaterialContainerMigrationTests
         await migrator.MigrateAsync(BeforeLibraryContainersMigration, ct);
 
         Section section = CreateSection("Legacy");
-        Topic topic = Topic.Create(
-            section.Id,
-            TopicName.Create("Old topic").Value,
-            TopicColor.Purple,
-            TopicIcon.DotNet);
-
+        Guid topicId = Guid.NewGuid();
         dbContext.Sections.Add(section);
-        dbContext.Topics.Add(topic);
         await dbContext.SaveChangesAsync(ct);
+        await LegacyTopicSqlFixture.InsertAsync(
+            dbContext, section.Id, topicId, "Old topic", "Purple", "DotNet", ct);
 
         Guid materialId = Guid.NewGuid();
-        await InsertLegacyMaterialAsync(dbContext, materialId, topic.Id, "Legacy material", ct);
+        await InsertLegacyMaterialAsync(dbContext, materialId, topicId, "Legacy material", ct);
 
         await migrator.MigrateAsync("20260822085333_AddLibraryContainers", ct);
         await dbContext.Database.ExecuteSqlInterpolatedAsync(
-            $"DELETE FROM library_containers WHERE id = {topic.Id.Value};", ct);
+            $"DELETE FROM library_containers WHERE id = {topicId};", ct);
 
         await migrator.MigrateAsync(targetMigration: null, cancellationToken: ct);
 
         LibraryContainer folder = await dbContext.LibraryContainers
             .AsNoTracking()
-            .SingleAsync(container => container.Id == LibraryContainerId.Create(topic.Id.Value).Value, ct);
+            .SingleAsync(container => container.Id == LibraryContainerId.Create(topicId).Value, ct);
         Material material = await dbContext.Materials
             .AsNoTracking()
             .SingleAsync(current => current.Id == MaterialId.Create(materialId).Value, ct);
 
         Assert.Equal(1, folder.Depth);
-        Assert.Equal(topic.Id.Value, material.ContainerId.Value);
+        Assert.Equal(topicId, material.ContainerId.Value);
     }
 
     [Fact]
@@ -190,23 +181,19 @@ public sealed class MaterialContainerMigrationTests
         await migrator.MigrateAsync(BeforeLibraryContainersMigration, ct);
 
         Section section = CreateSection("Interrupted");
-        Topic topic = Topic.Create(
-            section.Id,
-            TopicName.Create("Topic").Value,
-            TopicColor.Purple,
-            TopicIcon.DotNet);
-
+        Guid topicId = Guid.NewGuid();
         dbContext.Sections.Add(section);
-        dbContext.Topics.Add(topic);
         await dbContext.SaveChangesAsync(ct);
+        await LegacyTopicSqlFixture.InsertAsync(
+            dbContext, section.Id, topicId, "Topic", "Purple", "DotNet", ct);
 
         Guid materialId = Guid.NewGuid();
         await InsertLegacyMaterialAsync(
-            dbContext, materialId, topic.Id, "Interrupted material", ct);
+            dbContext, materialId, topicId, "Interrupted material", ct);
 
         await migrator.MigrateAsync("20260822085333_AddLibraryContainers", ct);
         await dbContext.Database.ExecuteSqlInterpolatedAsync(
-            $"DELETE FROM library_containers WHERE id = {topic.Id.Value};", ct);
+            $"DELETE FROM library_containers WHERE id = {topicId};", ct);
         await dbContext.Database.ExecuteSqlRawAsync(
             "ALTER TABLE materials ADD COLUMN container_id TEXT NULL;", ct);
         await dbContext.Database.ExecuteSqlRawAsync(
@@ -224,7 +211,7 @@ public sealed class MaterialContainerMigrationTests
             .AsNoTracking()
             .SingleAsync(current => current.Id == MaterialId.Create(materialId).Value, ct);
 
-        Assert.Equal(topic.Id.Value, material.ContainerId.Value);
+        Assert.Equal(topicId, material.ContainerId.Value);
         Assert.Contains(
             "20260823093103_AddMaterialContainerId",
             await verificationContext.Database.GetAppliedMigrationsAsync(ct));
@@ -233,7 +220,7 @@ public sealed class MaterialContainerMigrationTests
     private static Task InsertLegacyMaterialAsync(
         MnemoraDbContext dbContext,
         Guid materialId,
-        TopicId topicId,
+        Guid topicId,
         string title,
         CancellationToken ct)
     {
@@ -249,7 +236,7 @@ public sealed class MaterialContainerMigrationTests
             )
             VALUES
             (
-                {materialId}, {topicId.Value}, {title},
+                {materialId}, {topicId}, {title},
                 {(int)MaterialDifficulty.Medium}, {MaterialIcon.DefaultArticle.Key},
                 {50}, {20}, {1}, {now}, {now},
                 {(int)MaterialType.Article}, NULL, {Material.DefaultDisplayOrder}

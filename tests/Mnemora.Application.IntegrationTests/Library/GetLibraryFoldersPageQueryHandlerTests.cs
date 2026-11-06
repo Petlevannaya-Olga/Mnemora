@@ -7,7 +7,6 @@ using Mnemora.Contracts.Library;
 using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Materials;
 using Mnemora.Domain.Sections;
-using Mnemora.Domain.Topics;
 using Xunit;
 
 namespace Mnemora.Application.IntegrationTests.Library;
@@ -20,33 +19,33 @@ public sealed class GetLibraryFoldersPageQueryHandlerTests
         await using var db =
             await SqliteLibraryTestDatabase.CreateAsync();
 
-        (Section section, Topic topic) =
-            await db.CreateSectionAndTopicAsync();
+        (Section section, LibraryContainer folder) =
+            await db.CreateSectionAndFolderAsync();
 
         LibraryContainer root =
             await GetRootAsync(db, section);
 
-        // Тема уже дала одну depth-1 папку. Добавляем ещё 30.
+        // Первая папка уже создана. Добавляем ещё 30.
         for (int index = 1; index < 31; index++)
         {
-            LibraryContainer folder =
+            LibraryContainer newFolder =
                 LibraryContainer.CreateFolder(
                     root,
                     FolderName.Create($"Folder {index:D2}").Value,
                     FolderColor.Teal,
                     FolderIcon.Folder).Value;
 
-            folder.ChangeDisplayOrder(index);
-            db.Context.LibraryContainers.Add(folder);
+            newFolder.ChangeDisplayOrder(index);
+            db.Context.LibraryContainers.Add(newFolder);
         }
 
-        LibraryContainer legacyFolder =
+        LibraryContainer firstFolder =
             await db.Context.LibraryContainers.SingleAsync(
                 container =>
                     container.Id ==
-                    LibraryContainerId.Create(topic.Id.Value).Value);
+                    folder.Id);
 
-        legacyFolder.ChangeDisplayOrder(0);
+        firstFolder.ChangeDisplayOrder(0);
 
         await db.Context.SaveChangesAsync();
         db.Context.ChangeTracker.Clear();
@@ -75,8 +74,8 @@ public sealed class GetLibraryFoldersPageQueryHandlerTests
         await using var db =
             await SqliteLibraryTestDatabase.CreateAsync();
 
-        (Section section, Topic topic) =
-            await db.CreateSectionAndTopicAsync();
+        (Section section, LibraryContainer folder) =
+            await db.CreateSectionAndFolderAsync();
 
         LibraryContainer root =
             await GetRootAsync(db, section);
@@ -85,7 +84,7 @@ public sealed class GetLibraryFoldersPageQueryHandlerTests
             await db.Context.LibraryContainers.SingleAsync(
                 container =>
                     container.Id ==
-                    LibraryContainerId.Create(topic.Id.Value).Value);
+                    folder.Id);
 
         LibraryContainer level2 =
             LibraryContainer.CreateFolder(
@@ -109,10 +108,10 @@ public sealed class GetLibraryFoldersPageQueryHandlerTests
         db.Context.ChangeTracker.Clear();
 
         Article directArticle =
-            db.CreateArticle(topic.Id, "Direct article");
+            db.CreateArticle(folder.Id, "Direct article");
 
         Question standalone =
-            db.CreateStandaloneQuestion(topic.Id, "Direct question");
+            db.CreateStandaloneQuestion(folder.Id, "Direct question");
 
         Question linked =
             db.CreateLinkedQuestion(
@@ -120,7 +119,7 @@ public sealed class GetLibraryFoldersPageQueryHandlerTests
                 "Linked question");
 
         Article nestedArticle =
-            db.CreateArticle(topic.Id, "Nested article");
+            db.CreateArticle(folder.Id, "Nested article");
 
         nestedArticle
             .MoveToContainer(level2.Id)
@@ -144,14 +143,14 @@ public sealed class GetLibraryFoldersPageQueryHandlerTests
         result.IsSuccess.Should().BeTrue();
         result.Value.Items.Should().ContainSingle();
 
-        LibraryFolderDto folder =
+        LibraryFolderDto item =
             result.Value.Items.Single();
 
-        folder.Id.Should().Be(level1.Id.Value);
-        folder.ChildFoldersCount.Should().Be(1);
-        folder.MaterialsCount.Should().Be(2,
+        item.Id.Should().Be(level1.Id.Value);
+        item.ChildFoldersCount.Should().Be(1);
+        item.MaterialsCount.Should().Be(2,
             "linked questions are not top-level materials");
-        folder.CanCreateChildFolder.Should().BeTrue();
+        item.CanCreateChildFolder.Should().BeTrue();
 
         result.Value.Items.Should().NotContain(
             item => item.Id == level2.Id.Value);
@@ -166,8 +165,8 @@ public sealed class GetLibraryFoldersPageQueryHandlerTests
             await SqliteLibraryTestDatabase.CreateAsync();
 
         (Section section, _) =
-            await db.CreateSectionAndTopicAsync(
-                topicName: "CLR");
+            await db.CreateSectionAndFolderAsync(
+                folderName: "CLR");
 
         LibraryContainer root =
             await GetRootAsync(db, section);

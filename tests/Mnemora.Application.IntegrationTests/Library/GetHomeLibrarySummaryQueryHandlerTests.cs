@@ -55,9 +55,9 @@ public sealed class GetHomeLibrarySummaryQueryHandlerTests
     public async Task SectionWithoutTopics_IsPreferredForSuggestedSection()
     {
         await using var db = await SqliteLibraryTestDatabase.CreateAsync();
-        await db.CreateSectionAndTopicAsync(
+        await db.CreateSectionAndFolderAsync(
             sectionName: "Populated section",
-            topicName: "Topic");
+            folderName: "Folder");
 
         Section emptySection = CreateSection("Empty section");
         db.Context.Sections.Add(emptySection);
@@ -83,7 +83,7 @@ public sealed class GetHomeLibrarySummaryQueryHandlerTests
     public async Task AllSectionsHaveTopics_FallsBackToFirstSection()
     {
         await using var db = await SqliteLibraryTestDatabase.CreateAsync();
-        (Section section, _) = await db.CreateSectionAndTopicAsync();
+        (Section section, _) = await db.CreateSectionAndFolderAsync();
 
         var sut = CreateHandler(db.Context);
         var result = await sut.Handle(new GetHomeLibrarySummaryQuery());
@@ -101,7 +101,7 @@ public sealed class GetHomeLibrarySummaryQueryHandlerTests
     public async Task Summary_DoesNotAccessMaterialsQuery()
     {
         await using var db = await SqliteLibraryTestDatabase.CreateAsync();
-        await db.CreateSectionAndTopicAsync();
+        await db.CreateSectionAndFolderAsync();
 
         var guardedContext = new MaterialsForbiddenReadDbContext(db.Context);
         var sut = CreateHandler(guardedContext);

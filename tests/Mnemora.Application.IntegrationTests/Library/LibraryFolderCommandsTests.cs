@@ -35,7 +35,8 @@ public sealed class LibraryFolderCommandsTests
         Assert.Equal("CLR", folder.Name!.Value);
         Assert.Equal(FolderColor.Blue, folder.Color);
         Assert.Equal(FolderIcon.DotNet, folder.Icon);
-        Assert.Empty(await db.Context.Topics.ToListAsync());
+        Assert.Equal(0, await db.Context.Database.SqlQueryRaw<int>(
+            "SELECT count(*) AS Value FROM sqlite_master WHERE type = 'table' AND name = 'topics'").SingleAsync());
     }
 
     [Fact]
@@ -73,7 +74,8 @@ public sealed class LibraryFolderCommandsTests
         Assert.Equal("Runtime", persisted.Name!.Value);
         Assert.Equal(FolderColor.Purple, persisted.Color);
         Assert.Equal(FolderIcon.Code, persisted.Icon);
-        Assert.Empty(await db.Context.Topics.ToListAsync());
+        Assert.Equal(0, await db.Context.Database.SqlQueryRaw<int>(
+            "SELECT count(*) AS Value FROM sqlite_master WHERE type = 'table' AND name = 'topics'").SingleAsync());
     }
 
     [Fact]

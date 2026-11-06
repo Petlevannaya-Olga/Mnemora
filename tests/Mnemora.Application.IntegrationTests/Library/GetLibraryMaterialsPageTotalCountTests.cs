@@ -15,18 +15,18 @@ public sealed class GetLibraryMaterialsPageTotalCountTests
     public async Task Paging_51Materials_ReturnsTotalCountForEveryPage()
     {
         await using var db = await SqliteLibraryTestDatabase.CreateAsync();
-        (_, var topic) = await db.CreateSectionAndTopicAsync();
+        (_, var folder) = await db.CreateSectionAndFolderAsync();
 
         Material[] materials = Enumerable.Range(0, 51)
-            .Select(index => (Material)db.CreateArticle(topic.Id, $"Article {index:D2}"))
+            .Select(index => (Material)db.CreateArticle(folder.Id, $"Article {index:D2}"))
             .ToArray();
 
         await db.AddMaterialsAsync(materials);
 
         var sut = CreateHandler(db);
 
-        var first = await sut.Handle(Query(topic.Id.Value, offset: 0));
-        var second = await sut.Handle(Query(topic.Id.Value, offset: 50));
+        var first = await sut.Handle(Query(folder.Id.Value, offset: 0));
+        var second = await sut.Handle(Query(folder.Id.Value, offset: 50));
 
         first.IsSuccess.Should().BeTrue();
         second.IsSuccess.Should().BeTrue();
@@ -45,19 +45,19 @@ public sealed class GetLibraryMaterialsPageTotalCountTests
     public async Task ContainerQuery_ReadsDirectSectionAndNestedFolderMaterials()
     {
         await using var db = await SqliteLibraryTestDatabase.CreateAsync();
-        (var section, var topic) = await db.CreateSectionAndTopicAsync();
+        (var section, var folder) = await db.CreateSectionAndFolderAsync();
 
         LibraryContainer root = await db.Context.LibraryContainers
             .SingleAsync(container =>
                 container.SectionId == section.Id &&
                 container.ParentId == null);
 
-        LibraryContainer topicFolder = await db.Context.LibraryContainers
+        LibraryContainer firstLevelFolder = await db.Context.LibraryContainers
             .SingleAsync(container =>
-                container.Id == LibraryContainerId.Create(topic.Id.Value).Value);
+                container.Id == folder.Id);
 
         LibraryContainer nestedFolder = LibraryContainer.CreateFolder(
-            topicFolder,
+            firstLevelFolder,
             FolderName.Create("Memory").Value,
             FolderColor.Teal,
             FolderIcon.Folder).Value;
@@ -66,13 +66,13 @@ public sealed class GetLibraryMaterialsPageTotalCountTests
         await db.Context.SaveChangesAsync();
         db.Context.ChangeTracker.Clear();
 
-        Article rootArticle = db.CreateArticle(topic.Id, "Direct section article");
+        Article rootArticle = db.CreateArticle(folder.Id, "Direct section article");
         rootArticle.MoveToContainer(root.Id).IsSuccess.Should().BeTrue();
 
-        Article nestedArticle = db.CreateArticle(topic.Id, "Nested folder article");
+        Article nestedArticle = db.CreateArticle(folder.Id, "Nested folder article");
         nestedArticle.MoveToContainer(nestedFolder.Id).IsSuccess.Should().BeTrue();
 
-        Article topicArticle = db.CreateArticle(topic.Id, "First level folder article");
+        Article topicArticle = db.CreateArticle(folder.Id, "First level folder article");
 
         await db.AddMaterialsAsync(
             rootArticle,
@@ -99,7 +99,7 @@ public sealed class GetLibraryMaterialsPageTotalCountTests
         nestedResult.Value.Items[0].ContainerId.Should().Be(nestedFolder.Id.Value);
         nestedResult.Value.Container.Should().NotBeNull();
         nestedResult.Value.Container!.Id.Should().Be(nestedFolder.Id.Value);
-        nestedResult.Value.Container.ParentId.Should().Be(topicFolder.Id.Value);
+        nestedResult.Value.Container.ParentId.Should().Be(firstLevelFolder.Id.Value);
         nestedResult.Value.Container.Depth.Should().Be(2);
         nestedResult.Value.Container.Name.Should().Be("Memory");
         nestedResult.Value.Container.Name.Should().Be("Memory");
@@ -109,16 +109,16 @@ public sealed class GetLibraryMaterialsPageTotalCountTests
     public async Task FilterAndSearch_TotalCountMatchesDisplayedMaterials()
     {
         await using var db = await SqliteLibraryTestDatabase.CreateAsync();
-        (_, var topic) = await db.CreateSectionAndTopicAsync();
+        (_, var folder) = await db.CreateSectionAndFolderAsync();
 
         await db.AddMaterialsAsync(
-            db.CreateArticle(topic.Id, "EF Core tracking"),
-            db.CreateArticle(topic.Id, "PostgreSQL indexes"),
-            db.CreateStandaloneQuestion(topic.Id, "EF Core question"));
+            db.CreateArticle(folder.Id, "EF Core tracking"),
+            db.CreateArticle(folder.Id, "PostgreSQL indexes"),
+            db.CreateStandaloneQuestion(folder.Id, "EF Core question"));
 
         var sut = CreateHandler(db);
         var result = await sut.Handle(new GetLibraryMaterialsPageQuery(
-            topic.Id.Value,
+            folder.Id.Value,
             "ef CORE",
             LibraryMaterialFilter.Articles,
             LibraryMaterialSort.Name,
@@ -136,17 +136,17 @@ public sealed class GetLibraryMaterialsPageTotalCountTests
     public async Task LinkedQuestions_AreExcludedFromTopLevelPageAndTotals()
     {
         await using var db = await SqliteLibraryTestDatabase.CreateAsync();
-        (_, var topic) = await db.CreateSectionAndTopicAsync();
+        (_, var folder) = await db.CreateSectionAndFolderAsync();
 
-        Article article = db.CreateArticle(topic.Id, "Article");
-        Question standalone = db.CreateStandaloneQuestion(topic.Id, "Standalone question");
+        Article article = db.CreateArticle(folder.Id, "Article");
+        Question standalone = db.CreateStandaloneQuestion(folder.Id, "Standalone question");
         Question linked = db.CreateLinkedQuestion(article, "Linked question");
         await db.AddMaterialsAsync(article, standalone, linked);
 
         var sut = CreateHandler(db);
-        var all = await sut.Handle(Query(topic.Id.Value, offset: 0));
+        var all = await sut.Handle(Query(folder.Id.Value, offset: 0));
         var questions = await sut.Handle(new GetLibraryMaterialsPageQuery(
-            topic.Id.Value,
+            folder.Id.Value,
             Search: null,
             LibraryMaterialFilter.Questions,
             LibraryMaterialSort.Name,

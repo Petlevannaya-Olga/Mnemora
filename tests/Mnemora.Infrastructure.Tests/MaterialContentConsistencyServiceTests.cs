@@ -4,7 +4,6 @@ using Mnemora.Application.Materials.Content;
 using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Materials;
 using Mnemora.Domain.Sections;
-using Mnemora.Domain.Topics;
 using Mnemora.Infrastructure.Persistence;
 using Xunit;
 
@@ -38,19 +37,11 @@ public sealed class MaterialContentConsistencyServiceTests
             LibraryContainer root =
                 LibraryContainer.CreateRoot(section.Id).Value;
 
-            Topic topic = Topic.Create(
-                section.Id,
-                TopicName.Create("Topic").Value,
-                TopicColor.Teal,
-                TopicIcon.Bookmark);
-
-            LibraryContainer folder =
-                LibraryContainer.CreateFolderWithId(
-                    LibraryContainerId.Create(topic.Id.Value).Value,
-                    root,
-                    FolderName.Create(topic.Name.Value).Value,
-                    Enum.Parse<FolderColor>(topic.Color.ToString()),
-                    Enum.Parse<FolderIcon>(topic.Icon.ToString())).Value;
+            LibraryContainer folder = LibraryContainer.CreateFolder(
+                root,
+                FolderName.Create("Folder").Value,
+                FolderColor.Teal,
+                FolderIcon.Bookmark).Value;
 
             Article article = Article.CreateInContainer(
                 folder.Id,
@@ -62,7 +53,6 @@ public sealed class MaterialContentConsistencyServiceTests
             dbContext.AddRange(
                 section,
                 root,
-                topic,
                 folder,
                 article);
 

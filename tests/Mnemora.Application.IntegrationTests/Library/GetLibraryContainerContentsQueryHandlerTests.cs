@@ -5,7 +5,6 @@ using Mnemora.Application.Library.GetContainerContents;
 using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Materials;
 using Mnemora.Domain.Sections;
-using Mnemora.Domain.Topics;
 using Xunit;
 
 namespace Mnemora.Application.IntegrationTests.Library;
@@ -18,8 +17,8 @@ public sealed class GetLibraryContainerContentsQueryHandlerTests
         await using var db =
             await SqliteLibraryTestDatabase.CreateAsync();
 
-        (Section section, Topic topic) =
-            await db.CreateSectionAndTopicAsync();
+        (Section section, LibraryContainer folder) =
+            await db.CreateSectionAndFolderAsync();
 
         LibraryContainer root =
             await db.Context.LibraryContainers.SingleAsync(
@@ -31,7 +30,7 @@ public sealed class GetLibraryContainerContentsQueryHandlerTests
             await db.Context.LibraryContainers.SingleAsync(
                 container =>
                     container.Id ==
-                    LibraryContainerId.Create(topic.Id.Value).Value);
+                    folder.Id);
 
         LibraryContainer secondFolder =
             LibraryContainer.CreateFolder(
@@ -55,7 +54,7 @@ public sealed class GetLibraryContainerContentsQueryHandlerTests
         db.Context.ChangeTracker.Clear();
 
         Article rootArticle =
-            db.CreateArticle(topic.Id, "Root article");
+            db.CreateArticle(folder.Id, "Root article");
 
         rootArticle.MoveToContainer(root.Id)
             .IsSuccess.Should().BeTrue();
@@ -66,7 +65,7 @@ public sealed class GetLibraryContainerContentsQueryHandlerTests
                 "Linked question");
 
         Article nestedArticle =
-            db.CreateArticle(topic.Id, "Nested article");
+            db.CreateArticle(folder.Id, "Nested article");
 
         nestedArticle.MoveToContainer(nested.Id)
             .IsSuccess.Should().BeTrue();
@@ -103,14 +102,14 @@ public sealed class GetLibraryContainerContentsQueryHandlerTests
         await using var db =
             await SqliteLibraryTestDatabase.CreateAsync();
 
-        var (_, topic) =
-            await db.CreateSectionAndTopicAsync();
+        var (_, folder) =
+            await db.CreateSectionAndFolderAsync();
 
         LibraryContainer level1 =
             await db.Context.LibraryContainers.SingleAsync(
                 container =>
                     container.Id ==
-                    LibraryContainerId.Create(topic.Id.Value).Value);
+                    folder.Id);
 
         LibraryContainer level2 =
             LibraryContainer.CreateFolder(
