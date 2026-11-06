@@ -1,6 +1,7 @@
-﻿using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Input;
 using Mnemora.Application.Commands;
-using Mnemora.Application.Topics.Update;
+using Mnemora.Application.LibraryContainers.Update;
+using Mnemora.Domain.LibraryContainers;
 using Mnemora.Contracts;
 using Mnemora.Contracts.Library;
 using Mnemora.Desktop.Dialogs;
@@ -174,15 +175,15 @@ public sealed partial class EditTopicDialogViewModel(
         try
         {
             var command =
-                new UpdateTopicCommand(
+                new UpdateLibraryFolderCommand(
                     _topicId,
                     Name,
-                    SelectedColor.Value,
-                    SelectedIcon.Value);
+                    Enum.Parse<FolderColor>(SelectedColor.Value.ToString()),
+                    Enum.Parse<FolderIcon>(SelectedIcon.Value.ToString()));
 
             var result =
                 await commandDispatcher.SendAsync<
-                    UpdateTopicCommand,
+                    UpdateLibraryFolderCommand,
                     Guid>(
                     command,
                     cancellationToken);

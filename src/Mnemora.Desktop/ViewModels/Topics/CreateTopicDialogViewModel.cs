@@ -1,6 +1,7 @@
-﻿using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Input;
 using Mnemora.Application.Commands;
-using Mnemora.Application.Topics.Create;
+using Mnemora.Application.LibraryContainers.CreateSectionFolder;
+using Mnemora.Domain.LibraryContainers;
 using Mnemora.Desktop.Dialogs;
 using Mnemora.Desktop.ViewModels.Common;
 using Mnemora.Domain.Topics;
@@ -153,14 +154,14 @@ public sealed partial class CreateTopicDialogViewModel(
 
         try
         {
-            var command = new CreateTopicCommand(
+            var command = new CreateSectionFolderCommand(
                 _sectionId,
                 Name,
-                SelectedColor.Value,
-                SelectedIcon.Value);
+                Enum.Parse<FolderColor>(SelectedColor.Value.ToString()),
+                Enum.Parse<FolderIcon>(SelectedIcon.Value.ToString()));
 
             var result = await commandDispatcher
-                .SendAsync<CreateTopicCommand, Guid>(
+                .SendAsync<CreateSectionFolderCommand, Guid>(
                     command,
                     cancellationToken);
 

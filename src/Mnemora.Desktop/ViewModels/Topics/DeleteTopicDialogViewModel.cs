@@ -1,6 +1,6 @@
-﻿using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Input;
 using Mnemora.Application.Commands;
-using Mnemora.Application.Topics.Delete;
+using Mnemora.Application.LibraryContainers.Delete;
 using Mnemora.Contracts;
 using Mnemora.Contracts.Library;
 using Mnemora.Desktop.Dialogs;
@@ -94,11 +94,11 @@ public sealed partial class DeleteTopicDialogViewModel(
         try
         {
             var command =
-                new DeleteTopicCommand(_topicId);
+                new DeleteLibraryFolderCommand(_topicId);
 
             var result =
                 await commandDispatcher.SendAsync<
-                    DeleteTopicCommand,
+                    DeleteLibraryFolderCommand,
                     Guid>(
                     command,
                     cancellationToken);
