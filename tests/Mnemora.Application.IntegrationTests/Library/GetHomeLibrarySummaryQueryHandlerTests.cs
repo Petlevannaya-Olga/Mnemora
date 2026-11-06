@@ -5,7 +5,6 @@ using Mnemora.Application.Home.GetLibrarySummary;
 using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Materials;
 using Mnemora.Domain.Sections;
-using Mnemora.Domain.Topics;
 using Xunit;
 
 namespace Mnemora.Application.IntegrationTests.Library;
@@ -202,8 +201,6 @@ public sealed class GetHomeLibrarySummaryQueryHandlerTests
 
         public IQueryable<LibraryContainer> LibraryContainersRead =>
             inner.LibraryContainersRead;
-
-        public IQueryable<Topic> TopicsRead => inner.TopicsRead;
 
         public IQueryable<Material> MaterialsRead =>
             throw new InvalidOperationException(

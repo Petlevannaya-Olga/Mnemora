@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -15,7 +15,7 @@ using Mnemora.Desktop.Settings;
 using Mnemora.Desktop.ViewModels.Common;
 using Mnemora.Desktop.ViewModels.Topics;
 using Mnemora.Domain.Materials;
-using Mnemora.Domain.Topics;
+using Mnemora.Domain.LibraryContainers;
 
 namespace Mnemora.Desktop.ViewModels.Library;
 
@@ -914,7 +914,7 @@ public sealed partial class CreateMaterialViewModel(
             ?? TopicAppearanceOptions.Icons[0];
 
         var selectedIcon = dialogService
-            .Show<SelectTopicIconDialogViewModel, TopicIcon?>(
+            .Show<SelectTopicIconDialogViewModel, FolderIcon?>(
                 viewModel =>
                     viewModel.Initialize(
                         currentOption.Value));
@@ -950,7 +950,7 @@ public sealed partial class CreateMaterialViewModel(
             ?? TopicAppearanceOptions.Icons[0];
 
         var selectedIcon = dialogService
-            .Show<SelectTopicIconDialogViewModel, TopicIcon?>(
+            .Show<SelectTopicIconDialogViewModel, FolderIcon?>(
                 viewModel =>
                     viewModel.Initialize(
                         currentOption.Value));

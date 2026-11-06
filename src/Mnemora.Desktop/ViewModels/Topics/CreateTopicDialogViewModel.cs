@@ -1,10 +1,9 @@
 using CommunityToolkit.Mvvm.Input;
 using Mnemora.Application.Commands;
 using Mnemora.Application.LibraryContainers.CreateSectionFolder;
-using Mnemora.Domain.LibraryContainers;
 using Mnemora.Desktop.Dialogs;
 using Mnemora.Desktop.ViewModels.Common;
-using Mnemora.Domain.Topics;
+using Mnemora.Domain.LibraryContainers;
 
 namespace Mnemora.Desktop.ViewModels.Topics;
 
@@ -20,19 +19,19 @@ public sealed partial class CreateTopicDialogViewModel(
     private string? _errorMessage;
     private bool _isCreating;
 
-    private TopicColorOption _selectedColor =
+    private FolderColorOption _selectedColor =
         TopicAppearanceOptions.Colors[0];
 
-    private TopicIconOption _selectedIcon =
+    private FolderIconOption _selectedIcon =
         TopicAppearanceOptions.Icons[0];
 
     public event EventHandler<DialogCloseRequestedEventArgs<Guid?>>?
         CloseRequested;
 
-    public IReadOnlyList<TopicColorOption> ColorOptions =>
+    public IReadOnlyList<FolderColorOption> ColorOptions =>
         TopicAppearanceOptions.Colors;
 
-    public IReadOnlyList<TopicIconOption> IconOptions =>
+    public IReadOnlyList<FolderIconOption> IconOptions =>
         TopicAppearanceOptions.Icons;
 
     public string SectionName
@@ -58,7 +57,7 @@ public sealed partial class CreateTopicDialogViewModel(
         }
     }
 
-    public TopicColorOption SelectedColor
+    public FolderColorOption SelectedColor
     {
         get => _selectedColor;
         set
@@ -70,7 +69,7 @@ public sealed partial class CreateTopicDialogViewModel(
         }
     }
 
-    public TopicIconOption SelectedIcon
+    public FolderIconOption SelectedIcon
     {
         get => _selectedIcon;
         set
@@ -157,8 +156,8 @@ public sealed partial class CreateTopicDialogViewModel(
             var command = new CreateSectionFolderCommand(
                 _sectionId,
                 Name,
-                Enum.Parse<FolderColor>(SelectedColor.Value.ToString()),
-                Enum.Parse<FolderIcon>(SelectedIcon.Value.ToString()));
+                SelectedColor.Value,
+                SelectedIcon.Value);
 
             var result = await commandDispatcher
                 .SendAsync<CreateSectionFolderCommand, Guid>(
@@ -227,7 +226,7 @@ public sealed partial class CreateTopicDialogViewModel(
     {
         var selectedIcon = dialogService.Show<
             SelectTopicIconDialogViewModel,
-            TopicIcon?>(
+            FolderIcon?>(
             viewModel => viewModel.Initialize(
                 SelectedIcon.Value));
 

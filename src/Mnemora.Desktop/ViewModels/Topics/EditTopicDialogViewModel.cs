@@ -1,12 +1,11 @@
 using CommunityToolkit.Mvvm.Input;
 using Mnemora.Application.Commands;
 using Mnemora.Application.LibraryContainers.Update;
-using Mnemora.Domain.LibraryContainers;
 using Mnemora.Contracts;
 using Mnemora.Contracts.Library;
 using Mnemora.Desktop.Dialogs;
 using Mnemora.Desktop.ViewModels.Common;
-using Mnemora.Domain.Topics;
+using Mnemora.Domain.LibraryContainers;
 
 namespace Mnemora.Desktop.ViewModels.Topics;
 
@@ -25,20 +24,20 @@ public sealed partial class EditTopicDialogViewModel(
 
     private bool _isSaving;
 
-    private TopicColorOption _selectedColor =
+    private FolderColorOption _selectedColor =
         TopicAppearanceOptions.Colors[0];
 
-    private TopicIconOption _selectedIcon =
+    private FolderIconOption _selectedIcon =
         TopicAppearanceOptions.Icons[0];
 
     public event EventHandler<
         DialogCloseRequestedEventArgs<Guid?>>?
         CloseRequested;
 
-    public IReadOnlyList<TopicColorOption> ColorOptions =>
+    public IReadOnlyList<FolderColorOption> ColorOptions =>
         TopicAppearanceOptions.Colors;
 
-    public IReadOnlyList<TopicIconOption> IconOptions =>
+    public IReadOnlyList<FolderIconOption> IconOptions =>
         TopicAppearanceOptions.Icons;
 
     public string Name
@@ -60,7 +59,7 @@ public sealed partial class EditTopicDialogViewModel(
         }
     }
 
-    public TopicColorOption SelectedColor
+    public FolderColorOption SelectedColor
     {
         get => _selectedColor;
 
@@ -77,7 +76,7 @@ public sealed partial class EditTopicDialogViewModel(
         }
     }
 
-    public TopicIconOption SelectedIcon
+    public FolderIconOption SelectedIcon
     {
         get => _selectedIcon;
 
@@ -178,8 +177,8 @@ public sealed partial class EditTopicDialogViewModel(
                 new UpdateLibraryFolderCommand(
                     _topicId,
                     Name,
-                    Enum.Parse<FolderColor>(SelectedColor.Value.ToString()),
-                    Enum.Parse<FolderIcon>(SelectedIcon.Value.ToString()));
+                    SelectedColor.Value,
+                    SelectedIcon.Value);
 
             var result =
                 await commandDispatcher.SendAsync<
@@ -257,7 +256,7 @@ public sealed partial class EditTopicDialogViewModel(
         var selectedIcon =
             dialogService.Show<
                 SelectTopicIconDialogViewModel,
-                TopicIcon?>(
+                FolderIcon?>(
                 viewModel =>
                     viewModel.Initialize(
                         SelectedIcon.Value));
@@ -282,10 +281,10 @@ public sealed partial class EditTopicDialogViewModel(
         }
     }
 
-    private TopicColorOption GetColorOption(
+    private FolderColorOption GetColorOption(
         string? value)
     {
-        if (!Enum.TryParse<TopicColor>(
+        if (!Enum.TryParse<FolderColor>(
                 value,
                 ignoreCase: true,
                 out var color))
@@ -299,10 +298,10 @@ public sealed partial class EditTopicDialogViewModel(
                ?? ColorOptions[0];
     }
 
-    private TopicIconOption GetIconOption(
+    private FolderIconOption GetIconOption(
         string? value)
     {
-        if (!Enum.TryParse<TopicIcon>(
+        if (!Enum.TryParse<FolderIcon>(
                 value,
                 ignoreCase: true,
                 out var icon))

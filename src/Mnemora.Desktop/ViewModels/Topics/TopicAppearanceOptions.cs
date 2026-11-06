@@ -1,41 +1,41 @@
-﻿using System.Windows.Media;
+using System.Windows.Media;
 using MaterialDesignThemes.Wpf;
 using Mnemora.Desktop.ViewModels.Sections;
 using Mnemora.Domain.Sections;
-using Mnemora.Domain.Topics;
+using Mnemora.Domain.LibraryContainers;
 
 namespace Mnemora.Desktop.ViewModels.Topics;
 
-public sealed record TopicColorOption(
-    TopicColor Value,
+public sealed record FolderColorOption(
+    FolderColor Value,
     SolidColorBrush Brush);
 
-public sealed record TopicIconOption(
-    TopicIcon Value,
+public sealed record FolderIconOption(
+    FolderIcon Value,
     string Name,
     string Category,
     PackIconKind Kind);
 
 public static class TopicAppearanceOptions
 {
-    public static IReadOnlyList<TopicColorOption> Colors { get; } =
+    public static IReadOnlyList<FolderColorOption> Colors { get; } =
         CreateColors();
 
-    public static IReadOnlyList<TopicIconOption> Icons { get; } =
+    public static IReadOnlyList<FolderIconOption> Icons { get; } =
         CreateIcons();
 
-    private static IReadOnlyList<TopicColorOption> CreateColors()
+    private static IReadOnlyList<FolderColorOption> CreateColors()
     {
-        var options = new List<TopicColorOption>();
+        var options = new List<FolderColorOption>();
 
-        foreach (var topicColor in Enum.GetValues<TopicColor>())
+        foreach (var topicColor in Enum.GetValues<FolderColor>())
         {
             if (!Enum.TryParse<SectionColor>(
                     topicColor.ToString(),
                     out var sectionColor))
             {
                 throw new InvalidOperationException(
-                    $"Для цвета темы '{topicColor}' не найден цвет раздела.");
+                    $"Для цвета папки '{topicColor}' не найден цвет раздела.");
             }
 
             var sectionOption = SectionAppearanceOptions.Colors
@@ -45,11 +45,11 @@ public static class TopicAppearanceOptions
             if (sectionOption is null)
             {
                 throw new InvalidOperationException(
-                    $"Для цвета темы '{topicColor}' не настроена кисть.");
+                    $"Для цвета папки '{topicColor}' не настроена кисть.");
             }
 
             options.Add(
-                new TopicColorOption(
+                new FolderColorOption(
                     topicColor,
                     sectionOption.Brush));
         }
@@ -57,18 +57,25 @@ public static class TopicAppearanceOptions
         return options;
     }
 
-    private static IReadOnlyList<TopicIconOption> CreateIcons()
+    private static IReadOnlyList<FolderIconOption> CreateIcons()
     {
-        var options = new List<TopicIconOption>();
+        var options = new List<FolderIconOption>();
 
-        foreach (var topicIcon in Enum.GetValues<TopicIcon>())
+        // Keep previous icon choices and ordering, without using TopicIcon.
+        // The original picker started with Bookmark, then the section icons.
+        IEnumerable<FolderIcon> iconChoices = new[] { FolderIcon.Bookmark }.Concat(
+            Enum.GetValues<SectionIcon>()
+                .Where(icon => icon != SectionIcon.Folder)
+                .Select(icon => Enum.Parse<FolderIcon>(icon.ToString())));
+
+        foreach (var topicIcon in iconChoices)
         {
-            if (topicIcon == TopicIcon.Bookmark)
+            if (topicIcon == FolderIcon.Bookmark)
             {
                 options.Add(
-                    new TopicIconOption(
-                        TopicIcon.Bookmark,
-                        "Тема",
+                    new FolderIconOption(
+                        FolderIcon.Bookmark,
+                        "Закладка",
                         "Общие",
                         ResolveIconKind(
                             "BookmarkOutline",
@@ -82,7 +89,7 @@ public static class TopicAppearanceOptions
                     out var sectionIcon))
             {
                 throw new InvalidOperationException(
-                    $"Для иконки темы '{topicIcon}' не найдена соответствующая иконка раздела.");
+                    $"Для иконки папки '{topicIcon}' не найдена соответствующая иконка раздела.");
             }
 
             var sectionOption = SectionAppearanceOptions.Icons
@@ -92,11 +99,11 @@ public static class TopicAppearanceOptions
             if (sectionOption is null)
             {
                 throw new InvalidOperationException(
-                    $"Для иконки темы '{topicIcon}' не настроено отображение.");
+                    $"Для иконки папки '{topicIcon}' не настроено отображение.");
             }
 
             options.Add(
-                new TopicIconOption(
+                new FolderIconOption(
                     topicIcon,
                     sectionOption.Name,
                     sectionOption.Category,
@@ -109,7 +116,7 @@ public static class TopicAppearanceOptions
     public static SolidColorBrush GetColorBrush(
         string? value)
     {
-        if (!Enum.TryParse<TopicColor>(
+        if (!Enum.TryParse<FolderColor>(
                 value,
                 true,
                 out var color))
@@ -127,7 +134,7 @@ public static class TopicAppearanceOptions
     public static PackIconKind GetIconKind(
         string? value)
     {
-        if (!Enum.TryParse<TopicIcon>(
+        if (!Enum.TryParse<FolderIcon>(
                 value,
                 true,
                 out var icon))

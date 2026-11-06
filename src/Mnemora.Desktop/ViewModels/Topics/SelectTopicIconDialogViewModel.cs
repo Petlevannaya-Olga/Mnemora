@@ -1,21 +1,21 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Windows.Data;
 using CommunityToolkit.Mvvm.Input;
 using Mnemora.Desktop.Dialogs;
 using Mnemora.Desktop.ViewModels.Common;
-using Mnemora.Domain.Topics;
+using Mnemora.Domain.LibraryContainers;
 
 namespace Mnemora.Desktop.ViewModels.Topics;
 
 public sealed partial class SelectTopicIconDialogViewModel
     : ViewModelBase,
-      IDialogViewModel<TopicIcon?>
+      IDialogViewModel<FolderIcon?>
 {
     private readonly ListCollectionView _iconsView;
 
     private string _searchText = string.Empty;
     private string _selectedCategory = "Все";
-    private TopicIconOption? _selectedIcon;
+    private FolderIconOption? _selectedIcon;
 
     public SelectTopicIconDialogViewModel()
     {
@@ -35,7 +35,7 @@ public sealed partial class SelectTopicIconDialogViewModel
     }
 
     public event EventHandler<
-        DialogCloseRequestedEventArgs<TopicIcon?>>?
+        DialogCloseRequestedEventArgs<FolderIcon?>>?
         CloseRequested;
 
     public ICollectionView IconsView =>
@@ -75,7 +75,7 @@ public sealed partial class SelectTopicIconDialogViewModel
         }
     }
 
-    public TopicIconOption? SelectedIcon
+    public FolderIconOption? SelectedIcon
     {
         get => _selectedIcon;
         set
@@ -92,7 +92,7 @@ public sealed partial class SelectTopicIconDialogViewModel
     }
 
     public void Initialize(
-        TopicIcon selectedIcon)
+        FolderIcon selectedIcon)
     {
         SearchText = string.Empty;
         SelectedCategory = "Все";
@@ -109,7 +109,7 @@ public sealed partial class SelectTopicIconDialogViewModel
     {
         CloseRequested?.Invoke(
             this,
-            new DialogCloseRequestedEventArgs<TopicIcon?>(
+            new DialogCloseRequestedEventArgs<FolderIcon?>(
                 SelectedIcon!.Value,
                 true));
     }
@@ -124,7 +124,7 @@ public sealed partial class SelectTopicIconDialogViewModel
     {
         CloseRequested?.Invoke(
             this,
-            new DialogCloseRequestedEventArgs<TopicIcon?>(
+            new DialogCloseRequestedEventArgs<FolderIcon?>(
                 null,
                 false));
     }
@@ -136,7 +136,7 @@ public sealed partial class SelectTopicIconDialogViewModel
     private bool FilterIcon(
         object item)
     {
-        if (item is not TopicIconOption icon)
+        if (item is not FolderIconOption icon)
         {
             return false;
         }

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Mnemora.Application.Database;
 using Mnemora.Domain.LibraryContainers;
 using Mnemora.Domain.Materials;
@@ -20,8 +20,6 @@ public sealed class MnemoraDbContext(DbContextOptions<MnemoraDbContext> options)
     public IQueryable<Section> SectionsRead => Set<Section>().AsNoTracking();
 
     public IQueryable<LibraryContainer> LibraryContainersRead => Set<LibraryContainer>().AsNoTracking();
-
-    public IQueryable<Topic> TopicsRead => Set<Topic>().AsNoTracking();
 
     public IQueryable<Material> MaterialsRead => Set<Material>().AsNoTracking();
 

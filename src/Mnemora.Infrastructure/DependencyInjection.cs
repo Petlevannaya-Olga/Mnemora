@@ -26,7 +26,6 @@ public static class DependencyInjection
 
         services.AddScoped<IReadDbContext>(provider => provider.GetRequiredService<MnemoraDbContext>());
 
-        services.AddSingleton<ISqliteErrorHandler, TopicSqliteErrorHandler>();
         services.AddSingleton<ISqliteErrorHandler, SectionSqliteErrorHandler>();
         services.AddSingleton<SqliteErrorTranslator>();
 
