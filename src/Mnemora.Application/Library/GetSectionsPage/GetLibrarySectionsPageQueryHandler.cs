@@ -150,7 +150,7 @@ public sealed class GetLibrarySectionsPageQueryHandler(
                             row => row.Count,
                             cancellationToken);
 
-            Dictionary<SectionId, int> topicsCountBySection =
+            Dictionary<SectionId, int> rootFoldersCountBySection =
                 sectionIds.Length == 0
                     ? []
                     : await readDbContext.LibraryContainersRead
@@ -222,8 +222,8 @@ public sealed class GetLibrarySectionsPageQueryHandler(
 
                     int foldersCount =
                         foldersCountBySection.GetValueOrDefault(row.Section.Id);
-                    int topicsCount =
-                        topicsCountBySection.GetValueOrDefault(row.Section.Id);
+                    int rootFoldersCount =
+                        rootFoldersCountBySection.GetValueOrDefault(row.Section.Id);
                     int articlesCount =
                         articlesCountBySection.GetValueOrDefault(row.Section.Id);
                     int questionsCount =
@@ -239,7 +239,7 @@ public sealed class GetLibrarySectionsPageQueryHandler(
                         row.Section.UpdatedAt,
                         row.LastActivityAt,
                         foldersCount,
-                        topicsCount,
+                        rootFoldersCount,
                         articlesCount + questionsCount,
                         articlesCount,
                         questionsCount);

@@ -10,7 +10,7 @@ public sealed record LibrarySectionOverviewDto(
     DateTime UpdatedAt,
     DateTime LastActivityAt,
     int FoldersCount,
-    int TopicsCount,
+    int RootFoldersCount,
     int MaterialsCount,
     int ArticlesCount,
     int QuestionsCount);

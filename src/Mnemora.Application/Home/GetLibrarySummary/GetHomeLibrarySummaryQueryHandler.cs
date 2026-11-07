@@ -29,8 +29,8 @@ public sealed class GetHomeLibrarySummaryQueryHandler(
                     new HomeLibrarySummaryDto(0, 0, null));
             }
 
-            int topicsCount = await readDbContext.LibraryContainersRead
-                .CountAsync(container => container.Depth == 1, cancellationToken);
+            int foldersCount = await readDbContext.LibraryContainersRead
+                .CountAsync(container => container.ParentId != null, cancellationToken);
 
             Section? suggestedSection = await readDbContext.SectionsRead
                 .Where(section => !readDbContext.LibraryContainersRead
@@ -53,7 +53,7 @@ public sealed class GetHomeLibrarySummaryQueryHandler(
             return Result.Success<HomeLibrarySummaryDto, Errors>(
                 new HomeLibrarySummaryDto(
                     sectionsCount,
-                    topicsCount,
+                    foldersCount,
                     suggestedSectionDto));
         }
         catch (OperationCanceledException)

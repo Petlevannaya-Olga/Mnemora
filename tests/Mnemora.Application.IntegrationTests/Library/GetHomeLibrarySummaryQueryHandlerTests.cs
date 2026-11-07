@@ -21,7 +21,7 @@ public sealed class GetHomeLibrarySummaryQueryHandlerTests
 
         result.IsSuccess.Should().BeTrue();
         result.Value.SectionsCount.Should().Be(0);
-        result.Value.TopicsCount.Should().Be(0);
+        result.Value.FoldersCount.Should().Be(0);
         result.Value.SuggestedSection.Should().BeNull();
         db.CommandCounter.Count.Should().Be(1);
         db.Context.ChangeTracker.Entries().Should().BeEmpty();
@@ -47,12 +47,38 @@ public sealed class GetHomeLibrarySummaryQueryHandlerTests
 
         result.IsSuccess.Should().BeTrue();
         result.Value.SectionsCount.Should().Be(1);
-        result.Value.TopicsCount.Should().Be(1);
+        result.Value.FoldersCount.Should().Be(1);
         result.Value.SuggestedSection!.Id.Should().Be(section.Id.Value);
     }
 
     [Fact]
-    public async Task SectionWithoutTopics_IsPreferredForSuggestedSection()
+    public async Task Summary_CountsAllNestedFoldersWithoutCountingSectionRoot()
+    {
+        await using var db = await SqliteLibraryTestDatabase.CreateAsync();
+        (_, LibraryContainer firstLevelFolder) =
+            await db.CreateSectionAndFolderAsync();
+
+        LibraryContainer nestedFolder = LibraryContainer.CreateFolder(
+            firstLevelFolder,
+            FolderName.Create("Nested folder").Value,
+            FolderColor.Teal,
+            FolderIcon.Bookmark).Value;
+
+        db.Context.LibraryContainers.Add(nestedFolder);
+        await db.Context.SaveChangesAsync();
+        db.Context.ChangeTracker.Clear();
+
+        var result = await CreateHandler(db.Context)
+            .Handle(new GetHomeLibrarySummaryQuery());
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.SectionsCount.Should().Be(1);
+        result.Value.FoldersCount.Should().Be(2,
+            "the section root is not a folder, but nested folders are counted");
+    }
+
+    [Fact]
+    public async Task SectionWithoutFolders_IsPreferredForSuggestedSection()
     {
         await using var db = await SqliteLibraryTestDatabase.CreateAsync();
         await db.CreateSectionAndFolderAsync(
@@ -70,7 +96,7 @@ public sealed class GetHomeLibrarySummaryQueryHandlerTests
 
         result.IsSuccess.Should().BeTrue();
         result.Value.SectionsCount.Should().Be(2);
-        result.Value.TopicsCount.Should().Be(1);
+        result.Value.FoldersCount.Should().Be(1);
         var suggestedSection = result.Value.SuggestedSection;
         suggestedSection.Should().NotBeNull();
         suggestedSection!.Id.Should().Be(emptySection.Id.Value);
@@ -80,7 +106,7 @@ public sealed class GetHomeLibrarySummaryQueryHandlerTests
     }
 
     [Fact]
-    public async Task AllSectionsHaveTopics_FallsBackToFirstSection()
+    public async Task AllSectionsHaveFolders_FallsBackToFirstSection()
     {
         await using var db = await SqliteLibraryTestDatabase.CreateAsync();
         (Section section, _) = await db.CreateSectionAndFolderAsync();
@@ -90,7 +116,7 @@ public sealed class GetHomeLibrarySummaryQueryHandlerTests
 
         result.IsSuccess.Should().BeTrue();
         result.Value.SectionsCount.Should().Be(1);
-        result.Value.TopicsCount.Should().Be(1);
+        result.Value.FoldersCount.Should().Be(1);
         result.Value.SuggestedSection.Should().NotBeNull();
         result.Value.SuggestedSection!.Id.Should().Be(section.Id.Value);
         db.CommandCounter.Count.Should().Be(4);
@@ -110,7 +136,7 @@ public sealed class GetHomeLibrarySummaryQueryHandlerTests
 
         result.IsSuccess.Should().BeTrue();
         result.Value.SectionsCount.Should().Be(1);
-        result.Value.TopicsCount.Should().Be(1);
+        result.Value.FoldersCount.Should().Be(1);
     }
 
     [Fact]
@@ -175,7 +201,7 @@ public sealed class GetHomeLibrarySummaryQueryHandlerTests
 
         result.IsSuccess.Should().BeTrue();
         result.Value.SectionsCount.Should().Be(targetCount);
-        result.Value.TopicsCount.Should().Be(targetCount);
+        result.Value.FoldersCount.Should().Be(targetCount);
         result.Value.SuggestedSection.Should().NotBeNull();
         result.Value.SuggestedSection!.Id.Should().NotBe(hotSectionId!.Value);
         db.CommandCounter.Count.Should().Be(3);

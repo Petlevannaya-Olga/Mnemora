@@ -684,7 +684,7 @@ public sealed partial class LibraryManagementViewModel
         }
 
         _simpleTopicsTotalCount = 0;
-        _simpleTopicSourceTotalCount = SelectedSection?.SectionOverview?.TopicsCount
+        _simpleTopicSourceTotalCount = SelectedSection?.SectionOverview?.RootFoldersCount
                                       ?? SelectedSection?.Section?.Topics.Count
                                       ?? 0;
         _isSimpleTopicsLoadingNextPage = false;

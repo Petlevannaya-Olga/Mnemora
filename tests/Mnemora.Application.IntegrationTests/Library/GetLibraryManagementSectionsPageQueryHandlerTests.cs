@@ -111,7 +111,7 @@ public sealed class GetLibraryManagementSectionsPageQueryHandlerTests
 
         item.RootContainerId.Should().Be(root.Id.Value);
         item.FoldersCount.Should().Be(2);
-        item.TopicsCount.Should().Be(1);
+        item.RootFoldersCount.Should().Be(1);
         item.ArticlesCount.Should().Be(1);
         item.QuestionsCount.Should().Be(1);
         item.MaterialsCount.Should().Be(2);

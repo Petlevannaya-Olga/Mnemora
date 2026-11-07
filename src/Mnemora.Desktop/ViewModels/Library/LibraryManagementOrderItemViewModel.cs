@@ -184,13 +184,15 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
 
     public DateTime CreatedAt => SectionOverview?.CreatedAt ?? Section?.CreatedAt ?? DateTime.MinValue;
 
-    public int TopicsCount => SectionOverview?.TopicsCount ?? Section?.Topics.Count ?? 0;
+    public int FoldersCount => SectionOverview?.FoldersCount ?? Section?.Topics.Count ?? 0;
+
+    public int RootFoldersCount => SectionOverview?.RootFoldersCount ?? Section?.Topics.Count ?? 0;
 
     public int MaterialsCount => SectionOverview?.MaterialsCount ?? GetSectionMaterials().Count(IsTopLevelMaterialDto);
 
-    public string TopicsSummaryText => TopicsCount == 0
-        ? "Тем пока нет"
-        : FormatCount(TopicsCount, "тема", "темы", "тем");
+    public string RootFoldersSummaryText => RootFoldersCount == 0
+        ? "Папок пока нет"
+        : FormatCount(RootFoldersCount, "папка", "папки", "папок");
 
     public string MaterialsSummaryText =>
         FormatCount(MaterialsCount, "материал", "материала", "материалов");
@@ -209,7 +211,7 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
     public double? ProgressPercentage => null;
 
     public string StructureText =>
-        $"{FormatCount(TopicsCount, "тема", "темы", "тем")} • " +
+        $"{FormatCount(FoldersCount, "папка", "папки", "папок")} • " +
         FormatCount(MaterialsCount, "материал", "материала", "материалов");
 
     public string MaterialTypesText =>

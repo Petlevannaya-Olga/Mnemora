@@ -47,13 +47,13 @@
 
                                 <Style.Triggers>
 
-                                    <DataTrigger Binding="{Binding HasSectionsWithoutTopics}"
+                                    <DataTrigger Binding="{Binding HasSectionsWithoutFolders}"
                                                  Value="True">
                                         <Setter Property="Text"
-                                                Value="Начало положено — добавим первую тему" />
+                                                Value="Начало положено — добавим первую папку" />
                                     </DataTrigger>
 
-                                    <DataTrigger Binding="{Binding HasTopics}"
+                                    <DataTrigger Binding="{Binding HasFolders}"
                                                  Value="True">
                                         <Setter Property="Text"
                                                 Value="Ваша база знаний начинает наполняться" />
@@ -243,7 +243,7 @@
                                                TextAlignment="Center"
                                                TextWrapping="Wrap">
 
-                                        <Run Text="Создайте раздел, добавьте в него тему," />
+                                        <Run Text="Создайте раздел, добавьте в него папку," />
                                         <LineBreak />
                                         <Run Text="а затем подключите статью или вопрос в формате Markdown" />
 
@@ -328,7 +328,7 @@
                                         </Border>
 
                                         <TextBlock Margin="4,13,4,0"
-                                                   Text="Добавить тему"
+                                                   Text="Добавить папку"
                                                    Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
                                                    FontSize="14"
                                                    FontWeight="SemiBold"
@@ -472,7 +472,7 @@
                                             Value="Collapsed" />
 
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding HasSectionsWithoutTopics}"
+                                        <DataTrigger Binding="{Binding HasSectionsWithoutFolders}"
                                                      Value="True">
                                             <Setter Property="Visibility"
                                                     Value="Visible" />
@@ -588,7 +588,7 @@
                                             <StackPanel Margin="0,8,0,0"
                                                         Orientation="Horizontal">
 
-                                                <TextBlock Text="Тем пока нет"
+                                                <TextBlock Text="Папок пока нет"
                                                            Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
                                                            FontSize="14" />
 
@@ -786,7 +786,7 @@
 
                         </Grid>
 
-                        <!-- Есть темы -->
+                        <!-- Есть папки -->
 
                         <Grid MinHeight="520"
                               SnapsToDevicePixels="True"
@@ -801,7 +801,7 @@
                                             Value="Collapsed" />
 
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding HasTopics}"
+                                        <DataTrigger Binding="{Binding HasFolders}"
                                                      Value="True">
                                             <Setter Property="Visibility"
                                                     Value="Visible" />
@@ -953,13 +953,13 @@
                                                         Margin="16,0,0,0"
                                                         VerticalAlignment="Center">
 
-                                                <TextBlock Text="{Binding TopicsCount}"
+                                                <TextBlock Text="{Binding FoldersCount}"
                                                            Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
                                                            FontSize="30"
                                                            FontWeight="SemiBold" />
 
                                                 <TextBlock Margin="0,5,0,0"
-                                                           Text="Тем"
+                                                           Text="Папок"
                                                            Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
                                                            FontSize="14" />
 
@@ -1268,7 +1268,7 @@
                                                              VerticalAlignment="Center" />
 
                                     <TextBlock Grid.Column="1"
-                                               Text="Раздел объединяет связанные темы"
+                                               Text="Раздел объединяет связанные материалы и папки"
                                                Foreground="White"
                                                FontSize="14"
                                                VerticalAlignment="Center"
@@ -1295,7 +1295,7 @@
                                                              VerticalAlignment="Center" />
 
                                     <TextBlock Grid.Column="1"
-                                               Text="В теме хранятся статьи и вопросы"
+                                               Text="В папке хранятся статьи и вопросы"
                                                Foreground="White"
                                                FontSize="14"
                                                VerticalAlignment="Center"

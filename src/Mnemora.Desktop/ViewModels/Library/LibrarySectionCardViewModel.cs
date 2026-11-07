@@ -43,7 +43,7 @@ public sealed class LibrarySectionCardViewModel
 
     public int FoldersCount => Source.FoldersCount;
 
-    public int TopicsCount => Source.TopicsCount;
+    public int RootFoldersCount => Source.RootFoldersCount;
 
     public int MaterialsCount => Source.MaterialsCount;
 

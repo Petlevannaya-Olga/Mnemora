@@ -28,7 +28,7 @@ public sealed partial class HomeViewModel : ViewModelBase
     private string? _libraryErrorMessage;
     private bool _isLoading;
     private int _sectionsCount;
-    private int _topicsCount;
+    private int _foldersCount;
     private HomeSuggestedSectionDto? _suggestedSection;
 
     public HomeViewModel(
@@ -59,8 +59,8 @@ public sealed partial class HomeViewModel : ViewModelBase
             : onboardingState.StoragePath.Trim();
     }
 
-    public bool HasTopics =>
-        HasSections && TopicsCount > 0;
+    public bool HasFolders =>
+        HasSections && FoldersCount > 0;
 
     public HomeSuggestedSectionDto? SuggestedSection =>
         _suggestedSection;
@@ -109,12 +109,12 @@ public sealed partial class HomeViewModel : ViewModelBase
     public bool HasSections =>
         !IsLoading && !HasLibraryError && SectionsCount > 0;
 
-    public bool HasSectionsWithoutTopics =>
-        HasSections && TopicsCount == 0;
+    public bool HasSectionsWithoutFolders =>
+        HasSections && FoldersCount == 0;
 
     public int SectionsCount => _sectionsCount;
 
-    public int TopicsCount => _topicsCount;
+    public int FoldersCount => _foldersCount;
 
     public string SectionsSummary =>
         $"{SectionsCount} {DeclensionGenerator.Generate(
@@ -191,7 +191,7 @@ public sealed partial class HomeViewModel : ViewModelBase
             }
 
             _sectionsCount = result.Value.SectionsCount;
-            _topicsCount = result.Value.TopicsCount;
+            _foldersCount = result.Value.FoldersCount;
             _suggestedSection = result.Value.SuggestedSection;
 
             NotifyLibraryStateChanged();
@@ -268,7 +268,7 @@ public sealed partial class HomeViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private async Task AddFirstTopicAsync(
+    private async Task AddFirstFolderAsync(
         CancellationToken cancellationToken)
     {
         var section = SuggestedSection;
@@ -278,13 +278,13 @@ public sealed partial class HomeViewModel : ViewModelBase
             return;
         }
 
-        var topicId = _dialogService.Show<
+        var folderId = _dialogService.Show<
             CreateTopicDialogViewModel,
             Guid?>(viewModel => viewModel.Initialize(
             section.Id,
             section.Name));
 
-        if (topicId is null)
+        if (folderId is null)
         {
             return;
         }
@@ -303,10 +303,10 @@ public sealed partial class HomeViewModel : ViewModelBase
         OnPropertyChanged(nameof(HasLibraryError));
         OnPropertyChanged(nameof(IsLibraryEmpty));
         OnPropertyChanged(nameof(HasSections));
-        OnPropertyChanged(nameof(HasSectionsWithoutTopics));
-        OnPropertyChanged(nameof(HasTopics));
+        OnPropertyChanged(nameof(HasSectionsWithoutFolders));
+        OnPropertyChanged(nameof(HasFolders));
         OnPropertyChanged(nameof(SectionsCount));
-        OnPropertyChanged(nameof(TopicsCount));
+        OnPropertyChanged(nameof(FoldersCount));
         OnPropertyChanged(nameof(SuggestedSection));
         OnPropertyChanged(nameof(SectionsSummary));
     }

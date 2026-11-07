@@ -109,8 +109,8 @@ public sealed class GetLibrarySectionsPageQueryHandlerTests
 
         item.RootContainerId.Should().Be(root.Id.Value);
         item.FoldersCount.Should().Be(2);
-        item.TopicsCount.Should().Be(1,
-            "backward-compatible count of first-level folders");
+        item.RootFoldersCount.Should().Be(1,
+            "only first-level folders belong to the root-folder page");
         item.ArticlesCount.Should().Be(1);
         item.QuestionsCount.Should().Be(1);
         item.MaterialsCount.Should().Be(2);

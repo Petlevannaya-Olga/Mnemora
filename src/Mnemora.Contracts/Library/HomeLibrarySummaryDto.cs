@@ -2,7 +2,7 @@ namespace Mnemora.Contracts.Library;
 
 public sealed record HomeLibrarySummaryDto(
     int SectionsCount,
-    int TopicsCount,
+    int FoldersCount,
     HomeSuggestedSectionDto? SuggestedSection);
 
 public sealed record HomeSuggestedSectionDto(
