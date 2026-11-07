@@ -29,7 +29,7 @@ public sealed class LibraryContainerPersistenceTests
         await using (MnemoraDbContext dbContext =
                      await factory.CreateDbContextAsync(ct))
         {
-            await dbContext.Database.EnsureCreatedAsync(ct);
+            await dbContext.Database.MigrateAsync(ct);
         }
 
         var sectionsRepository = scope.ServiceProvider
@@ -88,7 +88,7 @@ public sealed class LibraryContainerPersistenceTests
             .GetRequiredService<IDbContextFactory<MnemoraDbContext>>();
         await using MnemoraDbContext dbContext =
             await factory.CreateDbContextAsync();
-        await dbContext.Database.EnsureCreatedAsync();
+        await dbContext.Database.MigrateAsync();
 
         Section section = CreateSection("Databases");
         LibraryContainer firstRoot =
@@ -114,7 +114,7 @@ public sealed class LibraryContainerPersistenceTests
             .GetRequiredService<IDbContextFactory<MnemoraDbContext>>();
         await using MnemoraDbContext dbContext =
             await factory.CreateDbContextAsync();
-        await dbContext.Database.EnsureCreatedAsync();
+        await dbContext.Database.MigrateAsync();
 
         Section section = CreateSection("Backend");
         LibraryContainer root =
@@ -140,7 +140,7 @@ public sealed class LibraryContainerPersistenceTests
             .GetRequiredService<IDbContextFactory<MnemoraDbContext>>();
         await using MnemoraDbContext dbContext =
             await factory.CreateDbContextAsync();
-        await dbContext.Database.EnsureCreatedAsync();
+        await dbContext.Database.MigrateAsync();
 
         Section section = CreateSection("C#");
         LibraryContainer root =

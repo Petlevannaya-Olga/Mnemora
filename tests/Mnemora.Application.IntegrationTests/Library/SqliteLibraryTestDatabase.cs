@@ -54,7 +54,7 @@ internal sealed class SqliteLibraryTestDatabase : IAsyncDisposable
 
         var context = new MnemoraDbContext(options);
 
-        await context.Database.EnsureCreatedAsync(cancellationToken);
+        await context.Database.MigrateAsync(cancellationToken);
         commandCounter.Reset();
 
         return new SqliteLibraryTestDatabase(

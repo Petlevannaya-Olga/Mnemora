@@ -46,7 +46,7 @@ internal sealed class ApplicationTestHost : IAsyncDisposable
         {
             var factory = provider.GetRequiredService<IDbContextFactory<MnemoraDbContext>>();
             await using MnemoraDbContext dbContext = await factory.CreateDbContextAsync();
-            await dbContext.Database.EnsureCreatedAsync();
+            await dbContext.Database.MigrateAsync();
             return new ApplicationTestHost(storagePath, provider);
         }
         catch

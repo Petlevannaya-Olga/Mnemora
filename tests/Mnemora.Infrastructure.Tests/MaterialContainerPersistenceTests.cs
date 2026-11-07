@@ -25,7 +25,7 @@ public sealed class MaterialContainerPersistenceTests
         await using MnemoraDbContext dbContext =
             await factory.CreateDbContextAsync(ct);
 
-        await dbContext.Database.EnsureCreatedAsync(ct);
+        await dbContext.Database.MigrateAsync(ct);
 
         Section section = CreateSection("C#");
         LibraryContainer root = LibraryContainer.CreateRoot(section.Id).Value;

@@ -27,7 +27,7 @@ public sealed class MaterialContentConsistencyServiceTests
         await using (MnemoraDbContext dbContext =
                      await factory.CreateDbContextAsync(ct))
         {
-            await dbContext.Database.EnsureCreatedAsync(ct);
+            await dbContext.Database.MigrateAsync(ct);
 
             Section section = Section.Create(
                 SectionName.Create("Section").Value,

@@ -29,6 +29,17 @@ public sealed class CurrentLibrarySchemaMigrationTests
             "SELECT COUNT(*) AS Value FROM sqlite_master WHERE type='table' AND name IN ('sections', 'library_containers', 'materials', 'material_tags')"));
         Assert.Equal(0, await ScalarAsync(context,
             "SELECT COUNT(*) AS Value FROM pragma_foreign_key_check"));
+        Assert.Equal(0, await ScalarAsync(context,
+            "SELECT COUNT(*) AS Value FROM sqlite_master " +
+            "WHERE type='table' AND name IN ('topics', 'legacy_topic_archive')"));
+        Assert.Equal(0, await ScalarAsync(context,
+            "SELECT COUNT(*) AS Value FROM pragma_table_info('materials') " +
+            "WHERE name = 'topic_id'"));
+        Assert.Equal(4, await ScalarAsync(context,
+            "SELECT COUNT(*) AS Value FROM sqlite_master " +
+            "WHERE type='table' AND name NOT LIKE 'sqlite_%' " +
+            "AND name NOT LIKE '__EFMigrations%'"));
+
         Assert.Equal(4, context.Model.GetEntityTypes()
             .Select(entity => entity.GetTableName())
             .Where(tableName => tableName is "sections" or "library_containers" or "materials" or "material_tags")
