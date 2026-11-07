@@ -22,7 +22,7 @@ public sealed class SaveLibraryOrderCommandValidatorTests
     }
 
     [Theory]
-    [InlineData(LibraryOrderTarget.Topics)]
+    [InlineData(LibraryOrderTarget.Folders)]
     [InlineData(LibraryOrderTarget.Materials)]
     public void ChildOrder_RequiresNonEmptyParent(LibraryOrderTarget target)
     {

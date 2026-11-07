@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -898,7 +898,7 @@ public partial class LibraryManagementView : UserControl
         object sender,
         RoutedEventArgs e)
     {
-        await ShowOrderDialogAsync(LibraryOrderTarget.Topics);
+        await ShowOrderDialogAsync(LibraryOrderTarget.Folders);
     }
 
     private async void ConfigureMaterialsOrder_OnClick(
@@ -933,7 +933,7 @@ public partial class LibraryManagementView : UserControl
 
             string? contextName = target switch
             {
-                LibraryOrderTarget.Topics => viewModel.SelectedSection?.Name,
+                LibraryOrderTarget.Folders => viewModel.SelectedSection?.Name,
                 LibraryOrderTarget.Materials => viewModel.SelectedTopic?.Name,
                 _ => null,
             };

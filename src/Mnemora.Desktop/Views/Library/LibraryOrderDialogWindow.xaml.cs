@@ -36,18 +36,18 @@ public partial class LibraryOrderDialogWindow : Window
         DialogTitle = target switch
         {
             LibraryOrderTarget.Sections => "Настройка порядка разделов",
-            LibraryOrderTarget.Topics => "Настройка порядка тем",
+            LibraryOrderTarget.Folders => "Настройка порядка папок",
             LibraryOrderTarget.Materials => "Настройка порядка материалов",
             _ => throw new ArgumentOutOfRangeException(nameof(target), target, null),
         };
 
         ContextText = target switch
         {
-            LibraryOrderTarget.Topics when !string.IsNullOrWhiteSpace(contextName) =>
+            LibraryOrderTarget.Folders when !string.IsNullOrWhiteSpace(contextName) =>
                 $"• Раздел: {contextName}",
 
             LibraryOrderTarget.Materials when !string.IsNullOrWhiteSpace(contextName) =>
-                $"• Тема: {contextName}",
+                $"• Папка: {contextName}",
 
             _ => string.Empty,
         };

@@ -8,11 +8,11 @@ public sealed record LibraryOrderItemDto(
     string Details,
     int DisplayOrder);
 
-public sealed record LibraryOrderTopicScopeDto(Guid Id, string Name);
+public sealed record LibraryOrderFolderScopeDto(Guid Id, string Name);
 
 public sealed record LibraryOrderSectionScopeDto(
     Guid Id,
     string Name,
-    IReadOnlyList<LibraryOrderTopicScopeDto> Topics);
+    IReadOnlyList<LibraryOrderFolderScopeDto> Folders);
 
 public sealed record LibraryOrderScopesDto(IReadOnlyList<LibraryOrderSectionScopeDto> Sections);

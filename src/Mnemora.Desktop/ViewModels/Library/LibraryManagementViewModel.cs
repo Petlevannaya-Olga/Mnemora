@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
@@ -346,7 +346,7 @@ public sealed partial class LibraryManagementViewModel(
         ActiveOrderTarget switch
         {
             LibraryOrderTarget.Sections => Sections,
-            LibraryOrderTarget.Topics => Topics,
+            LibraryOrderTarget.Folders => Topics,
             LibraryOrderTarget.Materials => Materials,
             _ => Array.Empty<LibraryManagementOrderItemViewModel>(),
         };
@@ -355,7 +355,7 @@ public sealed partial class LibraryManagementViewModel(
         ActiveOrderTarget switch
         {
             LibraryOrderTarget.Sections => "Sections",
-            LibraryOrderTarget.Topics => "Topics",
+            LibraryOrderTarget.Folders => "Folders",
             LibraryOrderTarget.Materials => "Materials",
             _ => string.Empty,
         };
@@ -364,7 +364,7 @@ public sealed partial class LibraryManagementViewModel(
         ActiveOrderTarget switch
         {
             LibraryOrderTarget.Sections => "Настроить порядок разделов",
-            LibraryOrderTarget.Topics => "Настроить порядок папок",
+            LibraryOrderTarget.Folders => "Настроить порядок папок",
             LibraryOrderTarget.Materials => "Настроить порядок материалов",
             _ => "Настроить порядок",
         };
@@ -373,7 +373,7 @@ public sealed partial class LibraryManagementViewModel(
         ActiveOrderTarget switch
         {
             LibraryOrderTarget.Sections => "Перетащите разделы в нужном порядке.",
-            LibraryOrderTarget.Topics => "Перетащите папки внутри выбранного раздела.",
+            LibraryOrderTarget.Folders => "Перетащите папки внутри выбранного раздела.",
             LibraryOrderTarget.Materials => "Перетащите материалы внутри выбранной папки.",
             _ => string.Empty,
         };
@@ -381,7 +381,7 @@ public sealed partial class LibraryManagementViewModel(
     public string OrderContextName =>
         ActiveOrderTarget switch
         {
-            LibraryOrderTarget.Topics => SelectedSection?.Name ?? string.Empty,
+            LibraryOrderTarget.Folders => SelectedSection?.Name ?? string.Empty,
             LibraryOrderTarget.Materials => SelectedTopic?.Name ?? string.Empty,
             _ => string.Empty,
         };
@@ -612,7 +612,7 @@ public sealed partial class LibraryManagementViewModel(
             case LibraryOrderTarget.Sections:
                 break;
 
-            case LibraryOrderTarget.Topics:
+            case LibraryOrderTarget.Folders:
                 if (SelectedSection is null)
                 {
                     return Array.Empty<LibraryManagementOrderItemViewModel>();
@@ -659,7 +659,7 @@ public sealed partial class LibraryManagementViewModel(
         Guid? parentId = target switch
         {
             LibraryOrderTarget.Sections => null,
-            LibraryOrderTarget.Topics => SelectedSection?.Id,
+            LibraryOrderTarget.Folders => SelectedSection?.Id,
             LibraryOrderTarget.Materials => SelectedTopic?.Id,
             _ => throw new ArgumentOutOfRangeException(nameof(target), target, null),
         };
@@ -704,7 +704,7 @@ public sealed partial class LibraryManagementViewModel(
                     await ReloadSimpleSectionsCoreAsync(cancellationToken);
                     break;
 
-                case LibraryOrderTarget.Topics:
+                case LibraryOrderTarget.Folders:
                     if (IsSimpleTopicsPage)
                     {
                         await ReloadSimpleTopicsPagedAsync(cancellationToken);
@@ -757,7 +757,7 @@ public sealed partial class LibraryManagementViewModel(
             return;
         }
 
-        BeginOrder(LibraryOrderTarget.Topics);
+        BeginOrder(LibraryOrderTarget.Folders);
     }
 
     [RelayCommand]
@@ -1214,7 +1214,7 @@ public sealed partial class LibraryManagementViewModel(
             foreach (var pendingOrder in _pendingTopicOrders.ToArray())
             {
                 if (!await SaveOrderCoreAsync(
-                        LibraryOrderTarget.Topics,
+                        LibraryOrderTarget.Folders,
                         pendingOrder.Key,
                         pendingOrder.Value,
                         cancellationToken))
@@ -1246,7 +1246,7 @@ public sealed partial class LibraryManagementViewModel(
             {
                 await ReloadSimpleSectionsCoreAsync(cancellationToken);
             }
-            else if (savedTarget == LibraryOrderTarget.Topics && IsSimpleTopicsPage)
+            else if (savedTarget == LibraryOrderTarget.Folders && IsSimpleTopicsPage)
             {
                 await ReloadSimpleTopicsPagedAsync(cancellationToken);
             }
@@ -2262,7 +2262,7 @@ public sealed partial class LibraryManagementViewModel(
         }
 
         var result = await LoadOrderItemsAsync(
-            LibraryOrderTarget.Topics,
+            LibraryOrderTarget.Folders,
             SelectedSection.Id,
             cancellationToken);
 
@@ -2282,7 +2282,7 @@ public sealed partial class LibraryManagementViewModel(
 
             Topics.Add(new LibraryManagementOrderItemViewModel(
                 orderItem,
-                LibraryOrderTarget.Topics,
+                LibraryOrderTarget.Folders,
                 position++,
                 topic: topic));
         }
@@ -2880,7 +2880,7 @@ public sealed partial class LibraryManagementViewModel(
         return target switch
         {
             LibraryOrderTarget.Sections => Sections,
-            LibraryOrderTarget.Topics => Topics,
+            LibraryOrderTarget.Folders => Topics,
             LibraryOrderTarget.Materials => Materials,
             _ => throw new ArgumentOutOfRangeException(nameof(target), target, null),
         };
@@ -2952,7 +2952,7 @@ public sealed partial class LibraryManagementViewModel(
                 _pendingSectionOrder = null;
                 break;
 
-            case LibraryOrderTarget.Topics when SelectedSection is not null:
+            case LibraryOrderTarget.Folders when SelectedSection is not null:
                 _pendingTopicOrders.Remove(SelectedSection.Id);
                 break;
 

@@ -26,7 +26,7 @@ public sealed class GetLibraryOrderItemsQueryHandler(
             return query.Target switch
             {
                 LibraryOrderTarget.Sections => await GetSectionsAsync(cancellationToken),
-                LibraryOrderTarget.Topics => await GetTopicsAsync(query.ParentId, cancellationToken),
+                LibraryOrderTarget.Folders => await GetFoldersAsync(query.ParentId, cancellationToken),
                 LibraryOrderTarget.Materials => await GetMaterialsAsync(query.ParentId, cancellationToken),
                 _ => CommonErrors.Validation(
                         "library.order.target.invalid",
@@ -57,10 +57,10 @@ public sealed class GetLibraryOrderItemsQueryHandler(
             .ThenBy(section => section.CreatedAt)
             .ThenBy(section => section.Id)
             .ToListAsync(cancellationToken);
-        var topics = await readDbContext.LibraryContainersRead
+        var folders = await readDbContext.LibraryContainersRead
             .Where(container => container.Depth == 1)
             .ToListAsync(cancellationToken);
-        var counts = topics.GroupBy(topic => topic.SectionId.Value)
+        var counts = folders.GroupBy(folder => folder.SectionId.Value)
             .ToDictionary(group => group.Key, group => group.Count());
         return Result.Success<IReadOnlyList<LibraryOrderItemDto>, Errors>(
             sections.Select(section => new LibraryOrderItemDto(
@@ -68,12 +68,12 @@ public sealed class GetLibraryOrderItemsQueryHandler(
                     section.Name.Value,
                     section.Icon.ToString(),
                     section.Color.ToString(),
-                    FormatCount(counts.GetValueOrDefault(section.Id.Value), "тема", "темы", "тем"),
+                    FormatCount(counts.GetValueOrDefault(section.Id.Value), "папка", "папки", "папок"),
                     section.DisplayOrder))
                 .ToArray());
     }
 
-    private async Task<Result<IReadOnlyList<LibraryOrderItemDto>, Errors>> GetTopicsAsync(
+    private async Task<Result<IReadOnlyList<LibraryOrderItemDto>, Errors>> GetFoldersAsync(
         Guid? parentId,
         CancellationToken cancellationToken)
     {
@@ -84,28 +84,28 @@ public sealed class GetLibraryOrderItemsQueryHandler(
             return sectionIdResult.Error.ToErrors();
         }
 
-        var topics = await readDbContext.LibraryContainersRead
-            .Where(topic => topic.SectionId == sectionIdResult.Value && topic.Depth == 1)
-            .OrderBy(topic => topic.DisplayOrder)
-            .ThenBy(topic => topic.CreatedAt)
-            .ThenBy(topic => topic.Id)
+        var folders = await readDbContext.LibraryContainersRead
+            .Where(folder => folder.SectionId == sectionIdResult.Value && folder.Depth == 1)
+            .OrderBy(folder => folder.DisplayOrder)
+            .ThenBy(folder => folder.CreatedAt)
+            .ThenBy(folder => folder.Id)
             .ToListAsync(cancellationToken);
-        var topicIds = topics.Select(topic => topic.Id).ToArray();
-        List<Material> materials = topicIds.Length == 0
+        var folderIds = folders.Select(folder => folder.Id).ToArray();
+        List<Material> materials = folderIds.Length == 0
             ? []
             : await readDbContext.MaterialsRead
-                .Where(material => topicIds.Contains(material.ContainerId))
+                .Where(material => folderIds.Contains(material.ContainerId))
                 .ToListAsync(cancellationToken);
         var counts = materials.GroupBy(material => material.ContainerId.Value)
             .ToDictionary(group => group.Key, group => group.Count());
         return Result.Success<IReadOnlyList<LibraryOrderItemDto>, Errors>(
-            topics.Select(topic => new LibraryOrderItemDto(
-                    topic.Id.Value,
-                    topic.Name!.Value,
-                    topic.Icon!.Value.ToString(),
-                    topic.Color!.Value.ToString(),
-                    FormatCount(counts.GetValueOrDefault(topic.Id.Value), "материал", "материала", "материалов"),
-                    topic.DisplayOrder))
+            folders.Select(folder => new LibraryOrderItemDto(
+                    folder.Id.Value,
+                    folder.Name!.Value,
+                    folder.Icon!.Value.ToString(),
+                    folder.Color!.Value.ToString(),
+                    FormatCount(counts.GetValueOrDefault(folder.Id.Value), "материал", "материала", "материалов"),
+                    folder.DisplayOrder))
                 .ToArray());
     }
 
@@ -113,15 +113,15 @@ public sealed class GetLibraryOrderItemsQueryHandler(
         Guid? parentId,
         CancellationToken cancellationToken)
     {
-        var topicIdResult = CreateContainerId(parentId);
+        var containerIdResult = CreateContainerId(parentId);
 
-        if (topicIdResult.IsFailure)
+        if (containerIdResult.IsFailure)
         {
-            return topicIdResult.Error.ToErrors();
+            return containerIdResult.Error.ToErrors();
         }
 
         var materials = await readDbContext.MaterialsRead
-            .Where(material => material.ContainerId == topicIdResult.Value)
+            .Where(material => material.ContainerId == containerIdResult.Value)
             .OrderBy(material => material.DisplayOrder)
             .ThenBy(material => material.CreatedAt)
             .ThenBy(material => material.Id)

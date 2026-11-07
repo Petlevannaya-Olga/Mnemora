@@ -22,7 +22,7 @@ public sealed class SaveLibraryOrderCommandHandler(
         var changeResult = command.Target switch
         {
             LibraryOrderTarget.Sections => await ChangeSectionsAsync(command.OrderedIds, cancellationToken),
-            LibraryOrderTarget.Topics => await ChangeTopicsAsync(command.ParentId, command.OrderedIds, cancellationToken),
+            LibraryOrderTarget.Folders => await ChangeFoldersAsync(command.ParentId, command.OrderedIds, cancellationToken),
             LibraryOrderTarget.Materials => await ChangeMaterialsAsync(command.ParentId, command.OrderedIds, cancellationToken),
             _ => UnitResult.Failure(CommonErrors.Validation(
                 "library.order.target.invalid",
@@ -64,7 +64,7 @@ public sealed class SaveLibraryOrderCommandHandler(
             (section, position) => section.ChangeDisplayOrder(position));
     }
 
-    private async Task<UnitResult<Error>> ChangeTopicsAsync(
+    private async Task<UnitResult<Error>> ChangeFoldersAsync(
         Guid? parentId,
         IReadOnlyList<Guid> orderedIds,
         CancellationToken cancellationToken)

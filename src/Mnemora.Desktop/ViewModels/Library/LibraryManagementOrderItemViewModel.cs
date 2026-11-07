@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using MaterialDesignThemes.Wpf;
 using Mnemora.Application.Library.Order;
 using Mnemora.Contracts;
@@ -63,7 +63,7 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
         Id = topic.Id;
         Name = topic.Name;
         Details = "Папка";
-        Target = LibraryOrderTarget.Topics;
+        Target = LibraryOrderTarget.Folders;
         IconKind = ResolveIcon(topic.Icon, Target, Details);
         _position = position;
     }
@@ -449,7 +449,7 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
         return target switch
         {
             LibraryOrderTarget.Sections => PackIconKind.FolderOutline,
-            LibraryOrderTarget.Topics => PackIconKind.BookOpenPageVariant,
+            LibraryOrderTarget.Folders => PackIconKind.BookOpenPageVariant,
             LibraryOrderTarget.Materials when details == "Вопрос" => PackIconKind.HelpCircleOutline,
             _ => PackIconKind.FileDocumentOutline,
         };

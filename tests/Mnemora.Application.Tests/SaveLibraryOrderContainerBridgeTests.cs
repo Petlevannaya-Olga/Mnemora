@@ -39,7 +39,7 @@ public sealed class SaveLibraryOrderContainerBridgeTests
             NullLogger<SaveLibraryOrderCommandHandler>.Instance);
 
         var command = new SaveLibraryOrderCommand(
-            LibraryOrderTarget.Topics,
+            LibraryOrderTarget.Folders,
             sectionId.Value,
             [secondFolder.Id.Value, firstFolder.Id.Value]);
 
