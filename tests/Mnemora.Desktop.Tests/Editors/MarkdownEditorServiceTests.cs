@@ -31,7 +31,7 @@ public sealed class MarkdownEditorServiceTests
 
         MarkdownEditorConfigurationValidationResult beforeDeletion =
             service.ValidateConfiguration(
-                MarkdownEditorType.VisualStudioCode,
+                MarkdownEditorType.VISUAL_STUDIO_CODE,
                 executablePath,
                 null);
 
@@ -39,7 +39,7 @@ public sealed class MarkdownEditorServiceTests
 
         MarkdownEditorConfigurationValidationResult afterDeletion =
             service.ValidateConfiguration(
-                MarkdownEditorType.VisualStudioCode,
+                MarkdownEditorType.VISUAL_STUDIO_CODE,
                 executablePath,
                 null);
 
@@ -61,7 +61,7 @@ public sealed class MarkdownEditorServiceTests
 
         MarkdownEditorConfigurationValidationResult result =
             service.ValidateConfiguration(
-                MarkdownEditorType.Obsidian,
+                MarkdownEditorType.OBSIDIAN,
                 null,
                 _testDirectory);
 

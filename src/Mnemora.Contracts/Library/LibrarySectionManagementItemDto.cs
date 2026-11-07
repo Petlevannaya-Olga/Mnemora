@@ -1,9 +1,12 @@
+using System.Text.Json.Serialization;
 namespace Mnemora.Contracts.Library;
 
 public enum LibrarySectionManagementItemKind
 {
-    Folder,
-    Material,
+    [JsonStringEnumMemberName("Folder")]
+    FOLDER,
+    [JsonStringEnumMemberName("Material")]
+    MATERIAL,
 }
 
 public sealed record LibrarySectionManagementItemDto(

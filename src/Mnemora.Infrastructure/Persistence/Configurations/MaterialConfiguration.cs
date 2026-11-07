@@ -34,8 +34,8 @@ public sealed class MaterialConfiguration
                 title => title.Value,
                 value => MaterialTitle.Create(value).Value)
             .HasColumnName("title")
-            .HasMaxLength(MaterialTitle.MaxLength)
-            .UseCollation(SqliteCollations.UnicodeNoCase)
+            .HasMaxLength(MaterialTitle.MAX_LENGTH)
+            .UseCollation(SqliteCollations.UNICODE_NO_CASE)
             .IsRequired();
 
         builder.Property(material => material.Difficulty)
@@ -48,7 +48,7 @@ public sealed class MaterialConfiguration
                 icon => icon.Key,
                 value => MaterialIcon.Create(value).Value)
             .HasColumnName("icon")
-            .HasMaxLength(MaterialIcon.MaxKeyLength)
+            .HasMaxLength(MaterialIcon.MAX_KEY_LENGTH)
             .IsRequired();
 
         builder.Property(material => material.LearningRevision)
@@ -65,8 +65,8 @@ public sealed class MaterialConfiguration
 
         builder.Property(material => material.DisplayOrder)
             .HasColumnName("display_order")
-            .HasDefaultValue(Material.DefaultDisplayOrder)
-            .HasSentinel(Material.DefaultDisplayOrder)
+            .HasDefaultValue(Material.DEFAULT_DISPLAY_ORDER)
+            .HasSentinel(Material.DEFAULT_DISPLAY_ORDER)
             .IsRequired();
 
         ConfigureDiscriminator(builder);
@@ -103,8 +103,8 @@ public sealed class MaterialConfiguration
         builder.Ignore(material => material.Type);
 
         builder.HasDiscriminator<MaterialType>("type")
-            .HasValue<Article>(MaterialType.Article)
-            .HasValue<Question>(MaterialType.Question);
+            .HasValue<Article>(MaterialType.ARTICLE)
+            .HasValue<Question>(MaterialType.QUESTION);
 
         builder.Property<MaterialType>("type")
             .HasConversion<int>()
@@ -150,9 +150,9 @@ public sealed class MaterialConfiguration
 
                 tagsBuilder.Property(tag => tag.Value)
                     .HasColumnName("value")
-                    .HasMaxLength(MaterialTag.MaxLength)
+                    .HasMaxLength(MaterialTag.MAX_LENGTH)
                     .UseCollation(
-                        SqliteCollations.UnicodeNoCase)
+                        SqliteCollations.UNICODE_NO_CASE)
                     .IsRequired();
 
                 tagsBuilder.HasKey(

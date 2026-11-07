@@ -14,9 +14,9 @@ internal sealed class MarkdownMaterialContentStore(
     ILogger<MarkdownMaterialContentStore> logger)
     : IMaterialContentStore
 {
-    private const string MaterialsDirectoryName = "materials";
-    private const string ArticlesDirectoryName = "articles";
-    private const string QuestionsDirectoryName = "questions";
+    private const string MATERIALS_DIRECTORY_NAME = "materials";
+    private const string ARTICLES_DIRECTORY_NAME = "articles";
+    private const string QUESTIONS_DIRECTORY_NAME = "questions";
 
     public Task<UnitResult<Error>> CreateArticleAsync(
         MaterialId materialId,
@@ -31,7 +31,7 @@ internal sealed class MarkdownMaterialContentStore(
             ["content.md"] = content.BodyMarkdown
         };
 
-        return CreateAsync(materialId, MaterialType.Article, files, cancellationToken);
+        return CreateAsync(materialId, MaterialType.ARTICLE, files, cancellationToken);
     }
 
     public Task<UnitResult<Error>> CreateQuestionAsync(
@@ -48,7 +48,7 @@ internal sealed class MarkdownMaterialContentStore(
             ["answer.md"] = content.ReferenceAnswerMarkdown
         };
 
-        return CreateAsync(materialId, MaterialType.Question, files, cancellationToken);
+        return CreateAsync(materialId, MaterialType.QUESTION, files, cancellationToken);
     }
 
     public async Task<Result<ArticleContent, Error>> ReadArticleAsync(
@@ -59,7 +59,7 @@ internal sealed class MarkdownMaterialContentStore(
 
         var bodyResult = await ReadFileAsync(
             materialId,
-            MaterialType.Article,
+            MaterialType.ARTICLE,
             "content.md",
             cancellationToken);
 
@@ -79,7 +79,7 @@ internal sealed class MarkdownMaterialContentStore(
 
         var promptResult = await ReadFileAsync(
             materialId,
-            MaterialType.Question,
+            MaterialType.QUESTION,
             "prompt.md",
             cancellationToken);
 
@@ -90,7 +90,7 @@ internal sealed class MarkdownMaterialContentStore(
 
         var answerResult = await ReadFileAsync(
             materialId,
-            MaterialType.Question,
+            MaterialType.QUESTION,
             "answer.md",
             cancellationToken);
 
@@ -284,8 +284,8 @@ internal sealed class MarkdownMaterialContentStore(
 
         string typeDirectoryName = materialType switch
         {
-            MaterialType.Article => ArticlesDirectoryName,
-            MaterialType.Question => QuestionsDirectoryName,
+            MaterialType.ARTICLE => ARTICLES_DIRECTORY_NAME,
+            MaterialType.QUESTION => QUESTIONS_DIRECTORY_NAME,
             _ => string.Empty
         };
 
@@ -299,7 +299,7 @@ internal sealed class MarkdownMaterialContentStore(
 
         return Path.Combine(
             storagePathResult.Value,
-            MaterialsDirectoryName,
+            MATERIALS_DIRECTORY_NAME,
             typeDirectoryName,
             materialId.Value.ToString("N"));
     }

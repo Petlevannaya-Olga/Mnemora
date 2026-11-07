@@ -1,8 +1,12 @@
+using System.Text.Json.Serialization;
 namespace Mnemora.Application.Library.Order;
 
 public enum LibraryOrderTarget
 {
-    Sections,
-    Folders,
-    Materials
+    [JsonStringEnumMemberName("Sections")]
+    SECTIONS,
+    [JsonStringEnumMemberName("Folders")]
+    FOLDERS,
+    [JsonStringEnumMemberName("Materials")]
+    MATERIALS
 }

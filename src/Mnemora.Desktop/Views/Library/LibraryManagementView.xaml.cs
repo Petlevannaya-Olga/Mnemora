@@ -891,21 +891,21 @@ public partial class LibraryManagementView : UserControl
         object sender,
         RoutedEventArgs e)
     {
-        await ShowOrderDialogAsync(LibraryOrderTarget.Sections);
+        await ShowOrderDialogAsync(LibraryOrderTarget.SECTIONS);
     }
 
     private async void ConfigureFoldersOrder_OnClick(
         object sender,
         RoutedEventArgs e)
     {
-        await ShowOrderDialogAsync(LibraryOrderTarget.Folders);
+        await ShowOrderDialogAsync(LibraryOrderTarget.FOLDERS);
     }
 
     private async void ConfigureMaterialsOrder_OnClick(
         object sender,
         RoutedEventArgs e)
     {
-        await ShowOrderDialogAsync(LibraryOrderTarget.Materials);
+        await ShowOrderDialogAsync(LibraryOrderTarget.MATERIALS);
     }
 
     private async Task ShowOrderDialogAsync(LibraryOrderTarget target)
@@ -933,8 +933,8 @@ public partial class LibraryManagementView : UserControl
 
             string? contextName = target switch
             {
-                LibraryOrderTarget.Folders => viewModel.SelectedSection?.Name,
-                LibraryOrderTarget.Materials => viewModel.SelectedFolder?.Name,
+                LibraryOrderTarget.FOLDERS => viewModel.SelectedSection?.Name,
+                LibraryOrderTarget.MATERIALS => viewModel.SelectedFolder?.Name,
                 _ => null,
             };
 

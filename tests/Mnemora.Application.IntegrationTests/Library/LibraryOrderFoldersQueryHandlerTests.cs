@@ -16,8 +16,8 @@ public sealed class LibraryOrderFoldersQueryHandlerTests
         LibraryContainer nestedFolder = LibraryContainer.CreateFolder(
             folder,
             FolderName.Create("Nested").Value,
-            FolderColor.Teal,
-            FolderIcon.Folder).Value;
+            FolderColor.TEAL,
+            FolderIcon.FOLDER).Value;
         db.Context.LibraryContainers.Add(nestedFolder);
         await db.Context.SaveChangesAsync();
         db.Context.ChangeTracker.Clear();
@@ -43,8 +43,8 @@ public sealed class LibraryOrderFoldersQueryHandlerTests
         db.Context.LibraryContainers.Add(LibraryContainer.CreateFolder(
             folder,
             FolderName.Create("Nested").Value,
-            FolderColor.Teal,
-            FolderIcon.Folder).Value);
+            FolderColor.TEAL,
+            FolderIcon.FOLDER).Value);
         await db.Context.SaveChangesAsync();
         db.Context.ChangeTracker.Clear();
 
@@ -52,7 +52,7 @@ public sealed class LibraryOrderFoldersQueryHandlerTests
             db.Context,
             NullLogger<GetLibraryOrderItemsQueryHandler>.Instance);
         var result = await handler.Handle(
-            new GetLibraryOrderItemsQuery(LibraryOrderTarget.Folders, section.Id.Value));
+            new GetLibraryOrderItemsQuery(LibraryOrderTarget.FOLDERS, section.Id.Value));
 
         Assert.True(result.IsSuccess);
         Assert.Equal(folder.Id.Value, Assert.Single(result.Value).Id);
@@ -67,7 +67,7 @@ public sealed class LibraryOrderFoldersQueryHandlerTests
             db.Context,
             NullLogger<GetLibraryOrderItemsQueryHandler>.Instance);
         var result = await handler.Handle(
-            new GetLibraryOrderItemsQuery(LibraryOrderTarget.Sections, null));
+            new GetLibraryOrderItemsQuery(LibraryOrderTarget.SECTIONS, null));
 
         Assert.True(result.IsSuccess);
         Assert.Equal("1 папка", Assert.Single(result.Value).Details);

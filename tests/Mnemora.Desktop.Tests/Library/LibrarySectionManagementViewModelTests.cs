@@ -262,7 +262,7 @@ public sealed class LibrarySectionManagementViewModelTests
         string name) =>
         new(
             folderId,
-            LibrarySectionManagementItemKind.Folder,
+            LibrarySectionManagementItemKind.FOLDER,
             name,
             "Раздел",
             "Folder",
@@ -281,7 +281,7 @@ public sealed class LibrarySectionManagementViewModelTests
         string title) =>
         new(
             materialId,
-            LibrarySectionManagementItemKind.Material,
+            LibrarySectionManagementItemKind.MATERIAL,
             title,
             "Раздел",
             "FileDocumentOutline",

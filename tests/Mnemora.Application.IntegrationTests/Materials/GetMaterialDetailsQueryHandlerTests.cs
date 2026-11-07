@@ -103,7 +103,7 @@ public sealed class GetMaterialDetailsQueryHandlerTests
         Article.CreateInContainer(
             containerId,
             MaterialTitle.Create(title).Value,
-            MaterialDifficulty.Medium,
+            MaterialDifficulty.MEDIUM,
             MaterialIcon.DefaultArticle,
             MaterialExperienceRewards.Create(50, 20).Value,
             Array.Empty<MaterialTag>()).Value;

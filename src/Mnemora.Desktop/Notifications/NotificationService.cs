@@ -6,7 +6,7 @@ namespace Mnemora.Desktop.Notifications;
 
 public sealed class NotificationService : INotificationService, IDisposable
 {
-    private const int MaximumVisibleNotifications = 4;
+    private const int MAXIMUM_VISIBLE_NOTIFICATIONS = 4;
     private static readonly TimeSpan NotificationLifetime = TimeSpan.FromSeconds(4);
     private static readonly TimeSpan ExpirationCheckInterval = TimeSpan.FromMilliseconds(250);
 
@@ -34,22 +34,22 @@ public sealed class NotificationService : INotificationService, IDisposable
 
     public void ShowSuccess(string message)
     {
-        Show(message, NotificationKind.Success);
+        Show(message, NotificationKind.SUCCESS);
     }
 
     public void ShowError(string message)
     {
-        Show(message, NotificationKind.Error);
+        Show(message, NotificationKind.ERROR);
     }
 
     public void ShowWarning(string message)
     {
-        Show(message, NotificationKind.Warning);
+        Show(message, NotificationKind.WARNING);
     }
 
     public void ShowInformation(string message)
     {
-        Show(message, NotificationKind.Information);
+        Show(message, NotificationKind.INFORMATION);
     }
 
     public void Dismiss(Guid notificationId)
@@ -95,7 +95,7 @@ public sealed class NotificationService : INotificationService, IDisposable
 
         RunOnDispatcher(() =>
         {
-            while (_notifications.Count >= MaximumVisibleNotifications)
+            while (_notifications.Count >= MAXIMUM_VISIBLE_NOTIFICATIONS)
             {
                 _notifications.RemoveAt(0);
             }

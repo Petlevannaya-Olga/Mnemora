@@ -26,7 +26,7 @@ public sealed class GetLibraryManagementFoldersPageQueryHandler(
             int pageSize = Math.Clamp(
                 request.PageSize,
                 1,
-                LibraryPagingDefaults.MaxQueryPageSize);
+                LibraryPagingDefaults.MAX_QUERY_PAGE_SIZE);
 
             var sectionIdResult =
                 SectionId.Create(request.SectionId);
@@ -82,20 +82,20 @@ public sealed class GetLibraryManagementFoldersPageQueryHandler(
 
             var orderedRows = request.Sort switch
             {
-                LibraryManagementFolderPageSort.Custom => rows
+                LibraryManagementFolderPageSort.CUSTOM => rows
                     .OrderBy(row => row.Folder.DisplayOrder)
                     .ThenBy(row => row.Folder.CreatedAt)
                     .ThenBy(row => row.Folder.Id),
 
-                LibraryManagementFolderPageSort.RecentActivity => rows
+                LibraryManagementFolderPageSort.RECENT_ACTIVITY => rows
                     .OrderByDescending(row => row.LastActivityAt)
                     .ThenBy(row => row.Folder.Id),
 
-                LibraryManagementFolderPageSort.Name => rows
+                LibraryManagementFolderPageSort.NAME => rows
                     .OrderBy(row => row.Folder.Name)
                     .ThenBy(row => row.Folder.Id),
 
-                LibraryManagementFolderPageSort.Newest => rows
+                LibraryManagementFolderPageSort.NEWEST => rows
                     .OrderByDescending(row => row.Folder.CreatedAt)
                     .ThenBy(row => row.Folder.Id),
 
@@ -171,8 +171,8 @@ public sealed class GetLibraryManagementFoldersPageQueryHandler(
                         row.Folder.Id.Value,
                         row.Folder.SectionId.Value,
                         row.Folder.Name!.Value,
-                        row.Folder.Color!.Value.ToString(),
-                        row.Folder.Icon!.Value.ToString(),
+                        row.Folder.Color!.Value.ToStableName(),
+                        row.Folder.Icon!.Value.ToStableName(),
                         row.Folder.CreatedAt,
                         row.Folder.UpdatedAt,
                         row.LastActivityAt,

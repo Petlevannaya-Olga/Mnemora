@@ -24,8 +24,8 @@ public sealed class CreateLibraryFolderCommandHandlerTests
         var command = new CreateLibraryFolderCommand(
             parent.Id.Value,
             "CLR",
-            FolderColor.Blue,
-            FolderIcon.DotNet);
+            FolderColor.BLUE,
+            FolderIcon.DOT_NET);
 
         var result = await handler.Handle(command, CancellationToken.None);
 
@@ -36,8 +36,8 @@ public sealed class CreateLibraryFolderCommandHandlerTests
         Assert.Equal(parent.SectionId, folder.SectionId);
         Assert.Equal(1, folder.Depth);
         Assert.Equal("CLR", folder.Name!.Value);
-        Assert.Equal(FolderColor.Blue, folder.Color);
-        Assert.Equal(FolderIcon.DotNet, folder.Icon);
+        Assert.Equal(FolderColor.BLUE, folder.Color);
+        Assert.Equal(FolderIcon.DOT_NET, folder.Icon);
         Assert.Equal(1, transactionManager.SaveChangesCallCount);
     }
 
@@ -56,8 +56,8 @@ public sealed class CreateLibraryFolderCommandHandlerTests
             new CreateLibraryFolderCommand(
                 parent.Id.Value,
                 "CLR",
-                FolderColor.Teal,
-                FolderIcon.Folder),
+                FolderColor.TEAL,
+                FolderIcon.FOLDER),
             CancellationToken.None);
 
         Assert.True(result.IsFailure);
@@ -83,8 +83,8 @@ public sealed class CreateLibraryFolderCommandHandlerTests
             new CreateLibraryFolderCommand(
                 level3.Id.Value,
                 "Level 4",
-                FolderColor.Teal,
-                FolderIcon.Folder),
+                FolderColor.TEAL,
+                FolderIcon.FOLDER),
             CancellationToken.None);
 
         Assert.True(result.IsFailure);
@@ -112,8 +112,8 @@ public sealed class CreateLibraryFolderCommandHandlerTests
         LibraryContainer.CreateFolder(
             parent,
             FolderName.Create(name).Value,
-            FolderColor.Teal,
-            FolderIcon.Folder).Value;
+            FolderColor.TEAL,
+            FolderIcon.FOLDER).Value;
 
     private sealed class LibraryContainersRepositoryStub(
         LibraryContainer? container)

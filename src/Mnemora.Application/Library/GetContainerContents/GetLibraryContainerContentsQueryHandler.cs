@@ -82,13 +82,13 @@ public sealed class GetLibraryContainerContentsQueryHandler(
 
             string containerColor =
                 currentContainer.IsRoot
-                    ? section.Color.ToString()
-                    : currentContainer.Color!.Value.ToString();
+                    ? section.Color.ToStableName()
+                    : currentContainer.Color!.Value.ToStableName();
 
             string containerIcon =
                 currentContainer.IsRoot
-                    ? section.Icon.ToString()
-                    : currentContainer.Icon!.Value.ToString();
+                    ? section.Icon.ToStableName()
+                    : currentContainer.Icon!.Value.ToStableName();
 
             var containerDto =
                 new LibraryContainerHeaderDto(
@@ -107,8 +107,8 @@ public sealed class GetLibraryContainerContentsQueryHandler(
                 new LibrarySectionHeaderDto(
                     section.Id.Value,
                     section.Name.Value,
-                    section.Color.ToString(),
-                    section.Icon.ToString(),
+                    section.Color.ToStableName(),
+                    section.Icon.ToStableName(),
                     section.CreatedAt,
                     section.UpdatedAt);
 
@@ -159,5 +159,5 @@ public sealed class GetLibraryContainerContentsQueryHandler(
     private static bool CanCreateChildFolder(
         LibraryContainer container) =>
         container.Depth <
-        LibraryContainer.MaxFolderDepth;
+        LibraryContainer.MAX_FOLDER_DEPTH;
 }

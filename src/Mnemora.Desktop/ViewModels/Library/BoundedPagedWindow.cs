@@ -1,9 +1,12 @@
+using System.Text.Json.Serialization;
 namespace Mnemora.Desktop.ViewModels.Library;
 
 public enum PageWindowInsert
 {
-    Append,
-    Prepend,
+    [JsonStringEnumMemberName("Append")]
+    APPEND,
+    [JsonStringEnumMemberName("Prepend")]
+    PREPEND,
 }
 
 /// <summary>
@@ -91,7 +94,7 @@ public sealed class BoundedPagedWindow<T>
             return;
         }
 
-        if (insert == PageWindowInsert.Append)
+        if (insert == PageWindowInsert.APPEND)
         {
             _visibleOffsets.AddLast(offset);
 

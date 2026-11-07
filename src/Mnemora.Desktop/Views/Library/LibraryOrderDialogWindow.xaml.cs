@@ -35,18 +35,18 @@ public partial class LibraryOrderDialogWindow : Window
 
         DialogTitle = target switch
         {
-            LibraryOrderTarget.Sections => "Настройка порядка разделов",
-            LibraryOrderTarget.Folders => "Настройка порядка папок",
-            LibraryOrderTarget.Materials => "Настройка порядка материалов",
+            LibraryOrderTarget.SECTIONS => "Настройка порядка разделов",
+            LibraryOrderTarget.FOLDERS => "Настройка порядка папок",
+            LibraryOrderTarget.MATERIALS => "Настройка порядка материалов",
             _ => throw new ArgumentOutOfRangeException(nameof(target), target, null),
         };
 
         ContextText = target switch
         {
-            LibraryOrderTarget.Folders when !string.IsNullOrWhiteSpace(contextName) =>
+            LibraryOrderTarget.FOLDERS when !string.IsNullOrWhiteSpace(contextName) =>
                 $"• Раздел: {contextName}",
 
-            LibraryOrderTarget.Materials when !string.IsNullOrWhiteSpace(contextName) =>
+            LibraryOrderTarget.MATERIALS when !string.IsNullOrWhiteSpace(contextName) =>
                 $"• Папка: {contextName}",
 
             _ => string.Empty,
@@ -513,8 +513,8 @@ public partial class LibraryOrderDialogWindow : Window
 
     private sealed class DragPreviewAdorner : Adorner
     {
-        private const double CursorOffset = 14d;
-        private const double MaxPreviewWidth = 640d;
+        private const double CURSOR_OFFSET = 14d;
+        private const double MAX_PREVIEW_WIDTH = 640d;
 
         private readonly VisualBrush _visualBrush;
         private readonly double _previewWidth;
@@ -530,7 +530,7 @@ public partial class LibraryOrderDialogWindow : Window
 
             _previewWidth = Math.Min(
                 Math.Max(source.ActualWidth, 1d),
-                MaxPreviewWidth);
+                MAX_PREVIEW_WIDTH);
 
             _previewHeight = Math.Max(source.ActualHeight, 1d);
 
@@ -553,8 +553,8 @@ public partial class LibraryOrderDialogWindow : Window
             base.OnRender(drawingContext);
 
             var previewRect = new Rect(
-                _position.X + CursorOffset,
-                _position.Y + CursorOffset,
+                _position.X + CURSOR_OFFSET,
+                _position.Y + CURSOR_OFFSET,
                 _previewWidth,
                 _previewHeight);
 

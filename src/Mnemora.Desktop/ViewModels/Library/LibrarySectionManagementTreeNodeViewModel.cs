@@ -1,17 +1,25 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Text.Json.Serialization;
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Mnemora.Contracts.Library;
 
 namespace Mnemora.Desktop.ViewModels.Library;
 
+#pragma warning disable CA1707
 public enum LibrarySectionManagementTreeNodeKind
 {
-    Section,
-    Folder,
-    Placeholder,
-    LoadMore,
-    Error,
+    [JsonStringEnumMemberName("Section")]
+    SECTION,
+    [JsonStringEnumMemberName("Folder")]
+    FOLDER,
+    [JsonStringEnumMemberName("Placeholder")]
+    PLACEHOLDER,
+    [JsonStringEnumMemberName("LoadMore")]
+    LOAD_MORE,
+    [JsonStringEnumMemberName("Error")]
+    ERROR,
 }
+#pragma warning restore CA1707
 
 public sealed partial class LibrarySectionManagementTreeNodeViewModel : ObservableObject
 {
@@ -48,11 +56,11 @@ public sealed partial class LibrarySectionManagementTreeNodeViewModel : Observab
     public LibrarySectionManagementTreeNodeViewModel? Parent { get; }
     public ObservableCollection<LibrarySectionManagementTreeNodeViewModel> Children { get; } = [];
 
-    public bool IsSection => Kind == LibrarySectionManagementTreeNodeKind.Section;
-    public bool IsFolder => Kind == LibrarySectionManagementTreeNodeKind.Folder;
-    public bool IsPlaceholder => Kind == LibrarySectionManagementTreeNodeKind.Placeholder;
-    public bool IsLoadMore => Kind == LibrarySectionManagementTreeNodeKind.LoadMore;
-    public bool IsError => Kind == LibrarySectionManagementTreeNodeKind.Error;
+    public bool IsSection => Kind == LibrarySectionManagementTreeNodeKind.SECTION;
+    public bool IsFolder => Kind == LibrarySectionManagementTreeNodeKind.FOLDER;
+    public bool IsPlaceholder => Kind == LibrarySectionManagementTreeNodeKind.PLACEHOLDER;
+    public bool IsLoadMore => Kind == LibrarySectionManagementTreeNodeKind.LOAD_MORE;
+    public bool IsError => Kind == LibrarySectionManagementTreeNodeKind.ERROR;
     public bool IsNavigationNode => IsSection || IsFolder;
     public bool CanCreateChildFolder => IsNavigationNode && Depth < 3;
 
@@ -75,7 +83,7 @@ public sealed partial class LibrarySectionManagementTreeNodeViewModel : Observab
         ArgumentNullException.ThrowIfNull(section);
 
         var node = new LibrarySectionManagementTreeNodeViewModel(
-            LibrarySectionManagementTreeNodeKind.Section,
+            LibrarySectionManagementTreeNodeKind.SECTION,
             section.Name,
             section.RootContainerId,
             section.Id,
@@ -96,7 +104,7 @@ public sealed partial class LibrarySectionManagementTreeNodeViewModel : Observab
         ArgumentNullException.ThrowIfNull(parent);
 
         var node = new LibrarySectionManagementTreeNodeViewModel(
-            LibrarySectionManagementTreeNodeKind.Folder,
+            LibrarySectionManagementTreeNodeKind.FOLDER,
             folder.Name,
             folder.Id,
             folder.SectionId,
@@ -113,14 +121,14 @@ public sealed partial class LibrarySectionManagementTreeNodeViewModel : Observab
     public static LibrarySectionManagementTreeNodeViewModel CreateLoading(
         LibrarySectionManagementTreeNodeViewModel parent) =>
         new(
-            LibrarySectionManagementTreeNodeKind.Placeholder,
+            LibrarySectionManagementTreeNodeKind.PLACEHOLDER,
             "Загружаем папки...",
             parent: parent);
 
     public static LibrarySectionManagementTreeNodeViewModel CreateLoadMore(
         LibrarySectionManagementTreeNodeViewModel parent) =>
         new(
-            LibrarySectionManagementTreeNodeKind.LoadMore,
+            LibrarySectionManagementTreeNodeKind.LOAD_MORE,
             "Загружаем папки...",
             parent: parent);
 
@@ -128,7 +136,7 @@ public sealed partial class LibrarySectionManagementTreeNodeViewModel : Observab
         LibrarySectionManagementTreeNodeViewModel parent,
         string message) =>
         new(
-            LibrarySectionManagementTreeNodeKind.Error,
+            LibrarySectionManagementTreeNodeKind.ERROR,
             message,
             parent: parent);
 

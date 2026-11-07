@@ -17,7 +17,7 @@ namespace Mnemora.Desktop.Tests.Library;
 
 public sealed class LibraryOverviewPagingRetryTests
 {
-    private const int PageSize = LibraryPagingDefaults.PageSize;
+    private const int PAGE_SIZE = LibraryPagingDefaults.PAGE_SIZE;
 
     [Fact]
     public async Task RetryPageCommand_AfterPreviousPageFailure_ReloadsPreviousOffset()
@@ -38,7 +38,7 @@ public sealed class LibraryOverviewPagingRetryTests
             await viewModel.LoadPreviousPageCommand.ExecuteAsync(null);
         }
 
-        dispatcher.FailOnceAtOffset = 2 * PageSize;
+        dispatcher.FailOnceAtOffset = 2 * PAGE_SIZE;
         await viewModel.LoadPreviousPageCommand.ExecuteAsync(null);
 
         viewModel.HasPageError.Should().BeTrue();
@@ -50,15 +50,15 @@ public sealed class LibraryOverviewPagingRetryTests
         await viewModel.RetryPageCommand.ExecuteAsync(null);
 
         dispatcher.RequestedOffsets.TakeLast(2)
-            .Should().Equal(2 * PageSize, 2 * PageSize);
+            .Should().Equal(2 * PAGE_SIZE, 2 * PAGE_SIZE);
         viewModel.HasPageError.Should().BeFalse();
-        viewModel.SectionWindowStartOffset.Should().Be(2 * PageSize);
+        viewModel.SectionWindowStartOffset.Should().Be(2 * PAGE_SIZE);
     }
 
     [Fact]
     public async Task RetryPageCommand_AfterNextPageFailure_ReloadsNextOffset()
     {
-        var dispatcher = new StubQueryDispatcher { FailOnceAtOffset = PageSize };
+        var dispatcher = new StubQueryDispatcher { FailOnceAtOffset = PAGE_SIZE };
         LibraryOverviewViewModel viewModel = CreateViewModel(dispatcher);
         await viewModel.LoadAsync();
         await viewModel.LoadNextPageCommand.ExecuteAsync(null);
@@ -68,15 +68,15 @@ public sealed class LibraryOverviewPagingRetryTests
 
         await viewModel.RetryPageCommand.ExecuteAsync(null);
 
-        dispatcher.RequestedOffsets.Should().Equal(0, PageSize, PageSize);
+        dispatcher.RequestedOffsets.Should().Equal(0, PAGE_SIZE, PAGE_SIZE);
         viewModel.HasPageError.Should().BeFalse();
-        viewModel.SectionWindowEndOffset.Should().Be(2 * PageSize);
+        viewModel.SectionWindowEndOffset.Should().Be(2 * PAGE_SIZE);
     }
 
     [Fact]
     public async Task Reload_ClearsFailedPageAndDisablesRetry()
     {
-        var dispatcher = new StubQueryDispatcher { FailOnceAtOffset = PageSize };
+        var dispatcher = new StubQueryDispatcher { FailOnceAtOffset = PAGE_SIZE };
         LibraryOverviewViewModel viewModel = CreateViewModel(dispatcher);
         await viewModel.LoadAsync();
         await viewModel.LoadNextPageCommand.ExecuteAsync(null);
@@ -97,7 +97,7 @@ public sealed class LibraryOverviewPagingRetryTests
 
     private sealed class StubQueryDispatcher : IQueryDispatcher
     {
-        private const int TotalItems = 15 * LibraryPagingDefaults.PageSize;
+        private const int TOTAL_ITEMS = 15 * LibraryPagingDefaults.PAGE_SIZE;
 
         public int? FailOnceAtOffset { get; set; }
 
@@ -124,15 +124,15 @@ public sealed class LibraryOverviewPagingRetryTests
 
             LibrarySectionOverviewDto[] items = Enumerable.Range(
                     page.Offset,
-                    Math.Min(page.PageSize, TotalItems - page.Offset))
+                    Math.Min(page.PageSize, TOTAL_ITEMS - page.Offset))
                 .Select(CreateSection)
                 .ToArray();
 
             object response = new LibrarySectionsPageDto(
                 items,
                 page.Offset + items.Length,
-                page.Offset + items.Length < TotalItems,
-                TotalItems);
+                page.Offset + items.Length < TOTAL_ITEMS,
+                TOTAL_ITEMS);
 
             return Task.FromResult(
                 Result.Success<TResponse, Errors>((TResponse)response));

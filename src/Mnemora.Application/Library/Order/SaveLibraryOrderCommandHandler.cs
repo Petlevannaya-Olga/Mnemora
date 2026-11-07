@@ -21,9 +21,9 @@ public sealed class SaveLibraryOrderCommandHandler(
     {
         var changeResult = command.Target switch
         {
-            LibraryOrderTarget.Sections => await ChangeSectionsAsync(command.OrderedIds, cancellationToken),
-            LibraryOrderTarget.Folders => await ChangeFoldersAsync(command.ParentId, command.OrderedIds, cancellationToken),
-            LibraryOrderTarget.Materials => await ChangeMaterialsAsync(command.ParentId, command.OrderedIds, cancellationToken),
+            LibraryOrderTarget.SECTIONS => await ChangeSectionsAsync(command.OrderedIds, cancellationToken),
+            LibraryOrderTarget.FOLDERS => await ChangeFoldersAsync(command.ParentId, command.OrderedIds, cancellationToken),
+            LibraryOrderTarget.MATERIALS => await ChangeMaterialsAsync(command.ParentId, command.OrderedIds, cancellationToken),
             _ => UnitResult.Failure(CommonErrors.Validation(
                 "library.order.target.invalid",
                 "Выбран неизвестный уровень библиотеки",

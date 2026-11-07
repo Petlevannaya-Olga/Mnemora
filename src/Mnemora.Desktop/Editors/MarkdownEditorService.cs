@@ -10,24 +10,24 @@ namespace Mnemora.Desktop.Editors;
 public sealed class MarkdownEditorService(
     ISettingsService settingsService) : IMarkdownEditorService
 {
-    private const string EditorCheckFileName =
+    private const string EDITOR_CHECK_FILE_NAME =
         "mnemora-editor-check.md";
 
-    private const string MaterialsDirectoryName =
+    private const string MATERIALS_DIRECTORY_NAME =
         "materials";
 
     // Техническая папка временных файлов, не хранилище
     // пользовательских материалов со статусом Draft.
-    private const string DraftsDirectoryName =
+    private const string DRAFTS_DIRECTORY_NAME =
         "_drafts";
 
-    private const string EditorCheckDirectoryName =
+    private const string EDITOR_CHECK_DIRECTORY_NAME =
         "editor-check";
 
-    private const string VisualStudioCodeDownloadUrl =
+    private const string VISUAL_STUDIO_CODE_DOWNLOAD_URL =
         "https://code.visualstudio.com/download";
 
-    private const string ObsidianDownloadUrl =
+    private const string OBSIDIAN_DOWNLOAD_URL =
         "https://obsidian.md/download";
 
     public string? FindVisualStudioCodeExecutable()
@@ -115,10 +115,10 @@ public sealed class MarkdownEditorService(
     {
         string url = editor switch
         {
-            MarkdownEditorType.VisualStudioCode =>
-                VisualStudioCodeDownloadUrl,
-            MarkdownEditorType.Obsidian =>
-                ObsidianDownloadUrl,
+            MarkdownEditorType.VISUAL_STUDIO_CODE =>
+                VISUAL_STUDIO_CODE_DOWNLOAD_URL,
+            MarkdownEditorType.OBSIDIAN =>
+                OBSIDIAN_DOWNLOAD_URL,
             _ => throw new ArgumentOutOfRangeException(
                 nameof(editor),
                 editor,
@@ -160,7 +160,7 @@ public sealed class MarkdownEditorService(
                 "Markdown-редактор не выбран.");
         }
 
-        if (editor == MarkdownEditorType.VisualStudioCode)
+        if (editor == MarkdownEditorType.VISUAL_STUDIO_CODE)
         {
             return IsValidVisualStudioCodePath(
                 visualStudioCodePath)
@@ -224,11 +224,11 @@ public sealed class MarkdownEditorService(
         {
             string testFilePath = editor switch
             {
-                MarkdownEditorType.VisualStudioCode =>
+                MarkdownEditorType.VISUAL_STUDIO_CODE =>
                     await CreateVisualStudioCodeCheckFileAsync(
                         cancellationToken),
 
-                MarkdownEditorType.Obsidian =>
+                MarkdownEditorType.OBSIDIAN =>
                     await CreateObsidianCheckFileAsync(
                         obsidianVaultPath,
                         cancellationToken),
@@ -326,12 +326,12 @@ public sealed class MarkdownEditorService(
 
         return editor switch
         {
-            MarkdownEditorType.VisualStudioCode =>
+            MarkdownEditorType.VISUAL_STUDIO_CODE =>
                 OpenInVisualStudioCode(
                     fullFilePath,
                     visualStudioCodePath),
 
-            MarkdownEditorType.Obsidian =>
+            MarkdownEditorType.OBSIDIAN =>
                 OpenInObsidian(
                     fullFilePath,
                     obsidianVaultPath),
@@ -450,7 +450,7 @@ public sealed class MarkdownEditorService(
 
         string filePath = Path.Combine(
             directory,
-            EditorCheckFileName);
+            EDITOR_CHECK_FILE_NAME);
 
         await WriteCheckFileAsync(
             filePath,
@@ -472,15 +472,15 @@ public sealed class MarkdownEditorService(
 
         string directory = Path.Combine(
             Path.GetFullPath(obsidianVaultPath!),
-            MaterialsDirectoryName,
-            DraftsDirectoryName,
-            EditorCheckDirectoryName);
+            MATERIALS_DIRECTORY_NAME,
+            DRAFTS_DIRECTORY_NAME,
+            EDITOR_CHECK_DIRECTORY_NAME);
 
         Directory.CreateDirectory(directory);
 
         string filePath = Path.Combine(
             directory,
-            EditorCheckFileName);
+            EDITOR_CHECK_FILE_NAME);
 
         await WriteCheckFileAsync(
             filePath,
@@ -493,13 +493,13 @@ public sealed class MarkdownEditorService(
         string filePath,
         CancellationToken cancellationToken)
     {
-        const string content =
+        const string CONTENT =
             "# Проверка редактора Mnemora\n\n" +
             "Если вы видите этот файл, Mnemora смогла передать его выбранному Markdown-редактору.\n";
 
         return File.WriteAllTextAsync(
             filePath,
-            content,
+            CONTENT,
             cancellationToken);
     }
 

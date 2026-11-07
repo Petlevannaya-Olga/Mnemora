@@ -73,14 +73,28 @@ resharper_web_config_wrong_module_highlighting = warning
 dotnet_analyzer_diagnostic.category-security.severity = error
 dotnet_code_quality.ca1802.api_surface = private, internal
 
-# name all constant fields using PascalCase
-dotnet_naming_rule.constant_fields_should_be_pascal_case.severity = suggestion
-dotnet_naming_rule.constant_fields_should_be_pascal_case.symbols = constant_fields
-dotnet_naming_rule.constant_fields_should_be_pascal_case.style = pascal_case_style
-dotnet_naming_symbols.constant_fields.applicable_kinds = field
-dotnet_naming_symbols.constant_fields.required_modifiers = const
-dotnet_naming_style.pascal_case_style.capitalization = pascal_case
+# Name constant fields and local constants using UPPER_SNAKE_CASE
+dotnet_naming_rule.constant_fields_should_be_upper_snake_case.severity = suggestion
+dotnet_naming_rule.constant_fields_should_be_upper_snake_case.symbols = constant_fields
+dotnet_naming_rule.constant_fields_should_be_upper_snake_case.style = upper_snake_case_style
 
+# Constants and enum members use UPPER_SNAKE_CASE.
+dotnet_naming_style.upper_snake_case_style.capitalization = all_upper
+dotnet_naming_style.upper_snake_case_style.word_separator = _
+
+dotnet_naming_symbols.enum_members_upper_snake_case.applicable_kinds = enum_member
+dotnet_naming_symbols.enum_members_upper_snake_case.applicable_accessibilities = *
+dotnet_naming_rule.enum_members_upper_snake_case.symbols = enum_members_upper_snake_case
+dotnet_naming_rule.enum_members_upper_snake_case.style = upper_snake_case_style
+dotnet_naming_rule.enum_members_upper_snake_case.severity = suggestion
+
+# Resolve overlaps with static-field conventions for non-public constants.
+dotnet_naming_symbols.nonpublic_constant_fields.applicable_kinds = field
+dotnet_naming_symbols.nonpublic_constant_fields.applicable_accessibilities = private, internal, private_protected
+dotnet_naming_symbols.nonpublic_constant_fields.required_modifiers = const
+dotnet_naming_rule.nonpublic_constant_fields.symbols = nonpublic_constant_fields
+dotnet_naming_rule.nonpublic_constant_fields.style = upper_snake_case_style
+dotnet_naming_rule.nonpublic_constant_fields.severity = suggestion
 # static fields should have s_ prefix
 dotnet_naming_rule.static_fields_should_have_prefix.severity = suggestion
 dotnet_naming_rule.static_fields_should_have_prefix.symbols = static_fields
@@ -198,10 +212,13 @@ csharp_space_between_method_declaration_parameter_list_parentheses = false
 csharp_space_between_parentheses = false
 csharp_space_between_square_brackets = false
 
-# Types: use keywords instead of BCL types, and permit var only when the type is clear
-csharp_style_var_for_built_in_types = false:suggestion
-csharp_style_var_when_type_is_apparent = false:none
-csharp_style_var_elsewhere = false:suggestion
+# Local variables: prefer var whenever C# can infer the type.
+# IDE0007 suggests var; IDE0008 must not suggest explicit types.
+csharp_style_var_for_built_in_types = true:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere = true:suggestion
+dotnet_diagnostic.IDE0007.severity = suggestion
+dotnet_diagnostic.IDE0008.severity = none
 
 # Xml project files
 [*.{csproj,vbproj,vcxproj,vcxproj.filters,proj,nativeproj,locproj}]
@@ -278,20 +295,12 @@ dotnet_diagnostic.SA1629.severity = none
 dotnet_diagnostic.SA1310.severity = none
 
 # Определяем символы для публичных констант
-dotnet_naming_symbols.public_constants.applicable_kinds = field
-dotnet_naming_symbols.public_constants.applicable_accessibilities = public
-dotnet_naming_symbols.public_constants.required_modifiers = const
 
 # Задаём стиль именования:
 #   - all_upper: все символы в верхнем регистре
 #   - word_separator = _: использовать подчеркивание для разделения слов
-dotnet_naming_style.public_constants_style.capitalization = all_upper
-dotnet_naming_style.public_constants_style.word_separator = _
 
 # Применяем стиль к символам:
-dotnet_naming_rule.public_constants_rule.symbols = public_constants
-dotnet_naming_rule.public_constants_rule.style = public_constants_style
-dotnet_naming_rule.public_constants_rule.severity = suggestion
 
 # Настройка правил именования для приватных статических полей
 dotnet_naming_rule.private_static_fields_should_have_underscore.symbols = private_static_fields
@@ -306,20 +315,12 @@ dotnet_naming_style.underscore_prefix_style.capitalization = camel_case
 dotnet_naming_style.underscore_prefix_style.required_prefix = _
 
 # Определяем символы для приватных констант
-dotnet_naming_symbols.private_constants.applicable_kinds = field
-dotnet_naming_symbols.private_constants.applicable_accessibilities = private
-dotnet_naming_symbols.private_constants.required_modifiers = const
 
 # Задаём стиль именования:
 #   - all_upper: все символы в верхнем регистре
 #   - word_separator = _: использовать подчеркивание для разделения слов
-dotnet_naming_style.private_constants_style.capitalization = all_upper
-dotnet_naming_style.private_constants_style.word_separator = _
 
 # Применяем стиль к символам:
-dotnet_naming_rule.private_constants_rule.symbols = private_constants
-dotnet_naming_rule.private_constants_rule.style = private_constants_style
-dotnet_naming_rule.private_constants_rule.severity = suggestion
 
 root = true
 
@@ -332,3 +333,25 @@ dotnet_analyzer_diagnostic.severity = none
 [**/Migrations/**/*.cs]
 generated_code = true
 dotnet_analyzer_diagnostic.severity = none
+
+# MNEMORA_FINAL_UPPER_SNAKE_BEGIN
+# Only const fields, local consts and enum members use UPPER_SNAKE_CASE.
+# Type names (including enum type names) continue to use PascalCase.
+[*.cs]
+dotnet_naming_symbols.mnemora_const_fields.applicable_kinds = field
+dotnet_naming_symbols.mnemora_const_fields.required_modifiers = const
+dotnet_naming_symbols.mnemora_local_consts.applicable_kinds = local
+dotnet_naming_symbols.mnemora_local_consts.required_modifiers = const
+dotnet_naming_symbols.mnemora_enum_members.applicable_kinds = enum_member
+dotnet_naming_style.mnemora_upper_snake.capitalization = all_upper
+dotnet_naming_style.mnemora_upper_snake.word_separator = _
+dotnet_naming_rule.mnemora_const_fields.symbols = mnemora_const_fields
+dotnet_naming_rule.mnemora_const_fields.style = mnemora_upper_snake
+dotnet_naming_rule.mnemora_const_fields.severity = suggestion
+dotnet_naming_rule.mnemora_local_consts.symbols = mnemora_local_consts
+dotnet_naming_rule.mnemora_local_consts.style = mnemora_upper_snake
+dotnet_naming_rule.mnemora_local_consts.severity = suggestion
+dotnet_naming_rule.mnemora_enum_members.symbols = mnemora_enum_members
+dotnet_naming_rule.mnemora_enum_members.style = mnemora_upper_snake
+dotnet_naming_rule.mnemora_enum_members.severity = suggestion
+# MNEMORA_FINAL_UPPER_SNAKE_END

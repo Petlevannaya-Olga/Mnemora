@@ -3,7 +3,9 @@
 public sealed class DevelopmentAiConnectionService
     : IAiConnectionService
 {
-    public const string SuccessfulTestKey = "mnemora-test-ok";
+    #pragma warning disable CA1707
+    public const string SUCCESSFUL_TEST_KEY = "mnemora-test-ok";
+    #pragma warning restore CA1707
 
     public async Task<AiConnectionCheckResult> CheckAsync(
         string apiKey,
@@ -17,7 +19,7 @@ public sealed class DevelopmentAiConnectionService
 
         return string.Equals(
             apiKey.Trim(),
-            SuccessfulTestKey,
+            SUCCESSFUL_TEST_KEY,
             StringComparison.Ordinal)
             ? AiConnectionCheckResult.Connected(
                 "Тестовое подключение установлено.",

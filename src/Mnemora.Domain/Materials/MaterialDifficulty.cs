@@ -1,8 +1,12 @@
-﻿namespace Mnemora.Domain.Materials;
+﻿using System.Text.Json.Serialization;
+namespace Mnemora.Domain.Materials;
 
 public enum MaterialDifficulty
 {
-    Easy = 1,
-    Medium = 2,
-    Hard = 3
+    [JsonStringEnumMemberName("Easy")]
+    EASY = 1,
+    [JsonStringEnumMemberName("Medium")]
+    MEDIUM = 2,
+    [JsonStringEnumMemberName("Hard")]
+    HARD = 3
 }

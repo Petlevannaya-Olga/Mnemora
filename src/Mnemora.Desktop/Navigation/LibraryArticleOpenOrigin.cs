@@ -1,7 +1,10 @@
+using System.Text.Json.Serialization;
 namespace Mnemora.Desktop.Navigation;
 
 public enum LibraryArticleOpenOrigin
 {
-    Overview,
-    Management,
+    [JsonStringEnumMemberName("Overview")]
+    OVERVIEW,
+    [JsonStringEnumMemberName("Management")]
+    MANAGEMENT,
 }

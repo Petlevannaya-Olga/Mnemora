@@ -8,12 +8,12 @@ public sealed class StorageTemporaryFilesCleanupService(
     ILogger<StorageTemporaryFilesCleanupService> logger)
     : IStorageTemporaryFilesCleanupService
 {
-    private const string MaterialsDirectoryName =
+    private const string MATERIALS_DIRECTORY_NAME =
         "materials";
 
     // Только технические рабочие файлы. Полноценные материалы
     // со статусом Draft хранятся в обычных каталогах материалов.
-    private const string DraftsDirectoryName =
+    private const string DRAFTS_DIRECTORY_NAME =
         "_drafts";
 
     public Task<StorageTemporaryFilesCleanupReport> CleanupAsync(
@@ -62,12 +62,12 @@ public sealed class StorageTemporaryFilesCleanupService(
 
         string materialsDirectory = Path.Combine(
             rootPath,
-            MaterialsDirectoryName);
+            MATERIALS_DIRECTORY_NAME);
 
         CleanupDirectory(
             Path.Combine(
                 materialsDirectory,
-                DraftsDirectoryName),
+                DRAFTS_DIRECTORY_NAME),
             ref deletedCount,
             ref skippedCount,
             cancellationToken);

@@ -143,7 +143,7 @@ public sealed partial class SelectSectionIconDialogViewModel
         return icon.Name.Contains(
                    SearchText.Trim(),
                    StringComparison.OrdinalIgnoreCase)
-               || icon.Value.ToString().Contains(
+               || icon.Value.ToString().Replace("_", "").Contains(
                    SearchText.Trim(),
                    StringComparison.OrdinalIgnoreCase);
     }

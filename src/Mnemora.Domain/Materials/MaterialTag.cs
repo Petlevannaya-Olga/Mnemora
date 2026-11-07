@@ -5,7 +5,9 @@ namespace Mnemora.Domain.Materials;
 
 public sealed class MaterialTag : ValueObject
 {
-    public const int MaxLength = 50;
+    #pragma warning disable CA1707
+    public const int MAX_LENGTH = 50;
+    #pragma warning restore CA1707
 
     private readonly string _normalizedValue;
 
@@ -31,9 +33,9 @@ public sealed class MaterialTag : ValueObject
             return CommonErrors.IsEmpty(nameof(tag));
         }
 
-        if (normalizedTag.Length > MaxLength)
+        if (normalizedTag.Length > MAX_LENGTH)
         {
-            return CommonErrors.LengthIsTooLarge(nameof(tag), MaxLength);
+            return CommonErrors.LengthIsTooLarge(nameof(tag), MAX_LENGTH);
         }
 
         return new MaterialTag(normalizedTag);

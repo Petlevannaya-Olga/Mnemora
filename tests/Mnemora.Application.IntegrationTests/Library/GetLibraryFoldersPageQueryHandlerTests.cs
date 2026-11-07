@@ -32,8 +32,8 @@ public sealed class GetLibraryFoldersPageQueryHandlerTests
                 LibraryContainer.CreateFolder(
                     root,
                     FolderName.Create($"Folder {index:D2}").Value,
-                    FolderColor.Teal,
-                    FolderIcon.Folder).Value;
+                    FolderColor.TEAL,
+                    FolderIcon.FOLDER).Value;
 
             newFolder.ChangeDisplayOrder(index);
             db.Context.LibraryContainers.Add(newFolder);
@@ -90,15 +90,15 @@ public sealed class GetLibraryFoldersPageQueryHandlerTests
             LibraryContainer.CreateFolder(
                 level1,
                 FolderName.Create("Memory").Value,
-                FolderColor.Teal,
-                FolderIcon.Folder).Value;
+                FolderColor.TEAL,
+                FolderIcon.FOLDER).Value;
 
         LibraryContainer level3 =
             LibraryContainer.CreateFolder(
                 level2,
                 FolderName.Create("LOH").Value,
-                FolderColor.Teal,
-                FolderIcon.Folder).Value;
+                FolderColor.TEAL,
+                FolderIcon.FOLDER).Value;
 
         db.Context.LibraryContainers.AddRange(
             level2,
@@ -177,16 +177,16 @@ public sealed class GetLibraryFoldersPageQueryHandlerTests
                 LibraryContainer.CreateFolder(
                     root,
                     FolderName.Create($"A Folder {index:D2}").Value,
-                    FolderColor.Teal,
-                    FolderIcon.Folder).Value);
+                    FolderColor.TEAL,
+                    FolderIcon.FOLDER).Value);
         }
 
         LibraryContainer target =
             LibraryContainer.CreateFolder(
                 root,
                 FolderName.Create("ZZZ Memory Model").Value,
-                FolderColor.Teal,
-                FolderIcon.Folder).Value;
+                FolderColor.TEAL,
+                FolderIcon.FOLDER).Value;
 
         db.Context.LibraryContainers.Add(target);
 
@@ -198,7 +198,7 @@ public sealed class GetLibraryFoldersPageQueryHandlerTests
             new GetLibraryFoldersPageQuery(
                 root.Id.Value,
                 "zzz MEMORY model",
-                LibraryFolderSort.Name,
+                LibraryFolderSort.NAME,
                 Offset: 0,
                 PageSize: 30));
 
@@ -217,8 +217,8 @@ public sealed class GetLibraryFoldersPageQueryHandlerTests
 
         Section section = Section.Create(
             SectionName.Create("Section").Value,
-            SectionColor.Teal,
-            SectionIcon.Folder);
+            SectionColor.TEAL,
+            SectionIcon.FOLDER);
 
         LibraryContainer root =
             db.AddSectionWithRoot(section);
@@ -229,8 +229,8 @@ public sealed class GetLibraryFoldersPageQueryHandlerTests
                 LibraryContainer.CreateFolder(
                     root,
                     FolderName.Create($"Folder {index:D5}").Value,
-                    FolderColor.Teal,
-                    FolderIcon.Folder).Value;
+                    FolderColor.TEAL,
+                    FolderIcon.FOLDER).Value;
 
             folder.ChangeDisplayOrder(index);
             db.Context.LibraryContainers.Add(folder);
@@ -265,8 +265,8 @@ public sealed class GetLibraryFoldersPageQueryHandlerTests
 
         Section section = Section.Create(
             SectionName.Create("Section").Value,
-            SectionColor.Teal,
-            SectionIcon.Folder);
+            SectionColor.TEAL,
+            SectionIcon.FOLDER);
 
         LibraryContainer root =
             db.AddSectionWithRoot(section);
@@ -277,8 +277,8 @@ public sealed class GetLibraryFoldersPageQueryHandlerTests
                 LibraryContainer.CreateFolder(
                     root,
                     FolderName.Create($"Folder {index:D5}").Value,
-                    FolderColor.Teal,
-                    FolderIcon.Folder).Value;
+                    FolderColor.TEAL,
+                    FolderIcon.FOLDER).Value;
 
             folder.ChangeDisplayOrder(index);
             db.Context.LibraryContainers.Add(folder);
@@ -312,11 +312,11 @@ public sealed class GetLibraryFoldersPageQueryHandlerTests
     private static GetLibraryFoldersPageQuery Query(
         Guid containerId,
         int offset = 0,
-        int pageSize = LibraryPagingDefaults.PageSize) =>
+        int pageSize = LibraryPagingDefaults.PAGE_SIZE) =>
         new(
             containerId,
             Search: null,
-            LibraryFolderSort.Custom,
+            LibraryFolderSort.CUSTOM,
             offset,
             pageSize);
 

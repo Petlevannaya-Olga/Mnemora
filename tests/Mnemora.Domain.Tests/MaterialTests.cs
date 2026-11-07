@@ -11,10 +11,10 @@ public sealed class MaterialTests
     {
         Article article = CreateArticle(LibraryContainerId.New(), icon: null);
 
-        Assert.Equal(MaterialType.Article, article.Type);
+        Assert.Equal(MaterialType.ARTICLE, article.Type);
         Assert.Equal(MaterialIcon.DefaultArticle, article.Icon);
         Assert.Equal(1, article.LearningRevision);
-        Assert.Equal(Material.DefaultDisplayOrder, article.DisplayOrder);
+        Assert.Equal(Material.DEFAULT_DISPLAY_ORDER, article.DisplayOrder);
     }
 
     [Fact]
@@ -45,7 +45,7 @@ public sealed class MaterialTests
         var result = Article.CreateInContainer(
             null,
             Title("Article"),
-            MaterialDifficulty.Medium,
+            MaterialDifficulty.MEDIUM,
             null,
             Rewards());
 
@@ -58,7 +58,7 @@ public sealed class MaterialTests
         var result = Question.CreateStandaloneInContainer(
             null,
             Title("Question"),
-            MaterialDifficulty.Medium,
+            MaterialDifficulty.MEDIUM,
             null,
             Rewards());
 
@@ -71,7 +71,7 @@ public sealed class MaterialTests
         var result = Article.CreateInContainer(
             LibraryContainerId.New(),
             Title("Article"),
-            MaterialDifficulty.Medium,
+            MaterialDifficulty.MEDIUM,
             MaterialIcon.DefaultArticle,
             Rewards(),
             [Tag("EF"), Tag("ef")]);
@@ -88,7 +88,7 @@ public sealed class MaterialTests
             tags: [Tag("original")]);
 
         var result = article.ReplaceTags(
-            Enumerable.Range(0, Material.MaxTags + 1)
+            Enumerable.Range(0, Material.MAX_TAGS + 1)
                 .Select(index => Tag($"tag-{index}")));
 
         Assert.True(result.IsFailure);
@@ -104,7 +104,7 @@ public sealed class MaterialTests
         var result = article.ChangeDifficulty((MaterialDifficulty)999);
 
         Assert.True(result.IsFailure);
-        Assert.Equal(MaterialDifficulty.Medium, article.Difficulty);
+        Assert.Equal(MaterialDifficulty.MEDIUM, article.Difficulty);
     }
 
     [Fact]
@@ -177,7 +177,7 @@ public sealed class MaterialTests
         var result = Question.CreateForArticle(
             article,
             Title("Question"),
-            MaterialDifficulty.Medium,
+            MaterialDifficulty.MEDIUM,
             null,
             Rewards(),
             [Tag("question")]);
@@ -204,7 +204,7 @@ public sealed class MaterialTests
         Article.CreateInContainer(
             containerId,
             Title("Article"),
-            MaterialDifficulty.Medium,
+            MaterialDifficulty.MEDIUM,
             icon,
             Rewards(),
             tags).Value;
@@ -215,7 +215,7 @@ public sealed class MaterialTests
         Question.CreateStandaloneInContainer(
             containerId,
             Title("Question"),
-            MaterialDifficulty.Medium,
+            MaterialDifficulty.MEDIUM,
             null,
             Rewards(),
             tags).Value;

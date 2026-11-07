@@ -60,8 +60,8 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandlerTests
         LibraryContainer nestedFolder = LibraryContainer.CreateFolder(
             firstLevelFolder,
             FolderName.Create("Nested").Value,
-            FolderColor.Teal,
-            FolderIcon.Folder).Value;
+            FolderColor.TEAL,
+            FolderIcon.FOLDER).Value;
 
         db.Context.LibraryContainers.Add(nestedFolder);
         await db.Context.SaveChangesAsync();
@@ -178,8 +178,8 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandlerTests
     }
 
     [Theory]
-    [InlineData(LibraryManagementMaterialPageFilter.Articles, 12, "Article")]
-    [InlineData(LibraryManagementMaterialPageFilter.Questions, 7, "Question")]
+    [InlineData(LibraryManagementMaterialPageFilter.ARTICLES, 12, "Article")]
+    [InlineData(LibraryManagementMaterialPageFilter.QUESTIONS, 7, "Question")]
     public async Task TypeFilter_IsAppliedInSqlAndTotalCountMatchesFilteredSet(
         LibraryManagementMaterialPageFilter filter,
         int expectedCount,
@@ -200,6 +200,7 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandlerTests
         result.IsSuccess.Should().BeTrue();
         result.Value.Items.Should().HaveCount(expectedCount);
         result.Value.Items.Should().OnlyContain(item => item.Type == expectedType);
+        result.Value.Items.Should().OnlyContain(item => item.Difficulty == "Medium");
         result.Value.TotalCount.Should().Be(expectedCount);
         result.Value.SourceTotalCount.Should().Be(19);
     }
@@ -226,10 +227,10 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandlerTests
     }
 
     [Theory]
-    [InlineData(LibraryManagementMaterialPageSort.Custom)]
-    [InlineData(LibraryManagementMaterialPageSort.RecentActivity)]
-    [InlineData(LibraryManagementMaterialPageSort.Name)]
-    [InlineData(LibraryManagementMaterialPageSort.Newest)]
+    [InlineData(LibraryManagementMaterialPageSort.CUSTOM)]
+    [InlineData(LibraryManagementMaterialPageSort.RECENT_ACTIVITY)]
+    [InlineData(LibraryManagementMaterialPageSort.NAME)]
+    [InlineData(LibraryManagementMaterialPageSort.NEWEST)]
     public async Task EverySort_HasStableTieBreakerAcrossPageBoundaries(
         LibraryManagementMaterialPageSort sort)
     {
@@ -285,14 +286,14 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandlerTests
         var result = await sut.Handle(new GetLibraryManagementMaterialsPageQuery(
             folder.Id.Value,
             Search: null,
-            LibraryManagementMaterialPageFilter.All,
-            LibraryManagementMaterialPageSort.Name,
+            LibraryManagementMaterialPageFilter.ALL,
+            LibraryManagementMaterialPageSort.NAME,
             Offset: -500,
             PageSize: 1_000));
 
         result.IsSuccess.Should().BeTrue();
-        result.Value.Items.Should().HaveCount(LibraryPagingDefaults.MaxQueryPageSize);
-        result.Value.NextOffset.Should().Be(LibraryPagingDefaults.MaxQueryPageSize);
+        result.Value.Items.Should().HaveCount(LibraryPagingDefaults.MAX_QUERY_PAGE_SIZE);
+        result.Value.NextOffset.Should().Be(LibraryPagingDefaults.MAX_QUERY_PAGE_SIZE);
         result.Value.HasMore.Should().BeTrue();
     }
 
@@ -310,7 +311,7 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandlerTests
         var result = await sut.Handle(Query(
             folder.Id.Value,
             offset: 4_980,
-            sort: LibraryManagementMaterialPageSort.Name));
+            sort: LibraryManagementMaterialPageSort.NAME));
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Items.Should().HaveCount(20);
@@ -326,14 +327,14 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandlerTests
     [Trait("Category", "LargeLoad")]
     public async Task LargeLoad_50000TopLevelAnd25000Linked_RemainsPageBounded()
     {
-        const int topLevelCount = 50_000;
+        const int TOP_LEVEL_COUNT = 50_000;
 
         await using var db = await SqliteLibraryTestDatabase.CreateAsync();
         (_, var folder) = await db.CreateSectionAndFolderAsync();
 
         IEnumerable<Material> Build()
         {
-            for (int index = 0; index < topLevelCount; index++)
+            for (int index = 0; index < TOP_LEVEL_COUNT; index++)
             {
                 Article article = db.CreateArticle(folder.Id, $"Material {index:D7}");
                 yield return article;
@@ -352,12 +353,12 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandlerTests
         var result = await sut.Handle(Query(
             folder.Id.Value,
             offset: 49_950,
-            sort: LibraryManagementMaterialPageSort.Name));
+            sort: LibraryManagementMaterialPageSort.NAME));
 
         result.IsSuccess.Should().BeTrue();
-        result.Value.SourceTotalCount.Should().Be(topLevelCount);
-        result.Value.TotalCount.Should().Be(topLevelCount);
-        result.Value.Items.Should().HaveCount(LibraryPagingDefaults.PageSize);
+        result.Value.SourceTotalCount.Should().Be(TOP_LEVEL_COUNT);
+        result.Value.TotalCount.Should().Be(TOP_LEVEL_COUNT);
+        result.Value.Items.Should().HaveCount(LibraryPagingDefaults.PAGE_SIZE);
         result.Value.Items.First().Title.Should().Be("Material 0049950");
         result.Value.Items.Last().Title.Should().Be("Material 0049979");
         db.Context.ChangeTracker.Entries().Should().BeEmpty();
@@ -371,9 +372,9 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandlerTests
     private static GetLibraryManagementMaterialsPageQuery Query(
         Guid containerId,
         string? search = null,
-        LibraryManagementMaterialPageFilter filter = LibraryManagementMaterialPageFilter.All,
-        LibraryManagementMaterialPageSort sort = LibraryManagementMaterialPageSort.Name,
+        LibraryManagementMaterialPageFilter filter = LibraryManagementMaterialPageFilter.ALL,
+        LibraryManagementMaterialPageSort sort = LibraryManagementMaterialPageSort.NAME,
         int offset = 0,
-        int pageSize = LibraryPagingDefaults.PageSize) =>
+        int pageSize = LibraryPagingDefaults.PAGE_SIZE) =>
         new(containerId, search, filter, sort, offset, pageSize);
 }

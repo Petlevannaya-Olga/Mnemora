@@ -81,7 +81,7 @@ public sealed class StorageValidationServiceTests
 
         Assert.False(result.IsValid);
         Assert.Equal(
-            StorageValidationFailureKind.MarkerMissing,
+            StorageValidationFailureKind.MARKER_MISSING,
             result.FailureKind);
         Assert.DoesNotContain(
             ".mnemora",
@@ -105,7 +105,7 @@ public sealed class StorageValidationServiceTests
 
         Assert.False(result.IsValid);
         Assert.Equal(
-            StorageValidationFailureKind.MarkerCorrupted,
+            StorageValidationFailureKind.MARKER_CORRUPTED,
             result.FailureKind);
 
         string errorMessage =
@@ -135,7 +135,7 @@ public sealed class StorageValidationServiceTests
 
         Assert.False(result.IsValid);
         Assert.Equal(
-            StorageValidationFailureKind.StorageVersionIsNewer,
+            StorageValidationFailureKind.STORAGE_VERSION_IS_NEWER,
             result.FailureKind);
         Assert.Contains(
             "более новой версии",
@@ -159,7 +159,7 @@ public sealed class StorageValidationServiceTests
 
         Assert.False(result.IsValid);
         Assert.Equal(
-            StorageValidationFailureKind.MarkerMissing,
+            StorageValidationFailureKind.MARKER_MISSING,
             result.FailureKind);
     }
 
@@ -184,7 +184,7 @@ public sealed class StorageValidationServiceTests
                     _storagePath,
                     ".mnemora")));
         Assert.Equal(
-            StorageValidationFailureKind.MarkerMissing,
+            StorageValidationFailureKind.MARKER_MISSING,
             result.FailureKind);
     }
 
@@ -237,7 +237,7 @@ public sealed class StorageValidationServiceTests
 
         Assert.False(result.IsValid);
         Assert.Equal(
-            StorageValidationFailureKind.MarkerCorrupted,
+            StorageValidationFailureKind.MARKER_CORRUPTED,
             result.FailureKind);
         Assert.Equal(
             "not-json",
@@ -321,7 +321,7 @@ public sealed class StorageValidationServiceTests
 
         Assert.False(result.IsValid);
         Assert.Equal(
-            StorageValidationFailureKind.Other,
+            StorageValidationFailureKind.OTHER,
             result.FailureKind);
         Assert.Contains(
             "подготовить восстановление",
@@ -349,12 +349,12 @@ public sealed class StorageValidationServiceTests
             _storagePath,
             ".mnemora");
 
-        const string markerContent =
+        const string MARKER_CONTENT =
             "{\"formatVersion\":999}";
 
         await File.WriteAllTextAsync(
             markerPath,
-            markerContent);
+            MARKER_CONTENT);
         await File.WriteAllTextAsync(
             Path.Combine(
                 _storagePath,
@@ -367,10 +367,10 @@ public sealed class StorageValidationServiceTests
 
         Assert.False(result.IsValid);
         Assert.Equal(
-            StorageValidationFailureKind.StorageVersionIsNewer,
+            StorageValidationFailureKind.STORAGE_VERSION_IS_NEWER,
             result.FailureKind);
         Assert.Equal(
-            markerContent,
+            MARKER_CONTENT,
             await File.ReadAllTextAsync(
                 markerPath));
         Assert.False(

@@ -32,13 +32,13 @@ public sealed class MaterialContainerPersistenceTests
         LibraryContainer folder = LibraryContainer.CreateFolder(
             root,
             FolderName.Create("Memory").Value,
-            FolderColor.Teal,
-            FolderIcon.Folder).Value;
+            FolderColor.TEAL,
+            FolderIcon.FOLDER).Value;
 
         Article article = Article.CreateInContainer(
             root.Id,
             MaterialTitle.Create("Garbage Collector").Value,
-            MaterialDifficulty.Medium,
+            MaterialDifficulty.MEDIUM,
             null,
             MaterialExperienceRewards.Create(50, 20).Value).Value;
 
@@ -47,7 +47,7 @@ public sealed class MaterialContainerPersistenceTests
         Question question = Question.CreateStandaloneInContainer(
             root.Id,
             MaterialTitle.Create("Independent question").Value,
-            MaterialDifficulty.Medium,
+            MaterialDifficulty.MEDIUM,
             null,
             MaterialExperienceRewards.Create(50, 20).Value).Value;
 

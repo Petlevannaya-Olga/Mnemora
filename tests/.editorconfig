@@ -1,0 +1,4 @@
+# Naming convention for xUnit test methods: Method_Scenario_ExpectedResult.
+# This is intentionally scoped to tests only; production code remains checked.
+[*.cs]
+dotnet_diagnostic.CA1707.severity = none

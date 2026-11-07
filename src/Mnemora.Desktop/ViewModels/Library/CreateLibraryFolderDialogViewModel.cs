@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Mnemora.Shared;
 using CommunityToolkit.Mvvm.Input;
 using Mnemora.Application.Commands;
 using Mnemora.Application.LibraryContainers.Create;
@@ -14,8 +15,8 @@ public sealed partial class CreateLibraryFolderDialogViewModel(
       IDialogViewModel<Guid?>
 {
     private Guid _parentContainerId;
-    private FolderColor _color = FolderColor.Teal;
-    private FolderIcon _icon = FolderIcon.Folder;
+    private FolderColor _color = FolderColor.TEAL;
+    private FolderIcon _icon = FolderIcon.FOLDER;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(CreateCommand))]
@@ -48,10 +49,10 @@ public sealed partial class CreateLibraryFolderDialogViewModel(
         ParentName = parentName;
         Name = string.Empty;
         ErrorMessage = null;
-        _color = Enum.TryParse(color, true, out FolderColor folderColor)
+        _color = EnumStableNames.TryParseStableName<FolderColor>(color, out var folderColor)
             ? folderColor
-            : FolderColor.Teal;
-        _icon = FolderIcon.Folder;
+            : FolderColor.TEAL;
+        _icon = FolderIcon.FOLDER;
     }
 
     partial void OnNameChanged(string value)

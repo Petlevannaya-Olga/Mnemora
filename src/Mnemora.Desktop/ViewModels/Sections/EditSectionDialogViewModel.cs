@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.Input;
+using Mnemora.Shared;
 using Mnemora.Application.Commands;
 using Mnemora.Application.Sections.Update;
 using Mnemora.Contracts;
@@ -283,9 +284,8 @@ public sealed partial class EditSectionDialogViewModel(
     private SectionColorOption GetColorOption(
         string? value)
     {
-        if (!Enum.TryParse<SectionColor>(
+        if (!EnumStableNames.TryParseStableName<SectionColor>(
                 value,
-                ignoreCase: true,
                 out var color))
         {
             return ColorOptions[0];
@@ -300,9 +300,8 @@ public sealed partial class EditSectionDialogViewModel(
     private SectionIconOption GetIconOption(
         string? value)
     {
-        if (!Enum.TryParse<SectionIcon>(
+        if (!EnumStableNames.TryParseStableName<SectionIcon>(
                 value,
-                ignoreCase: true,
                 out var icon))
         {
             return IconOptions[0];

@@ -21,12 +21,12 @@ public sealed partial class LibrarySectionManagementViewModel(
     IMaterialNavigationService? materialNavigationService = null)
     : ObservableObject
 {
-    private const int PageSize = LibraryPagingDefaults.PageSize;
-    private const int VisiblePageLimit = 7;
-    private const int CachePageLimit = 10;
+    private const int PAGE_SIZE = LibraryPagingDefaults.PAGE_SIZE;
+    private const int VISIBLE_PAGE_LIMIT = 7;
+    private const int CACHE_PAGE_LIMIT = 10;
 
     private readonly BoundedPagedWindow<LibrarySectionManagementItemDto> _materialWindow =
-        new(PageSize, VisiblePageLimit, CachePageLimit);
+        new(PAGE_SIZE, VISIBLE_PAGE_LIMIT, CACHE_PAGE_LIMIT);
 
     private int _materialLoadVersion;
     private CancellationTokenSource? _flatListReloadCancellationTokenSource;
@@ -36,10 +36,10 @@ public sealed partial class LibrarySectionManagementViewModel(
 
     public IReadOnlyList<LibrarySectionManagementSortOption> SortOptions { get; } =
     [
-        new("Мой порядок", LibrarySectionManagementItemSort.Custom),
-        new("Последняя активность", LibrarySectionManagementItemSort.RecentActivity),
-        new("По названию", LibrarySectionManagementItemSort.Name),
-        new("Сначала новые", LibrarySectionManagementItemSort.Newest),
+        new("Мой порядок", LibrarySectionManagementItemSort.CUSTOM),
+        new("Последняя активность", LibrarySectionManagementItemSort.RECENT_ACTIVITY),
+        new("По названию", LibrarySectionManagementItemSort.NAME),
+        new("Сначала новые", LibrarySectionManagementItemSort.NEWEST),
     ];
 
     [ObservableProperty]
@@ -49,7 +49,7 @@ public sealed partial class LibrarySectionManagementViewModel(
 
     [ObservableProperty]
     private LibrarySectionManagementSortOption _selectedSortOption =
-        new("Мой порядок", LibrarySectionManagementItemSort.Custom);
+        new("Мой порядок", LibrarySectionManagementItemSort.CUSTOM);
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsAllContentFilter))]
@@ -61,7 +61,7 @@ public sealed partial class LibrarySectionManagementViewModel(
     [NotifyPropertyChangedFor(nameof(HasNoSearchResults))]
     [NotifyPropertyChangedFor(nameof(EmptyResultsDescription))]
     private LibrarySectionManagementItemFilter _selectedContentFilter =
-        LibrarySectionManagementItemFilter.All;
+        LibrarySectionManagementItemFilter.ALL;
 
 
     [ObservableProperty]
@@ -137,10 +137,10 @@ public sealed partial class LibrarySectionManagementViewModel(
                               (RootNode.ChildFoldersCount > 0 ||
                                RootNode.Children.Any(child => child.IsFolder));
     public bool HasRootMaterials => RootMaterialsCount > 0;
-    public bool IsAllContentFilter => SelectedContentFilter == LibrarySectionManagementItemFilter.All;
-    public bool IsFoldersContentFilter => SelectedContentFilter == LibrarySectionManagementItemFilter.Folders;
-    public bool IsArticlesContentFilter => SelectedContentFilter == LibrarySectionManagementItemFilter.Articles;
-    public bool IsQuestionsContentFilter => SelectedContentFilter == LibrarySectionManagementItemFilter.Questions;
+    public bool IsAllContentFilter => SelectedContentFilter == LibrarySectionManagementItemFilter.ALL;
+    public bool IsFoldersContentFilter => SelectedContentFilter == LibrarySectionManagementItemFilter.FOLDERS;
+    public bool IsArticlesContentFilter => SelectedContentFilter == LibrarySectionManagementItemFilter.ARTICLES;
+    public bool IsQuestionsContentFilter => SelectedContentFilter == LibrarySectionManagementItemFilter.QUESTIONS;
     public bool HasActiveContentFilter => !IsAllContentFilter;
     public bool IsSectionEmpty =>
         HasSection &&
@@ -219,7 +219,7 @@ public sealed partial class LibrarySectionManagementViewModel(
             }
 
             int visibleCount = Math.Min(
-                PageSize,
+                PAGE_SIZE,
                 Math.Max(0, _materialWindow.TotalCount - _materialWindow.CurrentPageOffset));
 
             return LibraryRangeTextFormatter.FormatEntity(
@@ -351,7 +351,7 @@ public sealed partial class LibrarySectionManagementViewModel(
                 offset,
                 out IReadOnlyList<LibrarySectionManagementItemDto> cached))
         {
-            _materialWindow.ShowPage(offset, cached, PageWindowInsert.Append);
+            _materialWindow.ShowPage(offset, cached, PageWindowInsert.APPEND);
             RebuildMaterials();
             NotifyMaterialsStateChanged();
             return;
@@ -376,7 +376,7 @@ public sealed partial class LibrarySectionManagementViewModel(
             }
 
             _materialWindow.SetTotalCount(page.TotalCount);
-            _materialWindow.ShowPage(offset, page.Items, PageWindowInsert.Append);
+            _materialWindow.ShowPage(offset, page.Items, PageWindowInsert.APPEND);
             RebuildMaterials();
             NotifyMaterialsStateChanged();
         }
@@ -405,7 +405,7 @@ public sealed partial class LibrarySectionManagementViewModel(
                 offset,
                 out IReadOnlyList<LibrarySectionManagementItemDto> cached))
         {
-            _materialWindow.ShowPage(offset, cached, PageWindowInsert.Prepend);
+            _materialWindow.ShowPage(offset, cached, PageWindowInsert.PREPEND);
             RebuildMaterials();
             NotifyMaterialsStateChanged();
             return;
@@ -430,7 +430,7 @@ public sealed partial class LibrarySectionManagementViewModel(
             }
 
             _materialWindow.SetTotalCount(page.TotalCount);
-            _materialWindow.ShowPage(offset, page.Items, PageWindowInsert.Prepend);
+            _materialWindow.ShowPage(offset, page.Items, PageWindowInsert.PREPEND);
             RebuildMaterials();
             NotifyMaterialsStateChanged();
         }
@@ -446,19 +446,19 @@ public sealed partial class LibrarySectionManagementViewModel(
 
     [RelayCommand]
     private void SelectAllContent() =>
-        SelectedContentFilter = LibrarySectionManagementItemFilter.All;
+        SelectedContentFilter = LibrarySectionManagementItemFilter.ALL;
 
     [RelayCommand]
     private void SelectFoldersContent() =>
-        SelectedContentFilter = LibrarySectionManagementItemFilter.Folders;
+        SelectedContentFilter = LibrarySectionManagementItemFilter.FOLDERS;
 
     [RelayCommand]
     private void SelectArticlesContent() =>
-        SelectedContentFilter = LibrarySectionManagementItemFilter.Articles;
+        SelectedContentFilter = LibrarySectionManagementItemFilter.ARTICLES;
 
     [RelayCommand]
     private void SelectQuestionsContent() =>
-        SelectedContentFilter = LibrarySectionManagementItemFilter.Questions;
+        SelectedContentFilter = LibrarySectionManagementItemFilter.QUESTIONS;
 
     [RelayCommand]
     private void ToggleTree()
@@ -485,7 +485,7 @@ public sealed partial class LibrarySectionManagementViewModel(
 
         materialNavigationService.OpenArticle(
             item.Id,
-            LibraryArticleOpenOrigin.Management);
+            LibraryArticleOpenOrigin.MANAGEMENT);
     }
 
     private bool CanOpenArticle(
@@ -586,7 +586,7 @@ public sealed partial class LibrarySectionManagementViewModel(
                 new GetLibraryHierarchyFoldersPageQuery(
                     parent.ContainerId.Value,
                     offset,
-                    PageSize),
+                    PAGE_SIZE),
                 cancellationToken);
 
             RemoveAuxiliaryChildren(parent);
@@ -672,7 +672,7 @@ public sealed partial class LibrarySectionManagementViewModel(
 
             if (page.Items.Count > 0)
             {
-                _materialWindow.ShowPage(0, page.Items, PageWindowInsert.Append);
+                _materialWindow.ShowPage(0, page.Items, PageWindowInsert.APPEND);
             }
 
             RebuildMaterials();
@@ -719,7 +719,7 @@ public sealed partial class LibrarySectionManagementViewModel(
                 SelectedContentFilter,
                 SelectedSortOption.Sort,
                 offset,
-                PageSize),
+                PAGE_SIZE),
             cancellationToken);
 
         if (version != _materialLoadVersion || cancellationToken.IsCancellationRequested)

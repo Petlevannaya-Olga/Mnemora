@@ -27,13 +27,13 @@ public sealed class CreateArticleCommandValidator
 
         RuleFor(command => command.StudyPoints)
             .InclusiveBetween(
-                MaterialExperienceRewards.MinPoints,
-                MaterialExperienceRewards.MaxPoints);
+                MaterialExperienceRewards.MIN_POINTS,
+                MaterialExperienceRewards.MAX_POINTS);
 
         RuleFor(command => command.ReviewPoints)
             .InclusiveBetween(
-                MaterialExperienceRewards.MinPoints,
-                MaterialExperienceRewards.MaxPoints);
+                MaterialExperienceRewards.MIN_POINTS,
+                MaterialExperienceRewards.MAX_POINTS);
 
         RuleFor(command => command.ReviewPoints)
             .LessThan(command => command.StudyPoints)
@@ -46,9 +46,9 @@ public sealed class CreateArticleCommandValidator
         RuleFor(command => command.Tags)
             .Must(tags =>
                 tags is null ||
-                tags.Count <= Material.MaxTags)
+                tags.Count <= Material.MAX_TAGS)
             .WithMessage(
-                $"Материал может содержать не более {Material.MaxTags} тегов.");
+                $"Материал может содержать не более {Material.MAX_TAGS} тегов.");
 
         RuleFor(command => command.Tags)
             .Must(TagsAreUnique)

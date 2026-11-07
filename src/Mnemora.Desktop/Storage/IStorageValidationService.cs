@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 namespace Mnemora.Desktop.Storage;
 
 public interface IStorageValidationService
@@ -17,15 +18,23 @@ public interface IStorageValidationService
         CancellationToken cancellationToken = default);
 }
 
+#pragma warning disable CA1707
 public enum StorageValidationFailureKind
 {
-    None,
-    Other,
-    MarkerMissing,
-    MarkerCorrupted,
-    StorageVersionIsNewer,
-    StorageVersionUnsupported,
+    [JsonStringEnumMemberName("None")]
+    NONE,
+    [JsonStringEnumMemberName("Other")]
+    OTHER,
+    [JsonStringEnumMemberName("MarkerMissing")]
+    MARKER_MISSING,
+    [JsonStringEnumMemberName("MarkerCorrupted")]
+    MARKER_CORRUPTED,
+    [JsonStringEnumMemberName("StorageVersionIsNewer")]
+    STORAGE_VERSION_IS_NEWER,
+    [JsonStringEnumMemberName("StorageVersionUnsupported")]
+    STORAGE_VERSION_UNSUPPORTED,
 }
+#pragma warning restore CA1707
 
 public sealed record StorageValidationResult(
     bool IsValid,
@@ -39,12 +48,12 @@ public sealed record StorageValidationResult(
             true,
             normalizedPath,
             null,
-            StorageValidationFailureKind.None);
+            StorageValidationFailureKind.NONE);
 
     public static StorageValidationResult Failure(
         string errorMessage,
         StorageValidationFailureKind failureKind =
-            StorageValidationFailureKind.Other) =>
+            StorageValidationFailureKind.OTHER) =>
         new(
             false,
             null,

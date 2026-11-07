@@ -23,13 +23,13 @@ public sealed class SaveLibraryOrderContainerBridgeTests
         LibraryContainer firstFolder = LibraryContainer.CreateFolder(
             root,
             FolderName.Create("CLR").Value,
-            FolderColor.Teal,
-            FolderIcon.Bookmark).Value;
+            FolderColor.TEAL,
+            FolderIcon.BOOKMARK).Value;
         LibraryContainer secondFolder = LibraryContainer.CreateFolder(
             root,
             FolderName.Create("ASP.NET").Value,
-            FolderColor.Teal,
-            FolderIcon.Bookmark).Value;
+            FolderColor.TEAL,
+            FolderIcon.BOOKMARK).Value;
 
         var repository = new LibraryOrderRepositoryStub([firstFolder, secondFolder]);
         var transactionManager = new TransactionManagerStub();
@@ -39,7 +39,7 @@ public sealed class SaveLibraryOrderContainerBridgeTests
             NullLogger<SaveLibraryOrderCommandHandler>.Instance);
 
         var command = new SaveLibraryOrderCommand(
-            LibraryOrderTarget.Folders,
+            LibraryOrderTarget.FOLDERS,
             sectionId.Value,
             [secondFolder.Id.Value, firstFolder.Id.Value]);
 

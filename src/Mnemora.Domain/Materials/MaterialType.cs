@@ -1,7 +1,10 @@
-﻿namespace Mnemora.Domain.Materials;
+﻿using System.Text.Json.Serialization;
+namespace Mnemora.Domain.Materials;
 
 public enum MaterialType
 {
-    Article = 1,
-    Question = 2
+    [JsonStringEnumMemberName("Article")]
+    ARTICLE = 1,
+    [JsonStringEnumMemberName("Question")]
+    QUESTION = 2
 }

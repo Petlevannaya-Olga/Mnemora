@@ -230,15 +230,15 @@
             <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.PrimaryDark}" />
 
             <Style.Triggers>
-                <DataTrigger Binding="{Binding Kind}" Value="{x:Static notifications:NotificationKind.Error}">
+                <DataTrigger Binding="{Binding Kind}" Value="{x:Static notifications:NotificationKind.ERROR}">
                     <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Error}" />
                 </DataTrigger>
 
-                <DataTrigger Binding="{Binding Kind}" Value="{x:Static notifications:NotificationKind.Warning}">
+                <DataTrigger Binding="{Binding Kind}" Value="{x:Static notifications:NotificationKind.WARNING}">
                     <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Warning}" />
                 </DataTrigger>
 
-                <DataTrigger Binding="{Binding Kind}" Value="{x:Static notifications:NotificationKind.Information}">
+                <DataTrigger Binding="{Binding Kind}" Value="{x:Static notifications:NotificationKind.INFORMATION}">
                     <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Secondary}" />
                 </DataTrigger>
             </Style.Triggers>
@@ -249,17 +249,17 @@
             <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.PrimaryDark}" />
 
             <Style.Triggers>
-                <DataTrigger Binding="{Binding Kind}" Value="{x:Static notifications:NotificationKind.Error}">
+                <DataTrigger Binding="{Binding Kind}" Value="{x:Static notifications:NotificationKind.ERROR}">
                     <Setter Property="Kind" Value="AlertCircleOutline" />
                     <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.Error}" />
                 </DataTrigger>
 
-                <DataTrigger Binding="{Binding Kind}" Value="{x:Static notifications:NotificationKind.Warning}">
+                <DataTrigger Binding="{Binding Kind}" Value="{x:Static notifications:NotificationKind.WARNING}">
                     <Setter Property="Kind" Value="AlertOutline" />
                     <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.Warning}" />
                 </DataTrigger>
 
-                <DataTrigger Binding="{Binding Kind}" Value="{x:Static notifications:NotificationKind.Information}">
+                <DataTrigger Binding="{Binding Kind}" Value="{x:Static notifications:NotificationKind.INFORMATION}">
                     <Setter Property="Kind" Value="InformationOutline" />
                     <Setter Property="Foreground" Value="{DynamicResource Mnemora.Brush.Secondary}" />
                 </DataTrigger>

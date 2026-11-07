@@ -1,5 +1,7 @@
 ﻿namespace Mnemora.Shared;
 
+// CA1707 has no exception for enum members; keep the exception local to this enum.
+#pragma warning disable CA1707
 public enum ErrorType
 {
     /// <summary>
@@ -32,3 +34,4 @@ public enum ErrorType
     /// </summary>
     CANCELED,
 }
+#pragma warning restore CA1707

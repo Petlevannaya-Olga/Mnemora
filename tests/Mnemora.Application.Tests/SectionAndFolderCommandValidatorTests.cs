@@ -53,9 +53,9 @@ public sealed class SectionAndFolderCommandValidatorTests
     public void ValidSectionAndFolderCommands_PassValidation()
     {
         var sectionResult = new CreateSectionCommandValidator().Validate(
-            new CreateSectionCommand("Section", SectionColor.Teal, SectionIcon.Folder));
+            new CreateSectionCommand("Section", SectionColor.TEAL, SectionIcon.FOLDER));
         var folderResult = new CreateSectionFolderCommandValidator().Validate(
-            new CreateSectionFolderCommand(Guid.NewGuid(), "Folder", FolderColor.Teal, FolderIcon.Bookmark));
+            new CreateSectionFolderCommand(Guid.NewGuid(), "Folder", FolderColor.TEAL, FolderIcon.BOOKMARK));
         Assert.True(sectionResult.IsValid);
         Assert.True(folderResult.IsValid);
     }

@@ -44,13 +44,13 @@ public sealed class GetLibrarySectionManagementItemsPageQueryHandler(
             }
 
             int offset = Math.Max(0, request.Offset);
-            int pageSize = Math.Clamp(request.PageSize, 1, LibraryPagingDefaults.MaxQueryPageSize);
+            int pageSize = Math.Clamp(request.PageSize, 1, LibraryPagingDefaults.MAX_QUERY_PAGE_SIZE);
             string? search = request.Search?.Trim();
 
             bool includeFolders = request.Filter is
-                LibrarySectionManagementItemFilter.All or
-                LibrarySectionManagementItemFilter.Folders;
-            bool includeMaterials = request.Filter is not LibrarySectionManagementItemFilter.Folders;
+                LibrarySectionManagementItemFilter.ALL or
+                LibrarySectionManagementItemFilter.FOLDERS;
+            bool includeMaterials = request.Filter is not LibrarySectionManagementItemFilter.FOLDERS;
 
             IQueryable<LibraryContainer> sourceFolders = readDbContext.LibraryContainersRead
                 .Where(container => container.SectionId == sectionId && container.ParentId != null);
@@ -62,8 +62,8 @@ public sealed class GetLibrarySectionManagementItemsPageQueryHandler(
 
             sourceMaterials = request.Filter switch
             {
-                LibrarySectionManagementItemFilter.Articles => sourceMaterials.OfType<Article>(),
-                LibrarySectionManagementItemFilter.Questions => sourceMaterials.OfType<Question>(),
+                LibrarySectionManagementItemFilter.ARTICLES => sourceMaterials.OfType<Article>(),
+                LibrarySectionManagementItemFilter.QUESTIONS => sourceMaterials.OfType<Question>(),
                 _ => sourceMaterials,
             };
 
@@ -175,10 +175,10 @@ public sealed class GetLibrarySectionManagementItemsPageQueryHandler(
             {
                 items.Add(new LibrarySectionManagementItemDto(
                     folder.Id.Value,
-                    LibrarySectionManagementItemKind.Folder,
+                    LibrarySectionManagementItemKind.FOLDER,
                     folder.Name!.Value,
                     BuildLocation(folder.ParentId, containers, rootText: "Раздел"),
-                    folder.Icon!.Value.ToString(),
+                    folder.Icon!.Value.ToStableName(),
                     null,
                     null,
                     0,
@@ -193,12 +193,12 @@ public sealed class GetLibrarySectionManagementItemsPageQueryHandler(
             {
                 items.Add(new LibrarySectionManagementItemDto(
                     material.Id.Value,
-                    LibrarySectionManagementItemKind.Material,
+                    LibrarySectionManagementItemKind.MATERIAL,
                     material.Title.Value,
                     BuildLocation(material.ContainerId, containers, rootText: "Без папки"),
                     material.Icon.Key,
-                    material.Type.ToString(),
-                    material.Difficulty.ToString(),
+                    material.Type.ToStableName(),
+                    material.Difficulty.ToStableName(),
                     material is Article ? questionCounts.GetValueOrDefault(material.Id) : 0,
                     material.CreatedAt,
                     material.UpdatedAt,
@@ -241,13 +241,13 @@ public sealed class GetLibrarySectionManagementItemsPageQueryHandler(
         IQueryable<LibraryContainer> query,
         LibrarySectionManagementItemSort sort) => sort switch
         {
-            LibrarySectionManagementItemSort.RecentActivity => query
+            LibrarySectionManagementItemSort.RECENT_ACTIVITY => query
                 .OrderByDescending(folder => folder.UpdatedAt)
                 .ThenBy(folder => folder.Id),
-            LibrarySectionManagementItemSort.Name => query
+            LibrarySectionManagementItemSort.NAME => query
                 .OrderBy(folder => folder.Name)
                 .ThenBy(folder => folder.Id),
-            LibrarySectionManagementItemSort.Newest => query
+            LibrarySectionManagementItemSort.NEWEST => query
                 .OrderByDescending(folder => folder.CreatedAt)
                 .ThenBy(folder => folder.Id),
             _ => query
@@ -260,13 +260,13 @@ public sealed class GetLibrarySectionManagementItemsPageQueryHandler(
         IQueryable<Material> query,
         LibrarySectionManagementItemSort sort) => sort switch
         {
-            LibrarySectionManagementItemSort.RecentActivity => query
+            LibrarySectionManagementItemSort.RECENT_ACTIVITY => query
                 .OrderByDescending(material => material.UpdatedAt)
                 .ThenBy(material => material.Id),
-            LibrarySectionManagementItemSort.Name => query
+            LibrarySectionManagementItemSort.NAME => query
                 .OrderBy(material => material.Title)
                 .ThenBy(material => material.Id),
-            LibrarySectionManagementItemSort.Newest => query
+            LibrarySectionManagementItemSort.NEWEST => query
                 .OrderByDescending(material => material.CreatedAt)
                 .ThenBy(material => material.Id),
             _ => query
@@ -283,7 +283,7 @@ public sealed class GetLibrarySectionManagementItemsPageQueryHandler(
         var result = new Dictionary<LibraryContainerId, LibraryContainer>();
         var pending = new HashSet<LibraryContainerId>(startIds);
 
-        for (int level = 0; level <= LibraryContainer.MaxFolderDepth && pending.Count > 0; level++)
+        for (int level = 0; level <= LibraryContainer.MAX_FOLDER_DEPTH && pending.Count > 0; level++)
         {
             LibraryContainerId[] ids = pending
                 .Where(id => !result.ContainsKey(id))

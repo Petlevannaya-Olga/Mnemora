@@ -58,17 +58,17 @@ public sealed class CurrentLibrarySchemaMigrationTests
         await context.Database.MigrateAsync();
 
         Section section = Section.Create(
-            SectionName.Create("Migration check").Value, SectionColor.Teal, SectionIcon.Folder);
+            SectionName.Create("Migration check").Value, SectionColor.TEAL, SectionIcon.FOLDER);
         LibraryContainer root = LibraryContainer.CreateRoot(section.Id).Value;
         LibraryContainer folder = LibraryContainer.CreateFolder(
-            root, FolderName.Create("First folder").Value, FolderColor.Teal, FolderIcon.Folder).Value;
+            root, FolderName.Create("First folder").Value, FolderColor.TEAL, FolderIcon.FOLDER).Value;
         Article article = Article.CreateInContainer(
             folder.Id, MaterialTitle.Create("Article").Value,
-            MaterialDifficulty.Medium, MaterialIcon.DefaultArticle,
+            MaterialDifficulty.MEDIUM, MaterialIcon.DefaultArticle,
             MaterialExperienceRewards.Create(50, 20).Value).Value;
         Question question = Question.CreateForArticle(
             article, MaterialTitle.Create("Question").Value,
-            MaterialDifficulty.Medium, MaterialIcon.DefaultQuestion,
+            MaterialDifficulty.MEDIUM, MaterialIcon.DefaultQuestion,
             MaterialExperienceRewards.Create(50, 20).Value).Value;
 
         context.Sections.Add(section);

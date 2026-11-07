@@ -57,7 +57,7 @@ public sealed class GetStandaloneQuestionPickerOptionsQueryHandler(
                     new StandaloneQuestionPickerOptionDto(
                         question.Id.Value,
                         question.Title.Value,
-                        question.Difficulty.ToString(),
+                        question.Difficulty.ToStableName(),
                         question.ExperienceRewards.StudyPoints,
                         question.ExperienceRewards.ReviewPoints,
                         container.Id.Value,

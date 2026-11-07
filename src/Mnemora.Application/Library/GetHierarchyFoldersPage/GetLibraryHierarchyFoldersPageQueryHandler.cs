@@ -38,7 +38,7 @@ public sealed class GetLibraryHierarchyFoldersPageQueryHandler(
             int pageSize = Math.Clamp(
                 request.PageSize,
                 1,
-                LibraryPagingDefaults.MaxQueryPageSize);
+                LibraryPagingDefaults.MAX_QUERY_PAGE_SIZE);
 
             List<LibraryContainer> loadedFolders =
                 await readDbContext.LibraryContainersRead
@@ -85,8 +85,8 @@ public sealed class GetLibraryHierarchyFoldersPageQueryHandler(
                             folder.SectionId.Value,
                             folder.ParentId!.Value,
                             folder.Name!.Value,
-                            folder.Color!.Value.ToString(),
-                            folder.Icon!.Value.ToString(),
+                            folder.Color!.Value.ToStableName(),
+                            folder.Icon!.Value.ToStableName(),
                             childFoldersCountByParent
                                 .GetValueOrDefault(folder.Id)))
                     .ToArray();

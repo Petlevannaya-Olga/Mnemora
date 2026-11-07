@@ -111,8 +111,8 @@ public sealed class MarkdownMaterialContentStoreTests
             ArticleContent.Create("Content").Value,
             CancellationToken.None);
 
-        var first = store.Delete(materialId, MaterialType.Article);
-        var second = store.Delete(materialId, MaterialType.Article);
+        var first = store.Delete(materialId, MaterialType.ARTICLE);
+        var second = store.Delete(materialId, MaterialType.ARTICLE);
 
         Assert.True(first.IsSuccess);
         Assert.True(second.IsSuccess);

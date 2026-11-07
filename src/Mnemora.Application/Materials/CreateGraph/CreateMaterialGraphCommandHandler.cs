@@ -37,12 +37,12 @@ public sealed class CreateMaterialGraphCommandHandler(
         {
             return command.Type switch
             {
-                MaterialType.Article => await CreateArticleGraphAsync(
+                MaterialType.ARTICLE => await CreateArticleGraphAsync(
                     command,
                     createdContent,
                     cancellationToken),
 
-                MaterialType.Question => await CreateQuestionAsync(
+                MaterialType.QUESTION => await CreateQuestionAsync(
                     command,
                     createdContent,
                     cancellationToken),
@@ -170,7 +170,7 @@ public sealed class CreateMaterialGraphCommandHandler(
             return articleFileResult.Error.ToErrors();
         }
 
-        createdContent.Add(new CreatedContent(article.Id, MaterialType.Article));
+        createdContent.Add(new CreatedContent(article.Id, MaterialType.ARTICLE));
 
         foreach (PreparedQuestion prepared in newQuestionsResult.Value)
         {
@@ -190,7 +190,7 @@ public sealed class CreateMaterialGraphCommandHandler(
             createdContent.Add(
                 new CreatedContent(
                     prepared.Question.Id,
-                    MaterialType.Question));
+                    MaterialType.QUESTION));
         }
 
         materialsRepository.Add(article);
@@ -339,7 +339,7 @@ public sealed class CreateMaterialGraphCommandHandler(
             return fileResult.Error.ToErrors();
         }
 
-        createdContent.Add(new CreatedContent(question.Id, MaterialType.Question));
+        createdContent.Add(new CreatedContent(question.Id, MaterialType.QUESTION));
         materialsRepository.Add(question);
 
         var persistResult = await PersistAtomicallyAsync(

@@ -73,8 +73,8 @@ public sealed class GetLibraryManagementSectionsPageQueryHandlerTests
             LibraryContainer.CreateFolder(
                 level1,
                 FolderName.Create("Nested").Value,
-                FolderColor.Teal,
-                FolderIcon.Folder).Value;
+                FolderColor.TEAL,
+                FolderIcon.FOLDER).Value;
 
         db.Context.LibraryContainers.Add(nested);
         await db.Context.SaveChangesAsync();
@@ -130,8 +130,8 @@ public sealed class GetLibraryManagementSectionsPageQueryHandlerTests
 
         Section targetSection = Section.Create(
             SectionName.Create("Target").Value,
-            SectionColor.Teal,
-            SectionIcon.Folder);
+            SectionColor.TEAL,
+            SectionIcon.FOLDER);
 
         LibraryContainer targetRoot =
             db.AddSectionWithRoot(targetSection);
@@ -190,15 +190,15 @@ public sealed class GetLibraryManagementSectionsPageQueryHandlerTests
         var result = await sut.Handle(
             new GetLibraryManagementSectionsPageQuery(
                 Search: null,
-                LibraryManagementSectionSort.Name,
+                LibraryManagementSectionSort.NAME,
                 Offset: -10,
                 PageSize: 1_000));
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Items.Should().HaveCount(
-            LibraryPagingDefaults.MaxQueryPageSize);
+            LibraryPagingDefaults.MAX_QUERY_PAGE_SIZE);
         result.Value.NextOffset.Should().Be(
-            LibraryPagingDefaults.MaxQueryPageSize);
+            LibraryPagingDefaults.MAX_QUERY_PAGE_SIZE);
         result.Value.HasMore.Should().BeTrue();
     }
 
@@ -233,7 +233,7 @@ public sealed class GetLibraryManagementSectionsPageQueryHandlerTests
         var result = await sut.Handle(
             new GetLibraryManagementSectionsPageQuery(
                 Search: "zzz BACKEND",
-                LibraryManagementSectionSort.Name,
+                LibraryManagementSectionSort.NAME,
                 Offset: 0,
                 PageSize: 30));
 
@@ -319,8 +319,8 @@ public sealed class GetLibraryManagementSectionsPageQueryHandlerTests
 
         Section section = Section.Create(
             SectionName.Create("Section").Value,
-            SectionColor.Teal,
-            SectionIcon.Folder);
+            SectionColor.TEAL,
+            SectionIcon.FOLDER);
 
         LibraryContainer root =
             db.AddSectionWithRoot(section);
@@ -331,8 +331,8 @@ public sealed class GetLibraryManagementSectionsPageQueryHandlerTests
                 LibraryContainer.CreateFolder(
                     root,
                     FolderName.Create($"Folder {index:D5}").Value,
-                    FolderColor.Teal,
-                    FolderIcon.Folder).Value);
+                    FolderColor.TEAL,
+                    FolderIcon.FOLDER).Value);
         }
 
         await db.Context.SaveChangesAsync();
@@ -358,10 +358,10 @@ public sealed class GetLibraryManagementSectionsPageQueryHandlerTests
 
     private static GetLibraryManagementSectionsPageQuery Query(
         int offset = 0,
-        int pageSize = LibraryPagingDefaults.PageSize) =>
+        int pageSize = LibraryPagingDefaults.PAGE_SIZE) =>
         new(
             Search: null,
-            LibraryManagementSectionSort.Name,
+            LibraryManagementSectionSort.NAME,
             offset,
             pageSize);
 }

@@ -12,7 +12,7 @@ namespace Mnemora.Application.IntegrationTests.Library;
 
 internal sealed class SqliteLibraryTestDatabase : IAsyncDisposable
 {
-    private const string UnicodeContainsFunctionName =
+    private const string UNICODE_CONTAINS_FUNCTION_NAME =
         "MNEMORA_UNICODE_CONTAINS";
 
     private SqliteLibraryTestDatabase(
@@ -89,8 +89,8 @@ internal sealed class SqliteLibraryTestDatabase : IAsyncDisposable
         LibraryContainer folder = LibraryContainer.CreateFolder(
             root,
             FolderName.Create(folderName).Value,
-            FolderColor.Teal,
-            FolderIcon.Bookmark).Value;
+            FolderColor.TEAL,
+            FolderIcon.BOOKMARK).Value;
 
         Context.Sections.Add(section);
         Context.LibraryContainers.AddRange(root, folder);
@@ -104,7 +104,7 @@ internal sealed class SqliteLibraryTestDatabase : IAsyncDisposable
         Article.CreateInContainer(
             containerId,
             MaterialTitle.Create(title).Value,
-            MaterialDifficulty.Medium,
+            MaterialDifficulty.MEDIUM,
             MaterialIcon.DefaultArticle,
             MaterialExperienceRewards.Create(50, 20).Value,
             Array.Empty<MaterialTag>()).Value;
@@ -113,7 +113,7 @@ internal sealed class SqliteLibraryTestDatabase : IAsyncDisposable
         Question.CreateStandaloneInContainer(
             containerId,
             MaterialTitle.Create(title).Value,
-            MaterialDifficulty.Medium,
+            MaterialDifficulty.MEDIUM,
             MaterialIcon.DefaultQuestion,
             MaterialExperienceRewards.Create(50, 20).Value,
             Array.Empty<MaterialTag>()).Value;
@@ -125,7 +125,7 @@ internal sealed class SqliteLibraryTestDatabase : IAsyncDisposable
         return Question.CreateForArticle(
             article,
             MaterialTitle.Create(title).Value,
-            MaterialDifficulty.Medium,
+            MaterialDifficulty.MEDIUM,
             MaterialIcon.DefaultQuestion,
             MaterialExperienceRewards.Create(50, 20).Value,
             Array.Empty<MaterialTag>()).Value;
@@ -181,32 +181,22 @@ internal sealed class SqliteLibraryTestDatabase : IAsyncDisposable
     private static void RegisterSqliteExtensions(
         SqliteConnection connection)
     {
-        Assembly infrastructureAssembly =
-            typeof(MnemoraDbContext).Assembly;
+        var infrastructureAssembly = typeof(MnemoraDbContext).Assembly;
+        var collationsType = infrastructureAssembly.GetType(
+            "Mnemora.Infrastructure.Persistence.SqliteCollations",
+            throwOnError: false);
 
-        Type? collationsType =
-            infrastructureAssembly.GetType(
-                "Mnemora.Infrastructure.Persistence.SqliteCollations",
-                throwOnError: false);
-
-        const BindingFlags flags =
+        const BindingFlags FLAGS =
             BindingFlags.Public |
             BindingFlags.NonPublic |
             BindingFlags.Static;
 
-        FieldInfo? field =
-            collationsType?.GetField(
-                "UnicodeNoCase",
-                flags);
+        var collationField = collationsType?.GetField(
+            "UNICODE_NO_CASE",
+            FLAGS);
 
-        PropertyInfo? property =
-            collationsType?.GetProperty(
-                "UnicodeNoCase",
-                flags);
-
-        string collationName =
-            field?.GetValue(null) as string
-            ?? property?.GetValue(null) as string
+        var collationName =
+            collationField?.GetRawConstantValue() as string
             ?? throw new InvalidOperationException(
                 "Не найдено имя Unicode collation Mnemora. " +
                 "Обновите тестовый bootstrap вместе с SqliteCollations.");
@@ -216,7 +206,7 @@ internal sealed class SqliteLibraryTestDatabase : IAsyncDisposable
             StringComparer.OrdinalIgnoreCase.Compare);
 
         connection.CreateFunction<string?, string?, bool>(
-            UnicodeContainsFunctionName,
+            UNICODE_CONTAINS_FUNCTION_NAME,
             static (source, search) =>
                 source is not null &&
                 search is not null &&

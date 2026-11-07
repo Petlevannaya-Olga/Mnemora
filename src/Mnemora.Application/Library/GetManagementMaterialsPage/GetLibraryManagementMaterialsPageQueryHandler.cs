@@ -25,7 +25,7 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandler(
             int pageSize = Math.Clamp(
                 request.PageSize,
                 1,
-                LibraryPagingDefaults.MaxQueryPageSize);
+                LibraryPagingDefaults.MAX_QUERY_PAGE_SIZE);
 
             var containerIdResult = LibraryContainerId.Create(request.ContainerId);
 
@@ -72,10 +72,10 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandler(
 
             filteredQuery = request.Filter switch
             {
-                LibraryManagementMaterialPageFilter.Articles =>
+                LibraryManagementMaterialPageFilter.ARTICLES =>
                     filteredQuery.Where(material => material is Article),
 
-                LibraryManagementMaterialPageFilter.Questions =>
+                LibraryManagementMaterialPageFilter.QUESTIONS =>
                     filteredQuery.Where(material => material is Question),
 
                 _ => filteredQuery,
@@ -83,7 +83,7 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandler(
 
             bool hasSearch = !string.IsNullOrEmpty(search);
             bool hasTypeFilter =
-                request.Filter != LibraryManagementMaterialPageFilter.All;
+                request.Filter != LibraryManagementMaterialPageFilter.ALL;
 
             int totalCount = !hasSearch && !hasTypeFilter
                 ? sourceTotalCount
@@ -91,20 +91,20 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandler(
 
             var orderedQuery = request.Sort switch
             {
-                LibraryManagementMaterialPageSort.Custom => filteredQuery
+                LibraryManagementMaterialPageSort.CUSTOM => filteredQuery
                     .OrderBy(material => material.DisplayOrder)
                     .ThenBy(material => material.CreatedAt)
                     .ThenBy(material => material.Id),
 
-                LibraryManagementMaterialPageSort.RecentActivity => filteredQuery
+                LibraryManagementMaterialPageSort.RECENT_ACTIVITY => filteredQuery
                     .OrderByDescending(material => material.UpdatedAt)
                     .ThenBy(material => material.Id),
 
-                LibraryManagementMaterialPageSort.Name => filteredQuery
+                LibraryManagementMaterialPageSort.NAME => filteredQuery
                     .OrderBy(material => material.Title)
                     .ThenBy(material => material.Id),
 
-                LibraryManagementMaterialPageSort.Newest => filteredQuery
+                LibraryManagementMaterialPageSort.NEWEST => filteredQuery
                     .OrderByDescending(material => material.CreatedAt)
                     .ThenBy(material => material.Id),
 
@@ -151,8 +151,8 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandler(
                         material.Id.Value,
                         material.ContainerId.Value,
                         material.Title.Value,
-                        material.Type.ToString(),
-                        material.Difficulty.ToString(),
+                        material.Type.ToStableName(),
+                        material.Difficulty.ToStableName(),
                         material.Icon.Key,
                         material.CreatedAt,
                         material.UpdatedAt,

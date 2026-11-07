@@ -7,7 +7,7 @@ namespace Mnemora.Infrastructure.Persistence;
 internal sealed class SqliteUnicodeCollationInterceptor
     : DbConnectionInterceptor
 {
-    private const string UnicodeContainsFunctionName =
+    private const string UNICODE_CONTAINS_FUNCTION_NAME =
         "MNEMORA_UNICODE_CONTAINS";
 
     public override void ConnectionOpened(
@@ -35,11 +35,11 @@ internal sealed class SqliteUnicodeCollationInterceptor
         }
 
         sqliteConnection.CreateCollation(
-            SqliteCollations.UnicodeNoCase,
+            SqliteCollations.UNICODE_NO_CASE,
             StringComparer.OrdinalIgnoreCase.Compare);
 
         sqliteConnection.CreateFunction<string?, string?, bool>(
-            UnicodeContainsFunctionName,
+            UNICODE_CONTAINS_FUNCTION_NAME,
             static (source, search) =>
                 source is not null &&
                 search is not null &&

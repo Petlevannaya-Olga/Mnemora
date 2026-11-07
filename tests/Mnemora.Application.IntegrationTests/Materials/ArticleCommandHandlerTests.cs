@@ -26,7 +26,7 @@ public sealed class ArticleCommandHandlerTests
         var command = new CreateArticleCommand(
             folder.Id.Value,
             "EF Core tracking",
-            MaterialDifficulty.Medium,
+            MaterialDifficulty.MEDIUM,
             IconKey: null,
             StudyPoints: 50,
             ReviewPoints: 20,
@@ -63,13 +63,13 @@ public sealed class ArticleCommandHandlerTests
         Article article = Article.CreateInContainer(
             folder.Id,
             MaterialTitle.Create("Article").Value,
-            MaterialDifficulty.Medium,
+            MaterialDifficulty.MEDIUM,
             MaterialIcon.DefaultArticle,
             MaterialExperienceRewards.Create(50, 20).Value).Value;
         Question question = Question.CreateForArticle(
             article,
             MaterialTitle.Create("Question").Value,
-            MaterialDifficulty.Medium,
+            MaterialDifficulty.MEDIUM,
             MaterialIcon.DefaultQuestion,
             MaterialExperienceRewards.Create(50, 20).Value).Value;
 
@@ -126,7 +126,7 @@ public sealed class ArticleCommandHandlerTests
         Article article = Article.CreateInContainer(
             folder.Id,
             MaterialTitle.Create("Article").Value,
-            MaterialDifficulty.Medium,
+            MaterialDifficulty.MEDIUM,
             MaterialIcon.DefaultArticle,
             MaterialExperienceRewards.Create(50, 20).Value).Value;
 
@@ -167,14 +167,14 @@ public sealed class ArticleCommandHandlerTests
         CancellationToken ct = CancellationToken.None;
         Section section = Section.Create(
             SectionName.Create("Section").Value,
-            SectionColor.Teal,
-            SectionIcon.Folder);
+            SectionColor.TEAL,
+            SectionIcon.FOLDER);
         LibraryContainer root = LibraryContainer.CreateRoot(section.Id).Value;
         LibraryContainer folder = LibraryContainer.CreateFolder(
             root,
             FolderName.Create("Folder").Value,
-            FolderColor.Teal,
-            FolderIcon.Bookmark).Value;
+            FolderColor.TEAL,
+            FolderIcon.BOOKMARK).Value;
         var factory = host.Services.GetRequiredService<IDbContextFactory<MnemoraDbContext>>();
         await using MnemoraDbContext dbContext = await factory.CreateDbContextAsync(ct);
         dbContext.AddRange(section, root, folder);

@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Text.Json.Serialization;
+using System.IO;
 using System.Security.Cryptography;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.Input;
@@ -67,33 +68,33 @@ public sealed partial class CompletionSetupViewModel(
         "Mnemora настроена и готова к работе";
 
     public bool HasProfileError =>
-        _completionIssue == CompletionIssue.Profile;
+        _completionIssue == CompletionIssue.PROFILE;
 
     public bool HasStorageError =>
         _completionIssue is
-            CompletionIssue.Storage or
-            CompletionIssue.StorageRepairable or
-            CompletionIssue.StorageVersionUnsupported;
+            CompletionIssue.STORAGE or
+            CompletionIssue.STORAGE_REPAIRABLE or
+            CompletionIssue.STORAGE_VERSION_UNSUPPORTED;
 
     public bool CanRepairStorage =>
         _completionIssue ==
-        CompletionIssue.StorageRepairable;
+        CompletionIssue.STORAGE_REPAIRABLE;
 
     public bool HasEditorError =>
-        _completionIssue == CompletionIssue.Editor;
+        _completionIssue == CompletionIssue.EDITOR;
 
     public bool HasAiError =>
-        _completionIssue == CompletionIssue.Ai;
+        _completionIssue == CompletionIssue.AI;
 
     public string BackButtonText => _completionIssue switch
     {
-        CompletionIssue.Profile => "Изменить профиль",
-        CompletionIssue.Storage or
-            CompletionIssue.StorageRepairable or
-            CompletionIssue.StorageVersionUnsupported =>
+        CompletionIssue.PROFILE => "Изменить профиль",
+        CompletionIssue.STORAGE or
+            CompletionIssue.STORAGE_REPAIRABLE or
+            CompletionIssue.STORAGE_VERSION_UNSUPPORTED =>
             "Изменить хранилище",
-        CompletionIssue.Editor => "Настроить редактор",
-        CompletionIssue.Ai => "Настроить ИИ",
+        CompletionIssue.EDITOR => "Настроить редактор",
+        CompletionIssue.AI => "Настроить ИИ",
         _ => "Назад",
     };
 
@@ -116,8 +117,8 @@ public sealed partial class CompletionSetupViewModel(
 
     public string EditorStatus => onboardingState.MarkdownEditor switch
     {
-        MarkdownEditorType.VisualStudioCode => "Visual Studio Code",
-        MarkdownEditorType.Obsidian => "Obsidian",
+        MarkdownEditorType.VISUAL_STUDIO_CODE => "Visual Studio Code",
+        MarkdownEditorType.OBSIDIAN => "Obsidian",
         _ => "Не настроен",
     };
 
@@ -134,17 +135,17 @@ public sealed partial class CompletionSetupViewModel(
     {
         switch (_completionIssue)
         {
-            case CompletionIssue.Profile:
+            case CompletionIssue.PROFILE:
                 navigationService.NavigateTo<ProfileSetupViewModel>();
                 break;
 
-            case CompletionIssue.Storage:
-            case CompletionIssue.StorageRepairable:
-            case CompletionIssue.StorageVersionUnsupported:
+            case CompletionIssue.STORAGE:
+            case CompletionIssue.STORAGE_REPAIRABLE:
+            case CompletionIssue.STORAGE_VERSION_UNSUPPORTED:
                 navigationService.NavigateTo<StorageSetupViewModel>();
                 break;
 
-            case CompletionIssue.Editor:
+            case CompletionIssue.EDITOR:
                 navigationService.NavigateTo<EditorSetupViewModel>();
                 break;
 
@@ -163,7 +164,7 @@ public sealed partial class CompletionSetupViewModel(
         IsCompleting = true;
         SetCompletionError(
             null,
-            CompletionIssue.None);
+            CompletionIssue.NONE);
 
         try
         {
@@ -172,7 +173,7 @@ public sealed partial class CompletionSetupViewModel(
             {
                 SetCompletionError(
                     "Имя пользователя не указано. Вернитесь к шагу профиля.",
-                    CompletionIssue.Profile);
+                    CompletionIssue.PROFILE);
                 return;
             }
 
@@ -198,7 +199,7 @@ public sealed partial class CompletionSetupViewModel(
             {
                 SetCompletionError(
                     "Не найден проверенный API-ключ. Вернитесь к шагу ИИ и проверьте подключение.",
-                    CompletionIssue.Ai);
+                    CompletionIssue.AI);
                 return;
             }
 
@@ -210,7 +211,7 @@ public sealed partial class CompletionSetupViewModel(
                 {
                     SetCompletionError(
                         databaseResult.Error.Message,
-                        CompletionIssue.General);
+                        CompletionIssue.GENERAL);
                 }
 
                 return;
@@ -245,7 +246,7 @@ public sealed partial class CompletionSetupViewModel(
         {
             SetCompletionError(
                 "Не удалось завершить настройку. Проверьте доступ к файлам и попробуйте ещё раз.",
-                CompletionIssue.General);
+                CompletionIssue.GENERAL);
         }
         finally
         {
@@ -324,15 +325,15 @@ public sealed partial class CompletionSetupViewModel(
         CompletionIssue issue =
             result.FailureKind switch
             {
-                StorageValidationFailureKind.MarkerMissing or
-                    StorageValidationFailureKind.MarkerCorrupted =>
-                    CompletionIssue.StorageRepairable,
+                StorageValidationFailureKind.MARKER_MISSING or
+                    StorageValidationFailureKind.MARKER_CORRUPTED =>
+                    CompletionIssue.STORAGE_REPAIRABLE,
 
-                StorageValidationFailureKind.StorageVersionIsNewer or
-                    StorageValidationFailureKind.StorageVersionUnsupported =>
-                    CompletionIssue.StorageVersionUnsupported,
+                StorageValidationFailureKind.STORAGE_VERSION_IS_NEWER or
+                    StorageValidationFailureKind.STORAGE_VERSION_UNSUPPORTED =>
+                    CompletionIssue.STORAGE_VERSION_UNSUPPORTED,
 
-                _ => CompletionIssue.Storage,
+                _ => CompletionIssue.STORAGE,
             };
 
         SetCompletionError(
@@ -347,7 +348,7 @@ public sealed partial class CompletionSetupViewModel(
         {
             SetCompletionError(
                 "Markdown-редактор не проверен. Вернитесь к шагу редактора и повторите проверку.",
-                CompletionIssue.Editor);
+                CompletionIssue.EDITOR);
 
             return false;
         }
@@ -368,20 +369,30 @@ public sealed partial class CompletionSetupViewModel(
 
         SetCompletionError(
             result.Message,
-            CompletionIssue.Editor);
+            CompletionIssue.EDITOR);
 
         return false;
     }
 
+#pragma warning disable CA1707
     private enum CompletionIssue
     {
-        None,
-        Profile,
-        Storage,
-        StorageRepairable,
-        StorageVersionUnsupported,
-        Editor,
-        Ai,
-        General,
+        [JsonStringEnumMemberName("None")]
+        NONE,
+        [JsonStringEnumMemberName("Profile")]
+        PROFILE,
+        [JsonStringEnumMemberName("Storage")]
+        STORAGE,
+        [JsonStringEnumMemberName("StorageRepairable")]
+        STORAGE_REPAIRABLE,
+        [JsonStringEnumMemberName("StorageVersionUnsupported")]
+        STORAGE_VERSION_UNSUPPORTED,
+        [JsonStringEnumMemberName("Editor")]
+        EDITOR,
+        [JsonStringEnumMemberName("Ai")]
+        AI,
+        [JsonStringEnumMemberName("General")]
+        GENERAL,
     }
+#pragma warning restore CA1707
 }

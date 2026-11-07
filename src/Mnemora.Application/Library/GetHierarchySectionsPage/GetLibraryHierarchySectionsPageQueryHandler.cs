@@ -28,7 +28,7 @@ public sealed class GetLibraryHierarchySectionsPageQueryHandler(
             int pageSize = Math.Clamp(
                 request.PageSize,
                 1,
-                LibraryPagingDefaults.MaxQueryPageSize);
+                LibraryPagingDefaults.MAX_QUERY_PAGE_SIZE);
 
             List<Section> loadedSections =
                 await readDbContext.SectionsRead
@@ -96,8 +96,8 @@ public sealed class GetLibraryHierarchySectionsPageQueryHandler(
                             section.Id.Value,
                             rootId!.Value,
                             section.Name.Value,
-                            section.Color.ToString(),
-                            section.Icon.ToString(),
+                            section.Color.ToStableName(),
+                            section.Icon.ToStableName(),
                             childFoldersCountByRoot.GetValueOrDefault(rootId!));
                     })
                     .ToArray();

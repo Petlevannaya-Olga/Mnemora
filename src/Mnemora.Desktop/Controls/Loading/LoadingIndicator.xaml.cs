@@ -8,8 +8,8 @@ namespace Mnemora.Desktop.Controls.Loading;
 
 public partial class LoadingIndicator : UserControl
 {
-    private const int DefaultShowDelay = 0;
-    private const int DefaultMinimumVisibleDuration = 300;
+    private const int DEFAULT_SHOW_DELAY = 0;
+    private const int DEFAULT_MINIMUM_VISIBLE_DURATION = 300;
 
     public static readonly DependencyProperty MessageProperty = DependencyProperty.Register(
         nameof(Message),
@@ -80,13 +80,13 @@ public partial class LoadingIndicator : UserControl
         nameof(ShowDelay),
         typeof(int),
         typeof(LoadingIndicator),
-        new PropertyMetadata(DefaultShowDelay, OnTimingPropertyChanged));
+        new PropertyMetadata(DEFAULT_SHOW_DELAY, OnTimingPropertyChanged));
 
     public static readonly DependencyProperty MinimumVisibleDurationProperty = DependencyProperty.Register(
         nameof(MinimumVisibleDuration),
         typeof(int),
         typeof(LoadingIndicator),
-        new PropertyMetadata(DefaultMinimumVisibleDuration, OnTimingPropertyChanged));
+        new PropertyMetadata(DEFAULT_MINIMUM_VISIBLE_DURATION, OnTimingPropertyChanged));
 
     private static readonly DependencyPropertyKey IsPresentedPropertyKey = DependencyProperty.RegisterReadOnly(
         nameof(IsPresented),

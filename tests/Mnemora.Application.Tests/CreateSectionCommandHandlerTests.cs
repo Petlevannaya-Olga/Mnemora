@@ -32,8 +32,8 @@ public sealed class CreateSectionCommandHandlerTests
 
         var command = new CreateSectionCommand(
             "C#",
-            SectionColor.Teal,
-            SectionIcon.Folder);
+            SectionColor.TEAL,
+            SectionIcon.FOLDER);
 
         var result = await handler.Handle(command, ct);
 
@@ -45,7 +45,7 @@ public sealed class CreateSectionCommandHandlerTests
         Assert.Equal(section.Id.Value, result.Value);
         Assert.Equal(section.Id, root.SectionId);
         Assert.True(root.IsRoot);
-        Assert.Equal(LibraryContainer.RootDepth, root.Depth);
+        Assert.Equal(LibraryContainer.ROOT_DEPTH, root.Depth);
         Assert.Null(root.ParentId);
         Assert.Null(root.Name);
 

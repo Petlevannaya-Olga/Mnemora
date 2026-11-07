@@ -9,18 +9,18 @@ public sealed class StorageValidationService(
     IMnemoraLocalPathProvider localPathProvider)
     : IStorageValidationService
 {
-    private const string StorageMarkerFileName =
+    private const string STORAGE_MARKER_FILE_NAME =
         ".mnemora";
 
-    private const int CurrentStorageFormatVersion = 1;
+    private const int CURRENT_STORAGE_FORMAT_VERSION = 1;
 
-    private const string StorageMarkerContent =
+    private const string STORAGE_MARKER_CONTENT =
         "{\"formatVersion\":1}";
 
-    private const string ObsidianMetadataDirectoryName =
+    private const string OBSIDIAN_METADATA_DIRECTORY_NAME =
         ".obsidian";
 
-    private const string RecoveryDirectoryName =
+    private const string RECOVERY_DIRECTORY_NAME =
         "Recovery";
 
     public StorageValidationService()
@@ -142,7 +142,7 @@ public sealed class StorageValidationService(
 
         string markerPath = Path.Combine(
             normalizedPath,
-            StorageMarkerFileName);
+            STORAGE_MARKER_FILE_NAME);
 
         if (!File.Exists(markerPath))
         {
@@ -178,8 +178,8 @@ public sealed class StorageValidationService(
         }
 
         if (markerResult.FailureKind is
-            StorageValidationFailureKind.StorageVersionIsNewer or
-            StorageValidationFailureKind.StorageVersionUnsupported)
+            StorageValidationFailureKind.STORAGE_VERSION_IS_NEWER or
+            StorageValidationFailureKind.STORAGE_VERSION_UNSUPPORTED)
         {
             return markerResult;
         }
@@ -192,7 +192,7 @@ public sealed class StorageValidationService(
 
         string markerPath = Path.Combine(
             normalizedPath,
-            StorageMarkerFileName);
+            STORAGE_MARKER_FILE_NAME);
 
         if (File.Exists(markerPath))
         {
@@ -251,13 +251,13 @@ public sealed class StorageValidationService(
     {
         string markerPath = Path.Combine(
             storagePath,
-            StorageMarkerFileName);
+            STORAGE_MARKER_FILE_NAME);
 
         if (!File.Exists(markerPath))
         {
             return StorageValidationResult.Failure(
                 "Служебные настройки хранилища отсутствуют.",
-                StorageValidationFailureKind.MarkerMissing);
+                StorageValidationFailureKind.MARKER_MISSING);
         }
 
         try
@@ -284,20 +284,20 @@ public sealed class StorageValidationService(
             }
 
             if (formatVersion ==
-                CurrentStorageFormatVersion)
+                CURRENT_STORAGE_FORMAT_VERSION)
             {
                 return StorageValidationResult.Success(
                     storagePath);
             }
 
             return formatVersion >
-                   CurrentStorageFormatVersion
+                   CURRENT_STORAGE_FORMAT_VERSION
                 ? StorageValidationResult.Failure(
                     "Хранилище создано в более новой версии Mnemora. Обновите приложение.",
-                    StorageValidationFailureKind.StorageVersionIsNewer)
+                    StorageValidationFailureKind.STORAGE_VERSION_IS_NEWER)
                 : StorageValidationResult.Failure(
                     "Версия хранилища не поддерживается этой версией Mnemora.",
-                    StorageValidationFailureKind.StorageVersionUnsupported);
+                    StorageValidationFailureKind.STORAGE_VERSION_UNSUPPORTED);
         }
         catch (JsonException)
         {
@@ -317,21 +317,21 @@ public sealed class StorageValidationService(
     private static StorageValidationResult CorruptedMarkerFailure() =>
         StorageValidationResult.Failure(
             "Не удалось проверить хранилище. Служебные настройки повреждены.",
-            StorageValidationFailureKind.MarkerCorrupted);
+            StorageValidationFailureKind.MARKER_CORRUPTED);
 
     private static bool IsMarkerFailure(
         StorageValidationFailureKind failureKind) =>
         failureKind is
-            StorageValidationFailureKind.MarkerMissing or
-            StorageValidationFailureKind.MarkerCorrupted or
-            StorageValidationFailureKind.StorageVersionIsNewer or
-            StorageValidationFailureKind.StorageVersionUnsupported;
+            StorageValidationFailureKind.MARKER_MISSING or
+            StorageValidationFailureKind.MARKER_CORRUPTED or
+            StorageValidationFailureKind.STORAGE_VERSION_IS_NEWER or
+            StorageValidationFailureKind.STORAGE_VERSION_UNSUPPORTED;
 
     private static bool IsRepairableMarkerFailure(
         StorageValidationFailureKind failureKind) =>
         failureKind is
-            StorageValidationFailureKind.MarkerMissing or
-            StorageValidationFailureKind.MarkerCorrupted;
+            StorageValidationFailureKind.MARKER_MISSING or
+            StorageValidationFailureKind.MARKER_CORRUPTED;
 
     private static bool ContainsNoMnemoraData(
         string storagePath)
@@ -348,11 +348,11 @@ public sealed class StorageValidationService(
 
                     return string.Equals(
                                name,
-                               StorageMarkerFileName,
+                               STORAGE_MARKER_FILE_NAME,
                                StringComparison.OrdinalIgnoreCase) ||
                            string.Equals(
                                name,
-                               ObsidianMetadataDirectoryName,
+                               OBSIDIAN_METADATA_DIRECTORY_NAME,
                                StringComparison.OrdinalIgnoreCase);
                 });
         }
@@ -373,7 +373,7 @@ public sealed class StorageValidationService(
         {
             string recoveryPath = Path.Combine(
                 localPathProvider.RootPath,
-                RecoveryDirectoryName);
+                RECOVERY_DIRECTORY_NAME);
 
             Directory.CreateDirectory(recoveryPath);
 
@@ -407,7 +407,7 @@ public sealed class StorageValidationService(
     {
         string markerPath = Path.Combine(
             storagePath,
-            StorageMarkerFileName);
+            STORAGE_MARKER_FILE_NAME);
 
         string temporaryPath = Path.Combine(
             storagePath,
@@ -417,7 +417,7 @@ public sealed class StorageValidationService(
         {
             await File.WriteAllTextAsync(
                 temporaryPath,
-                StorageMarkerContent,
+                STORAGE_MARKER_CONTENT,
                 cancellationToken);
 
             File.Move(

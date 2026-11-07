@@ -52,7 +52,7 @@ public sealed class StartupServiceTests : IDisposable
         var settings = new AppSettings
         {
             StoragePath = _storagePath,
-            MarkdownEditor = MarkdownEditorType.VisualStudioCode,
+            MarkdownEditor = MarkdownEditorType.VISUAL_STUDIO_CODE,
             VisualStudioCodePath = "code.exe",
             IsOnboardingCompleted = true,
         };
@@ -79,7 +79,7 @@ public sealed class StartupServiceTests : IDisposable
         var settings = new AppSettings
         {
             StoragePath = _storagePath,
-            MarkdownEditor = MarkdownEditorType.VisualStudioCode,
+            MarkdownEditor = MarkdownEditorType.VISUAL_STUDIO_CODE,
             VisualStudioCodePath = "code.exe",
             IsOnboardingCompleted = true,
         };
@@ -114,7 +114,7 @@ public sealed class StartupServiceTests : IDisposable
         var settings = new AppSettings
         {
             StoragePath = _storagePath,
-            MarkdownEditor = MarkdownEditorType.Obsidian,
+            MarkdownEditor = MarkdownEditorType.OBSIDIAN,
             ObsidianVaultPath = _storagePath,
             IsOnboardingCompleted = true,
         };

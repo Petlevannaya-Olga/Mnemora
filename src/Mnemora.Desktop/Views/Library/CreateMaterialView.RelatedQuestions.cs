@@ -393,11 +393,11 @@ public partial class CreateMaterialView
         return value switch
         {
             "Начальный" =>
-                MaterialDifficulty.Easy,
+                MaterialDifficulty.EASY,
             "Продвинутый" =>
-                MaterialDifficulty.Hard,
+                MaterialDifficulty.HARD,
             _ =>
-                MaterialDifficulty.Medium,
+                MaterialDifficulty.MEDIUM,
         };
     }
 }

@@ -5,8 +5,12 @@ namespace Mnemora.Domain.Materials;
 
 public sealed class MaterialTitle : ValueObject
 {
-    public const int MinLength = 2;
-    public const int MaxLength = 150;
+    #pragma warning disable CA1707
+    public const int MIN_LENGTH = 2;
+    #pragma warning restore CA1707
+    #pragma warning disable CA1707
+    public const int MAX_LENGTH = 150;
+    #pragma warning restore CA1707
 
     public string Value { get; }
 
@@ -29,12 +33,12 @@ public sealed class MaterialTitle : ValueObject
             return CommonErrors.IsEmpty(nameof(title));
         }
 
-        if (normalizedTitle.Length is < MinLength or > MaxLength)
+        if (normalizedTitle.Length is < MIN_LENGTH or > MAX_LENGTH)
         {
             return CommonErrors.LengthIsWrong(
                 nameof(title),
-                MinLength,
-                MaxLength);
+                MIN_LENGTH,
+                MAX_LENGTH);
         }
 
         return new MaterialTitle(normalizedTitle);

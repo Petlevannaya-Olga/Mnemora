@@ -66,16 +66,16 @@ public sealed class LibraryContainerConfiguration
                     ? null
                     : FolderName.Create(value).Value)
             .HasMaxLength(FolderName.MAXLENGTH)
-            .UseCollation(SqliteCollations.UnicodeNoCase)
+            .UseCollation(SqliteCollations.UNICODE_NO_CASE)
             .HasColumnName("name");
 
         builder.Property(container => container.Color)
-            .HasConversion<string>()
+            .HasConversion<StableEnumStringConverter<FolderColor>>()
             .HasMaxLength(32)
             .HasColumnName("color");
 
         builder.Property(container => container.Icon)
-            .HasConversion<string>()
+            .HasConversion<StableEnumStringConverter<FolderIcon>>()
             .HasMaxLength(64)
             .HasColumnName("icon");
 
@@ -88,8 +88,8 @@ public sealed class LibraryContainerConfiguration
             .HasColumnName("updated_at");
 
         builder.Property(container => container.DisplayOrder)
-            .HasDefaultValue(LibraryContainer.DefaultDisplayOrder)
-            .HasSentinel(LibraryContainer.DefaultDisplayOrder)
+            .HasDefaultValue(LibraryContainer.DEFAULT_DISPLAY_ORDER)
+            .HasSentinel(LibraryContainer.DEFAULT_DISPLAY_ORDER)
             .IsRequired()
             .HasColumnName("display_order");
 

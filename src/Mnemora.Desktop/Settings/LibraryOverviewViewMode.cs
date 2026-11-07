@@ -1,8 +1,14 @@
-﻿namespace Mnemora.Desktop.Settings;
+﻿using System.Text.Json.Serialization;
+namespace Mnemora.Desktop.Settings;
 
+#pragma warning disable CA1707
 public enum LibraryOverviewViewMode
 {
-    Table,
-    Tiles,
-    CompactTiles
+    [JsonStringEnumMemberName("Table")]
+    TABLE,
+    [JsonStringEnumMemberName("Tiles")]
+    TILES,
+    [JsonStringEnumMemberName("CompactTiles")]
+    COMPACT_TILES
 }
+#pragma warning restore CA1707

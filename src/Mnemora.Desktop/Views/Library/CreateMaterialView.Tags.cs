@@ -10,8 +10,8 @@ namespace Mnemora.Desktop.Views.Library;
 
 public partial class CreateMaterialView
 {
-    private const string TagsFieldHostMarker = "TagsFieldHost";
-    private const string TagsErrorMarker = "TagsError";
+    private const string TAGS_FIELD_HOST_MARKER = "TagsFieldHost";
+    private const string TAGS_ERROR_MARKER = "TagsError";
 
     private void TagInput_OnKeyDown(object sender, KeyEventArgs e)
     {
@@ -36,21 +36,21 @@ public partial class CreateMaterialView
             return;
         }
 
-        if (tag.Length > MaterialTag.MaxLength)
+        if (tag.Length > MaterialTag.MAX_LENGTH)
         {
             ShowTagError(
                 tagsPanel,
-                $"Тег не может быть длиннее {MaterialTag.MaxLength} символов.");
+                $"Тег не может быть длиннее {MaterialTag.MAX_LENGTH} символов.");
             return;
         }
 
         string[] existingTags = GetTags(tagsPanel);
 
-        if (existingTags.Length >= Material.MaxTags)
+        if (existingTags.Length >= Material.MAX_TAGS)
         {
             ShowTagError(
                 tagsPanel,
-                $"Можно добавить не более {Material.MaxTags} тегов.");
+                $"Можно добавить не более {Material.MAX_TAGS} тегов.");
             return;
         }
 
@@ -209,11 +209,11 @@ public partial class CreateMaterialView
         while (current is not null)
         {
             if (current is StackPanel host &&
-                Equals(host.Tag, TagsFieldHostMarker))
+                Equals(host.Tag, TAGS_FIELD_HOST_MARKER))
             {
                 return host.Children
                     .OfType<TextBlock>()
-                    .FirstOrDefault(text => Equals(text.Tag, TagsErrorMarker));
+                    .FirstOrDefault(text => Equals(text.Tag, TAGS_ERROR_MARKER));
             }
 
             current = System.Windows.Media.VisualTreeHelper.GetParent(current);

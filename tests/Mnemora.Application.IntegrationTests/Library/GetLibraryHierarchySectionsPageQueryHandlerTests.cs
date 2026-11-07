@@ -20,8 +20,8 @@ public sealed class GetLibraryHierarchySectionsPageQueryHandlerTests
         {
             Section section = Section.Create(
                 SectionName.Create($"Section {index:D2}").Value,
-                SectionColor.Teal,
-                SectionIcon.Folder);
+                SectionColor.TEAL,
+                SectionIcon.FOLDER);
 
             db.AddSectionWithRoot(section);
         }
@@ -51,8 +51,8 @@ public sealed class GetLibraryHierarchySectionsPageQueryHandlerTests
 
         Section section = Section.Create(
             SectionName.Create("Section").Value,
-            SectionColor.Teal,
-            SectionIcon.Folder);
+            SectionColor.TEAL,
+            SectionIcon.FOLDER);
 
         LibraryContainer root =
             db.AddSectionWithRoot(section);
@@ -60,20 +60,20 @@ public sealed class GetLibraryHierarchySectionsPageQueryHandlerTests
         LibraryContainer first = LibraryContainer.CreateFolder(
             root,
             FolderName.Create("First").Value,
-            FolderColor.Teal,
-            FolderIcon.Folder).Value;
+            FolderColor.TEAL,
+            FolderIcon.FOLDER).Value;
 
         LibraryContainer second = LibraryContainer.CreateFolder(
             root,
             FolderName.Create("Second").Value,
-            FolderColor.Teal,
-            FolderIcon.Folder).Value;
+            FolderColor.TEAL,
+            FolderIcon.FOLDER).Value;
 
         LibraryContainer nested = LibraryContainer.CreateFolder(
             first,
             FolderName.Create("Nested").Value,
-            FolderColor.Teal,
-            FolderIcon.Folder).Value;
+            FolderColor.TEAL,
+            FolderIcon.FOLDER).Value;
 
         db.Context.LibraryContainers.AddRange(first, second, nested);
         await db.Context.SaveChangesAsync();
@@ -98,6 +98,6 @@ public sealed class GetLibraryHierarchySectionsPageQueryHandlerTests
 
     private static GetLibraryHierarchySectionsPageQuery Query(
         int offset = 0,
-        int pageSize = LibraryPagingDefaults.PageSize) =>
+        int pageSize = LibraryPagingDefaults.PAGE_SIZE) =>
         new(offset, pageSize);
 }

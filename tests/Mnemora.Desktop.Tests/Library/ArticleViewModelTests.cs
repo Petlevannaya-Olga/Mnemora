@@ -32,7 +32,7 @@ public sealed class ArticleViewModelTests
             editor,
             NullLogger<ArticleViewModel>.Instance);
 
-        viewModel.Initialize(articleId, LibraryArticleOpenOrigin.Overview);
+        viewModel.Initialize(articleId, LibraryArticleOpenOrigin.OVERVIEW);
         await viewModel.LoadAsync();
 
         viewModel.HasArticle.Should().BeTrue();
@@ -58,7 +58,7 @@ public sealed class ArticleViewModelTests
             new StubMaterialEditorService(),
             NullLogger<ArticleViewModel>.Instance);
 
-        viewModel.Initialize(articleId, LibraryArticleOpenOrigin.Overview);
+        viewModel.Initialize(articleId, LibraryArticleOpenOrigin.OVERVIEW);
         await viewModel.LoadAsync();
 
         viewModel.Breadcrumbs.Select(item => item.Name)
@@ -80,7 +80,7 @@ public sealed class ArticleViewModelTests
             editor,
             NullLogger<ArticleViewModel>.Instance);
 
-        viewModel.Initialize(articleId, LibraryArticleOpenOrigin.Management);
+        viewModel.Initialize(articleId, LibraryArticleOpenOrigin.MANAGEMENT);
         await viewModel.LoadAsync();
         await viewModel.EditCommand.ExecuteAsync(null);
 

@@ -64,7 +64,7 @@ public sealed class StartupViewModelTests
         var service = new FakeStartupService(
             StartupResult.Failure(
                 "Служебные настройки повреждены.",
-                StorageValidationFailureKind.MarkerCorrupted),
+                StorageValidationFailureKind.MARKER_CORRUPTED),
             StartupResult.Success(
                 true,
                 true,
@@ -96,7 +96,7 @@ public sealed class StartupViewModelTests
         var service = new FakeStartupService(
             StartupResult.Failure(
                 "Хранилище создано в более новой версии Mnemora.",
-                StorageValidationFailureKind.StorageVersionIsNewer));
+                StorageValidationFailureKind.STORAGE_VERSION_IS_NEWER));
 
         var viewModel = new StartupViewModel(service);
 

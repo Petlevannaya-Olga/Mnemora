@@ -80,7 +80,7 @@ public sealed partial class StartupViewModel(IStartupService startupService) : V
     public string ErrorHint => CanRepairStorage
         ? "Материалы не будут изменены. Можно восстановить служебные настройки."
         : Result?.StorageFailureKind ==
-          StorageValidationFailureKind.StorageVersionIsNewer
+          StorageValidationFailureKind.STORAGE_VERSION_IS_NEWER
             ? "Обновите Mnemora или выберите другое хранилище."
             : "Повторите проверку или измените настройки приложения.";
 

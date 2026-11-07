@@ -24,24 +24,24 @@ public sealed class LibraryContainerPagingRetryTests
     {
         var dispatcher = new StubQueryDispatcher(foldersCount: 80, materialsCount: 0)
         {
-            FailFolderOnceAtOffset = LibraryPagingDefaults.PageSize,
+            FailFolderOnceAtOffset = LibraryPagingDefaults.PAGE_SIZE,
         };
         LibraryContainerViewModel viewModel = CreateViewModel(dispatcher);
         await viewModel.LoadAsync();
 
-        viewModel.Folders.Should().HaveCount(LibraryPagingDefaults.PageSize);
+        viewModel.Folders.Should().HaveCount(LibraryPagingDefaults.PAGE_SIZE);
         await viewModel.LoadNextFoldersPageCommand.ExecuteAsync(null);
 
         viewModel.HasFoldersError.Should().BeTrue();
-        viewModel.Folders.Should().HaveCount(LibraryPagingDefaults.PageSize);
+        viewModel.Folders.Should().HaveCount(LibraryPagingDefaults.PAGE_SIZE);
         viewModel.FolderWindowStartOffset.Should().Be(0);
         viewModel.LoadNextFoldersPageCommand.CanExecute(null).Should().BeFalse();
 
         await viewModel.RetryFoldersCommand.ExecuteAsync(null);
 
-        dispatcher.FolderOffsets.Should().Equal(0, LibraryPagingDefaults.PageSize, LibraryPagingDefaults.PageSize);
+        dispatcher.FolderOffsets.Should().Equal(0, LibraryPagingDefaults.PAGE_SIZE, LibraryPagingDefaults.PAGE_SIZE);
         viewModel.HasFoldersError.Should().BeFalse();
-        viewModel.Folders.Should().HaveCount(2 * LibraryPagingDefaults.PageSize);
+        viewModel.Folders.Should().HaveCount(2 * LibraryPagingDefaults.PAGE_SIZE);
         viewModel.FolderWindowStartOffset.Should().Be(0);
     }
 
@@ -49,7 +49,7 @@ public sealed class LibraryContainerPagingRetryTests
     public async Task Folders_RetryPreviousPage_RestoresRequestedOffset()
     {
         var dispatcher = new StubQueryDispatcher(
-            foldersCount: 15 * LibraryPagingDefaults.PageSize,
+            foldersCount: 15 * LibraryPagingDefaults.PAGE_SIZE,
             materialsCount: 0);
         LibraryContainerViewModel viewModel = CreateViewModel(dispatcher);
         await viewModel.LoadAsync();
@@ -64,7 +64,7 @@ public sealed class LibraryContainerPagingRetryTests
             await viewModel.LoadPreviousFoldersPageCommand.ExecuteAsync(null);
         }
 
-        int failedOffset = 2 * LibraryPagingDefaults.PageSize;
+        int failedOffset = 2 * LibraryPagingDefaults.PAGE_SIZE;
         dispatcher.FailFolderOnceAtOffset = failedOffset;
         await viewModel.LoadPreviousFoldersPageCommand.ExecuteAsync(null);
 

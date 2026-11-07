@@ -160,7 +160,7 @@ public sealed partial class SelectFolderIconDialogViewModel
         return icon.Name.Contains(
                    searchText,
                    StringComparison.OrdinalIgnoreCase)
-               || icon.Value.ToString().Contains(
+               || icon.Value.ToString().Replace("_", "").Contains(
                    searchText,
                    StringComparison.OrdinalIgnoreCase);
     }

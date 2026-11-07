@@ -11,9 +11,15 @@ namespace Mnemora.Domain.LibraryContainers;
 /// </summary>
 public sealed class LibraryContainer
 {
-    public const int RootDepth = 0;
-    public const int MaxFolderDepth = 3;
-    public const int DefaultDisplayOrder = int.MaxValue;
+    #pragma warning disable CA1707
+    public const int ROOT_DEPTH = 0;
+    #pragma warning restore CA1707
+    #pragma warning disable CA1707
+    public const int MAX_FOLDER_DEPTH = 3;
+    #pragma warning restore CA1707
+    #pragma warning disable CA1707
+    public const int DEFAULT_DISPLAY_ORDER = int.MaxValue;
+    #pragma warning restore CA1707
 
     public LibraryContainerId Id { get; private set; } = null!;
 
@@ -52,7 +58,7 @@ public sealed class LibraryContainer
     /// Позиция папки среди соседних папок одного родительского контейнера.
     /// Для root не используется.
     /// </summary>
-    public int DisplayOrder { get; private set; } = DefaultDisplayOrder;
+    public int DisplayOrder { get; private set; } = DEFAULT_DISPLAY_ORDER;
 
     public bool IsRoot => ParentId is null;
 
@@ -70,11 +76,11 @@ public sealed class LibraryContainer
         Id = LibraryContainerId.New();
         SectionId = sectionId;
         ParentId = null;
-        Depth = RootDepth;
+        Depth = ROOT_DEPTH;
         Name = null;
         Color = null;
         Icon = null;
-        DisplayOrder = DefaultDisplayOrder;
+        DisplayOrder = DEFAULT_DISPLAY_ORDER;
         CreatedAt = now;
         UpdatedAt = now;
     }
@@ -95,7 +101,7 @@ public sealed class LibraryContainer
         Name = name;
         Color = color;
         Icon = icon;
-        DisplayOrder = DefaultDisplayOrder;
+        DisplayOrder = DEFAULT_DISPLAY_ORDER;
         CreatedAt = now;
         UpdatedAt = now;
     }
@@ -136,9 +142,9 @@ public sealed class LibraryContainer
             return LibraryContainerErrors.FolderIconIsInvalid(nameof(icon));
         }
 
-        if (parent.Depth >= MaxFolderDepth)
+        if (parent.Depth >= MAX_FOLDER_DEPTH)
         {
-            return LibraryContainerErrors.MaximumFolderDepthExceeded(MaxFolderDepth);
+            return LibraryContainerErrors.MaximumFolderDepthExceeded(MAX_FOLDER_DEPTH);
         }
 
         return new LibraryContainer(

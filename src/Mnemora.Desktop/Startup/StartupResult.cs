@@ -12,8 +12,8 @@ public sealed record StartupResult(
 {
     public bool CanRepairStorage =>
         StorageFailureKind is
-            StorageValidationFailureKind.MarkerMissing or
-            StorageValidationFailureKind.MarkerCorrupted;
+            StorageValidationFailureKind.MARKER_MISSING or
+            StorageValidationFailureKind.MARKER_CORRUPTED;
 
     public static StartupResult Success(
         bool wasOnboardingCompleted,
@@ -25,12 +25,12 @@ public sealed record StartupResult(
             storageIsConfigured,
             editorIsConfigured,
             null,
-            StorageValidationFailureKind.None);
+            StorageValidationFailureKind.NONE);
 
     public static StartupResult Failure(
         string errorMessage,
         StorageValidationFailureKind storageFailureKind =
-            StorageValidationFailureKind.Other) =>
+            StorageValidationFailureKind.OTHER) =>
         new(
             false,
             false,

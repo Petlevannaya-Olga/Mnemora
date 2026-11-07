@@ -1,4 +1,5 @@
 using System.Globalization;
+using Mnemora.Shared;
 using System.Windows.Data;
 using MaterialDesignThemes.Wpf;
 using Mnemora.Desktop.ViewModels.Sections;
@@ -16,7 +17,7 @@ public sealed class LibraryFolderIconConverter : IValueConverter
     {
         string? icon = value as string;
 
-        if (Enum.TryParse<SectionIcon>(icon, true, out _))
+        if (EnumStableNames.TryParseStableName<SectionIcon>(icon, out _))
         {
             return SectionAppearanceOptions.GetIconKind(icon);
         }

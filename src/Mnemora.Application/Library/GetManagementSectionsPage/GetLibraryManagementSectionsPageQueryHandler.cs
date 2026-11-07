@@ -27,7 +27,7 @@ public sealed class GetLibraryManagementSectionsPageQueryHandler(
             int pageSize = Math.Clamp(
                 request.PageSize,
                 1,
-                LibraryPagingDefaults.MaxQueryPageSize);
+                LibraryPagingDefaults.MAX_QUERY_PAGE_SIZE);
 
             IQueryable<Section> sectionsQuery =
                 readDbContext.SectionsRead;
@@ -92,20 +92,20 @@ public sealed class GetLibraryManagementSectionsPageQueryHandler(
 
             var orderedRows = request.Sort switch
             {
-                LibraryManagementSectionSort.Custom => sectionRows
+                LibraryManagementSectionSort.CUSTOM => sectionRows
                     .OrderBy(row => row.Section.DisplayOrder)
                     .ThenBy(row => row.Section.CreatedAt)
                     .ThenBy(row => row.Section.Id),
 
-                LibraryManagementSectionSort.Name => sectionRows
+                LibraryManagementSectionSort.NAME => sectionRows
                     .OrderBy(row => row.Section.Name)
                     .ThenBy(row => row.Section.Id),
 
-                LibraryManagementSectionSort.Newest => sectionRows
+                LibraryManagementSectionSort.NEWEST => sectionRows
                     .OrderByDescending(row => row.Section.CreatedAt)
                     .ThenBy(row => row.Section.Id),
 
-                LibraryManagementSectionSort.RecentActivity => sectionRows
+                LibraryManagementSectionSort.RECENT_ACTIVITY => sectionRows
                     .OrderByDescending(row => row.LastActivityAt)
                     .ThenBy(row => row.Section.Id),
 
@@ -239,8 +239,8 @@ public sealed class GetLibraryManagementSectionsPageQueryHandler(
                         row.Section.Id.Value,
                         rootId!.Value,
                         row.Section.Name.Value,
-                        row.Section.Color.ToString(),
-                        row.Section.Icon.ToString(),
+                        row.Section.Color.ToStableName(),
+                        row.Section.Icon.ToStableName(),
                         row.Section.CreatedAt,
                         row.Section.UpdatedAt,
                         row.LastActivityAt,

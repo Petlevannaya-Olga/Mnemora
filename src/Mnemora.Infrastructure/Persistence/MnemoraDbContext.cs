@@ -30,7 +30,7 @@ public sealed class MnemoraDbContext(DbContextOptions<MnemoraDbContext> options)
 
         modelBuilder
             .HasDbFunction(unicodeContainsMethod)
-            .HasName(SqliteFunctions.UnicodeContains);
+            .HasName(SqliteFunctions.UNICODE_CONTAINS);
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(MnemoraDbContext).Assembly);
     }

@@ -76,11 +76,11 @@ public sealed partial class AppShellViewModel : ViewModelBase
         or LibraryManagementViewModel;
     public bool IsLibraryOverviewSelected =>
         (CurrentPageViewModel is LibraryOverviewViewModel or LibraryContainerViewModel) ||
-        CurrentPageViewModel is ArticleViewModel { Origin: LibraryArticleOpenOrigin.Overview };
+        CurrentPageViewModel is ArticleViewModel { Origin: LibraryArticleOpenOrigin.OVERVIEW };
     public bool IsAllMaterialsSelected => CurrentPageViewModel is AllMaterialsViewModel;
     public bool IsLibraryManagementSelected =>
         CurrentPageViewModel is LibraryManagementViewModel ||
-        CurrentPageViewModel is ArticleViewModel { Origin: LibraryArticleOpenOrigin.Management };
+        CurrentPageViewModel is ArticleViewModel { Origin: LibraryArticleOpenOrigin.MANAGEMENT };
     public bool IsPracticeSelected => CurrentPageViewModel is PracticeViewModel;
     public bool IsTrainingSelected => CurrentPageViewModel is TrainingViewModel;
     public bool IsPlanSelected => CurrentPageViewModel is PlanViewModel;

@@ -42,8 +42,8 @@ public sealed class DeleteSectionContainerSafetyTests
         LibraryContainer folder = LibraryContainer.CreateFolder(
             root,
             FolderName.Create("Folder only").Value,
-            FolderColor.Teal,
-            FolderIcon.Folder).Value;
+            FolderColor.TEAL,
+            FolderIcon.FOLDER).Value;
         db.Context.LibraryContainers.Add(folder);
         await db.Context.SaveChangesAsync();
         db.Context.ChangeTracker.Clear();
@@ -65,7 +65,7 @@ public sealed class DeleteSectionContainerSafetyTests
         Article article = Article.CreateInContainer(
             root.Id,
             MaterialTitle.Create("Root article").Value,
-            MaterialDifficulty.Medium,
+            MaterialDifficulty.MEDIUM,
             MaterialIcon.DefaultArticle,
             MaterialExperienceRewards.Create(50, 20).Value).Value;
         db.Context.Materials.Add(article);
@@ -93,8 +93,8 @@ public sealed class DeleteSectionContainerSafetyTests
         db.Context.LibraryContainers.Add(LibraryContainer.CreateFolder(
             otherRoot,
             FolderName.Create("Other folder").Value,
-            FolderColor.Teal,
-            FolderIcon.Folder).Value);
+            FolderColor.TEAL,
+            FolderIcon.FOLDER).Value);
         await db.Context.SaveChangesAsync();
         db.Context.ChangeTracker.Clear();
 
@@ -110,8 +110,8 @@ public sealed class DeleteSectionContainerSafetyTests
 
     private static Section NewSection(string name) => Section.Create(
         SectionName.Create(name).Value,
-        SectionColor.Teal,
-        SectionIcon.Folder);
+        SectionColor.TEAL,
+        SectionIcon.FOLDER);
 
     private static DeleteSectionCommandHandler CreateHandler(SqliteLibraryTestDatabase db) =>
         new(

@@ -10,9 +10,9 @@ public sealed class MaterialEditorService(
     INotificationService notificationService)
     : IMaterialEditorService
 {
-    private const string MaterialsDirectoryName = "materials";
-    private const string ArticlesDirectoryName = "articles";
-    private const string ArticleFileName = "content.md";
+    private const string MATERIALS_DIRECTORY_NAME = "materials";
+    private const string ARTICLES_DIRECTORY_NAME = "articles";
+    private const string ARTICLE_FILE_NAME = "content.md";
 
     public async Task OpenArticleInEditorAsync(
         Guid articleId,
@@ -34,10 +34,10 @@ public sealed class MaterialEditorService(
 
         string articlePath = Path.Combine(
             storagePathResult.Value,
-            MaterialsDirectoryName,
-            ArticlesDirectoryName,
+            MATERIALS_DIRECTORY_NAME,
+            ARTICLES_DIRECTORY_NAME,
             articleId.ToString("N"),
-            ArticleFileName);
+            ARTICLE_FILE_NAME);
 
         try
         {

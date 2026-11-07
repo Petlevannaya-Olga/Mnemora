@@ -15,9 +15,9 @@ namespace Mnemora.Desktop.Views.Library;
 
 public partial class CreateMaterialView : UserControl
 {
-    private const string ArticleSource = "Article";
-    private const string QuestionSource = "Question";
-    private const string AnswerSource = "Answer";
+    private const string ARTICLE_SOURCE = "Article";
+    private const string QUESTION_SOURCE = "Question";
+    private const string ANSWER_SOURCE = "Answer";
 
     private string? _articleMarkdownPath;
     private string? _questionMarkdownPath;
@@ -53,9 +53,9 @@ public partial class CreateMaterialView : UserControl
         // в VS Code / Obsidian, даже если пользователь создал новый.
         DeleteAllOwnedDrafts();
 
-        ClearSelectedFile(ArticleSource);
-        ClearSelectedFile(QuestionSource);
-        ClearSelectedFile(AnswerSource);
+        ClearSelectedFile(ARTICLE_SOURCE);
+        ClearSelectedFile(QUESTION_SOURCE);
+        ClearSelectedFile(ANSWER_SOURCE);
 
         HideMaterialStepError();
 
@@ -186,11 +186,11 @@ public partial class CreateMaterialView : UserControl
             titleInput.Text.Trim();
 
         if (title.Length is
-            < MaterialTitle.MinLength
-            or > MaterialTitle.MaxLength)
+            < MaterialTitle.MIN_LENGTH
+            or > MaterialTitle.MAX_LENGTH)
         {
             ShowMaterialStepError(
-                $"Название должно содержать от {MaterialTitle.MinLength} до {MaterialTitle.MaxLength} символов.");
+                $"Название должно содержать от {MaterialTitle.MIN_LENGTH} до {MaterialTitle.MAX_LENGTH} символов.");
 
             titleInput.Focus();
             return false;
@@ -246,14 +246,14 @@ public partial class CreateMaterialView : UserControl
         string? bodyPath =
             isArticle
                 ? GetSelectedPath(
-                    ArticleSource)
+                    ARTICLE_SOURCE)
                 : GetSelectedPath(
-                    QuestionSource);
+                    QUESTION_SOURCE);
 
         string bodySource =
             isArticle
-                ? ArticleSource
-                : QuestionSource;
+                ? ARTICLE_SOURCE
+                : QUESTION_SOURCE;
 
         if (string.IsNullOrWhiteSpace(
                 bodyPath) ||
@@ -278,7 +278,7 @@ public partial class CreateMaterialView : UserControl
         string? answerPath =
             isQuestion
                 ? GetSelectedPath(
-                    AnswerSource)
+                    ANSWER_SOURCE)
                 : null;
 
         if (isQuestion &&
@@ -287,15 +287,15 @@ public partial class CreateMaterialView : UserControl
              !File.Exists(
                  answerPath)))
         {
-            const string message =
+            const string MESSAGE =
                 "Выберите Markdown-файл эталонного ответа.";
 
             ShowFileError(
-                AnswerSource,
-                message);
+                ANSWER_SOURCE,
+                MESSAGE);
 
             ShowMaterialStepError(
-                message);
+                MESSAGE);
 
             return false;
         }
@@ -732,7 +732,7 @@ public partial class CreateMaterialView : UserControl
             return;
         }
 
-        string accentResource = source == AnswerSource
+        string accentResource = source == ANSWER_SOURCE
             ? "Mnemora.Brush.Primary"
             : "Mnemora.Brush.Secondary";
 
@@ -764,9 +764,9 @@ public partial class CreateMaterialView : UserControl
     private string? GetSelectedPath(string source) =>
         source switch
         {
-            ArticleSource => _articleMarkdownPath,
-            QuestionSource => _questionMarkdownPath,
-            AnswerSource => _answerMarkdownPath,
+            ARTICLE_SOURCE => _articleMarkdownPath,
+            QUESTION_SOURCE => _questionMarkdownPath,
+            ANSWER_SOURCE => _answerMarkdownPath,
             _ => null,
         };
 
@@ -774,13 +774,13 @@ public partial class CreateMaterialView : UserControl
     {
         switch (source)
         {
-            case ArticleSource:
+            case ARTICLE_SOURCE:
                 _articleMarkdownPath = path;
                 break;
-            case QuestionSource:
+            case QUESTION_SOURCE:
                 _questionMarkdownPath = path;
                 break;
-            case AnswerSource:
+            case ANSWER_SOURCE:
                 _answerMarkdownPath = path;
                 break;
             default:
@@ -794,13 +794,13 @@ public partial class CreateMaterialView : UserControl
     {
         TextBlock title = source switch
         {
-            ArticleSource =>
+            ARTICLE_SOURCE =>
                 FindRequiredControl<TextBlock>(
                     "ArticleCreateTemplateTitle"),
-            QuestionSource =>
+            QUESTION_SOURCE =>
                 FindRequiredControl<TextBlock>(
                     "QuestionCreateTemplateTitle"),
-            AnswerSource =>
+            ANSWER_SOURCE =>
                 FindRequiredControl<TextBlock>(
                     "AnswerCreateTemplateTitle"),
             _ => throw new ArgumentOutOfRangeException(
@@ -811,13 +811,13 @@ public partial class CreateMaterialView : UserControl
 
         TextBlock subtitle = source switch
         {
-            ArticleSource =>
+            ARTICLE_SOURCE =>
                 FindRequiredControl<TextBlock>(
                     "ArticleCreateTemplateSubtitle"),
-            QuestionSource =>
+            QUESTION_SOURCE =>
                 FindRequiredControl<TextBlock>(
                     "QuestionCreateTemplateSubtitle"),
-            AnswerSource =>
+            ANSWER_SOURCE =>
                 FindRequiredControl<TextBlock>(
                     "AnswerCreateTemplateSubtitle"),
             _ => throw new ArgumentOutOfRangeException(
@@ -843,7 +843,7 @@ public partial class CreateMaterialView : UserControl
              Button ClearButton) GetSourceControls(string source) =>
         source switch
         {
-            ArticleSource => (
+            ARTICLE_SOURCE => (
                 FindRequiredControl<StackPanel>("ArticleEmptyState"),
                 FindRequiredControl<Grid>("ArticleSelectedState"),
                 FindRequiredControl<TextBlock>("ArticleSelectedFileName"),
@@ -851,7 +851,7 @@ public partial class CreateMaterialView : UserControl
                 FindRequiredControl<Rectangle>("ArticleDropBorder"),
                 FindRequiredControl<Button>("ArticleClearFileButton")),
 
-            QuestionSource => (
+            QUESTION_SOURCE => (
                 FindRequiredControl<StackPanel>("QuestionEmptyState"),
                 FindRequiredControl<Grid>("QuestionSelectedState"),
                 FindRequiredControl<TextBlock>("QuestionSelectedFileName"),
@@ -859,7 +859,7 @@ public partial class CreateMaterialView : UserControl
                 FindRequiredControl<Rectangle>("QuestionDropBorder"),
                 FindRequiredControl<Button>("QuestionClearFileButton")),
 
-            AnswerSource => (
+            ANSWER_SOURCE => (
                 FindRequiredControl<StackPanel>("AnswerEmptyState"),
                 FindRequiredControl<Grid>("AnswerSelectedState"),
                 FindRequiredControl<TextBlock>("AnswerSelectedFileName"),
@@ -886,7 +886,7 @@ public partial class CreateMaterialView : UserControl
     private static bool TryGetSource(FrameworkElement element, out string source)
     {
         source = element.Tag as string ?? string.Empty;
-        return source is ArticleSource or QuestionSource or AnswerSource;
+        return source is ARTICLE_SOURCE or QUESTION_SOURCE or ANSWER_SOURCE;
     }
 
     private static T? FindVisualParent<T>(DependencyObject child)

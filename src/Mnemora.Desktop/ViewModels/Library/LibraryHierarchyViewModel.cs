@@ -10,7 +10,7 @@ namespace Mnemora.Desktop.ViewModels.Library;
 
 public sealed partial class LibraryHierarchyViewModel : ObservableObject
 {
-    private const int PageSize = LibraryPagingDefaults.PageSize;
+    private const int PAGE_SIZE = LibraryPagingDefaults.PAGE_SIZE;
     private readonly IQueryDispatcher _queryDispatcher;
 
     public LibraryHierarchyViewModel(IQueryDispatcher queryDispatcher)
@@ -171,7 +171,7 @@ public sealed partial class LibraryHierarchyViewModel : ObservableObject
                 LibraryHierarchySectionsPageDto>(
                 new GetLibraryHierarchySectionsPageQuery(
                     offset,
-                    PageSize),
+                    PAGE_SIZE),
                 cancellationToken);
 
             if (result.IsFailure)
@@ -238,7 +238,7 @@ public sealed partial class LibraryHierarchyViewModel : ObservableObject
                 new GetLibraryHierarchyFoldersPageQuery(
                     parent.ContainerId.Value,
                     offset,
-                    PageSize),
+                    PAGE_SIZE),
                 cancellationToken);
 
             if (result.IsFailure)

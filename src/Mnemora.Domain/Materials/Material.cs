@@ -6,8 +6,12 @@ namespace Mnemora.Domain.Materials;
 
 public abstract class Material
 {
-    public const int MaxTags = 10;
-    public const int DefaultDisplayOrder = int.MaxValue;
+    #pragma warning disable CA1707
+    public const int MAX_TAGS = 10;
+    #pragma warning restore CA1707
+    #pragma warning disable CA1707
+    public const int DEFAULT_DISPLAY_ORDER = int.MaxValue;
+    #pragma warning restore CA1707
 
     private readonly List<MaterialTag> _tags = [];
 
@@ -31,7 +35,7 @@ public abstract class Material
 
     public DateTime UpdatedAt { get; private set; }
 
-    public int DisplayOrder { get; private set; } = DefaultDisplayOrder;
+    public int DisplayOrder { get; private set; } = DEFAULT_DISPLAY_ORDER;
 
     public abstract MaterialType Type { get; }
 
@@ -158,9 +162,9 @@ public abstract class Material
             return MaterialErrors.TagsContainDuplicates();
         }
 
-        if (_tags.Count >= MaxTags)
+        if (_tags.Count >= MAX_TAGS)
         {
-            return MaterialErrors.TagsCountIsTooLarge(MaxTags);
+            return MaterialErrors.TagsCountIsTooLarge(MAX_TAGS);
         }
 
         _tags.Add(tag);
@@ -301,9 +305,9 @@ public abstract class Material
                 return MaterialErrors.TagsContainDuplicates();
             }
 
-            if (preparedTags.Count >= MaxTags)
+            if (preparedTags.Count >= MAX_TAGS)
             {
-                return MaterialErrors.TagsCountIsTooLarge(MaxTags);
+                return MaterialErrors.TagsCountIsTooLarge(MAX_TAGS);
             }
 
             preparedTags.Add(tag);

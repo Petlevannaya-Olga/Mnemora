@@ -15,9 +15,9 @@ public sealed class SaveLibraryOrderCommandValidator : AbstractValidator<SaveLib
         RuleFor(command => command.ParentId)
             .NotNull()
             .NotEqual(Guid.Empty)
-            .When(command => command.Target is not LibraryOrderTarget.Sections);
+            .When(command => command.Target is not LibraryOrderTarget.SECTIONS);
         RuleFor(command => command.ParentId)
             .Null()
-            .When(command => command.Target is LibraryOrderTarget.Sections);
+            .When(command => command.Target is LibraryOrderTarget.SECTIONS);
     }
 }

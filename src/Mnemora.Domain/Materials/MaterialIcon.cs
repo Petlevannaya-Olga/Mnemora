@@ -5,7 +5,9 @@ namespace Mnemora.Domain.Materials;
 
 public sealed class MaterialIcon : ValueObject
 {
-    public const int MaxKeyLength = 50;
+    #pragma warning disable CA1707
+    public const int MAX_KEY_LENGTH = 50;
+    #pragma warning restore CA1707
 
     public static MaterialIcon DefaultArticle { get; } = new("article");
 
@@ -32,9 +34,9 @@ public sealed class MaterialIcon : ValueObject
             return CommonErrors.IsEmpty(nameof(key));
         }
 
-        if (normalizedKey.Length > MaxKeyLength)
+        if (normalizedKey.Length > MAX_KEY_LENGTH)
         {
-            return CommonErrors.LengthIsTooLarge(nameof(key), MaxKeyLength);
+            return CommonErrors.LengthIsTooLarge(nameof(key), MAX_KEY_LENGTH);
         }
 
         if (!IsValidKey(normalizedKey))

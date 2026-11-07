@@ -20,28 +20,28 @@ public sealed class FolderSettingsTests
         Guid sectionId = Guid.NewGuid();
         AppSettings original = new()
         {
-            LibraryFoldersViewMode = LibraryFoldersViewMode.Table,
-            LibraryManagementFoldersViewMode = LibraryManagementViewMode.CompactTiles,
+            LibraryFoldersViewMode = LibraryFoldersViewMode.TABLE,
+            LibraryManagementFoldersViewMode = LibraryManagementViewMode.COMPACT_TILES,
             LibraryManagementFolderSortBySection = new()
             {
-                [sectionId] = LibraryManagementSortMode.Newest,
+                [sectionId] = LibraryManagementSortMode.NEWEST,
             },
         };
 
         string json = JsonSerializer.Serialize(original, Options);
         AppSettings restored = JsonSerializer.Deserialize<AppSettings>(json, Options)!;
 
-        restored.LibraryFoldersViewMode.Should().Be(LibraryFoldersViewMode.Table);
-        restored.LibraryManagementFoldersViewMode.Should().Be(LibraryManagementViewMode.CompactTiles);
-        restored.LibraryManagementFolderSortBySection[sectionId].Should().Be(LibraryManagementSortMode.Newest);
+        restored.LibraryFoldersViewMode.Should().Be(LibraryFoldersViewMode.TABLE);
+        restored.LibraryManagementFoldersViewMode.Should().Be(LibraryManagementViewMode.COMPACT_TILES);
+        restored.LibraryManagementFolderSortBySection[sectionId].Should().Be(LibraryManagementSortMode.NEWEST);
     }
 
     [Fact]
     public void DefaultSettings_DoNotRequireAnyMigration()
     {
         AppSettings settings = JsonSerializer.Deserialize<AppSettings>("{}", Options)!;
-        settings.LibraryOverviewViewMode.Should().Be(LibraryOverviewViewMode.Tiles);
-        settings.LibraryFoldersViewMode.Should().Be(LibraryFoldersViewMode.CompactTiles);
-        settings.LibraryManagementMaterialsViewMode.Should().Be(LibraryManagementViewMode.Table);
+        settings.LibraryOverviewViewMode.Should().Be(LibraryOverviewViewMode.TILES);
+        settings.LibraryFoldersViewMode.Should().Be(LibraryFoldersViewMode.COMPACT_TILES);
+        settings.LibraryManagementMaterialsViewMode.Should().Be(LibraryManagementViewMode.TABLE);
     }
 }

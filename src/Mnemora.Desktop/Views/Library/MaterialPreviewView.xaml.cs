@@ -16,7 +16,7 @@ namespace Mnemora.Desktop.Views.Library;
 /// </summary>
 public partial class MaterialPreviewView : UserControl
 {
-    private const double ExpandedTocWidth = 270;
+    private const double EXPANDED_TOC_WIDTH = 270;
 
     private bool _isInitialized;
     private bool _isTocExpanded = true;
@@ -1711,7 +1711,7 @@ public partial class MaterialPreviewView : UserControl
         // Развернутое содержание занимает обычную боковую панель.
         // В свернутом состоянии сама панель полностью исчезает —
         // остаётся только компактная кнопка в правом верхнем углу статьи.
-        ReadingPanel.Width = ExpandedTocWidth;
+        ReadingPanel.Width = EXPANDED_TOC_WIDTH;
         ReadingPanel.Visibility = _isTocExpanded
             ? Visibility.Visible
             : Visibility.Collapsed;

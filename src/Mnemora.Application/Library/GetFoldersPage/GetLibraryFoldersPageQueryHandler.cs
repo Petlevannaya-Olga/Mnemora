@@ -51,7 +51,7 @@ public sealed class GetLibraryFoldersPageQueryHandler(
             int pageSize = Math.Clamp(
                 request.PageSize,
                 1,
-                LibraryPagingDefaults.MaxQueryPageSize);
+                LibraryPagingDefaults.MAX_QUERY_PAGE_SIZE);
 
             IQueryable<LibraryContainer> foldersQuery =
                 readDbContext.LibraryContainersRead
@@ -76,15 +76,15 @@ public sealed class GetLibraryFoldersPageQueryHandler(
             IOrderedQueryable<LibraryContainer> orderedQuery =
                 request.Sort switch
                 {
-                    LibraryFolderSort.RecentlyUpdated => foldersQuery
+                    LibraryFolderSort.RECENTLY_UPDATED => foldersQuery
                         .OrderByDescending(folder => folder.UpdatedAt)
                         .ThenBy(folder => folder.Id),
 
-                    LibraryFolderSort.Name => foldersQuery
+                    LibraryFolderSort.NAME => foldersQuery
                         .OrderBy(folder => folder.Name)
                         .ThenBy(folder => folder.Id),
 
-                    LibraryFolderSort.Newest => foldersQuery
+                    LibraryFolderSort.NEWEST => foldersQuery
                         .OrderByDescending(folder => folder.CreatedAt)
                         .ThenBy(folder => folder.Id),
 
@@ -157,8 +157,8 @@ public sealed class GetLibraryFoldersPageQueryHandler(
                             folder.ParentId!.Value,
                             folder.Depth,
                             folder.Name!.Value,
-                            folder.Color!.Value.ToString(),
-                            folder.Icon!.Value.ToString(),
+                            folder.Color!.Value.ToStableName(),
+                            folder.Icon!.Value.ToStableName(),
                             folder.DisplayOrder,
                             childFoldersCountByParent
                                 .GetValueOrDefault(folder.Id),
@@ -211,5 +211,5 @@ public sealed class GetLibraryFoldersPageQueryHandler(
     private static bool CanCreateChildFolder(
         LibraryContainer container) =>
         container.Depth <
-        LibraryContainer.MaxFolderDepth;
+        LibraryContainer.MAX_FOLDER_DEPTH;
 }

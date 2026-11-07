@@ -31,8 +31,8 @@ public sealed class MaterialContentConsistencyServiceTests
 
             Section section = Section.Create(
                 SectionName.Create("Section").Value,
-                SectionColor.Teal,
-                SectionIcon.Folder);
+                SectionColor.TEAL,
+                SectionIcon.FOLDER);
 
             LibraryContainer root =
                 LibraryContainer.CreateRoot(section.Id).Value;
@@ -40,13 +40,13 @@ public sealed class MaterialContentConsistencyServiceTests
             LibraryContainer folder = LibraryContainer.CreateFolder(
                 root,
                 FolderName.Create("Folder").Value,
-                FolderColor.Teal,
-                FolderIcon.Bookmark).Value;
+                FolderColor.TEAL,
+                FolderIcon.BOOKMARK).Value;
 
             Article article = Article.CreateInContainer(
                 folder.Id,
                 MaterialTitle.Create("Article").Value,
-                MaterialDifficulty.Medium,
+                MaterialDifficulty.MEDIUM,
                 MaterialIcon.DefaultArticle,
                 MaterialExperienceRewards.Create(50, 20).Value).Value;
 

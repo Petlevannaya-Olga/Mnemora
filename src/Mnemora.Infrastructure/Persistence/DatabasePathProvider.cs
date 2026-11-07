@@ -7,8 +7,8 @@ namespace Mnemora.Infrastructure.Persistence;
 
 public static class DatabasePathProvider
 {
-    private const string SystemDirectoryName = ".mnemora-data";
-    private const string DatabaseFileName = "mnemora.db";
+    private const string SYSTEM_DIRECTORY_NAME = ".mnemora-data";
+    private const string DATABASE_FILE_NAME = "mnemora.db";
 
     public static Result<string, Error> GetDatabasePath(string? storagePath)
     {
@@ -16,7 +16,7 @@ public static class DatabasePathProvider
 
         if (normalizedStoragePathResult.IsFailure) return normalizedStoragePathResult.Error;
 
-        return Path.Combine(normalizedStoragePathResult.Value, SystemDirectoryName, DatabaseFileName);
+        return Path.Combine(normalizedStoragePathResult.Value, SYSTEM_DIRECTORY_NAME, DATABASE_FILE_NAME);
     }
 
     public static Result<string, Error> CreateConnectionString(string? storagePath)

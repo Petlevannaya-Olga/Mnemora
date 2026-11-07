@@ -15,9 +15,9 @@ public sealed class GetLibraryMaterialsPageQueryValidator : AbstractValidator<Ge
         RuleFor(query => query.Search)
             .Must(search =>
                 string.IsNullOrWhiteSpace(search) ||
-                search.Trim().Length <= MaterialTitle.MaxLength)
+                search.Trim().Length <= MaterialTitle.MAX_LENGTH)
             .WithErrorCode("library.materials.search.too.long")
-            .WithMessage($"Поисковый запрос не должен превышать {MaterialTitle.MaxLength} символов.");
+            .WithMessage($"Поисковый запрос не должен превышать {MaterialTitle.MAX_LENGTH} символов.");
 
         RuleFor(query => query.Filter)
             .IsInEnum();

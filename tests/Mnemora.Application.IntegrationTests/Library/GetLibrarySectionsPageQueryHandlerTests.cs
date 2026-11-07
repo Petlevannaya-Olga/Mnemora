@@ -73,8 +73,8 @@ public sealed class GetLibrarySectionsPageQueryHandlerTests
             LibraryContainer.CreateFolder(
                 level1,
                 FolderName.Create("Nested").Value,
-                FolderColor.Teal,
-                FolderIcon.Folder).Value;
+                FolderColor.TEAL,
+                FolderIcon.FOLDER).Value;
 
         db.Context.LibraryContainers.Add(level2);
         await db.Context.SaveChangesAsync();
@@ -129,8 +129,8 @@ public sealed class GetLibrarySectionsPageQueryHandlerTests
 
         Section targetSection = Section.Create(
             SectionName.Create("Target").Value,
-            SectionColor.Teal,
-            SectionIcon.Folder);
+            SectionColor.TEAL,
+            SectionIcon.FOLDER);
 
         LibraryContainer targetRoot =
             db.AddSectionWithRoot(targetSection);
@@ -175,8 +175,8 @@ public sealed class GetLibrarySectionsPageQueryHandlerTests
 
         Section section = Section.Create(
             SectionName.Create("Section").Value,
-            SectionColor.Teal,
-            SectionIcon.Folder);
+            SectionColor.TEAL,
+            SectionIcon.FOLDER);
 
         LibraryContainer root =
             db.AddSectionWithRoot(section);
@@ -187,8 +187,8 @@ public sealed class GetLibrarySectionsPageQueryHandlerTests
                 LibraryContainer.CreateFolder(
                     root,
                     FolderName.Create($"Folder {index:D5}").Value,
-                    FolderColor.Teal,
-                    FolderIcon.Folder).Value);
+                    FolderColor.TEAL,
+                    FolderIcon.FOLDER).Value);
         }
 
         await db.Context.SaveChangesAsync();
@@ -215,10 +215,10 @@ public sealed class GetLibrarySectionsPageQueryHandlerTests
 
     private static GetLibrarySectionsPageQuery Query(
         int offset = 0,
-        int pageSize = LibraryPagingDefaults.PageSize) =>
+        int pageSize = LibraryPagingDefaults.PAGE_SIZE) =>
         new(
             Search: null,
-            LibrarySectionSort.Name,
+            LibrarySectionSort.NAME,
             offset,
             pageSize);
 }

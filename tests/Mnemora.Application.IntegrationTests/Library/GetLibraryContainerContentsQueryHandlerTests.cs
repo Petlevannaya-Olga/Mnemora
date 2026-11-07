@@ -36,15 +36,15 @@ public sealed class GetLibraryContainerContentsQueryHandlerTests
             LibraryContainer.CreateFolder(
                 root,
                 FolderName.Create("Algorithms").Value,
-                FolderColor.Teal,
-                FolderIcon.Folder).Value;
+                FolderColor.TEAL,
+                FolderIcon.FOLDER).Value;
 
         LibraryContainer nested =
             LibraryContainer.CreateFolder(
                 firstLevelFolder,
                 FolderName.Create("Memory").Value,
-                FolderColor.Teal,
-                FolderIcon.Folder).Value;
+                FolderColor.TEAL,
+                FolderIcon.FOLDER).Value;
 
         db.Context.LibraryContainers.AddRange(
             secondFolder,
@@ -115,15 +115,15 @@ public sealed class GetLibraryContainerContentsQueryHandlerTests
             LibraryContainer.CreateFolder(
                 level1,
                 FolderName.Create("Level 2").Value,
-                FolderColor.Teal,
-                FolderIcon.Folder).Value;
+                FolderColor.TEAL,
+                FolderIcon.FOLDER).Value;
 
         LibraryContainer level3 =
             LibraryContainer.CreateFolder(
                 level2,
                 FolderName.Create("Level 3").Value,
-                FolderColor.Teal,
-                FolderIcon.Folder).Value;
+                FolderColor.TEAL,
+                FolderIcon.FOLDER).Value;
 
         db.Context.LibraryContainers.AddRange(
             level2,
@@ -138,7 +138,7 @@ public sealed class GetLibraryContainerContentsQueryHandlerTests
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Container.Depth.Should().Be(
-            LibraryContainer.MaxFolderDepth);
+            LibraryContainer.MAX_FOLDER_DEPTH);
         result.Value.Container.IsFolder.Should().BeTrue();
         result.Value.CanCreateChildFolder.Should().BeFalse();
         result.Value.FoldersCount.Should().Be(0);
@@ -153,8 +153,8 @@ public sealed class GetLibraryContainerContentsQueryHandlerTests
 
         Section section = Section.Create(
             SectionName.Create("Section").Value,
-            SectionColor.Teal,
-            SectionIcon.Folder);
+            SectionColor.TEAL,
+            SectionIcon.FOLDER);
 
         LibraryContainer root =
             db.AddSectionWithRoot(section);
@@ -165,8 +165,8 @@ public sealed class GetLibraryContainerContentsQueryHandlerTests
                 LibraryContainer.CreateFolder(
                     root,
                     FolderName.Create($"Folder {index:D5}").Value,
-                    FolderColor.Teal,
-                    FolderIcon.Folder).Value);
+                    FolderColor.TEAL,
+                    FolderIcon.FOLDER).Value);
         }
 
         await db.Context.SaveChangesAsync();

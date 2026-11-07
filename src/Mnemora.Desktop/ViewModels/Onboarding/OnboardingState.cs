@@ -28,10 +28,10 @@ public sealed class OnboardingState
     {
         get => MarkdownEditor switch
         {
-            MarkdownEditorType.VisualStudioCode =>
+            MarkdownEditorType.VISUAL_STUDIO_CODE =>
                 IsVisualStudioCodeVerified,
 
-            MarkdownEditorType.Obsidian =>
+            MarkdownEditorType.OBSIDIAN =>
                 IsObsidianVerified,
 
             _ => false,
@@ -47,11 +47,11 @@ public sealed class OnboardingState
 
             switch (MarkdownEditor)
             {
-                case MarkdownEditorType.VisualStudioCode:
+                case MarkdownEditorType.VISUAL_STUDIO_CODE:
                     IsVisualStudioCodeVerified = true;
                     break;
 
-                case MarkdownEditorType.Obsidian:
+                case MarkdownEditorType.OBSIDIAN:
                     IsObsidianVerified = true;
                     break;
             }

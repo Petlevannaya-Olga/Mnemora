@@ -6,7 +6,7 @@ namespace Mnemora.Domain.Materials;
 
 public sealed class Article : Material
 {
-    public override MaterialType Type => MaterialType.Article;
+    public override MaterialType Type => MaterialType.ARTICLE;
 
     // EF Core
     private Article()

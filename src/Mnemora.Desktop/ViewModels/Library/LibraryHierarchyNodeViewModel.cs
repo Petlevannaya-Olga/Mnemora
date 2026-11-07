@@ -1,18 +1,27 @@
+using System.Text.Json.Serialization;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Mnemora.Contracts.Library;
 
 namespace Mnemora.Desktop.ViewModels.Library;
 
+#pragma warning disable CA1707
 public enum LibraryHierarchyNodeKind
 {
-    Library,
-    Section,
-    Folder,
-    Placeholder,
-    LoadMore,
-    Error,
+    [JsonStringEnumMemberName("Library")]
+    LIBRARY,
+    [JsonStringEnumMemberName("Section")]
+    SECTION,
+    [JsonStringEnumMemberName("Folder")]
+    FOLDER,
+    [JsonStringEnumMemberName("Placeholder")]
+    PLACEHOLDER,
+    [JsonStringEnumMemberName("LoadMore")]
+    LOAD_MORE,
+    [JsonStringEnumMemberName("Error")]
+    ERROR,
 }
+#pragma warning restore CA1707
 
 public sealed partial class LibraryHierarchyNodeViewModel : ObservableObject
 {
@@ -46,12 +55,12 @@ public sealed partial class LibraryHierarchyNodeViewModel : ObservableObject
     public int ChildFoldersCount { get; }
     public ObservableCollection<LibraryHierarchyNodeViewModel> Children { get; } = [];
 
-    public bool IsLibrary => Kind == LibraryHierarchyNodeKind.Library;
-    public bool IsSection => Kind == LibraryHierarchyNodeKind.Section;
-    public bool IsFolder => Kind == LibraryHierarchyNodeKind.Folder;
-    public bool IsPlaceholder => Kind == LibraryHierarchyNodeKind.Placeholder;
-    public bool IsLoadMore => Kind == LibraryHierarchyNodeKind.LoadMore;
-    public bool IsError => Kind == LibraryHierarchyNodeKind.Error;
+    public bool IsLibrary => Kind == LibraryHierarchyNodeKind.LIBRARY;
+    public bool IsSection => Kind == LibraryHierarchyNodeKind.SECTION;
+    public bool IsFolder => Kind == LibraryHierarchyNodeKind.FOLDER;
+    public bool IsPlaceholder => Kind == LibraryHierarchyNodeKind.PLACEHOLDER;
+    public bool IsLoadMore => Kind == LibraryHierarchyNodeKind.LOAD_MORE;
+    public bool IsError => Kind == LibraryHierarchyNodeKind.ERROR;
     public bool IsNavigationNode => IsLibrary || IsSection || IsFolder;
 
     [ObservableProperty]
@@ -69,7 +78,7 @@ public sealed partial class LibraryHierarchyNodeViewModel : ObservableObject
 
     public static LibraryHierarchyNodeViewModel CreateLibrary() =>
         new(
-            LibraryHierarchyNodeKind.Library,
+            LibraryHierarchyNodeKind.LIBRARY,
             "Библиотека",
             icon: "HOME");
 
@@ -81,7 +90,7 @@ public sealed partial class LibraryHierarchyNodeViewModel : ObservableObject
         ArgumentNullException.ThrowIfNull(parent);
 
         var node = new LibraryHierarchyNodeViewModel(
-            LibraryHierarchyNodeKind.Section,
+            LibraryHierarchyNodeKind.SECTION,
             source.Name,
             parent,
             source.RootContainerId,
@@ -102,7 +111,7 @@ public sealed partial class LibraryHierarchyNodeViewModel : ObservableObject
         ArgumentNullException.ThrowIfNull(parent);
 
         var node = new LibraryHierarchyNodeViewModel(
-            LibraryHierarchyNodeKind.Section,
+            LibraryHierarchyNodeKind.SECTION,
             root.Section.Name,
             parent,
             root.Container.Id,
@@ -123,7 +132,7 @@ public sealed partial class LibraryHierarchyNodeViewModel : ObservableObject
         ArgumentNullException.ThrowIfNull(parent);
 
         var node = new LibraryHierarchyNodeViewModel(
-            LibraryHierarchyNodeKind.Folder,
+            LibraryHierarchyNodeKind.FOLDER,
             source.Name,
             parent,
             source.Id,
@@ -144,7 +153,7 @@ public sealed partial class LibraryHierarchyNodeViewModel : ObservableObject
         ArgumentNullException.ThrowIfNull(parent);
 
         var node = new LibraryHierarchyNodeViewModel(
-            LibraryHierarchyNodeKind.Folder,
+            LibraryHierarchyNodeKind.FOLDER,
             contents.Container.Name,
             parent,
             contents.Container.Id,
@@ -161,7 +170,7 @@ public sealed partial class LibraryHierarchyNodeViewModel : ObservableObject
         LibraryHierarchyNodeViewModel parent,
         string name) =>
         new(
-            LibraryHierarchyNodeKind.LoadMore,
+            LibraryHierarchyNodeKind.LOAD_MORE,
             name,
             parent);
 
@@ -169,7 +178,7 @@ public sealed partial class LibraryHierarchyNodeViewModel : ObservableObject
         LibraryHierarchyNodeViewModel parent,
         string name) =>
         new(
-            LibraryHierarchyNodeKind.Error,
+            LibraryHierarchyNodeKind.ERROR,
             name,
             parent);
 
@@ -183,7 +192,7 @@ public sealed partial class LibraryHierarchyNodeViewModel : ObservableObject
 
         Children.Add(
             new LibraryHierarchyNodeViewModel(
-                LibraryHierarchyNodeKind.Placeholder,
+                LibraryHierarchyNodeKind.PLACEHOLDER,
                 "Загрузка...",
                 this));
     }

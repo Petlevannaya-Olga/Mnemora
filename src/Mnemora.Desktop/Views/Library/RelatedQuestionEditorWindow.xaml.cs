@@ -13,8 +13,8 @@ namespace Mnemora.Desktop.Views.Library;
 
 public partial class RelatedQuestionEditorWindow : Window
 {
-    private const string PromptSource = "Prompt";
-    private const string AnswerSource = "Answer";
+    private const string PROMPT_SOURCE = "Prompt";
+    private const string ANSWER_SOURCE = "Answer";
 
     public RelatedQuestionEditorWindow()
     {
@@ -85,7 +85,7 @@ public partial class RelatedQuestionEditorWindow : Window
     {
         var dialog = new OpenFileDialog
         {
-            Title = source == AnswerSource
+            Title = source == ANSWER_SOURCE
                 ? "Выбрать Markdown-файл эталонного ответа"
                 : "Выбрать Markdown-файл вопроса",
             Filter = "Markdown (*.md)|*.md",
@@ -110,7 +110,7 @@ public partial class RelatedQuestionEditorWindow : Window
             return;
         }
 
-        string? destinationPath = source == AnswerSource
+        string? destinationPath = source == ANSWER_SOURCE
             ? viewModel.RelatedQuestionAnswerPath
             : viewModel.RelatedQuestionPromptPath;
 
@@ -157,7 +157,7 @@ public partial class RelatedQuestionEditorWindow : Window
             }
 
             viewModel.SetRelatedQuestionFileConfigured(
-                source == AnswerSource,
+                source == ANSWER_SOURCE,
                 true);
             viewModel.SetRelatedQuestionEditorError(null);
         }
@@ -186,7 +186,7 @@ public partial class RelatedQuestionEditorWindow : Window
             return;
         }
 
-        string? path = source == AnswerSource
+        string? path = source == ANSWER_SOURCE
             ? viewModel.RelatedQuestionAnswerPath
             : viewModel.RelatedQuestionPromptPath;
 
@@ -206,7 +206,7 @@ public partial class RelatedQuestionEditorWindow : Window
                     encoderShouldEmitUTF8Identifier: false));
 
             viewModel.SetRelatedQuestionFileConfigured(
-                source == AnswerSource,
+                source == ANSWER_SOURCE,
                 true);
             viewModel.SetRelatedQuestionEditorError(null);
         }
@@ -235,7 +235,7 @@ public partial class RelatedQuestionEditorWindow : Window
             return;
         }
 
-        string? path = source == AnswerSource
+        string? path = source == ANSWER_SOURCE
             ? viewModel.RelatedQuestionAnswerPath
             : viewModel.RelatedQuestionPromptPath;
 
@@ -251,7 +251,7 @@ public partial class RelatedQuestionEditorWindow : Window
             }
 
             viewModel.SetRelatedQuestionFileConfigured(
-                source == AnswerSource,
+                source == ANSWER_SOURCE,
                 false);
             viewModel.SetRelatedQuestionEditorError(null);
         }
@@ -281,7 +281,7 @@ public partial class RelatedQuestionEditorWindow : Window
         string? path =
             string.Equals(
                 element.Tag as string,
-                AnswerSource,
+                ANSWER_SOURCE,
                 StringComparison.Ordinal)
                 ? viewModel.RelatedQuestionAnswerPath
                 : viewModel.RelatedQuestionPromptPath;
@@ -420,7 +420,7 @@ public partial class RelatedQuestionEditorWindow : Window
         out string source)
     {
         source = element.Tag as string ?? string.Empty;
-        return source is PromptSource or AnswerSource;
+        return source is PROMPT_SOURCE or ANSWER_SOURCE;
     }
 
     private static bool TryGetSingleMarkdownFile(
@@ -499,9 +499,9 @@ public partial class RelatedQuestionEditorWindow : Window
         string source) =>
         source switch
         {
-            PromptSource =>
+            PROMPT_SOURCE =>
                 "## Вопрос\n\n",
-            AnswerSource =>
+            ANSWER_SOURCE =>
                 "## Эталонный ответ\n\n",
             _ => throw new ArgumentOutOfRangeException(
                 nameof(source),

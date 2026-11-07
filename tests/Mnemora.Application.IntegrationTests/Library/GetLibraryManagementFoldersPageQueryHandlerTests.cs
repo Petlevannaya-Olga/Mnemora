@@ -45,8 +45,8 @@ public sealed class GetLibraryManagementFoldersPageQueryHandlerTests
         LibraryContainer nested = LibraryContainer.CreateFolder(
             folder,
             FolderName.Create("Nested").Value,
-            FolderColor.Teal,
-            FolderIcon.Folder).Value;
+            FolderColor.TEAL,
+            FolderIcon.FOLDER).Value;
 
         db.Context.LibraryContainers.Add(nested);
         await db.Context.SaveChangesAsync();
@@ -107,8 +107,8 @@ public sealed class GetLibraryManagementFoldersPageQueryHandlerTests
         LibraryContainer target = LibraryContainer.CreateFolder(
             root,
             FolderName.Create("ZZZ EF Core").Value,
-            FolderColor.Teal,
-            FolderIcon.Folder).Value;
+            FolderColor.TEAL,
+            FolderIcon.FOLDER).Value;
         db.Context.LibraryContainers.Add(target);
         await db.Context.SaveChangesAsync();
         db.Context.ChangeTracker.Clear();
@@ -204,15 +204,15 @@ public sealed class GetLibraryManagementFoldersPageQueryHandlerTests
     {
         Section section = Section.Create(
             SectionName.Create("Section").Value,
-            SectionColor.Teal,
-            SectionIcon.Folder);
+            SectionColor.TEAL,
+            SectionIcon.FOLDER);
 
         LibraryContainer root = db.AddSectionWithRoot(section);
         LibraryContainer folder = LibraryContainer.CreateFolder(
             root,
             FolderName.Create(folderName).Value,
-            FolderColor.Teal,
-            FolderIcon.Folder).Value;
+            FolderColor.TEAL,
+            FolderIcon.FOLDER).Value;
 
         db.Context.LibraryContainers.Add(folder);
         await db.Context.SaveChangesAsync();
@@ -228,17 +228,17 @@ public sealed class GetLibraryManagementFoldersPageQueryHandlerTests
         int exclusiveEnd,
         string prefix = "Folder")
     {
-        const int batchSize = 1_000;
+        const int BATCH_SIZE = 1_000;
         for (int index = startIndex; index < exclusiveEnd; index++)
         {
             LibraryContainer folder = LibraryContainer.CreateFolder(
                 root,
                 FolderName.Create($"{prefix} {index:D5}").Value,
-                FolderColor.Teal,
-                FolderIcon.Folder).Value;
+                FolderColor.TEAL,
+                FolderIcon.FOLDER).Value;
             db.Context.LibraryContainers.Add(folder);
 
-            if ((index - startIndex + 1) % batchSize == 0)
+            if ((index - startIndex + 1) % BATCH_SIZE == 0)
             {
                 await db.Context.SaveChangesAsync();
                 db.Context.ChangeTracker.Clear();
@@ -254,7 +254,7 @@ public sealed class GetLibraryManagementFoldersPageQueryHandlerTests
         Article.CreateInContainer(
             containerId,
             MaterialTitle.Create(title).Value,
-            MaterialDifficulty.Medium,
+            MaterialDifficulty.MEDIUM,
             MaterialIcon.DefaultArticle,
             MaterialExperienceRewards.Create(50, 20).Value,
             Array.Empty<MaterialTag>()).Value;
@@ -265,7 +265,7 @@ public sealed class GetLibraryManagementFoldersPageQueryHandlerTests
         Question.CreateStandaloneInContainer(
             containerId,
             MaterialTitle.Create(title).Value,
-            MaterialDifficulty.Medium,
+            MaterialDifficulty.MEDIUM,
             MaterialIcon.DefaultQuestion,
             MaterialExperienceRewards.Create(50, 20).Value,
             Array.Empty<MaterialTag>()).Value;
@@ -280,11 +280,11 @@ public sealed class GetLibraryManagementFoldersPageQueryHandlerTests
         Guid sectionId,
         string? search = null,
         int offset = 0,
-        int pageSize = LibraryPagingDefaults.PageSize) =>
+        int pageSize = LibraryPagingDefaults.PAGE_SIZE) =>
         new(
             sectionId,
             search,
-            LibraryManagementFolderPageSort.Name,
+            LibraryManagementFolderPageSort.NAME,
             offset,
             pageSize);
 }

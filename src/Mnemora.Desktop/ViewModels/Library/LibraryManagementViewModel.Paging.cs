@@ -13,28 +13,28 @@ namespace Mnemora.Desktop.ViewModels.Library;
 
 public sealed partial class LibraryManagementViewModel
 {
-    private const int SimpleSectionVisiblePageLimit = 7;
-    private const int SimpleSectionCachePageLimit = 10;
-    private const int SimpleFolderPageSize = LibraryPagingDefaults.PageSize;
-    private const int SimpleFolderVisiblePageLimit = 7;
-    private const int SimpleFolderCachePageLimit = 10;
-    private const int SimpleMaterialVisiblePageLimit = 7;
-    private const int SimpleMaterialCachePageLimit = 10;
+    private const int SIMPLE_SECTION_VISIBLE_PAGE_LIMIT = 7;
+    private const int SIMPLE_SECTION_CACHE_PAGE_LIMIT = 10;
+    private const int SIMPLE_FOLDER_PAGE_SIZE = LibraryPagingDefaults.PAGE_SIZE;
+    private const int SIMPLE_FOLDER_VISIBLE_PAGE_LIMIT = 7;
+    private const int SIMPLE_FOLDER_CACHE_PAGE_LIMIT = 10;
+    private const int SIMPLE_MATERIAL_VISIBLE_PAGE_LIMIT = 7;
+    private const int SIMPLE_MATERIAL_CACHE_PAGE_LIMIT = 10;
 
     private readonly BoundedPagedWindow<LibrarySectionOverviewDto> _simpleSectionWindow =
-        new(SimpleSectionPageSize, SimpleSectionVisiblePageLimit, SimpleSectionCachePageLimit);
+        new(SIMPLE_SECTION_PAGE_SIZE, SIMPLE_SECTION_VISIBLE_PAGE_LIMIT, SIMPLE_SECTION_CACHE_PAGE_LIMIT);
 
     private readonly Dictionary<int, Task<LibraryManagementSectionsPageDto?>> _simpleSectionInFlight = [];
     private readonly object _simpleSectionInFlightGate = new();
 
     private readonly BoundedPagedWindow<LibraryManagementFolderOverviewDto> _simpleFolderWindow =
-        new(SimpleFolderPageSize, SimpleFolderVisiblePageLimit, SimpleFolderCachePageLimit);
+        new(SIMPLE_FOLDER_PAGE_SIZE, SIMPLE_FOLDER_VISIBLE_PAGE_LIMIT, SIMPLE_FOLDER_CACHE_PAGE_LIMIT);
 
     private readonly Dictionary<int, Task<LibraryManagementFoldersPageDto?>> _simpleFolderInFlight = [];
     private readonly object _simpleFolderInFlightGate = new();
 
     private readonly BoundedPageCache<LibraryManagementMaterialOverviewDto> _simpleMaterialPageCache =
-        new(SimpleMaterialCachePageLimit);
+        new(SIMPLE_MATERIAL_CACHE_PAGE_LIMIT);
 
     private readonly LinkedList<int> _simpleMaterialVisiblePageOffsets = [];
     private readonly Dictionary<int, Task<LibraryManagementMaterialsPageDto?>> _simpleMaterialInFlight = [];
@@ -108,7 +108,7 @@ public sealed partial class LibraryManagementViewModel
     public int SimpleMaterialWindowEndOffset => _simpleMaterialWindowEndOffset;
     public int SimpleMaterialCurrentPageOffset => _simpleMaterialCurrentPageOffset;
     public int SimpleMaterialCachedPageCount => _simpleMaterialPageCache.Count;
-    public int SimpleMaterialCachedItemUpperBound => SimpleMaterialCachePageLimit * SimpleMaterialPageSize;
+    public int SimpleMaterialCachedItemUpperBound => SIMPLE_MATERIAL_CACHE_PAGE_LIMIT * SIMPLE_MATERIAL_PAGE_SIZE;
 
     public async Task LoadNextSimpleSectionWindowAsync(CancellationToken cancellationToken = default)
     {
@@ -124,7 +124,7 @@ public sealed partial class LibraryManagementViewModel
                 offset,
                 out IReadOnlyList<LibrarySectionOverviewDto> cached))
         {
-            _simpleSectionWindow.ShowPage(offset, cached, PageWindowInsert.Append);
+            _simpleSectionWindow.ShowPage(offset, cached, PageWindowInsert.APPEND);
             RebuildSimpleSectionWindow();
             SyncSimpleSectionPagingProperties();
             return;
@@ -160,7 +160,7 @@ public sealed partial class LibraryManagementViewModel
                 return;
             }
 
-            _simpleSectionWindow.ShowPage(offset, page.Items, PageWindowInsert.Append);
+            _simpleSectionWindow.ShowPage(offset, page.Items, PageWindowInsert.APPEND);
             RebuildSimpleSectionWindow();
             SyncSimpleSectionPagingProperties();
         }
@@ -191,7 +191,7 @@ public sealed partial class LibraryManagementViewModel
                 offset,
                 out IReadOnlyList<LibrarySectionOverviewDto> cached))
         {
-            _simpleSectionWindow.ShowPage(offset, cached, PageWindowInsert.Prepend);
+            _simpleSectionWindow.ShowPage(offset, cached, PageWindowInsert.PREPEND);
             RebuildSimpleSectionWindow();
             SyncSimpleSectionPagingProperties();
             return;
@@ -221,7 +221,7 @@ public sealed partial class LibraryManagementViewModel
             }
 
             ApplySectionPageTotals(page);
-            _simpleSectionWindow.ShowPage(offset, page.Items, PageWindowInsert.Prepend);
+            _simpleSectionWindow.ShowPage(offset, page.Items, PageWindowInsert.PREPEND);
             RebuildSimpleSectionWindow();
             SyncSimpleSectionPagingProperties();
         }
@@ -349,7 +349,7 @@ public sealed partial class LibraryManagementViewModel
                 search,
                 sort,
                 offset,
-                SimpleSectionPageSize);
+                SIMPLE_SECTION_PAGE_SIZE);
 
             var result = await queryDispatcher.SendAsync<
                 GetLibraryManagementSectionsPageQuery,
@@ -511,7 +511,7 @@ public sealed partial class LibraryManagementViewModel
             }
 
             ApplyFolderPageTotals(page);
-            _simpleFolderWindow.ShowPage(0, page.Items, PageWindowInsert.Append);
+            _simpleFolderWindow.ShowPage(0, page.Items, PageWindowInsert.APPEND);
             RebuildSimpleFolderWindow();
             NotifySimpleFoldersStateChanged();
         }
@@ -539,7 +539,7 @@ public sealed partial class LibraryManagementViewModel
                 offset,
                 out IReadOnlyList<LibraryManagementFolderOverviewDto> cached))
         {
-            _simpleFolderWindow.ShowPage(offset, cached, PageWindowInsert.Append);
+            _simpleFolderWindow.ShowPage(offset, cached, PageWindowInsert.APPEND);
             RebuildSimpleFolderWindow();
             NotifySimpleFoldersStateChanged();
             return;
@@ -575,7 +575,7 @@ public sealed partial class LibraryManagementViewModel
                 return;
             }
 
-            _simpleFolderWindow.ShowPage(offset, page.Items, PageWindowInsert.Append);
+            _simpleFolderWindow.ShowPage(offset, page.Items, PageWindowInsert.APPEND);
             RebuildSimpleFolderWindow();
             NotifySimpleFoldersStateChanged();
         }
@@ -609,7 +609,7 @@ public sealed partial class LibraryManagementViewModel
                 offset,
                 out IReadOnlyList<LibraryManagementFolderOverviewDto> cached))
         {
-            _simpleFolderWindow.ShowPage(offset, cached, PageWindowInsert.Prepend);
+            _simpleFolderWindow.ShowPage(offset, cached, PageWindowInsert.PREPEND);
             RebuildSimpleFolderWindow();
             NotifySimpleFoldersStateChanged();
             return;
@@ -639,7 +639,7 @@ public sealed partial class LibraryManagementViewModel
             }
 
             ApplyFolderPageTotals(page);
-            _simpleFolderWindow.ShowPage(offset, page.Items, PageWindowInsert.Prepend);
+            _simpleFolderWindow.ShowPage(offset, page.Items, PageWindowInsert.PREPEND);
             RebuildSimpleFolderWindow();
             NotifySimpleFoldersStateChanged();
         }
@@ -808,7 +808,7 @@ public sealed partial class LibraryManagementViewModel
                 search,
                 ToFolderPageSort(sort),
                 offset,
-                SimpleFolderPageSize);
+                SIMPLE_FOLDER_PAGE_SIZE);
 
             var result = await queryDispatcher.SendAsync<
                 GetLibraryManagementFoldersPageQuery,
@@ -1041,7 +1041,7 @@ public sealed partial class LibraryManagementViewModel
 
         int loadVersion = _simpleMaterialLoadVersion;
         int firstOffset = _simpleMaterialVisiblePageOffsets.First?.Value ?? 0;
-        int offset = Math.Max(0, firstOffset - SimpleMaterialPageSize);
+        int offset = Math.Max(0, firstOffset - SIMPLE_MATERIAL_PAGE_SIZE);
 
         if (_simpleMaterialPageCache.TryGet(
                 offset,
@@ -1239,7 +1239,7 @@ public sealed partial class LibraryManagementViewModel
                 ToMaterialPageFilter(filter),
                 ToMaterialPageSort(sort),
                 offset,
-                SimpleMaterialPageSize);
+                SIMPLE_MATERIAL_PAGE_SIZE);
 
             var result = await queryDispatcher.SendAsync<
                 GetLibraryManagementMaterialsPageQuery,
@@ -1307,7 +1307,7 @@ public sealed partial class LibraryManagementViewModel
 
     private void TrimVisibleMaterialPagesFromStart()
     {
-        while (_simpleMaterialVisiblePageOffsets.Count > SimpleMaterialVisiblePageLimit)
+        while (_simpleMaterialVisiblePageOffsets.Count > SIMPLE_MATERIAL_VISIBLE_PAGE_LIMIT)
         {
             _simpleMaterialVisiblePageOffsets.RemoveFirst();
         }
@@ -1315,7 +1315,7 @@ public sealed partial class LibraryManagementViewModel
 
     private void TrimVisibleMaterialPagesFromEnd()
     {
-        while (_simpleMaterialVisiblePageOffsets.Count > SimpleMaterialVisiblePageLimit)
+        while (_simpleMaterialVisiblePageOffsets.Count > SIMPLE_MATERIAL_VISIBLE_PAGE_LIMIT)
         {
             _simpleMaterialVisiblePageOffsets.RemoveLast();
         }
@@ -1357,12 +1357,12 @@ public sealed partial class LibraryManagementViewModel
         int pageOffset = LibraryRangeTextFormatter.GetPageStartOffset(
             _simpleMaterialWindowStartOffset,
             verticalOffset,
-            SimpleMaterialPageSize);
+            SIMPLE_MATERIAL_PAGE_SIZE);
 
         if (_simpleMaterialsFilteredTotalCount > 0)
         {
             int lastPageOffset =
-                (_simpleMaterialsFilteredTotalCount - 1) / SimpleMaterialPageSize * SimpleMaterialPageSize;
+                (_simpleMaterialsFilteredTotalCount - 1) / SIMPLE_MATERIAL_PAGE_SIZE * SIMPLE_MATERIAL_PAGE_SIZE;
             pageOffset = Math.Min(pageOffset, lastPageOffset);
         }
 
@@ -1379,7 +1379,7 @@ public sealed partial class LibraryManagementViewModel
     private string FormatSimpleMaterialRangeText()
     {
         int visibleCount = Math.Min(
-            SimpleMaterialPageSize,
+            SIMPLE_MATERIAL_PAGE_SIZE,
             Math.Max(0, _simpleMaterialsFilteredTotalCount - _simpleMaterialCurrentPageOffset));
 
         return LibraryRangeTextFormatter.Format(
@@ -1392,29 +1392,29 @@ public sealed partial class LibraryManagementViewModel
     private static LibraryManagementFolderPageSort ToFolderPageSort(LibraryManagementFolderSort sort) =>
         sort switch
         {
-            LibraryManagementFolderSort.Custom => LibraryManagementFolderPageSort.Custom,
-            LibraryManagementFolderSort.RecentActivity => LibraryManagementFolderPageSort.RecentActivity,
-            LibraryManagementFolderSort.Name => LibraryManagementFolderPageSort.Name,
-            LibraryManagementFolderSort.Newest => LibraryManagementFolderPageSort.Newest,
-            _ => LibraryManagementFolderPageSort.Custom,
+            LibraryManagementFolderSort.CUSTOM => LibraryManagementFolderPageSort.CUSTOM,
+            LibraryManagementFolderSort.RECENT_ACTIVITY => LibraryManagementFolderPageSort.RECENT_ACTIVITY,
+            LibraryManagementFolderSort.NAME => LibraryManagementFolderPageSort.NAME,
+            LibraryManagementFolderSort.NEWEST => LibraryManagementFolderPageSort.NEWEST,
+            _ => LibraryManagementFolderPageSort.CUSTOM,
         };
 
     private static LibraryManagementMaterialPageFilter ToMaterialPageFilter(LibraryManagementMaterialFilter filter) =>
         filter switch
         {
-            LibraryManagementMaterialFilter.Articles => LibraryManagementMaterialPageFilter.Articles,
-            LibraryManagementMaterialFilter.Questions => LibraryManagementMaterialPageFilter.Questions,
-            _ => LibraryManagementMaterialPageFilter.All,
+            LibraryManagementMaterialFilter.ARTICLES => LibraryManagementMaterialPageFilter.ARTICLES,
+            LibraryManagementMaterialFilter.QUESTIONS => LibraryManagementMaterialPageFilter.QUESTIONS,
+            _ => LibraryManagementMaterialPageFilter.ALL,
         };
 
     private static LibraryManagementMaterialPageSort ToMaterialPageSort(LibraryManagementMaterialSort sort) =>
         sort switch
         {
-            LibraryManagementMaterialSort.Custom => LibraryManagementMaterialPageSort.Custom,
-            LibraryManagementMaterialSort.RecentActivity => LibraryManagementMaterialPageSort.RecentActivity,
-            LibraryManagementMaterialSort.Name => LibraryManagementMaterialPageSort.Name,
-            LibraryManagementMaterialSort.Newest => LibraryManagementMaterialPageSort.Newest,
-            _ => LibraryManagementMaterialPageSort.Custom,
+            LibraryManagementMaterialSort.CUSTOM => LibraryManagementMaterialPageSort.CUSTOM,
+            LibraryManagementMaterialSort.RECENT_ACTIVITY => LibraryManagementMaterialPageSort.RECENT_ACTIVITY,
+            LibraryManagementMaterialSort.NAME => LibraryManagementMaterialPageSort.NAME,
+            LibraryManagementMaterialSort.NEWEST => LibraryManagementMaterialPageSort.NEWEST,
+            _ => LibraryManagementMaterialPageSort.CUSTOM,
         };
 
     private static async Task YieldForPagingLoaderAsync(CancellationToken cancellationToken)

@@ -1,21 +1,32 @@
-﻿using Mnemora.Shared.Abstractions;
+﻿using System.Text.Json.Serialization;
+using Mnemora.Shared.Abstractions;
 
 namespace Mnemora.Application.Library.GetSectionManagementItemsPage;
 
+#pragma warning disable CA1707
 public enum LibrarySectionManagementItemSort
 {
-    Custom,
-    RecentActivity,
-    Name,
-    Newest,
+    [JsonStringEnumMemberName("Custom")]
+    CUSTOM,
+    [JsonStringEnumMemberName("RecentActivity")]
+    RECENT_ACTIVITY,
+    [JsonStringEnumMemberName("Name")]
+    NAME,
+    [JsonStringEnumMemberName("Newest")]
+    NEWEST,
 }
+#pragma warning restore CA1707
 
 public enum LibrarySectionManagementItemFilter
 {
-    All,
-    Folders,
-    Articles,
-    Questions,
+    [JsonStringEnumMemberName("All")]
+    ALL,
+    [JsonStringEnumMemberName("Folders")]
+    FOLDERS,
+    [JsonStringEnumMemberName("Articles")]
+    ARTICLES,
+    [JsonStringEnumMemberName("Questions")]
+    QUESTIONS,
 }
 
 public sealed record GetLibrarySectionManagementItemsPageQuery(

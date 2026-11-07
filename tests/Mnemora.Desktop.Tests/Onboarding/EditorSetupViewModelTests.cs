@@ -24,7 +24,7 @@ public sealed class EditorSetupViewModelTests : IDisposable
         var state = new OnboardingState
         {
             StoragePath = _storagePath,
-            MarkdownEditor = MarkdownEditorType.VisualStudioCode,
+            MarkdownEditor = MarkdownEditorType.VISUAL_STUDIO_CODE,
         };
 
         var viewModel = new EditorSetupViewModel(
@@ -55,7 +55,7 @@ public sealed class EditorSetupViewModelTests : IDisposable
         var state = new OnboardingState
         {
             StoragePath = _storagePath,
-            MarkdownEditor = MarkdownEditorType.Obsidian,
+            MarkdownEditor = MarkdownEditorType.OBSIDIAN,
             ObsidianVaultPath = _storagePath,
             IsObsidianVerified = true,
         };

@@ -282,12 +282,12 @@ public sealed class CompletionSetupViewModelTests
             _storagePath,
             ".mnemora");
 
-        const string markerContent =
+        const string MARKER_CONTENT =
             "{\"formatVersion\":999}";
 
         await File.WriteAllTextAsync(
             markerPath,
-            markerContent);
+            MARKER_CONTENT);
         await File.WriteAllTextAsync(
             Path.Combine(
                 _storagePath,
@@ -311,7 +311,7 @@ public sealed class CompletionSetupViewModelTests
             context.ViewModel.CompletionErrorMessage,
             StringComparison.OrdinalIgnoreCase);
         Assert.Equal(
-            markerContent,
+            MARKER_CONTENT,
             await File.ReadAllTextAsync(
                 markerPath));
         Assert.Equal(0, context.Database.CallCount);
@@ -320,10 +320,10 @@ public sealed class CompletionSetupViewModelTests
 
     [Theory]
     [InlineData(
-        MarkdownEditorType.VisualStudioCode,
+        MarkdownEditorType.VISUAL_STUDIO_CODE,
         "Visual Studio Code не найден. Проверьте путь к Code.exe.")]
     [InlineData(
-        MarkdownEditorType.Obsidian,
+        MarkdownEditorType.OBSIDIAN,
         "Obsidian не найден. Установите приложение и повторите проверку.")]
     public async Task OpenMnemoraAsync_WhenEditorApplicationWasUninstalled_RequiresEditorSetup(
         MarkdownEditorType editor,
@@ -428,7 +428,7 @@ public sealed class CompletionSetupViewModelTests
             editorValidationResult = null,
         Action? onDatabaseInitialize = null,
         MarkdownEditorType editor =
-            MarkdownEditorType.VisualStudioCode)
+            MarkdownEditorType.VISUAL_STUDIO_CODE)
     {
         var state = new OnboardingState
         {
@@ -436,17 +436,17 @@ public sealed class CompletionSetupViewModelTests
             StoragePath = _storagePath,
             MarkdownEditor = editor,
             VisualStudioCodePath =
-                editor == MarkdownEditorType.VisualStudioCode
+                editor == MarkdownEditorType.VISUAL_STUDIO_CODE
                     ? "Code.exe"
                     : null,
             ObsidianVaultPath =
-                editor == MarkdownEditorType.Obsidian
+                editor == MarkdownEditorType.OBSIDIAN
                     ? _storagePath
                     : null,
             IsVisualStudioCodeVerified =
-                editor == MarkdownEditorType.VisualStudioCode,
+                editor == MarkdownEditorType.VISUAL_STUDIO_CODE,
             IsObsidianVerified =
-                editor == MarkdownEditorType.Obsidian,
+                editor == MarkdownEditorType.OBSIDIAN,
         };
 
         var navigation =

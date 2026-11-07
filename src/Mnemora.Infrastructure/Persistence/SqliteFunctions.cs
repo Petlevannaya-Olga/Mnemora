@@ -2,5 +2,7 @@
 
 internal static class SqliteFunctions
 {
-    public const string UnicodeContains = "MNEMORA_UNICODE_CONTAINS";
+    #pragma warning disable CA1707
+    public const string UNICODE_CONTAINS = "MNEMORA_UNICODE_CONTAINS";
+    #pragma warning restore CA1707
 }

@@ -5,7 +5,7 @@ namespace Mnemora.Desktop.Views.Library;
 
 internal static class LibraryScrollAnchor
 {
-    private const double OffsetTolerance = 0.01;
+    private const double OFFSET_TOLERANCE = 0.01;
 
     public static async Task RestoreAsync(
         Dispatcher dispatcher,
@@ -21,7 +21,7 @@ internal static class LibraryScrollAnchor
         double maximumOffset = Math.Max(0, scrollViewer.ScrollableHeight);
         double targetOffset = Math.Clamp(verticalOffset, 0, maximumOffset);
 
-        if (Math.Abs(scrollViewer.VerticalOffset - targetOffset) > OffsetTolerance)
+        if (Math.Abs(scrollViewer.VerticalOffset - targetOffset) > OFFSET_TOLERANCE)
         {
             scrollViewer.ScrollToVerticalOffset(targetOffset);
         }

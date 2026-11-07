@@ -105,7 +105,7 @@ public sealed class GetMaterialLearningLinkOptionsQueryHandler(
         return new MaterialLearningLinkOptionDto(
             material.Id.Value,
             material.Title.Value,
-            material.Difficulty.ToString(),
+            material.Difficulty.ToStableName(),
             material.ExperienceRewards.StudyPoints,
             material.ExperienceRewards.ReviewPoints);
     }

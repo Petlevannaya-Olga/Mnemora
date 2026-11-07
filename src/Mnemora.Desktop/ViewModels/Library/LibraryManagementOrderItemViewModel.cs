@@ -45,7 +45,7 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
         Id = section.Id;
         Name = section.Name;
         Details = "Раздел";
-        Target = LibraryOrderTarget.Sections;
+        Target = LibraryOrderTarget.SECTIONS;
         IconKind = ResolveIcon(section.Icon, Target, Details);
         _position = position;
     }
@@ -63,7 +63,7 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
         Id = folder.Id;
         Name = folder.Name;
         Details = "Папка";
-        Target = LibraryOrderTarget.Folders;
+        Target = LibraryOrderTarget.FOLDERS;
         IconKind = ResolveIcon(folder.Icon, Target, Details);
         _position = position;
     }
@@ -84,7 +84,7 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
         Details = string.Equals(material.Type, "Question", StringComparison.OrdinalIgnoreCase)
             ? "Вопрос"
             : "Статья";
-        Target = LibraryOrderTarget.Materials;
+        Target = LibraryOrderTarget.MATERIALS;
         ArticleQuestionCount = material.ArticleQuestionCount;
         IconKind = ResolveIcon(material.Icon, Target, Details);
         _position = position;
@@ -103,12 +103,12 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
         SectionManagementItem = item;
         Id = item.Id;
         Name = item.Name;
-        Details = item.Kind == LibrarySectionManagementItemKind.Folder
+        Details = item.Kind == LibrarySectionManagementItemKind.FOLDER
             ? "Папка"
             : string.Equals(item.MaterialType, "Question", StringComparison.OrdinalIgnoreCase)
                 ? "Вопрос"
                 : "Статья";
-        Target = LibraryOrderTarget.Materials;
+        Target = LibraryOrderTarget.MATERIALS;
         ArticleQuestionCount = item.ArticleQuestionCount;
         IconKind = ResolveIcon(item.Icon, Target, Details);
         _position = position;
@@ -154,7 +154,7 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
         (Material is not null && !IsLinkedQuestion);
 
     public bool IsManagementFolder =>
-        SectionManagementItem?.Kind == LibrarySectionManagementItemKind.Folder;
+        SectionManagementItem?.Kind == LibrarySectionManagementItemKind.FOLDER;
 
     public string ManagementItemTypeText => IsManagementFolder
         ? "Папка"
@@ -426,9 +426,9 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
 
         return target switch
         {
-            LibraryOrderTarget.Sections => PackIconKind.FolderOutline,
-            LibraryOrderTarget.Folders => PackIconKind.BookOpenPageVariant,
-            LibraryOrderTarget.Materials when details == "Вопрос" => PackIconKind.HelpCircleOutline,
+            LibraryOrderTarget.SECTIONS => PackIconKind.FolderOutline,
+            LibraryOrderTarget.FOLDERS => PackIconKind.BookOpenPageVariant,
+            LibraryOrderTarget.MATERIALS when details == "Вопрос" => PackIconKind.HelpCircleOutline,
             _ => PackIconKind.FileDocumentOutline,
         };
     }

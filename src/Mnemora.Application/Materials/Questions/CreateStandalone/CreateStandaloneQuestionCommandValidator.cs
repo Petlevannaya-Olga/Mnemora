@@ -22,10 +22,10 @@ public sealed class CreateStandaloneQuestionCommandValidator
             .When(command => command.IconKey is not null);
 
         RuleFor(command => command.StudyPoints)
-            .InclusiveBetween(MaterialExperienceRewards.MinPoints, MaterialExperienceRewards.MaxPoints);
+            .InclusiveBetween(MaterialExperienceRewards.MIN_POINTS, MaterialExperienceRewards.MAX_POINTS);
 
         RuleFor(command => command.ReviewPoints)
-            .InclusiveBetween(MaterialExperienceRewards.MinPoints, MaterialExperienceRewards.MaxPoints);
+            .InclusiveBetween(MaterialExperienceRewards.MIN_POINTS, MaterialExperienceRewards.MAX_POINTS);
 
         RuleFor(command => command.ReviewPoints)
             .LessThan(command => command.StudyPoints)
@@ -40,8 +40,8 @@ public sealed class CreateStandaloneQuestionCommandValidator
             .WithMessage("Эталонный ответ обязателен.");
 
         RuleFor(command => command.Tags)
-            .Must(tags => tags is null || tags.Count <= Material.MaxTags)
-            .WithMessage($"Материал может содержать не более {Material.MaxTags} тегов.");
+            .Must(tags => tags is null || tags.Count <= Material.MAX_TAGS)
+            .WithMessage($"Материал может содержать не более {Material.MAX_TAGS} тегов.");
 
         RuleFor(command => command.Tags)
             .Must(TagsAreUnique)

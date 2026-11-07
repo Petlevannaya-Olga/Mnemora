@@ -180,6 +180,6 @@ public sealed class LibraryContainerPersistenceTests
         LibraryContainer.CreateFolder(
             parent,
             FolderName.Create(name).Value,
-            FolderColor.Teal,
-            FolderIcon.Folder).Value;
+            FolderColor.TEAL,
+            FolderIcon.FOLDER).Value;
 }

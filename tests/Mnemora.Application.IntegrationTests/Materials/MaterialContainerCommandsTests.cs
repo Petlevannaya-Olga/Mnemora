@@ -30,7 +30,7 @@ public sealed class MaterialContainerCommandsTests
             ICommandHandler<Guid, CreateArticleCommand>>();
 
         var result = await handler.Handle(
-            new CreateArticleCommand(rootId, "Root article", MaterialDifficulty.Medium,
+            new CreateArticleCommand(rootId, "Root article", MaterialDifficulty.MEDIUM,
                 null, 50, 20, "# In root"), CancellationToken.None);
 
         Assert.True(result.IsSuccess);
@@ -57,7 +57,7 @@ public sealed class MaterialContainerCommandsTests
             ICommandHandler<Guid, CreateStandaloneQuestionCommand>>();
 
         var result = await handler.Handle(
-            new CreateStandaloneQuestionCommand(folderId, "Question", MaterialDifficulty.Easy,
+            new CreateStandaloneQuestionCommand(folderId, "Question", MaterialDifficulty.EASY,
                 null, 50, 20, "Prompt", "Answer"), CancellationToken.None);
 
         Assert.True(result.IsSuccess);
@@ -79,11 +79,11 @@ public sealed class MaterialContainerCommandsTests
         Article article = Article.CreateInContainer(
             LibraryContainerId.Create(rootId).Value,
             MaterialTitle.Create("Original article").Value,
-            MaterialDifficulty.Medium, MaterialIcon.DefaultArticle,
+            MaterialDifficulty.MEDIUM, MaterialIcon.DefaultArticle,
             MaterialExperienceRewards.Create(50, 20).Value).Value;
         Question question = Question.CreateForArticle(
             article, MaterialTitle.Create("Linked question").Value,
-            MaterialDifficulty.Medium, MaterialIcon.DefaultQuestion,
+            MaterialDifficulty.MEDIUM, MaterialIcon.DefaultQuestion,
             MaterialExperienceRewards.Create(50, 20).Value).Value;
 
         await using (var db = await factory.CreateDbContextAsync())
@@ -97,7 +97,7 @@ public sealed class MaterialContainerCommandsTests
             ICommandHandler<Guid, UpdateArticleCommand>>();
         var result = await handler.Handle(
             new UpdateArticleCommand(article.Id.Value, folderId, "Moved article",
-                MaterialDifficulty.Medium, null, 50, 20), CancellationToken.None);
+                MaterialDifficulty.MEDIUM, null, 50, 20), CancellationToken.None);
 
         Assert.True(result.IsSuccess);
         await using var verification = await factory.CreateDbContextAsync();
@@ -119,7 +119,7 @@ public sealed class MaterialContainerCommandsTests
         Question question = Question.CreateStandaloneInContainer(
             LibraryContainerId.Create(folderId).Value,
             MaterialTitle.Create("Original question").Value,
-            MaterialDifficulty.Easy, MaterialIcon.DefaultQuestion,
+            MaterialDifficulty.EASY, MaterialIcon.DefaultQuestion,
             MaterialExperienceRewards.Create(50, 20).Value).Value;
 
         await using (var db = await factory.CreateDbContextAsync())
@@ -133,7 +133,7 @@ public sealed class MaterialContainerCommandsTests
             ICommandHandler<Guid, UpdateQuestionCommand>>();
         var result = await handler.Handle(
             new UpdateQuestionCommand(question.Id.Value, rootId, null,
-                "Moved question", MaterialDifficulty.Medium, null, 50, 20),
+                "Moved question", MaterialDifficulty.MEDIUM, null, 50, 20),
             CancellationToken.None);
 
         Assert.True(result.IsSuccess);
@@ -154,12 +154,12 @@ public sealed class MaterialContainerCommandsTests
         Article article = Article.CreateInContainer(
             LibraryContainerId.Create(folderId).Value,
             MaterialTitle.Create("Parent article").Value,
-            MaterialDifficulty.Medium, MaterialIcon.DefaultArticle,
+            MaterialDifficulty.MEDIUM, MaterialIcon.DefaultArticle,
             MaterialExperienceRewards.Create(50, 20).Value).Value;
         Question question = Question.CreateStandaloneInContainer(
             LibraryContainerId.Create(rootId).Value,
             MaterialTitle.Create("Standalone").Value,
-            MaterialDifficulty.Easy, MaterialIcon.DefaultQuestion,
+            MaterialDifficulty.EASY, MaterialIcon.DefaultQuestion,
             MaterialExperienceRewards.Create(50, 20).Value).Value;
 
         await using (var db = await factory.CreateDbContextAsync())
@@ -173,7 +173,7 @@ public sealed class MaterialContainerCommandsTests
             ICommandHandler<Guid, UpdateQuestionCommand>>();
         var result = await handler.Handle(
             new UpdateQuestionCommand(question.Id.Value, null, article.Id.Value,
-                "Attached", MaterialDifficulty.Medium, null, 50, 20),
+                "Attached", MaterialDifficulty.MEDIUM, null, 50, 20),
             CancellationToken.None);
 
         Assert.True(result.IsSuccess);
@@ -194,7 +194,7 @@ public sealed class MaterialContainerCommandsTests
         var handler = scope.ServiceProvider.GetRequiredService<
             ICommandHandler<Guid, CreateArticleCommand>>();
         var result = await handler.Handle(
-            new CreateArticleCommand(Guid.NewGuid(), "Orphan", MaterialDifficulty.Easy,
+            new CreateArticleCommand(Guid.NewGuid(), "Orphan", MaterialDifficulty.EASY,
                 null, 50, 20, "No parent"), CancellationToken.None);
 
         Assert.True(result.IsFailure);
@@ -208,14 +208,14 @@ public sealed class MaterialContainerCommandsTests
     {
         Section section = Section.Create(
             SectionName.Create("Materials section").Value,
-            SectionColor.Teal, SectionIcon.Folder);
+            SectionColor.TEAL, SectionIcon.FOLDER);
         LibraryContainer root = LibraryContainer.CreateRoot(section.Id).Value;
         LibraryContainer parent = LibraryContainer.CreateFolder(
             root, FolderName.Create("Backend").Value,
-            FolderColor.Teal, FolderIcon.Folder).Value;
+            FolderColor.TEAL, FolderIcon.FOLDER).Value;
         LibraryContainer nested = LibraryContainer.CreateFolder(
             parent, FolderName.Create("CSharp").Value,
-            FolderColor.Teal, FolderIcon.Folder).Value;
+            FolderColor.TEAL, FolderIcon.FOLDER).Value;
 
         var factory = host.Services.GetRequiredService<IDbContextFactory<MnemoraDbContext>>();
         await using var db = await factory.CreateDbContextAsync();

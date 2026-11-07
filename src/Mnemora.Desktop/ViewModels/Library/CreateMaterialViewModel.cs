@@ -27,14 +27,14 @@ public sealed partial class CreateMaterialViewModel(
     ICommandDispatcher commandDispatcher)
     : ViewModelBase
 {
-    private const string MaterialsDirectoryName = "materials";
-    private const string DraftsDirectoryName = "_drafts";
-    private const int ExperiencePointsStep = 5;
+    private const string MATERIALS_DIRECTORY_NAME = "materials";
+    private const string DRAFTS_DIRECTORY_NAME = "_drafts";
+    private const int EXPERIENCE_POINTS_STEP = 5;
 
-    private const PackIconKind DefaultMaterialIconKind =
+    private const PackIconKind DEFAULT_MATERIAL_ICON_KIND =
         PackIconKind.FileDocumentOutline;
 
-    private const PackIconKind DefaultRelatedQuestionIconKind =
+    private const PackIconKind DEFAULT_RELATED_QUESTION_ICON_KIND =
         PackIconKind.HelpCircleOutline;
 
     private Action? _closeRequested;
@@ -45,7 +45,7 @@ public sealed partial class CreateMaterialViewModel(
 
     [ObservableProperty]
     private PackIconKind _selectedIconKind =
-        DefaultMaterialIconKind;
+        DEFAULT_MATERIAL_ICON_KIND;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsArticleMaterial))]
@@ -97,13 +97,13 @@ public sealed partial class CreateMaterialViewModel(
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanSaveRelatedQuestion))]
     private MaterialDifficulty _relatedQuestionDifficulty =
-        MaterialDifficulty.Medium;
+        MaterialDifficulty.MEDIUM;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(RelatedQuestionIconKey))]
     [NotifyPropertyChangedFor(nameof(CanSaveRelatedQuestion))]
     private PackIconKind _relatedQuestionIconKind =
-        DefaultRelatedQuestionIconKind;
+        DEFAULT_RELATED_QUESTION_ICON_KIND;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(RelatedQuestionValidationMessage))]
@@ -179,9 +179,9 @@ public sealed partial class CreateMaterialViewModel(
     public IReadOnlyList<RelatedQuestionDifficultyOption>
         RelatedQuestionDifficultyOptions { get; } =
         [
-            new("Лёгкий", MaterialDifficulty.Easy),
-            new("Средний", MaterialDifficulty.Medium),
-            new("Сложный", MaterialDifficulty.Hard),
+            new("Лёгкий", MaterialDifficulty.EASY),
+            new("Средний", MaterialDifficulty.MEDIUM),
+            new("Сложный", MaterialDifficulty.HARD),
         ];
 
     public string SelectedIconKey =>
@@ -318,8 +318,8 @@ public sealed partial class CreateMaterialViewModel(
             if (titleResult.IsFailure)
             {
                 return
-                    $"Название вопроса должно содержать от {MaterialTitle.MinLength} " +
-                    $"до {MaterialTitle.MaxLength} символов.";
+                    $"Название вопроса должно содержать от {MaterialTitle.MIN_LENGTH} " +
+                    $"до {MaterialTitle.MAX_LENGTH} символов.";
             }
 
             var rewardsResult =
@@ -354,21 +354,21 @@ public sealed partial class CreateMaterialViewModel(
         get
         {
             if (StudyPoints is
-                < MaterialExperienceRewards.MinPoints
-                or > MaterialExperienceRewards.MaxPoints)
+                < MaterialExperienceRewards.MIN_POINTS
+                or > MaterialExperienceRewards.MAX_POINTS)
             {
                 return
-                    $"За изучение можно назначить от {MaterialExperienceRewards.MinPoints} " +
-                    $"до {MaterialExperienceRewards.MaxPoints} XP.";
+                    $"За изучение можно назначить от {MaterialExperienceRewards.MIN_POINTS} " +
+                    $"до {MaterialExperienceRewards.MAX_POINTS} XP.";
             }
 
             if (ReviewPoints is
-                < MaterialExperienceRewards.MinPoints
-                or > MaterialExperienceRewards.MaxPoints)
+                < MaterialExperienceRewards.MIN_POINTS
+                or > MaterialExperienceRewards.MAX_POINTS)
             {
                 return
-                    $"За повторение можно назначить от {MaterialExperienceRewards.MinPoints} " +
-                    $"до {MaterialExperienceRewards.MaxPoints} XP.";
+                    $"За повторение можно назначить от {MaterialExperienceRewards.MIN_POINTS} " +
+                    $"до {MaterialExperienceRewards.MAX_POINTS} XP.";
             }
 
             if (ReviewPoints >= StudyPoints)
@@ -411,7 +411,7 @@ public sealed partial class CreateMaterialViewModel(
     public void Reset()
     {
         SelectedFolder = null;
-        SelectedIconKind = DefaultMaterialIconKind;
+        SelectedIconKind = DEFAULT_MATERIAL_ICON_KIND;
         _closeRequested = null;
         _createdRequested = null;
 
@@ -435,7 +435,7 @@ public sealed partial class CreateMaterialViewModel(
 
     partial void OnStudyPointsChanged(int value)
     {
-        if (value <= MaterialExperienceRewards.MinPoints)
+        if (value <= MaterialExperienceRewards.MIN_POINTS)
         {
             return;
         }
@@ -458,7 +458,7 @@ public sealed partial class CreateMaterialViewModel(
 
     partial void OnRelatedQuestionStudyPointsChanged(int value)
     {
-        if (value <= MaterialExperienceRewards.MinPoints)
+        if (value <= MaterialExperienceRewards.MIN_POINTS)
         {
             return;
         }
@@ -615,8 +615,8 @@ public sealed partial class CreateMaterialViewModel(
 
         return Path.Combine(
             storagePath,
-            MaterialsDirectoryName,
-            DraftsDirectoryName,
+            MATERIALS_DIRECTORY_NAME,
+            DRAFTS_DIRECTORY_NAME,
             "create-material",
             sessionId);
     }
@@ -774,7 +774,7 @@ public sealed partial class CreateMaterialViewModel(
         EditingRelatedQuestion = null;
         RelatedQuestionTitle = string.Empty;
         RelatedQuestionDifficulty = difficulty;
-        RelatedQuestionIconKind = DefaultRelatedQuestionIconKind;
+        RelatedQuestionIconKind = DEFAULT_RELATED_QUESTION_ICON_KIND;
         RelatedQuestionStudyPoints = StudyPoints;
         RelatedQuestionReviewPoints = ReviewPoints;
         RelatedQuestionPromptPath = null;
@@ -1072,8 +1072,8 @@ public sealed partial class CreateMaterialViewModel(
         NewRelatedQuestions.Clear();
         IsRelatedQuestionEditorOpen = false;
         RelatedQuestionTitle = string.Empty;
-        RelatedQuestionDifficulty = MaterialDifficulty.Medium;
-        RelatedQuestionIconKind = DefaultRelatedQuestionIconKind;
+        RelatedQuestionDifficulty = MaterialDifficulty.MEDIUM;
+        RelatedQuestionIconKind = DEFAULT_RELATED_QUESTION_ICON_KIND;
         RelatedQuestionStudyPoints = 50;
         RelatedQuestionReviewPoints = 20;
         RelatedQuestionPromptPath = null;
@@ -1145,10 +1145,10 @@ public sealed partial class CreateMaterialViewModel(
     private static int GetReviewMaximum(int studyPoints)
     {
         int maximumBelowStudy =
-            ((studyPoints - 1) / ExperiencePointsStep) * ExperiencePointsStep;
+            ((studyPoints - 1) / EXPERIENCE_POINTS_STEP) * EXPERIENCE_POINTS_STEP;
 
         return Math.Max(
-            MaterialExperienceRewards.MinPoints,
+            MaterialExperienceRewards.MIN_POINTS,
             maximumBelowStudy);
     }
 
@@ -1289,9 +1289,9 @@ public sealed partial class RelatedQuestionDraftViewModel(
     public string DifficultyText =>
         Difficulty switch
         {
-            MaterialDifficulty.Easy => "Лёгкий",
-            MaterialDifficulty.Medium => "Средний",
-            MaterialDifficulty.Hard => "Сложный",
+            MaterialDifficulty.EASY => "Лёгкий",
+            MaterialDifficulty.MEDIUM => "Средний",
+            MaterialDifficulty.HARD => "Сложный",
             _ => Difficulty.ToString(),
         };
 

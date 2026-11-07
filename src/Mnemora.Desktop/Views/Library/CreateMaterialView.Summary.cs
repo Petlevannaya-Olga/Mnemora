@@ -58,12 +58,12 @@ public partial class CreateMaterialView
         string? bodyPath =
             GetSelectedPath(
                 isQuestion
-                    ? QuestionSource
-                    : ArticleSource);
+                    ? QUESTION_SOURCE
+                    : ARTICLE_SOURCE);
 
         string? answerPath =
             isQuestion
-                ? GetSelectedPath(AnswerSource)
+                ? GetSelectedPath(ANSWER_SOURCE)
                 : null;
 
         if (string.IsNullOrWhiteSpace(bodyPath))
@@ -98,12 +98,12 @@ public partial class CreateMaterialView
         string? bodyPath =
             GetSelectedPath(
                 viewModel.IsQuestionMaterial
-                    ? QuestionSource
-                    : ArticleSource);
+                    ? QUESTION_SOURCE
+                    : ARTICLE_SOURCE);
 
         string? answerPath =
             viewModel.IsQuestionMaterial
-                ? GetSelectedPath(AnswerSource)
+                ? GetSelectedPath(ANSWER_SOURCE)
                 : null;
 
         if (string.IsNullOrWhiteSpace(bodyPath) ||
@@ -197,12 +197,12 @@ public partial class CreateMaterialView
         string? bodyPath =
             GetSelectedPath(
                 isQuestion
-                    ? QuestionSource
-                    : ArticleSource);
+                    ? QUESTION_SOURCE
+                    : ARTICLE_SOURCE);
 
         string? answerPath =
             isQuestion
-                ? GetSelectedPath(AnswerSource)
+                ? GetSelectedPath(ANSWER_SOURCE)
                 : null;
 
         if (string.IsNullOrWhiteSpace(bodyPath) ||
@@ -274,18 +274,18 @@ public partial class CreateMaterialView
                         "DifficultyComboBox")
                     .SelectedIndex switch
                     {
-                        0 => MaterialDifficulty.Easy,
-                        1 => MaterialDifficulty.Medium,
-                        2 => MaterialDifficulty.Hard,
-                        _ => MaterialDifficulty.Medium,
+                        0 => MaterialDifficulty.EASY,
+                        1 => MaterialDifficulty.MEDIUM,
+                        2 => MaterialDifficulty.HARD,
+                        _ => MaterialDifficulty.MEDIUM,
                     };
 
             var command =
                 new CreateMaterialGraphCommand(
                     viewModel.SelectedFolder.Id,
                     isQuestion
-                        ? MaterialType.Question
-                        : MaterialType.Article,
+                        ? MaterialType.QUESTION
+                        : MaterialType.ARTICLE,
                     viewModel.SummaryTitle,
                     difficulty,
                     viewModel.SelectedIconKey,

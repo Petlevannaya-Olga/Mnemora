@@ -18,8 +18,8 @@ public sealed class GetLibraryHierarchyFoldersPageQueryHandlerTests
 
         Section section = Section.Create(
             SectionName.Create("Section").Value,
-            SectionColor.Teal,
-            SectionIcon.Folder);
+            SectionColor.TEAL,
+            SectionIcon.FOLDER);
 
         LibraryContainer root =
             db.AddSectionWithRoot(section);
@@ -30,8 +30,8 @@ public sealed class GetLibraryHierarchyFoldersPageQueryHandlerTests
                 LibraryContainer.CreateFolder(
                     root,
                     FolderName.Create($"Folder {index:D2}").Value,
-                    FolderColor.Teal,
-                    FolderIcon.Folder).Value);
+                    FolderColor.TEAL,
+                    FolderIcon.FOLDER).Value);
         }
 
         await db.Context.SaveChangesAsync();
@@ -57,8 +57,8 @@ public sealed class GetLibraryHierarchyFoldersPageQueryHandlerTests
 
         Section section = Section.Create(
             SectionName.Create("Section").Value,
-            SectionColor.Teal,
-            SectionIcon.Folder);
+            SectionColor.TEAL,
+            SectionIcon.FOLDER);
 
         LibraryContainer root =
             db.AddSectionWithRoot(section);
@@ -66,14 +66,14 @@ public sealed class GetLibraryHierarchyFoldersPageQueryHandlerTests
         LibraryContainer parent = LibraryContainer.CreateFolder(
             root,
             FolderName.Create("Parent").Value,
-            FolderColor.Teal,
-            FolderIcon.Folder).Value;
+            FolderColor.TEAL,
+            FolderIcon.FOLDER).Value;
 
         LibraryContainer child = LibraryContainer.CreateFolder(
             parent,
             FolderName.Create("Child").Value,
-            FolderColor.Teal,
-            FolderIcon.Folder).Value;
+            FolderColor.TEAL,
+            FolderIcon.FOLDER).Value;
 
         db.Context.LibraryContainers.AddRange(parent, child);
         await db.Context.SaveChangesAsync();
@@ -99,6 +99,6 @@ public sealed class GetLibraryHierarchyFoldersPageQueryHandlerTests
     private static GetLibraryHierarchyFoldersPageQuery Query(
         Guid containerId,
         int offset = 0,
-        int pageSize = LibraryPagingDefaults.PageSize) =>
+        int pageSize = LibraryPagingDefaults.PAGE_SIZE) =>
         new(containerId, offset, pageSize);
 }

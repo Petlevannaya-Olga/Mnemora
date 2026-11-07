@@ -32,7 +32,7 @@ public sealed class CreateArticleCommandHandlerTests
         var command = new CreateArticleCommand(
             Guid.NewGuid(),
             "Article",
-            MaterialDifficulty.Medium,
+            MaterialDifficulty.MEDIUM,
             IconKey: null,
             StudyPoints: 50,
             ReviewPoints: 20,
@@ -44,7 +44,7 @@ public sealed class CreateArticleCommandHandlerTests
         Article addedArticle = Assert.IsType<Article>(materialsRepository.AddedMaterial);
         Assert.Equal(addedArticle.Id, contentStore.CreatedMaterialId);
         Assert.Equal(addedArticle.Id, contentStore.DeletedMaterialId);
-        Assert.Equal(MaterialType.Article, contentStore.DeletedMaterialType);
+        Assert.Equal(MaterialType.ARTICLE, contentStore.DeletedMaterialType);
     }
 
     private sealed class ExistingContainerRepository : ILibraryContainersRepository

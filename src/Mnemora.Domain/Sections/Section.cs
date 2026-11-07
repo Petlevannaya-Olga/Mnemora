@@ -2,7 +2,9 @@
 
 public sealed class Section
 {
-    public const int DefaultDisplayOrder = int.MaxValue;
+    #pragma warning disable CA1707
+    public const int DEFAULT_DISPLAY_ORDER = int.MaxValue;
+    #pragma warning restore CA1707
 
     public SectionId Id { get; private set; } = null!;
 
@@ -16,7 +18,7 @@ public sealed class Section
 
     public DateTime UpdatedAt { get; private set; }
 
-    public int DisplayOrder { get; private set; } = DefaultDisplayOrder;
+    public int DisplayOrder { get; private set; } = DEFAULT_DISPLAY_ORDER;
 
     // EF Core
     private Section()

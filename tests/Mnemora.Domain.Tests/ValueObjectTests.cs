@@ -100,8 +100,8 @@ public sealed class ValueObjectTests
     public void MaterialExperienceRewards_Create_AcceptsBoundaryValues()
     {
         var result = MaterialExperienceRewards.Create(
-            MaterialExperienceRewards.MaxPoints,
-            MaterialExperienceRewards.MinPoints);
+            MaterialExperienceRewards.MAX_POINTS,
+            MaterialExperienceRewards.MIN_POINTS);
 
         Assert.True(result.IsSuccess);
         Assert.Equal(100, result.Value.StudyPoints);

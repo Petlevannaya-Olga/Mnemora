@@ -18,7 +18,7 @@ public sealed class LibraryContainerTests
         Assert.True(result.Value.IsRoot);
         Assert.False(result.Value.IsFolder);
         Assert.Null(result.Value.ParentId);
-        Assert.Equal(LibraryContainer.RootDepth, result.Value.Depth);
+        Assert.Equal(LibraryContainer.ROOT_DEPTH, result.Value.Depth);
         Assert.Null(result.Value.Name);
         Assert.Null(result.Value.Color);
         Assert.Null(result.Value.Icon);
@@ -32,8 +32,8 @@ public sealed class LibraryContainerTests
         var result = LibraryContainer.CreateFolder(
             root,
             FolderName.Create("CLR").Value,
-            FolderColor.Teal,
-            FolderIcon.DotNet);
+            FolderColor.TEAL,
+            FolderIcon.DOT_NET);
 
         Assert.True(result.IsSuccess);
         Assert.Equal(root.SectionId, result.Value.SectionId);
@@ -41,9 +41,9 @@ public sealed class LibraryContainerTests
         Assert.Equal(1, result.Value.Depth);
         Assert.True(result.Value.IsFolder);
         Assert.Equal("CLR", result.Value.Name!.Value);
-        Assert.Equal(FolderColor.Teal, result.Value.Color);
-        Assert.Equal(FolderIcon.DotNet, result.Value.Icon);
-        Assert.Equal(LibraryContainer.DefaultDisplayOrder, result.Value.DisplayOrder);
+        Assert.Equal(FolderColor.TEAL, result.Value.Color);
+        Assert.Equal(FolderIcon.DOT_NET, result.Value.Icon);
+        Assert.Equal(LibraryContainer.DEFAULT_DISPLAY_ORDER, result.Value.DisplayOrder);
     }
 
 
@@ -57,11 +57,11 @@ public sealed class LibraryContainerTests
         var level3Result = LibraryContainer.CreateFolder(
             level2,
             FolderName.Create("Level 3").Value,
-            FolderColor.Teal,
-            FolderIcon.Folder);
+            FolderColor.TEAL,
+            FolderIcon.FOLDER);
 
         Assert.True(level3Result.IsSuccess);
-        Assert.Equal(LibraryContainer.MaxFolderDepth, level3Result.Value.Depth);
+        Assert.Equal(LibraryContainer.MAX_FOLDER_DEPTH, level3Result.Value.Depth);
     }
 
     [Fact]
@@ -75,8 +75,8 @@ public sealed class LibraryContainerTests
         var result = LibraryContainer.CreateFolder(
             level3,
             FolderName.Create("Level 4").Value,
-            FolderColor.Teal,
-            FolderIcon.Folder);
+            FolderColor.TEAL,
+            FolderIcon.FOLDER);
 
         Assert.True(result.IsFailure);
         Assert.Equal(
@@ -92,17 +92,17 @@ public sealed class LibraryContainerTests
 
         var folderResult = folder.UpdateFolder(
             FolderName.Create("New name").Value,
-            FolderColor.Purple,
-            FolderIcon.Database);
+            FolderColor.PURPLE,
+            FolderIcon.DATABASE);
         var rootResult = root.UpdateFolder(
             FolderName.Create("Root name").Value,
-            FolderColor.Purple,
-            FolderIcon.Database);
+            FolderColor.PURPLE,
+            FolderIcon.DATABASE);
 
         Assert.True(folderResult.IsSuccess);
         Assert.Equal("New name", folder.Name!.Value);
-        Assert.Equal(FolderColor.Purple, folder.Color);
-        Assert.Equal(FolderIcon.Database, folder.Icon);
+        Assert.Equal(FolderColor.PURPLE, folder.Color);
+        Assert.Equal(FolderIcon.DATABASE, folder.Icon);
 
         Assert.True(rootResult.IsFailure);
         Assert.Null(root.Name);
@@ -128,6 +128,6 @@ public sealed class LibraryContainerTests
         LibraryContainer.CreateFolder(
             parent,
             FolderName.Create(name).Value,
-            FolderColor.Teal,
-            FolderIcon.Folder).Value;
+            FolderColor.TEAL,
+            FolderIcon.FOLDER).Value;
 }

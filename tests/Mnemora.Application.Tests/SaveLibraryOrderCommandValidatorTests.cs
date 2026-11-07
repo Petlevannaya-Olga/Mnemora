@@ -10,7 +10,7 @@ public sealed class SaveLibraryOrderCommandValidatorTests
     {
         Guid duplicate = Guid.NewGuid();
         var command = new SaveLibraryOrderCommand(
-            LibraryOrderTarget.Sections,
+            LibraryOrderTarget.SECTIONS,
             ParentId: Guid.NewGuid(),
             OrderedIds: [duplicate, duplicate, Guid.Empty]);
 
@@ -22,8 +22,8 @@ public sealed class SaveLibraryOrderCommandValidatorTests
     }
 
     [Theory]
-    [InlineData(LibraryOrderTarget.Folders)]
-    [InlineData(LibraryOrderTarget.Materials)]
+    [InlineData(LibraryOrderTarget.FOLDERS)]
+    [InlineData(LibraryOrderTarget.MATERIALS)]
     public void ChildOrder_RequiresNonEmptyParent(LibraryOrderTarget target)
     {
         var command = new SaveLibraryOrderCommand(

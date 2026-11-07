@@ -1,7 +1,12 @@
-﻿namespace Mnemora.Desktop.Settings;
+﻿using System.Text.Json.Serialization;
+namespace Mnemora.Desktop.Settings;
 
+#pragma warning disable CA1707
 public enum MarkdownEditorType
 {
-    VisualStudioCode,
-    Obsidian,
+    [JsonStringEnumMemberName("VisualStudioCode")]
+    VISUAL_STUDIO_CODE,
+    [JsonStringEnumMemberName("Obsidian")]
+    OBSIDIAN,
 }
+#pragma warning restore CA1707

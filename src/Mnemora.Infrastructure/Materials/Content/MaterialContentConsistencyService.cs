@@ -54,13 +54,13 @@ internal sealed class MaterialContentConsistencyService(
 
             var articleResult = CheckMaterialType(
                 storagePathResult.Value,
-                MaterialType.Article,
+                MaterialType.ARTICLE,
                 articleIds,
                 ["content.md"]);
 
             var questionResult = CheckMaterialType(
                 storagePathResult.Value,
-                MaterialType.Question,
+                MaterialType.QUESTION,
                 questionIds,
                 ["prompt.md", "answer.md"]);
 
@@ -202,8 +202,8 @@ internal sealed class MaterialContentConsistencyService(
     {
         string typeDirectoryName = materialType switch
         {
-            MaterialType.Article => "articles",
-            MaterialType.Question => "questions",
+            MaterialType.ARTICLE => "articles",
+            MaterialType.QUESTION => "questions",
             _ => throw new ArgumentOutOfRangeException(nameof(materialType))
         };
 

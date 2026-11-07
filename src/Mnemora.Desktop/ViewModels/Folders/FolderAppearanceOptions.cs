@@ -1,4 +1,5 @@
 using System.Windows.Media;
+using Mnemora.Shared;
 using MaterialDesignThemes.Wpf;
 using Mnemora.Desktop.ViewModels.Sections;
 using Mnemora.Domain.Sections;
@@ -30,8 +31,8 @@ public static class FolderAppearanceOptions
 
         foreach (var folderColor in Enum.GetValues<FolderColor>())
         {
-            if (!Enum.TryParse<SectionColor>(
-                    folderColor.ToString(),
+            if (!EnumStableNames.TryParseStableName<SectionColor>(
+                    folderColor.ToStableName(),
                     out var sectionColor))
             {
                 throw new InvalidOperationException(
@@ -63,18 +64,18 @@ public static class FolderAppearanceOptions
 
         // Keep previous icon choices and ordering, without using FolderIcon.
         // The original picker started with Bookmark, then the section icons.
-        IEnumerable<FolderIcon> iconChoices = new[] { FolderIcon.Bookmark }.Concat(
+        IEnumerable<FolderIcon> iconChoices = new[] { FolderIcon.BOOKMARK }.Concat(
             Enum.GetValues<SectionIcon>()
-                .Where(icon => icon != SectionIcon.Folder)
-                .Select(icon => Enum.Parse<FolderIcon>(icon.ToString())));
+                .Where(icon => icon != SectionIcon.FOLDER)
+                .Select(icon => EnumStableNames.ParseStableName<FolderIcon>(icon.ToStableName())));
 
         foreach (var folderIcon in iconChoices)
         {
-            if (folderIcon == FolderIcon.Bookmark)
+            if (folderIcon == FolderIcon.BOOKMARK)
             {
                 options.Add(
                     new FolderIconOption(
-                        FolderIcon.Bookmark,
+                        FolderIcon.BOOKMARK,
                         "Закладка",
                         "Общие",
                         ResolveIconKind(
@@ -84,8 +85,8 @@ public static class FolderAppearanceOptions
                 continue;
             }
 
-            if (!Enum.TryParse<SectionIcon>(
-                    folderIcon.ToString(),
+            if (!EnumStableNames.TryParseStableName<SectionIcon>(
+                    folderIcon.ToStableName(),
                     out var sectionIcon))
             {
                 throw new InvalidOperationException(
@@ -116,9 +117,8 @@ public static class FolderAppearanceOptions
     public static SolidColorBrush GetColorBrush(
         string? value)
     {
-        if (!Enum.TryParse<FolderColor>(
+        if (!EnumStableNames.TryParseStableName<FolderColor>(
                 value,
-                true,
                 out var color))
         {
             return Colors[0].Brush;
@@ -134,9 +134,8 @@ public static class FolderAppearanceOptions
     public static PackIconKind GetIconKind(
         string? value)
     {
-        if (!Enum.TryParse<FolderIcon>(
+        if (!EnumStableNames.TryParseStableName<FolderIcon>(
                 value,
-                true,
                 out var icon))
         {
             return Icons[0].Kind;

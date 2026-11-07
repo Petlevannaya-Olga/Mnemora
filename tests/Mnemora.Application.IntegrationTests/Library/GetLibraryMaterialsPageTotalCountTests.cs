@@ -59,8 +59,8 @@ public sealed class GetLibraryMaterialsPageTotalCountTests
         LibraryContainer nestedFolder = LibraryContainer.CreateFolder(
             firstLevelFolder,
             FolderName.Create("Memory").Value,
-            FolderColor.Teal,
-            FolderIcon.Folder).Value;
+            FolderColor.TEAL,
+            FolderIcon.FOLDER).Value;
 
         db.Context.LibraryContainers.Add(nestedFolder);
         await db.Context.SaveChangesAsync();
@@ -120,8 +120,8 @@ public sealed class GetLibraryMaterialsPageTotalCountTests
         var result = await sut.Handle(new GetLibraryMaterialsPageQuery(
             folder.Id.Value,
             "ef CORE",
-            LibraryMaterialFilter.Articles,
-            LibraryMaterialSort.Name,
+            LibraryMaterialFilter.ARTICLES,
+            LibraryMaterialSort.NAME,
             0,
             50));
 
@@ -148,8 +148,8 @@ public sealed class GetLibraryMaterialsPageTotalCountTests
         var questions = await sut.Handle(new GetLibraryMaterialsPageQuery(
             folder.Id.Value,
             Search: null,
-            LibraryMaterialFilter.Questions,
-            LibraryMaterialSort.Name,
+            LibraryMaterialFilter.QUESTIONS,
+            LibraryMaterialSort.NAME,
             Offset: 0,
             PageSize: 50));
 
@@ -175,8 +175,8 @@ public sealed class GetLibraryMaterialsPageTotalCountTests
         new(
             containerId,
             Search: null,
-            LibraryMaterialFilter.All,
-            LibraryMaterialSort.Name,
+            LibraryMaterialFilter.ALL,
+            LibraryMaterialSort.NAME,
             offset,
             pageSize);
 }

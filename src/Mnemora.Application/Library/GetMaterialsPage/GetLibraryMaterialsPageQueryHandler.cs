@@ -59,8 +59,8 @@ public sealed class GetLibraryMaterialsPageQueryHandler(
 
             materialsQuery = request.Filter switch
             {
-                LibraryMaterialFilter.Articles => materialsQuery.OfType<Article>(),
-                LibraryMaterialFilter.Questions => materialsQuery.OfType<Question>(),
+                LibraryMaterialFilter.ARTICLES => materialsQuery.OfType<Article>(),
+                LibraryMaterialFilter.QUESTIONS => materialsQuery.OfType<Question>(),
                 _ => materialsQuery,
             };
 
@@ -78,29 +78,29 @@ public sealed class GetLibraryMaterialsPageQueryHandler(
 
             var orderedMaterials = request.Sort switch
             {
-                LibraryMaterialSort.Custom => materialsQuery
+                LibraryMaterialSort.CUSTOM => materialsQuery
                     .OrderBy(material => material.DisplayOrder)
                     .ThenBy(material => material.Title)
                     .ThenBy(material => material.Id),
 
-                LibraryMaterialSort.RecentlyUpdated => materialsQuery
+                LibraryMaterialSort.RECENTLY_UPDATED => materialsQuery
                     .OrderByDescending(material => material.UpdatedAt)
                     .ThenBy(material => material.Id),
 
-                LibraryMaterialSort.Name => materialsQuery
+                LibraryMaterialSort.NAME => materialsQuery
                     .OrderBy(material => material.Title)
                     .ThenBy(material => material.Id),
 
-                LibraryMaterialSort.Newest => materialsQuery
+                LibraryMaterialSort.NEWEST => materialsQuery
                     .OrderByDescending(material => material.CreatedAt)
                     .ThenBy(material => material.Id),
 
-                LibraryMaterialSort.Easiest => materialsQuery
+                LibraryMaterialSort.EASIEST => materialsQuery
                     .OrderBy(material => material.Difficulty)
                     .ThenBy(material => material.Title)
                     .ThenBy(material => material.Id),
 
-                LibraryMaterialSort.Hardest => materialsQuery
+                LibraryMaterialSort.HARDEST => materialsQuery
                     .OrderByDescending(material => material.Difficulty)
                     .ThenBy(material => material.Title)
                     .ThenBy(material => material.Id),
@@ -131,12 +131,12 @@ public sealed class GetLibraryMaterialsPageQueryHandler(
                 : container.Name!.Value;
 
             string displayColor = container.IsRoot
-                ? section.Color.ToString()
-                : container.Color!.Value.ToString();
+                ? section.Color.ToStableName()
+                : container.Color!.Value.ToStableName();
 
             string displayIcon = container.IsRoot
-                ? section.Icon.ToString()
-                : container.Icon!.Value.ToString();
+                ? section.Icon.ToStableName()
+                : container.Icon!.Value.ToStableName();
 
             var containerHeader = new LibraryContainerHeaderDto(
                 container.Id.Value,
@@ -197,8 +197,8 @@ public sealed class GetLibraryMaterialsPageQueryHandler(
             material.Id.Value,
             material.ContainerId.Value,
             material.Title.Value,
-            material.Type.ToString(),
-            material.Difficulty.ToString(),
+            material.Type.ToStableName(),
+            material.Difficulty.ToStableName(),
             material.Icon.Key,
             material.ExperienceRewards.StudyPoints,
             material.ExperienceRewards.ReviewPoints,

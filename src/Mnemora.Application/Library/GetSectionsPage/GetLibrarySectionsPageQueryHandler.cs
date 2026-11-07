@@ -27,7 +27,7 @@ public sealed class GetLibrarySectionsPageQueryHandler(
             int pageSize = Math.Clamp(
                 request.PageSize,
                 1,
-                LibraryPagingDefaults.MaxQueryPageSize);
+                LibraryPagingDefaults.MAX_QUERY_PAGE_SIZE);
 
             IQueryable<Section> sectionsQuery =
                 readDbContext.SectionsRead;
@@ -92,15 +92,15 @@ public sealed class GetLibrarySectionsPageQueryHandler(
 
             var orderedRows = request.Sort switch
             {
-                LibrarySectionSort.Name => sectionRows
+                LibrarySectionSort.NAME => sectionRows
                     .OrderBy(row => row.Section.Name)
                     .ThenBy(row => row.Section.Id),
 
-                LibrarySectionSort.Newest => sectionRows
+                LibrarySectionSort.NEWEST => sectionRows
                     .OrderByDescending(row => row.Section.CreatedAt)
                     .ThenBy(row => row.Section.Id),
 
-                LibrarySectionSort.RecentActivity => sectionRows
+                LibrarySectionSort.RECENT_ACTIVITY => sectionRows
                     .OrderByDescending(row => row.LastActivityAt)
                     .ThenBy(row => row.Section.Id),
 
@@ -233,8 +233,8 @@ public sealed class GetLibrarySectionsPageQueryHandler(
                         row.Section.Id.Value,
                         rootId!.Value,
                         row.Section.Name.Value,
-                        row.Section.Color.ToString(),
-                        row.Section.Icon.ToString(),
+                        row.Section.Color.ToStableName(),
+                        row.Section.Icon.ToStableName(),
                         row.Section.CreatedAt,
                         row.Section.UpdatedAt,
                         row.LastActivityAt,

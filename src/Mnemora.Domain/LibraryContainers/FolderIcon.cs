@@ -1,83 +1,149 @@
+using System.Text.Json.Serialization;
 namespace Mnemora.Domain.LibraryContainers;
 
+#pragma warning disable CA1707
 public enum FolderIcon
 {
-    Folder,
-    Bookmark,
+    [JsonStringEnumMemberName("Folder")]
+    FOLDER,
+    [JsonStringEnumMemberName("Bookmark")]
+    BOOKMARK,
 
-    DotNet,
-    CSharp,
-    AspNet,
-    Blazor,
-    Maui,
+    [JsonStringEnumMemberName("DotNet")]
+    DOT_NET,
+    [JsonStringEnumMemberName("CSharp")]
+    C_SHARP,
+    [JsonStringEnumMemberName("AspNet")]
+    ASP_NET,
+    [JsonStringEnumMemberName("Blazor")]
+    BLAZOR,
+    [JsonStringEnumMemberName("Maui")]
+    MAUI,
 
-    Code,
-    Api,
-    Backend,
-    Frontend,
-    Web,
+    [JsonStringEnumMemberName("Code")]
+    CODE,
+    [JsonStringEnumMemberName("Api")]
+    API,
+    [JsonStringEnumMemberName("Backend")]
+    BACKEND,
+    [JsonStringEnumMemberName("Frontend")]
+    FRONTEND,
+    [JsonStringEnumMemberName("Web")]
+    WEB,
 
-    JavaScript,
-    TypeScript,
-    Python,
-    Java,
+    [JsonStringEnumMemberName("JavaScript")]
+    JAVA_SCRIPT,
+    [JsonStringEnumMemberName("TypeScript")]
+    TYPE_SCRIPT,
+    [JsonStringEnumMemberName("Python")]
+    PYTHON,
+    [JsonStringEnumMemberName("Java")]
+    JAVA,
 
-    Database,
-    Sql,
-    PostgreSql,
-    SqlServer,
-    Redis,
-    ElasticSearch,
+    [JsonStringEnumMemberName("Database")]
+    DATABASE,
+    [JsonStringEnumMemberName("Sql")]
+    SQL,
+    [JsonStringEnumMemberName("PostgreSql")]
+    POSTGRE_SQL,
+    [JsonStringEnumMemberName("SqlServer")]
+    SQL_SERVER,
+    [JsonStringEnumMemberName("Redis")]
+    REDIS,
+    [JsonStringEnumMemberName("ElasticSearch")]
+    ELASTIC_SEARCH,
 
-    Architecture,
-    Ddd,
-    Microservices,
-    Algorithms,
-    DataStructures,
+    [JsonStringEnumMemberName("Architecture")]
+    ARCHITECTURE,
+    [JsonStringEnumMemberName("Ddd")]
+    DDD,
+    [JsonStringEnumMemberName("Microservices")]
+    MICROSERVICES,
+    [JsonStringEnumMemberName("Algorithms")]
+    ALGORITHMS,
+    [JsonStringEnumMemberName("DataStructures")]
+    DATA_STRUCTURES,
 
-    Server,
-    Cloud,
-    Azure,
-    Aws,
-    Docker,
-    Kubernetes,
+    [JsonStringEnumMemberName("Server")]
+    SERVER,
+    [JsonStringEnumMemberName("Cloud")]
+    CLOUD,
+    [JsonStringEnumMemberName("Azure")]
+    AZURE,
+    [JsonStringEnumMemberName("Aws")]
+    AWS,
+    [JsonStringEnumMemberName("Docker")]
+    DOCKER,
+    [JsonStringEnumMemberName("Kubernetes")]
+    KUBERNETES,
 
-    Git,
-    DevOps,
-    CiCd,
+    [JsonStringEnumMemberName("Git")]
+    GIT,
+    [JsonStringEnumMemberName("DevOps")]
+    DEV_OPS,
+    [JsonStringEnumMemberName("CiCd")]
+    CI_CD,
 
-    Linux,
-    Windows,
-    Network,
-    Security,
+    [JsonStringEnumMemberName("Linux")]
+    LINUX,
+    [JsonStringEnumMemberName("Windows")]
+    WINDOWS,
+    [JsonStringEnumMemberName("Network")]
+    NETWORK,
+    [JsonStringEnumMemberName("Security")]
+    SECURITY,
 
-    Testing,
-    Bug,
-    Performance,
-    Monitoring,
+    [JsonStringEnumMemberName("Testing")]
+    TESTING,
+    [JsonStringEnumMemberName("Bug")]
+    BUG,
+    [JsonStringEnumMemberName("Performance")]
+    PERFORMANCE,
+    [JsonStringEnumMemberName("Monitoring")]
+    MONITORING,
 
-    RabbitMq,
-    Kafka,
-    MessageQueue,
+    [JsonStringEnumMemberName("RabbitMq")]
+    RABBIT_MQ,
+    [JsonStringEnumMemberName("Kafka")]
+    KAFKA,
+    [JsonStringEnumMemberName("MessageQueue")]
+    MESSAGE_QUEUE,
 
-    ArtificialIntelligence,
-    MachineLearning,
-    DataScience,
+    [JsonStringEnumMemberName("ArtificialIntelligence")]
+    ARTIFICIAL_INTELLIGENCE,
+    [JsonStringEnumMemberName("MachineLearning")]
+    MACHINE_LEARNING,
+    [JsonStringEnumMemberName("DataScience")]
+    DATA_SCIENCE,
 
-    Book,
-    Document,
-    Question,
-    Answer,
+    [JsonStringEnumMemberName("Book")]
+    BOOK,
+    [JsonStringEnumMemberName("Document")]
+    DOCUMENT,
+    [JsonStringEnumMemberName("Question")]
+    QUESTION,
+    [JsonStringEnumMemberName("Answer")]
+    ANSWER,
 
-    Brain,
-    Education,
-    Idea,
+    [JsonStringEnumMemberName("Brain")]
+    BRAIN,
+    [JsonStringEnumMemberName("Education")]
+    EDUCATION,
+    [JsonStringEnumMemberName("Idea")]
+    IDEA,
 
-    Team,
-    Work,
-    Finance,
+    [JsonStringEnumMemberName("Team")]
+    TEAM,
+    [JsonStringEnumMemberName("Work")]
+    WORK,
+    [JsonStringEnumMemberName("Finance")]
+    FINANCE,
 
-    Rocket,
-    Mobile,
-    Desktop
+    [JsonStringEnumMemberName("Rocket")]
+    ROCKET,
+    [JsonStringEnumMemberName("Mobile")]
+    MOBILE,
+    [JsonStringEnumMemberName("Desktop")]
+    DESKTOP
 }
+#pragma warning restore CA1707

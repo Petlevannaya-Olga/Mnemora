@@ -74,12 +74,12 @@ public sealed partial class EditorSetupViewModel : ViewModelBase
             if (_isVisualStudioCodeInstalled)
             {
                 _selectedEditor =
-                    MarkdownEditorType.VisualStudioCode;
+                    MarkdownEditorType.VISUAL_STUDIO_CODE;
             }
             else if (_isObsidianInstalled)
             {
                 _selectedEditor =
-                    MarkdownEditorType.Obsidian;
+                    MarkdownEditorType.OBSIDIAN;
             }
         }
 
@@ -194,11 +194,11 @@ public sealed partial class EditorSetupViewModel : ViewModelBase
 
     public bool IsVisualStudioCodeSelected =>
         SelectedEditor ==
-        MarkdownEditorType.VisualStudioCode;
+        MarkdownEditorType.VISUAL_STUDIO_CODE;
 
     public bool IsObsidianSelected =>
         SelectedEditor ==
-        MarkdownEditorType.Obsidian;
+        MarkdownEditorType.OBSIDIAN;
 
     public bool HasSelectedEditor =>
         SelectedEditor is not null;
@@ -215,10 +215,10 @@ public sealed partial class EditorSetupViewModel : ViewModelBase
     public bool IsConfigurationVerified =>
         SelectedEditor switch
         {
-            MarkdownEditorType.VisualStudioCode =>
+            MarkdownEditorType.VISUAL_STUDIO_CODE =>
                 IsVisualStudioCodeVerified,
 
-            MarkdownEditorType.Obsidian =>
+            MarkdownEditorType.OBSIDIAN =>
                 IsObsidianVerified,
 
             _ => false,
@@ -268,14 +268,14 @@ public sealed partial class EditorSetupViewModel : ViewModelBase
     private void SelectVisualStudioCode()
     {
         SelectedEditor =
-            MarkdownEditorType.VisualStudioCode;
+            MarkdownEditorType.VISUAL_STUDIO_CODE;
     }
 
     [RelayCommand]
     private void SelectObsidian()
     {
         SelectedEditor =
-            MarkdownEditorType.Obsidian;
+            MarkdownEditorType.OBSIDIAN;
     }
 
     [RelayCommand]
@@ -314,11 +314,11 @@ public sealed partial class EditorSetupViewModel : ViewModelBase
     private void InstallVisualStudioCode()
     {
         SelectedEditor =
-            MarkdownEditorType.VisualStudioCode;
+            MarkdownEditorType.VISUAL_STUDIO_CODE;
 
         MarkdownEditorLaunchResult result =
             _markdownEditorService.OpenDownloadPage(
-                MarkdownEditorType.VisualStudioCode);
+                MarkdownEditorType.VISUAL_STUDIO_CODE);
 
         if (!result.IsSuccess)
         {
@@ -339,11 +339,11 @@ public sealed partial class EditorSetupViewModel : ViewModelBase
     private void InstallObsidian()
     {
         SelectedEditor =
-            MarkdownEditorType.Obsidian;
+            MarkdownEditorType.OBSIDIAN;
 
         MarkdownEditorLaunchResult result =
             _markdownEditorService.OpenDownloadPage(
-                MarkdownEditorType.Obsidian);
+                MarkdownEditorType.OBSIDIAN);
 
         if (!result.IsSuccess)
         {
@@ -405,12 +405,12 @@ public sealed partial class EditorSetupViewModel : ViewModelBase
             if (IsVisualStudioCodeInstalled)
             {
                 SelectedEditor =
-                    MarkdownEditorType.VisualStudioCode;
+                    MarkdownEditorType.VISUAL_STUDIO_CODE;
             }
             else if (IsObsidianInstalled)
             {
                 SelectedEditor =
-                    MarkdownEditorType.Obsidian;
+                    MarkdownEditorType.OBSIDIAN;
             }
         }
 
@@ -426,13 +426,13 @@ public sealed partial class EditorSetupViewModel : ViewModelBase
 
         return SelectedEditor switch
         {
-            MarkdownEditorType.VisualStudioCode =>
+            MarkdownEditorType.VISUAL_STUDIO_CODE =>
                 IsVisualStudioCodeConfigurationReady(),
 
             // Проверка должна быть доступна до появления .obsidian:
             // пользователь сначала подключает папку Mnemora как Vault,
             // а затем повторным нажатием запускает фактическую проверку.
-            MarkdownEditorType.Obsidian =>
+            MarkdownEditorType.OBSIDIAN =>
                 IsObsidianInstalled &&
                 IsExistingDirectory(ObsidianVaultPath),
 
@@ -562,10 +562,10 @@ public sealed partial class EditorSetupViewModel : ViewModelBase
     {
         return SelectedEditor switch
         {
-            MarkdownEditorType.VisualStudioCode =>
+            MarkdownEditorType.VISUAL_STUDIO_CODE =>
                 IsVisualStudioCodeConfigurationReady(),
 
-            MarkdownEditorType.Obsidian =>
+            MarkdownEditorType.OBSIDIAN =>
                 IsObsidianConfigurationReady(),
 
             _ => false,
@@ -592,12 +592,12 @@ public sealed partial class EditorSetupViewModel : ViewModelBase
     {
         switch (editor)
         {
-            case MarkdownEditorType.VisualStudioCode:
+            case MarkdownEditorType.VISUAL_STUDIO_CODE:
                 SetVisualStudioCodeVerification(
                     isVerified);
                 break;
 
-            case MarkdownEditorType.Obsidian:
+            case MarkdownEditorType.OBSIDIAN:
                 SetObsidianVerification(
                     isVerified);
                 break;
@@ -684,9 +684,9 @@ public sealed partial class EditorSetupViewModel : ViewModelBase
             ConfigurationTitle = "Редактор готов";
             ConfigurationMessage = SelectedEditor switch
             {
-                MarkdownEditorType.VisualStudioCode =>
+                MarkdownEditorType.VISUAL_STUDIO_CODE =>
                     "Mnemora может открывать Markdown-файлы в Visual Studio Code",
-                MarkdownEditorType.Obsidian =>
+                MarkdownEditorType.OBSIDIAN =>
                     "Mnemora может открывать Markdown-файлы в Obsidian",
                 _ => string.Empty,
             };
@@ -697,7 +697,7 @@ public sealed partial class EditorSetupViewModel : ViewModelBase
 
         switch (SelectedEditor)
         {
-            case MarkdownEditorType.VisualStudioCode:
+            case MarkdownEditorType.VISUAL_STUDIO_CODE:
                 if (!IsVisualStudioCodeInstalled)
                 {
                     ConfigurationTitle =
@@ -714,7 +714,7 @@ public sealed partial class EditorSetupViewModel : ViewModelBase
                 }
                 break;
 
-            case MarkdownEditorType.Obsidian:
+            case MarkdownEditorType.OBSIDIAN:
                 if (!IsObsidianInstalled)
                 {
                     ConfigurationTitle =

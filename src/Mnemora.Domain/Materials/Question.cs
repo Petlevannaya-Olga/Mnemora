@@ -8,7 +8,7 @@ public sealed class Question : Material
 {
     public MaterialId? ArticleId { get; private set; }
 
-    public override MaterialType Type => MaterialType.Question;
+    public override MaterialType Type => MaterialType.QUESTION;
 
     // EF Core
     private Question()

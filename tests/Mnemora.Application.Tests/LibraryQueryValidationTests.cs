@@ -13,20 +13,20 @@ public sealed class LibraryQueryValidationTests
     public void QueriesWithValidators_OptIntoValidationDecorator()
     {
         Assert.IsAssignableFrom<IQueryValidation>(
-            new GetLibrarySectionsPageQuery(null, LibrarySectionSort.Name, 0, 30));
+            new GetLibrarySectionsPageQuery(null, LibrarySectionSort.NAME, 0, 30));
         Assert.IsAssignableFrom<IQueryValidation>(
             new GetLibraryFoldersPageQuery(
                 Guid.NewGuid(),
                 null,
-                LibraryFolderSort.Name,
+                LibraryFolderSort.NAME,
                 0,
                 30));
         Assert.IsAssignableFrom<IQueryValidation>(
             new GetLibraryMaterialsPageQuery(
                 Guid.NewGuid(),
                 null,
-                LibraryMaterialFilter.All,
-                LibraryMaterialSort.Name,
+                LibraryMaterialFilter.ALL,
+                LibraryMaterialSort.NAME,
                 0,
                 30));
         Assert.IsAssignableFrom<IQueryValidation>(

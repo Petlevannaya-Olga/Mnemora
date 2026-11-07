@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.Input;
+using Mnemora.Shared;
 using Mnemora.Application.Commands;
 using Mnemora.Application.LibraryContainers.Update;
 using Mnemora.Contracts;
@@ -284,9 +285,8 @@ public sealed partial class EditFolderDialogViewModel(
     private FolderColorOption GetColorOption(
         string? value)
     {
-        if (!Enum.TryParse<FolderColor>(
+        if (!EnumStableNames.TryParseStableName<FolderColor>(
                 value,
-                ignoreCase: true,
                 out var color))
         {
             return ColorOptions[0];
@@ -301,9 +301,8 @@ public sealed partial class EditFolderDialogViewModel(
     private FolderIconOption GetIconOption(
         string? value)
     {
-        if (!Enum.TryParse<FolderIcon>(
+        if (!EnumStableNames.TryParseStableName<FolderIcon>(
                 value,
-                ignoreCase: true,
                 out var icon))
         {
             return IconOptions[0];

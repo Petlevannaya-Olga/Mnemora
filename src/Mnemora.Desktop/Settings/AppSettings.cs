@@ -12,37 +12,37 @@ public sealed class AppSettings
     public bool IsAiConfigured { get; set; }
     public bool IsOnboardingCompleted { get; set; }
 
-    public LibraryOverviewViewMode LibraryOverviewViewMode { get; set; } = LibraryOverviewViewMode.Tiles;
-    public LibraryManagementViewMode LibraryManagementSectionsViewMode { get; set; } = LibraryManagementViewMode.Tiles;
-    public LibraryManagementViewMode LibraryManagementFoldersViewMode { get; set; } = LibraryManagementViewMode.Tiles;
-    public LibraryManagementViewMode LibraryManagementMaterialsViewMode { get; set; } = LibraryManagementViewMode.Table;
-    public LibraryFoldersViewMode LibraryFoldersViewMode { get; set; } = LibraryFoldersViewMode.CompactTiles;
+    public LibraryOverviewViewMode LibraryOverviewViewMode { get; set; } = LibraryOverviewViewMode.TILES;
+    public LibraryManagementViewMode LibraryManagementSectionsViewMode { get; set; } = LibraryManagementViewMode.TILES;
+    public LibraryManagementViewMode LibraryManagementFoldersViewMode { get; set; } = LibraryManagementViewMode.TILES;
+    public LibraryManagementViewMode LibraryManagementMaterialsViewMode { get; set; } = LibraryManagementViewMode.TABLE;
+    public LibraryFoldersViewMode LibraryFoldersViewMode { get; set; } = LibraryFoldersViewMode.COMPACT_TILES;
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public int? LibraryTilesPerRow { get; set; }
 
     public double LibraryContainerFoldersPaneRatio { get; set; } = 1d / 3d;
-    public LibraryManagementSortMode LibraryManagementSectionSort { get; set; } = LibraryManagementSortMode.Custom;
+    public LibraryManagementSortMode LibraryManagementSectionSort { get; set; } = LibraryManagementSortMode.CUSTOM;
     public Dictionary<Guid, LibraryManagementSortMode> LibraryManagementFolderSortBySection { get; set; } = [];
     public Dictionary<Guid, LibraryManagementSortMode> LibraryManagementMaterialSortByFolder { get; set; } = [];
 
     public HashSet<LibraryManagementSectionColumn> LibraryManagementSectionColumns { get; set; } =
     [
-        LibraryManagementSectionColumn.Folders,
-        LibraryManagementSectionColumn.Materials,
-        LibraryManagementSectionColumn.Articles,
-        LibraryManagementSectionColumn.Questions,
-        LibraryManagementSectionColumn.Created,
-        LibraryManagementSectionColumn.Updated,
-        LibraryManagementSectionColumn.Activity,
+        LibraryManagementSectionColumn.FOLDERS,
+        LibraryManagementSectionColumn.MATERIALS,
+        LibraryManagementSectionColumn.ARTICLES,
+        LibraryManagementSectionColumn.QUESTIONS,
+        LibraryManagementSectionColumn.CREATED,
+        LibraryManagementSectionColumn.UPDATED,
+        LibraryManagementSectionColumn.ACTIVITY,
     ];
 
     public HashSet<LibraryManagementContentColumn> LibraryManagementContentColumns { get; set; } =
     [
-        LibraryManagementContentColumn.Type,
-        LibraryManagementContentColumn.Location,
-        LibraryManagementContentColumn.Questions,
-        LibraryManagementContentColumn.Difficulty,
-        LibraryManagementContentColumn.Updated,
+        LibraryManagementContentColumn.TYPE,
+        LibraryManagementContentColumn.LOCATION,
+        LibraryManagementContentColumn.QUESTIONS,
+        LibraryManagementContentColumn.DIFFICULTY,
+        LibraryManagementContentColumn.UPDATED,
     ];
 }

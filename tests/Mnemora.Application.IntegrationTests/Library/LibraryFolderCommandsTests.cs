@@ -23,7 +23,7 @@ public sealed class LibraryFolderCommandsTests
         await using var db = await SqliteLibraryTestDatabase.CreateAsync();
         var (section, root) = await CreateSectionAsync(db);
         var result = await CreateHandler(db).Handle(
-            new CreateSectionFolderCommand(section.Id.Value, "CLR", FolderColor.Blue, FolderIcon.DotNet),
+            new CreateSectionFolderCommand(section.Id.Value, "CLR", FolderColor.BLUE, FolderIcon.DOT_NET),
             CancellationToken.None);
 
         Assert.True(result.IsSuccess);
@@ -33,8 +33,8 @@ public sealed class LibraryFolderCommandsTests
         Assert.Equal(section.Id, folder.SectionId);
         Assert.Equal(1, folder.Depth);
         Assert.Equal("CLR", folder.Name!.Value);
-        Assert.Equal(FolderColor.Blue, folder.Color);
-        Assert.Equal(FolderIcon.DotNet, folder.Icon);
+        Assert.Equal(FolderColor.BLUE, folder.Color);
+        Assert.Equal(FolderIcon.DOT_NET, folder.Icon);
     }
 
     [Fact]
@@ -46,7 +46,7 @@ public sealed class LibraryFolderCommandsTests
         await db.Context.SaveChangesAsync();
 
         var result = await CreateHandler(db).Handle(
-            new CreateSectionFolderCommand(section.Id.Value, "Existing", FolderColor.Teal, FolderIcon.Folder),
+            new CreateSectionFolderCommand(section.Id.Value, "Existing", FolderColor.TEAL, FolderIcon.FOLDER),
             CancellationToken.None);
 
         Assert.True(result.IsFailure);
@@ -63,15 +63,15 @@ public sealed class LibraryFolderCommandsTests
         await db.Context.SaveChangesAsync();
 
         var result = await UpdateHandler(db).Handle(
-            new UpdateLibraryFolderCommand(folder.Id.Value, "Runtime", FolderColor.Purple, FolderIcon.Code),
+            new UpdateLibraryFolderCommand(folder.Id.Value, "Runtime", FolderColor.PURPLE, FolderIcon.CODE),
             CancellationToken.None);
 
         Assert.True(result.IsSuccess);
         db.Context.ChangeTracker.Clear();
         LibraryContainer persisted = await db.Context.LibraryContainers.SingleAsync(x => x.Id == folder.Id);
         Assert.Equal("Runtime", persisted.Name!.Value);
-        Assert.Equal(FolderColor.Purple, persisted.Color);
-        Assert.Equal(FolderIcon.Code, persisted.Icon);
+        Assert.Equal(FolderColor.PURPLE, persisted.Color);
+        Assert.Equal(FolderIcon.CODE, persisted.Icon);
     }
 
     [Fact]
@@ -84,7 +84,7 @@ public sealed class LibraryFolderCommandsTests
         await db.Context.SaveChangesAsync();
 
         var result = await UpdateHandler(db).Handle(
-            new UpdateLibraryFolderCommand(first.Id.Value, "Second", FolderColor.Blue, FolderIcon.Code),
+            new UpdateLibraryFolderCommand(first.Id.Value, "Second", FolderColor.BLUE, FolderIcon.CODE),
             CancellationToken.None);
 
         Assert.True(result.IsFailure);
@@ -116,7 +116,7 @@ public sealed class LibraryFolderCommandsTests
         LibraryContainer folder = AddFolder(db, root, "Documents");
         var article = Article.CreateInContainer(
             folder.Id, MaterialTitle.Create("Useful document").Value,
-            MaterialDifficulty.Medium, MaterialIcon.DefaultArticle,
+            MaterialDifficulty.MEDIUM, MaterialIcon.DefaultArticle,
             MaterialExperienceRewards.Create(50, 20).Value).Value;
         db.Context.Materials.Add(article);
         await db.Context.SaveChangesAsync();
@@ -162,7 +162,7 @@ public sealed class LibraryFolderCommandsTests
     }
 
     private static Section NewSection() => Section.Create(
-        SectionName.Create("Test section").Value, SectionColor.Teal, SectionIcon.Folder);
+        SectionName.Create("Test section").Value, SectionColor.TEAL, SectionIcon.FOLDER);
 
     private static async Task<(Section Section, LibraryContainer Root)> CreateSectionAsync(
         SqliteLibraryTestDatabase db)
@@ -177,7 +177,7 @@ public sealed class LibraryFolderCommandsTests
         SqliteLibraryTestDatabase db, LibraryContainer parent, string name)
     {
         LibraryContainer folder = LibraryContainer.CreateFolder(
-            parent, FolderName.Create(name).Value, FolderColor.Teal, FolderIcon.Folder).Value;
+            parent, FolderName.Create(name).Value, FolderColor.TEAL, FolderIcon.FOLDER).Value;
         db.Context.LibraryContainers.Add(folder);
         return folder;
     }

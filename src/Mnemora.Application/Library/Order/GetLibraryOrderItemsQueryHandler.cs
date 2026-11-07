@@ -25,9 +25,9 @@ public sealed class GetLibraryOrderItemsQueryHandler(
         {
             return query.Target switch
             {
-                LibraryOrderTarget.Sections => await GetSectionsAsync(cancellationToken),
-                LibraryOrderTarget.Folders => await GetFoldersAsync(query.ParentId, cancellationToken),
-                LibraryOrderTarget.Materials => await GetMaterialsAsync(query.ParentId, cancellationToken),
+                LibraryOrderTarget.SECTIONS => await GetSectionsAsync(cancellationToken),
+                LibraryOrderTarget.FOLDERS => await GetFoldersAsync(query.ParentId, cancellationToken),
+                LibraryOrderTarget.MATERIALS => await GetMaterialsAsync(query.ParentId, cancellationToken),
                 _ => CommonErrors.Validation(
                         "library.order.target.invalid",
                         "Выбран неизвестный уровень библиотеки",
@@ -66,8 +66,8 @@ public sealed class GetLibraryOrderItemsQueryHandler(
             sections.Select(section => new LibraryOrderItemDto(
                     section.Id.Value,
                     section.Name.Value,
-                    section.Icon.ToString(),
-                    section.Color.ToString(),
+                    section.Icon.ToStableName(),
+                    section.Color.ToStableName(),
                     FormatCount(counts.GetValueOrDefault(section.Id.Value), "папка", "папки", "папок"),
                     section.DisplayOrder))
                 .ToArray());
@@ -102,8 +102,8 @@ public sealed class GetLibraryOrderItemsQueryHandler(
             folders.Select(folder => new LibraryOrderItemDto(
                     folder.Id.Value,
                     folder.Name!.Value,
-                    folder.Icon!.Value.ToString(),
-                    folder.Color!.Value.ToString(),
+                    folder.Icon!.Value.ToStableName(),
+                    folder.Color!.Value.ToStableName(),
                     FormatCount(counts.GetValueOrDefault(folder.Id.Value), "материал", "материала", "материалов"),
                     folder.DisplayOrder))
                 .ToArray());
@@ -132,7 +132,7 @@ public sealed class GetLibraryOrderItemsQueryHandler(
                     material.Title.Value,
                     material.Icon.Key,
                     null,
-                    material.Type == MaterialType.Article ? "Статья" : "Вопрос",
+                    material.Type == MaterialType.ARTICLE ? "Статья" : "Вопрос",
                     material.DisplayOrder))
                 .ToArray());
     }

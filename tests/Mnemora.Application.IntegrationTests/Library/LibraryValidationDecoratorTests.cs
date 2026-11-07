@@ -18,7 +18,7 @@ public sealed class LibraryValidationDecoratorTests
             IQueryHandler<LibrarySectionsPageDto, GetLibrarySectionsPageQuery>>();
         var query = new GetLibrarySectionsPageQuery(
             Search: null,
-            LibrarySectionSort.Name,
+            LibrarySectionSort.NAME,
             Offset: -1,
             PageSize: 1_000);
 

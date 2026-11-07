@@ -26,19 +26,19 @@ public sealed class SectionConfiguration
                 name => name.Value,
                 value => SectionName.Create(value).Value)
             .HasMaxLength(SectionName.MAXLENGTH)
-            .UseCollation(SqliteCollations.UnicodeNoCase)
+            .UseCollation(SqliteCollations.UNICODE_NO_CASE)
             .IsRequired()
             .HasColumnName("name");
 
         builder.Property(section => section.Color)
             .HasColumnName("color")
-            .HasConversion<string>()
+            .HasConversion<StableEnumStringConverter<SectionColor>>()
             .HasMaxLength(20)
             .IsRequired();
 
         builder.Property(section => section.Icon)
             .HasColumnName("icon")
-            .HasConversion<string>()
+            .HasConversion<StableEnumStringConverter<SectionIcon>>()
             .HasMaxLength(40)
             .IsRequired();
 
@@ -52,8 +52,8 @@ public sealed class SectionConfiguration
 
         builder.Property(section => section.DisplayOrder)
             .HasColumnName("display_order")
-            .HasDefaultValue(Section.DefaultDisplayOrder)
-            .HasSentinel(Section.DefaultDisplayOrder)
+            .HasDefaultValue(Section.DEFAULT_DISPLAY_ORDER)
+            .HasSentinel(Section.DEFAULT_DISPLAY_ORDER)
             .IsRequired();
 
         builder.HasIndex(section => section.Name)

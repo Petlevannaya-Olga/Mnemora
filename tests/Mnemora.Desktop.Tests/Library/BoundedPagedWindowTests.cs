@@ -37,7 +37,7 @@ public sealed class BoundedPagedWindowTests
             window.ShowPage(
                 offset,
                 Enumerable.Range(offset, 30).ToArray(),
-                PageWindowInsert.Append);
+                PageWindowInsert.APPEND);
 
             window.VisiblePageCount.Should().BeLessThanOrEqualTo(7);
             window.CachedPageCount.Should().BeLessThanOrEqualTo(10);
@@ -59,15 +59,15 @@ public sealed class BoundedPagedWindowTests
         for (int page = 0; page < 10; page++)
         {
             int offset = page * 30;
-            window.ShowPage(offset, Enumerable.Range(offset, 30).ToArray(), PageWindowInsert.Append);
+            window.ShowPage(offset, Enumerable.Range(offset, 30).ToArray(), PageWindowInsert.APPEND);
         }
 
         window.WindowStartOffset.Should().Be(90);
         window.WindowEndOffset.Should().Be(300);
 
-        window.ShowPage(60, Enumerable.Range(60, 30).ToArray(), PageWindowInsert.Prepend);
-        window.ShowPage(30, Enumerable.Range(30, 30).ToArray(), PageWindowInsert.Prepend);
-        window.ShowPage(0, Enumerable.Range(0, 30).ToArray(), PageWindowInsert.Prepend);
+        window.ShowPage(60, Enumerable.Range(60, 30).ToArray(), PageWindowInsert.PREPEND);
+        window.ShowPage(30, Enumerable.Range(30, 30).ToArray(), PageWindowInsert.PREPEND);
+        window.ShowPage(0, Enumerable.Range(0, 30).ToArray(), PageWindowInsert.PREPEND);
 
         window.VisiblePageCount.Should().Be(7);
         window.WindowStartOffset.Should().Be(0);
@@ -84,13 +84,13 @@ public sealed class BoundedPagedWindowTests
         for (int page = 0; page < 12; page++)
         {
             int offset = page * 30;
-            window.ShowPage(offset, Enumerable.Range(offset, 30).ToArray(), PageWindowInsert.Append);
+            window.ShowPage(offset, Enumerable.Range(offset, 30).ToArray(), PageWindowInsert.APPEND);
         }
 
         int previousOffset = window.PreviousOffset;
         window.TryGetCachedPage(previousOffset, out IReadOnlyList<int> cached).Should().BeTrue();
 
-        window.ShowPage(previousOffset, cached, PageWindowInsert.Prepend);
+        window.ShowPage(previousOffset, cached, PageWindowInsert.PREPEND);
 
         window.VisiblePageCount.Should().Be(7);
         window.CachedPageCount.Should().BeLessThanOrEqualTo(10);
@@ -101,7 +101,7 @@ public sealed class BoundedPagedWindowTests
     {
         var window = new BoundedPagedWindow<int>(30, 7, 10);
         window.SetTotalCount(300);
-        window.ShowPage(0, Enumerable.Range(0, 30).ToArray(), PageWindowInsert.Append);
+        window.ShowPage(0, Enumerable.Range(0, 30).ToArray(), PageWindowInsert.APPEND);
         window.StorePage(30, Enumerable.Range(30, 30).ToArray());
 
         window.GetPrefetchOffsets(2).Should().Equal(60, 90);
@@ -115,7 +115,7 @@ public sealed class BoundedPagedWindowTests
 
         for (int offset = 180; offset <= 360; offset += 30)
         {
-            window.ShowPage(offset, Enumerable.Range(offset, 30).ToArray(), PageWindowInsert.Append);
+            window.ShowPage(offset, Enumerable.Range(offset, 30).ToArray(), PageWindowInsert.APPEND);
         }
 
         window.UpdateViewport(35.2).Should().BeTrue();
@@ -127,7 +127,7 @@ public sealed class BoundedPagedWindowTests
     {
         var window = new BoundedPagedWindow<int>(30, 7, 10);
         window.SetTotalCount(1000);
-        window.ShowPage(0, [1, 2, 3], PageWindowInsert.Append);
+        window.ShowPage(0, [1, 2, 3], PageWindowInsert.APPEND);
         window.StorePage(30, [4, 5, 6]);
 
         window.Reset();
@@ -145,8 +145,8 @@ public sealed class BoundedPagedWindowTests
     {
         var window = new BoundedPagedWindow<int>(30, 7, 10);
         window.SetTotalCount(31);
-        window.ShowPage(0, Enumerable.Range(0, 30).ToArray(), PageWindowInsert.Append);
-        window.ShowPage(30, [30], PageWindowInsert.Append);
+        window.ShowPage(0, Enumerable.Range(0, 30).ToArray(), PageWindowInsert.APPEND);
+        window.ShowPage(30, [30], PageWindowInsert.APPEND);
 
         window.WindowEndOffset.Should().Be(31);
         window.HasNext.Should().BeFalse();

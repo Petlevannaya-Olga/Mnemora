@@ -25,8 +25,8 @@ public sealed class GetLibraryQueryHandlerTests
         LibraryContainer nested = LibraryContainer.CreateFolder(
             folder,
             FolderName.Create("Level 2").Value,
-            FolderColor.Teal,
-            FolderIcon.Folder).Value;
+            FolderColor.TEAL,
+            FolderIcon.FOLDER).Value;
 
         db.Context.LibraryContainers.Add(nested);
         await db.Context.SaveChangesAsync();
@@ -66,8 +66,8 @@ public sealed class GetLibraryQueryHandlerTests
 
         Section second = Section.Create(
             SectionName.Create("Second").Value,
-            SectionColor.Teal,
-            SectionIcon.Folder);
+            SectionColor.TEAL,
+            SectionIcon.FOLDER);
         LibraryContainer secondRoot = db.AddSectionWithRoot(second);
         await db.Context.SaveChangesAsync();
         db.Context.ChangeTracker.Clear();
@@ -94,8 +94,8 @@ public sealed class GetLibraryQueryHandlerTests
         await using var db = await SqliteLibraryTestDatabase.CreateAsync();
         Section section = Section.Create(
             SectionName.Create("Empty").Value,
-            SectionColor.Teal,
-            SectionIcon.Folder);
+            SectionColor.TEAL,
+            SectionIcon.FOLDER);
         db.AddSectionWithRoot(section);
         await db.Context.SaveChangesAsync();
         db.Context.ChangeTracker.Clear();

@@ -107,9 +107,9 @@ public partial class CreateMaterialView
 
         string fileName = source switch
         {
-            ArticleSource => "article.md",
-            QuestionSource => "question.md",
-            AnswerSource => "answer.md",
+            ARTICLE_SOURCE => "article.md",
+            QUESTION_SOURCE => "question.md",
+            ANSWER_SOURCE => "answer.md",
             _ => throw new ArgumentOutOfRangeException(
                 nameof(source),
                 source,
@@ -142,9 +142,9 @@ public partial class CreateMaterialView
 
         string sourceDirectoryName = source switch
         {
-            ArticleSource => "article",
-            QuestionSource => "question",
-            AnswerSource => "answer",
+            ARTICLE_SOURCE => "article",
+            QUESTION_SOURCE => "question",
+            ANSWER_SOURCE => "answer",
             _ => throw new ArgumentOutOfRangeException(
                 nameof(source),
                 source,
@@ -350,16 +350,16 @@ public partial class CreateMaterialView
     private static string GetTemplateContent(string source) =>
         source switch
         {
-            ArticleSource =>
+            ARTICLE_SOURCE =>
                 "# Название материала\n\n" +
                 "## Основное\n\n" +
                 "\n\n## Пример\n\n" +
                 "```csharp\n\n```\n",
 
-            QuestionSource =>
+            QUESTION_SOURCE =>
                 "# Вопрос\n\n",
 
-            AnswerSource =>
+            ANSWER_SOURCE =>
                 "# Эталонный ответ\n\n",
 
             _ => throw new ArgumentOutOfRangeException(nameof(source), source, null),

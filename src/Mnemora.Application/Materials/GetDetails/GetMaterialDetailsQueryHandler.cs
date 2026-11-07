@@ -17,7 +17,7 @@ public sealed class GetMaterialDetailsQueryHandler(
     ILogger<GetMaterialDetailsQueryHandler> logger)
     : IQueryHandler<MaterialDetailsDto, GetMaterialDetailsQuery>
 {
-    private const string RootLocationName = "Без папки";
+    private const string ROOT_LOCATION_NAME = "Без папки";
 
     public async Task<Result<MaterialDetailsDto, Errors>> Handle(
         GetMaterialDetailsQuery query,
@@ -83,8 +83,8 @@ public sealed class GetMaterialDetailsQueryHandler(
                 containerRow.Section.Id.Value,
                 containerRow.Section.Name.Value,
                 material.Title.Value,
-                material.Type.ToString(),
-                material.Difficulty.ToString(),
+                material.Type.ToStableName(),
+                material.Difficulty.ToStableName(),
                 material.Icon.Key,
                 material.ExperienceRewards.StudyPoints,
                 material.ExperienceRewards.ReviewPoints,
@@ -141,13 +141,13 @@ public sealed class GetMaterialDetailsQueryHandler(
     {
         if (container.IsRoot)
         {
-            return RootLocationName;
+            return ROOT_LOCATION_NAME;
         }
 
         var names = new Stack<string>();
         LibraryContainer current = container;
 
-        for (int level = 0; level < LibraryContainer.MaxFolderDepth; level++)
+        for (int level = 0; level < LibraryContainer.MAX_FOLDER_DEPTH; level++)
         {
             if (current.IsRoot)
             {
@@ -181,7 +181,7 @@ public sealed class GetMaterialDetailsQueryHandler(
         }
 
         return names.Count == 0
-            ? RootLocationName
+            ? ROOT_LOCATION_NAME
             : string.Join(" / ", names);
     }
 

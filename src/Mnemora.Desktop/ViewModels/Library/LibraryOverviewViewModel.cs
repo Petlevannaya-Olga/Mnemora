@@ -17,9 +17,9 @@ namespace Mnemora.Desktop.ViewModels.Library;
 
 public sealed partial class LibraryOverviewViewModel : ViewModelBase
 {
-    private const int PageSize = LibraryPagingDefaults.PageSize;
-    private const int VisiblePageLimit = 7;
-    private const int CachePageLimit = 10;
+    private const int PAGE_SIZE = LibraryPagingDefaults.PAGE_SIZE;
+    private const int VISIBLE_PAGE_LIMIT = 7;
+    private const int CACHE_PAGE_LIMIT = 10;
     private static readonly TimeSpan SearchDelay = TimeSpan.FromMilliseconds(350);
 
     private readonly IQueryDispatcher _queryDispatcher;
@@ -27,7 +27,7 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
     private readonly IPageNavigationService _pageNavigationService;
     private readonly ILogger<LibraryOverviewViewModel> _logger;
     private readonly BoundedPagedWindow<LibrarySectionOverviewDto> _sectionWindow =
-        new(PageSize, VisiblePageLimit, CachePageLimit);
+        new(PAGE_SIZE, VISIBLE_PAGE_LIMIT, CACHE_PAGE_LIMIT);
 
     private CancellationToken _viewCancellationToken;
     private int _loadVersion;
@@ -51,9 +51,9 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
 
         SortOptions =
         [
-            new("Последняя активность", LibrarySectionSort.RecentActivity),
-            new("По названию", LibrarySectionSort.Name),
-            new("Сначала новые", LibrarySectionSort.Newest)
+            new("Последняя активность", LibrarySectionSort.RECENT_ACTIVITY),
+            new("По названию", LibrarySectionSort.NAME),
+            new("Сначала новые", LibrarySectionSort.NEWEST)
         ];
 
         _selectedSortOption = SortOptions[0];
@@ -128,7 +128,7 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(IsTilesView))]
     [NotifyPropertyChangedFor(nameof(IsCompactTilesView))]
     [NotifyPropertyChangedFor(nameof(IsTilesPerRowSelectorVisible))]
-    private LibraryOverviewViewMode _overviewViewMode = LibraryOverviewViewMode.Tiles;
+    private LibraryOverviewViewMode _overviewViewMode = LibraryOverviewViewMode.TILES;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(DesiredTilesPerRow))]
@@ -164,11 +164,11 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
         !HasSections &&
         !string.IsNullOrWhiteSpace(SearchText);
 
-    public bool IsTableView => OverviewViewMode == LibraryOverviewViewMode.Table;
+    public bool IsTableView => OverviewViewMode == LibraryOverviewViewMode.TABLE;
 
-    public bool IsTilesView => OverviewViewMode == LibraryOverviewViewMode.Tiles;
+    public bool IsTilesView => OverviewViewMode == LibraryOverviewViewMode.TILES;
 
-    public bool IsCompactTilesView => OverviewViewMode == LibraryOverviewViewMode.CompactTiles;
+    public bool IsCompactTilesView => OverviewViewMode == LibraryOverviewViewMode.COMPACT_TILES;
 
     public bool IsTilesPerRowSelectorVisible => !IsTableView;
 
@@ -183,7 +183,7 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
         get
         {
             int visibleCount = Math.Min(
-                PageSize,
+                PAGE_SIZE,
                 Math.Max(0, TotalCount - CurrentPageOffset));
 
             return LibraryRangeTextFormatter.FormatEntity(
@@ -248,7 +248,7 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
 
         await ShowSectionPageAsync(
             request.Offset,
-            request.IsPreviousPage ? PageWindowInsert.Prepend : PageWindowInsert.Append,
+            request.IsPreviousPage ? PageWindowInsert.PREPEND : PageWindowInsert.APPEND,
             loadVersion,
             linkedCancellationTokenSource.Token,
             isInitialPage: false,
@@ -258,19 +258,19 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
     [RelayCommand]
     private Task ShowTableViewAsync(CancellationToken cancellationToken)
     {
-        return SetViewModeAsync(LibraryOverviewViewMode.Table, cancellationToken);
+        return SetViewModeAsync(LibraryOverviewViewMode.TABLE, cancellationToken);
     }
 
     [RelayCommand]
     private Task ShowTilesViewAsync(CancellationToken cancellationToken)
     {
-        return SetViewModeAsync(LibraryOverviewViewMode.Tiles, cancellationToken);
+        return SetViewModeAsync(LibraryOverviewViewMode.TILES, cancellationToken);
     }
 
     [RelayCommand]
     private Task ShowCompactTilesViewAsync(CancellationToken cancellationToken)
     {
-        return SetViewModeAsync(LibraryOverviewViewMode.CompactTiles, cancellationToken);
+        return SetViewModeAsync(LibraryOverviewViewMode.COMPACT_TILES, cancellationToken);
     }
     
     [RelayCommand]
@@ -387,7 +387,7 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
 
         await ShowSectionPageAsync(
             _sectionWindow.NextOffset,
-            PageWindowInsert.Append,
+            PageWindowInsert.APPEND,
             _loadVersion,
             linkedCancellationTokenSource.Token,
             isInitialPage: false,
@@ -407,7 +407,7 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
 
         await ShowSectionPageAsync(
             _sectionWindow.PreviousOffset,
-            PageWindowInsert.Prepend,
+            PageWindowInsert.PREPEND,
             _loadVersion,
             linkedCancellationTokenSource.Token,
             isInitialPage: false,
@@ -437,7 +437,7 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
 
         await ShowSectionPageAsync(
             0,
-            PageWindowInsert.Append,
+            PageWindowInsert.APPEND,
             loadVersion,
             cancellationToken,
             isInitialPage: true,
@@ -498,7 +498,7 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
                 SearchText,
                 SelectedSortOption.Sort,
                 offset,
-                PageSize);
+                PAGE_SIZE);
 
             var result = await _queryDispatcher.SendAsync<
                 GetLibrarySectionsPageQuery,
@@ -736,7 +736,7 @@ public sealed partial class LibraryOverviewViewModel : ViewModelBase
         {
             _logger.LogWarning(exception, "Не удалось загрузить режим просмотра разделов");
 
-            OverviewViewMode = LibraryOverviewViewMode.Tiles;
+            OverviewViewMode = LibraryOverviewViewMode.TILES;
             _isViewModeLoaded = true;
         }
     }

@@ -36,8 +36,8 @@ public sealed class GetHomeLibrarySummaryQueryHandlerTests
         LibraryContainer folder = LibraryContainer.CreateFolder(
             root,
             FolderName.Create("C#").Value,
-            FolderColor.Teal,
-            FolderIcon.Bookmark).Value;
+            FolderColor.TEAL,
+            FolderIcon.BOOKMARK).Value;
         db.Context.LibraryContainers.Add(folder);
         await db.Context.SaveChangesAsync();
         db.Context.ChangeTracker.Clear();
@@ -61,8 +61,8 @@ public sealed class GetHomeLibrarySummaryQueryHandlerTests
         LibraryContainer nestedFolder = LibraryContainer.CreateFolder(
             firstLevelFolder,
             FolderName.Create("Nested folder").Value,
-            FolderColor.Teal,
-            FolderIcon.Bookmark).Value;
+            FolderColor.TEAL,
+            FolderIcon.BOOKMARK).Value;
 
         db.Context.LibraryContainers.Add(nestedFolder);
         await db.Context.SaveChangesAsync();
@@ -143,16 +143,16 @@ public sealed class GetHomeLibrarySummaryQueryHandlerTests
     [Trait("Category", "LargeLoad")]
     public async Task LargeLoad_50000SectionsAndFolders_RemainsAggregateBounded()
     {
-        const int targetCount = 50_000;
-        const int batchSize = 2_000;
+        const int TARGET_COUNT = 50_000;
+        const int BATCH_SIZE = 2_000;
 
         await using var db = await SqliteLibraryTestDatabase.CreateAsync();
 
         SectionId? hotSectionId = null;
 
-        for (int start = 0; start < targetCount; start += batchSize)
+        for (int start = 0; start < TARGET_COUNT; start += BATCH_SIZE)
         {
-            int end = Math.Min(start + batchSize, targetCount);
+            int end = Math.Min(start + BATCH_SIZE, TARGET_COUNT);
             var batch = new List<Section>(end - start);
 
             for (int index = start; index < end; index++)
@@ -174,9 +174,9 @@ public sealed class GetHomeLibrarySummaryQueryHandlerTests
         await db.Context.SaveChangesAsync();
         db.Context.ChangeTracker.Clear();
 
-        for (int start = 0; start < targetCount; start += batchSize)
+        for (int start = 0; start < TARGET_COUNT; start += BATCH_SIZE)
         {
-            int end = Math.Min(start + batchSize, targetCount);
+            int end = Math.Min(start + BATCH_SIZE, TARGET_COUNT);
             var batch = new List<LibraryContainer>(end - start);
 
             for (int index = start; index < end; index++)
@@ -184,8 +184,8 @@ public sealed class GetHomeLibrarySummaryQueryHandlerTests
                 batch.Add(LibraryContainer.CreateFolder(
                     root,
                     FolderName.Create($"Folder {index:D5}").Value,
-                    FolderColor.Teal,
-                    FolderIcon.Bookmark).Value);
+                    FolderColor.TEAL,
+                    FolderIcon.BOOKMARK).Value);
             }
 
             db.Context.LibraryContainers.AddRange(batch);
@@ -200,8 +200,8 @@ public sealed class GetHomeLibrarySummaryQueryHandlerTests
         var result = await sut.Handle(new GetHomeLibrarySummaryQuery());
 
         result.IsSuccess.Should().BeTrue();
-        result.Value.SectionsCount.Should().Be(targetCount);
-        result.Value.FoldersCount.Should().Be(targetCount);
+        result.Value.SectionsCount.Should().Be(TARGET_COUNT);
+        result.Value.FoldersCount.Should().Be(TARGET_COUNT);
         result.Value.SuggestedSection.Should().NotBeNull();
         result.Value.SuggestedSection!.Id.Should().NotBe(hotSectionId!.Value);
         db.CommandCounter.Count.Should().Be(3);

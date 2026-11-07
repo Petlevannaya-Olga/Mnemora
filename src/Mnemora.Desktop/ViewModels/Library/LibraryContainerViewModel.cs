@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Threading;
@@ -20,24 +21,28 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
 {
     private enum MixedContentFilter
     {
-        All,
-        Folders,
-        Articles,
-        Questions,
+        [JsonStringEnumMemberName("All")]
+        ALL,
+        [JsonStringEnumMemberName("Folders")]
+        FOLDERS,
+        [JsonStringEnumMemberName("Articles")]
+        ARTICLES,
+        [JsonStringEnumMemberName("Questions")]
+        QUESTIONS,
     }
 
-    private const int FolderPageSize = LibraryPagingDefaults.PageSize;
-    private const int FolderVisiblePageLimit = 7;
-    private const int FolderCachePageLimit = 10;
-    private const int MaterialPageSize = 50;
-    private const int MaterialVisiblePageLimit = 7;
-    private const int MaterialCachePageLimit = 10;
-    private const int MixedPageSize = 50;
-    private const int MixedVisiblePageLimit = 7;
-    private const int MixedCachePageLimit = 10;
-    private const double DefaultFoldersPaneRatio = 1d / 3d;
-    private const double MinFoldersPaneRatio = 0.1;
-    private const double MaxFoldersPaneRatio = 0.9;
+    private const int FOLDER_PAGE_SIZE = LibraryPagingDefaults.PAGE_SIZE;
+    private const int FOLDER_VISIBLE_PAGE_LIMIT = 7;
+    private const int FOLDER_CACHE_PAGE_LIMIT = 10;
+    private const int MATERIAL_PAGE_SIZE = 50;
+    private const int MATERIAL_VISIBLE_PAGE_LIMIT = 7;
+    private const int MATERIAL_CACHE_PAGE_LIMIT = 10;
+    private const int MIXED_PAGE_SIZE = 50;
+    private const int MIXED_VISIBLE_PAGE_LIMIT = 7;
+    private const int MIXED_CACHE_PAGE_LIMIT = 10;
+    private const double DEFAULT_FOLDERS_PANE_RATIO = 1d / 3d;
+    private const double MIN_FOLDERS_PANE_RATIO = 0.1;
+    private const double MAX_FOLDERS_PANE_RATIO = 0.9;
     private static readonly TimeSpan SearchDelay =
         TimeSpan.FromMilliseconds(350);
 
@@ -48,11 +53,11 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
     private readonly ILogger<LibraryContainerViewModel> _logger;
 
     private readonly BoundedPagedWindow<LibraryFolderDto> _folderWindow =
-        new(FolderPageSize, FolderVisiblePageLimit, FolderCachePageLimit);
+        new(FOLDER_PAGE_SIZE, FOLDER_VISIBLE_PAGE_LIMIT, FOLDER_CACHE_PAGE_LIMIT);
     private readonly BoundedPagedWindow<LibraryMaterialDto> _materialWindow =
-        new(MaterialPageSize, MaterialVisiblePageLimit, MaterialCachePageLimit);
+        new(MATERIAL_PAGE_SIZE, MATERIAL_VISIBLE_PAGE_LIMIT, MATERIAL_CACHE_PAGE_LIMIT);
     private readonly BoundedPagedWindow<LibraryContentListItemViewModel> _mixedWindow =
-        new(MixedPageSize, MixedVisiblePageLimit, MixedCachePageLimit);
+        new(MIXED_PAGE_SIZE, MIXED_VISIBLE_PAGE_LIMIT, MIXED_CACHE_PAGE_LIMIT);
 
     private CancellationToken _viewCancellationToken;
     private Guid _containerId;
@@ -62,7 +67,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
     private int _mixedLoadVersion;
     private int _mixedFoldersTotalCount = -1;
     private int _mixedMaterialsTotalCount = -1;
-    private MixedContentFilter _mixedContentFilter = MixedContentFilter.All;
+    private MixedContentFilter _mixedContentFilter = MixedContentFilter.ALL;
     private (int Offset, bool IsPreviousPage)? _failedFoldersPage;
     private (int Offset, bool IsPreviousPage)? _failedMaterialsPage;
     private (int Offset, bool IsPreviousPage)? _failedMixedPage;
@@ -84,29 +89,29 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
 
         FilterOptions =
         [
-            new("Все", LibraryMaterialFilter.All),
-            new("Статьи", LibraryMaterialFilter.Articles),
-            new("Вопросы", LibraryMaterialFilter.Questions),
+            new("Все", LibraryMaterialFilter.ALL),
+            new("Статьи", LibraryMaterialFilter.ARTICLES),
+            new("Вопросы", LibraryMaterialFilter.QUESTIONS),
         ];
 
         SortOptions =
         [
             new(
                 "Мой порядок",
-                LibraryFolderSort.Custom,
-                LibraryMaterialSort.Custom),
+                LibraryFolderSort.CUSTOM,
+                LibraryMaterialSort.CUSTOM),
             new(
                 "Недавно изменённые",
-                LibraryFolderSort.RecentlyUpdated,
-                LibraryMaterialSort.RecentlyUpdated),
+                LibraryFolderSort.RECENTLY_UPDATED,
+                LibraryMaterialSort.RECENTLY_UPDATED),
             new(
                 "По названию",
-                LibraryFolderSort.Name,
-                LibraryMaterialSort.Name),
+                LibraryFolderSort.NAME,
+                LibraryMaterialSort.NAME),
             new(
                 "Сначала новые",
-                LibraryFolderSort.Newest,
-                LibraryMaterialSort.Newest),
+                LibraryFolderSort.NEWEST,
+                LibraryMaterialSort.NEWEST),
         ];
 
         _selectedFilterOption = FilterOptions[0];
@@ -287,7 +292,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(IsTilesView))]
     [NotifyPropertyChangedFor(nameof(IsCompactTilesView))]
     [NotifyPropertyChangedFor(nameof(IsTilesPerRowSelectorVisible))]
-    private LibraryFoldersViewMode _viewMode = LibraryFoldersViewMode.CompactTiles;
+    private LibraryFoldersViewMode _viewMode = LibraryFoldersViewMode.COMPACT_TILES;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(DesiredTilesPerRow))]
@@ -295,7 +300,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
         LibraryTilesPerRowOptions.Auto;
 
     [ObservableProperty]
-    private double _foldersPaneRatio = DefaultFoldersPaneRatio;
+    private double _foldersPaneRatio = DEFAULT_FOLDERS_PANE_RATIO;
 
     [ObservableProperty]
     private int _actualFolderTilesPerRow = 1;
@@ -459,23 +464,23 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
         }
     }
 
-    public bool IsMixedAllFilter => _mixedContentFilter == MixedContentFilter.All;
-    public bool IsMixedFoldersFilter => _mixedContentFilter == MixedContentFilter.Folders;
-    public bool IsMixedArticlesFilter => _mixedContentFilter == MixedContentFilter.Articles;
-    public bool IsMixedQuestionsFilter => _mixedContentFilter == MixedContentFilter.Questions;
+    public bool IsMixedAllFilter => _mixedContentFilter == MixedContentFilter.ALL;
+    public bool IsMixedFoldersFilter => _mixedContentFilter == MixedContentFilter.FOLDERS;
+    public bool IsMixedArticlesFilter => _mixedContentFilter == MixedContentFilter.ARTICLES;
+    public bool IsMixedQuestionsFilter => _mixedContentFilter == MixedContentFilter.QUESTIONS;
 
     public bool IsAllFilter =>
-        SelectedFilterOption.Filter == LibraryMaterialFilter.All;
+        SelectedFilterOption.Filter == LibraryMaterialFilter.ALL;
 
     public bool IsArticlesFilter =>
-        SelectedFilterOption.Filter == LibraryMaterialFilter.Articles;
+        SelectedFilterOption.Filter == LibraryMaterialFilter.ARTICLES;
 
     public bool IsQuestionsFilter =>
-        SelectedFilterOption.Filter == LibraryMaterialFilter.Questions;
+        SelectedFilterOption.Filter == LibraryMaterialFilter.QUESTIONS;
 
-    public bool IsTableView => ViewMode == LibraryFoldersViewMode.Table;
-    public bool IsTilesView => ViewMode == LibraryFoldersViewMode.Tiles;
-    public bool IsCompactTilesView => ViewMode == LibraryFoldersViewMode.CompactTiles;
+    public bool IsTableView => ViewMode == LibraryFoldersViewMode.TABLE;
+    public bool IsTilesView => ViewMode == LibraryFoldersViewMode.TILES;
+    public bool IsCompactTilesView => ViewMode == LibraryFoldersViewMode.COMPACT_TILES;
 
     public bool IsTilesPerRowSelectorVisible => !IsTableView;
 
@@ -495,7 +500,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
             }
 
             int visibleCount = Math.Min(
-                FolderPageSize,
+                FOLDER_PAGE_SIZE,
                 Math.Max(0, FoldersTotalCount - FoldersCurrentPageOffset));
 
             return LibraryRangeTextFormatter.FormatEntity(
@@ -523,7 +528,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
         get
         {
             int visibleCount = Math.Min(
-                MaterialPageSize,
+                MATERIAL_PAGE_SIZE,
                 Math.Max(0, MaterialsTotalCount - MaterialsCurrentPageOffset));
 
             return LibraryRangeTextFormatter.Format(
@@ -549,7 +554,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
         get
         {
             int visibleCount = Math.Min(
-                MixedPageSize,
+                MIXED_PAGE_SIZE,
                 Math.Max(0, MixedTotalCount - MixedCurrentPageOffset));
 
             return LibraryRangeTextFormatter.FormatEntity(
@@ -666,7 +671,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
 
         _materialNavigationService.OpenArticle(
             material.Id,
-            LibraryArticleOpenOrigin.Overview);
+            LibraryArticleOpenOrigin.OVERVIEW);
     }
 
     private static bool CanOpenArticle(
@@ -745,7 +750,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
         FoldersErrorMessage = null;
         await ShowFolderPageAsync(
             page.Offset,
-            page.IsPreviousPage ? PageWindowInsert.Prepend : PageWindowInsert.Append,
+            page.IsPreviousPage ? PageWindowInsert.PREPEND : PageWindowInsert.APPEND,
             _foldersLoadVersion,
             linkedCancellationTokenSource.Token,
             isInitialPage: false,
@@ -770,7 +775,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
         MaterialsErrorMessage = null;
         await ShowMaterialPageAsync(
             page.Offset,
-            page.IsPreviousPage ? PageWindowInsert.Prepend : PageWindowInsert.Append,
+            page.IsPreviousPage ? PageWindowInsert.PREPEND : PageWindowInsert.APPEND,
             _materialsLoadVersion,
             linkedCancellationTokenSource.Token,
             isInitialPage: false,
@@ -795,7 +800,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
         MixedErrorMessage = null;
         await ShowMixedPageAsync(
             page.Offset,
-            page.IsPreviousPage ? PageWindowInsert.Prepend : PageWindowInsert.Append,
+            page.IsPreviousPage ? PageWindowInsert.PREPEND : PageWindowInsert.APPEND,
             _mixedLoadVersion,
             linkedCancellationTokenSource.Token,
             isInitialPage: false,
@@ -822,19 +827,19 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
 
     [RelayCommand]
     private void SelectAllContent() =>
-        SetMixedContentFilter(MixedContentFilter.All);
+        SetMixedContentFilter(MixedContentFilter.ALL);
 
     [RelayCommand]
     private void SelectFoldersContent() =>
-        SetMixedContentFilter(MixedContentFilter.Folders);
+        SetMixedContentFilter(MixedContentFilter.FOLDERS);
 
     [RelayCommand]
     private void SelectArticlesContent() =>
-        SetMixedContentFilter(MixedContentFilter.Articles);
+        SetMixedContentFilter(MixedContentFilter.ARTICLES);
 
     [RelayCommand]
     private void SelectQuestionsContent() =>
-        SetMixedContentFilter(MixedContentFilter.Questions);
+        SetMixedContentFilter(MixedContentFilter.QUESTIONS);
 
     private void SetMixedContentFilter(MixedContentFilter filter)
     {
@@ -859,15 +864,15 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
 
     [RelayCommand]
     private Task ShowTilesViewAsync(CancellationToken cancellationToken) =>
-        SetViewModeAsync(LibraryFoldersViewMode.Tiles, cancellationToken);
+        SetViewModeAsync(LibraryFoldersViewMode.TILES, cancellationToken);
 
     [RelayCommand]
     private Task ShowCompactTilesViewAsync(CancellationToken cancellationToken) =>
-        SetViewModeAsync(LibraryFoldersViewMode.CompactTiles, cancellationToken);
+        SetViewModeAsync(LibraryFoldersViewMode.COMPACT_TILES, cancellationToken);
 
     [RelayCommand]
     private Task ShowTableViewAsync(CancellationToken cancellationToken) =>
-        SetViewModeAsync(LibraryFoldersViewMode.Table, cancellationToken);
+        SetViewModeAsync(LibraryFoldersViewMode.TABLE, cancellationToken);
 
     partial void OnSearchTextChanged(string? value)
     {
@@ -1095,7 +1100,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
 
         await ShowFolderPageAsync(
             0,
-            PageWindowInsert.Append,
+            PageWindowInsert.APPEND,
             version,
             cancellationToken,
             isInitialPage: true,
@@ -1118,7 +1123,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
 
         return ShowFolderPageAsync(
             _folderWindow.NextOffset,
-            PageWindowInsert.Append,
+            PageWindowInsert.APPEND,
             version,
             cancellationToken,
             isInitialPage: false,
@@ -1141,7 +1146,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
 
         return ShowFolderPageAsync(
             _folderWindow.PreviousOffset,
-            PageWindowInsert.Prepend,
+            PageWindowInsert.PREPEND,
             version,
             cancellationToken,
             isInitialPage: false,
@@ -1205,7 +1210,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
                 SearchText,
                 SelectedSortOption.FolderSort,
                 offset,
-                FolderPageSize);
+                FOLDER_PAGE_SIZE);
 
             var result = await _queryDispatcher.SendAsync<
                 GetLibraryFoldersPageQuery,
@@ -1349,7 +1354,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
 
         await ShowMaterialPageAsync(
             0,
-            PageWindowInsert.Append,
+            PageWindowInsert.APPEND,
             version,
             cancellationToken,
             isInitialPage: true,
@@ -1372,7 +1377,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
 
         return ShowMaterialPageAsync(
             _materialWindow.NextOffset,
-            PageWindowInsert.Append,
+            PageWindowInsert.APPEND,
             version,
             cancellationToken,
             isInitialPage: false,
@@ -1395,7 +1400,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
 
         return ShowMaterialPageAsync(
             _materialWindow.PreviousOffset,
-            PageWindowInsert.Prepend,
+            PageWindowInsert.PREPEND,
             version,
             cancellationToken,
             isInitialPage: false,
@@ -1456,7 +1461,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
                     SelectedFilterOption.Filter,
                     SelectedSortOption.MaterialSort,
                     offset,
-                    MaterialPageSize),
+                    MATERIAL_PAGE_SIZE),
                 cancellationToken);
 
             if (version != _materialsLoadVersion || cancellationToken.IsCancellationRequested)
@@ -1578,7 +1583,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
 
         await ShowMixedPageAsync(
             0,
-            PageWindowInsert.Append,
+            PageWindowInsert.APPEND,
             version,
             cancellationToken,
             isInitialPage: true,
@@ -1601,7 +1606,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
 
         return ShowMixedPageAsync(
             _mixedWindow.NextOffset,
-            PageWindowInsert.Append,
+            PageWindowInsert.APPEND,
             version,
             cancellationToken,
             isInitialPage: false,
@@ -1624,7 +1629,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
 
         return ShowMixedPageAsync(
             _mixedWindow.PreviousOffset,
-            PageWindowInsert.Prepend,
+            PageWindowInsert.PREPEND,
             version,
             cancellationToken,
             isInitialPage: false,
@@ -1734,10 +1739,10 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
             int offset,
             CancellationToken cancellationToken)
     {
-        if (_mixedContentFilter == MixedContentFilter.Folders)
+        if (_mixedContentFilter == MixedContentFilter.FOLDERS)
         {
             LibraryFoldersPageDto page = await GetFoldersPageForMixedAsync(
-                version, offset, MixedPageSize, cancellationToken);
+                version, offset, MIXED_PAGE_SIZE, cancellationToken);
 
             return (
                 page.Items
@@ -1747,10 +1752,10 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
                 page.TotalCount);
         }
 
-        if (_mixedContentFilter is MixedContentFilter.Articles or MixedContentFilter.Questions)
+        if (_mixedContentFilter is MixedContentFilter.ARTICLES or MixedContentFilter.QUESTIONS)
         {
             LibraryMaterialsPageDto page = await GetMaterialsPageForMixedAsync(
-                version, offset, MixedPageSize, cancellationToken);
+                version, offset, MIXED_PAGE_SIZE, cancellationToken);
 
             return (
                 page.Items
@@ -1763,8 +1768,8 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
         await EnsureMixedTotalsAsync(version, cancellationToken);
 
         int totalCount = _mixedFoldersTotalCount + _mixedMaterialsTotalCount;
-        var result = new List<LibraryContentListItemViewModel>(MixedPageSize);
-        int remaining = MixedPageSize;
+        var result = new List<LibraryContentListItemViewModel>(MIXED_PAGE_SIZE);
+        int remaining = MIXED_PAGE_SIZE;
 
         if (offset < _mixedFoldersTotalCount)
         {
@@ -1885,9 +1890,9 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
     private LibraryMaterialFilter GetMixedMaterialFilter() =>
         _mixedContentFilter switch
         {
-            MixedContentFilter.Articles => LibraryMaterialFilter.Articles,
-            MixedContentFilter.Questions => LibraryMaterialFilter.Questions,
-            _ => LibraryMaterialFilter.All,
+            MixedContentFilter.ARTICLES => LibraryMaterialFilter.ARTICLES,
+            MixedContentFilter.QUESTIONS => LibraryMaterialFilter.QUESTIONS,
+            _ => LibraryMaterialFilter.ALL,
         };
 
     private void RebuildMixedContent()
@@ -2155,8 +2160,8 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
                 exception,
                 "Не удалось загрузить режим просмотра содержимого библиотеки");
 
-            ViewMode = LibraryFoldersViewMode.CompactTiles;
-            FoldersPaneRatio = DefaultFoldersPaneRatio;
+            ViewMode = LibraryFoldersViewMode.COMPACT_TILES;
+            FoldersPaneRatio = DEFAULT_FOLDERS_PANE_RATIO;
             _isViewModeLoaded = true;
         }
     }
@@ -2249,13 +2254,13 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
     {
         if (!double.IsFinite(foldersPaneRatio))
         {
-            return DefaultFoldersPaneRatio;
+            return DEFAULT_FOLDERS_PANE_RATIO;
         }
 
         return Math.Clamp(
             foldersPaneRatio,
-            MinFoldersPaneRatio,
-            MaxFoldersPaneRatio);
+            MIN_FOLDERS_PANE_RATIO,
+            MAX_FOLDERS_PANE_RATIO);
     }
 
     private void NotifyFolderStateChanged()

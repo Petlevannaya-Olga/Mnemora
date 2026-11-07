@@ -14,7 +14,7 @@ internal sealed class SectionSqliteErrorHandler : ISqliteErrorHandler
     {
         error = null!;
 
-        if (sqliteException.SqliteExtendedErrorCode != SqliteExtendedErrorCodes.UniqueConstraint)
+        if (sqliteException.SqliteExtendedErrorCode != SqliteExtendedErrorCodes.UNIQUE_CONSTRAINT)
         {
             return false;
         }

@@ -16,66 +16,68 @@ public sealed class LibraryStressDataSeeder(
     IDbContextFactory<MnemoraDbContext> dbContextFactory,
     ILogger<LibraryStressDataSeeder> logger)
 {
-    public const int TargetCount = 50_000;
+    #pragma warning disable CA1707
+    public const int TARGET_COUNT = 50_000;
+    #pragma warning restore CA1707
 
-    private const string SeederVersion = "v5-library-containers";
-    private const string SectionPrefix = "STRESS V5 — ";
-    private const int BatchSize = 1_000;
-    private const int MixedFolderCount = 5_000;
-    private const int MixedMaterialCount = 5_000;
-    private const int IntermediateDepthMaterialCount = 5_000;
-    private const int TypeCount = 25_000;
-    private const int LinkedQuestionCount = 5_000;
+    private const string SEEDER_VERSION = "v5-library-containers";
+    private const string SECTION_PREFIX = "STRESS V5 — ";
+    private const int BATCH_SIZE = 1_000;
+    private const int MIXED_FOLDER_COUNT = 5_000;
+    private const int MIXED_MATERIAL_COUNT = 5_000;
+    private const int INTERMEDIATE_DEPTH_MATERIAL_COUNT = 5_000;
+    private const int TYPE_COUNT = 25_000;
+    private const int LINKED_QUESTION_COUNT = 5_000;
 
-    private const string FoldersSectionName = "STRESS V5 — 01 — 50 000 папок";
-    private const string RootMaterialsSectionName = "STRESS V5 — 02 — 50 000 материалов в разделе";
-    private const string MixedSectionName = "STRESS V5 — 03 — папки + материалы";
-    private const string Depth1SectionName = "STRESS V5 — 04 — L1, 5 000 материалов";
-    private const string Depth2SectionName = "STRESS V5 — 05 — L2, 5 000 материалов";
-    private const string Depth3SectionName = "STRESS V5 — 06 — L3, 50 000 материалов";
-    private const string TypesSectionName = "STRESS V5 — 07 — статьи + вопросы";
-    private const string EmptySectionName = "STRESS V5 — 08 — пустой";
-    private const string OneFolderSectionName = "STRESS V5 — 09 — одна папка";
-    private const string FiveMaterialsSectionName = "STRESS V5 — 10 — пять материалов";
-    private const string Folders29SectionName = "STRESS V5 — 11 — 29 папок";
-    private const string Folders30SectionName = "STRESS V5 — 12 — 30 папок";
-    private const string Folders31SectionName = "STRESS V5 — 13 — 31 папка";
-    private const string Materials29SectionName = "STRESS V5 — 14 — 29 материалов";
-    private const string Materials30SectionName = "STRESS V5 — 15 — 30 материалов";
-    private const string Materials31SectionName = "STRESS V5 — 16 — 31 материал";
+    private const string FOLDERS_SECTION_NAME = "STRESS V5 — 01 — 50 000 папок";
+    private const string ROOT_MATERIALS_SECTION_NAME = "STRESS V5 — 02 — 50 000 материалов в разделе";
+    private const string MIXED_SECTION_NAME = "STRESS V5 — 03 — папки + материалы";
+    private const string DEPTH1_SECTION_NAME = "STRESS V5 — 04 — L1, 5 000 материалов";
+    private const string DEPTH2_SECTION_NAME = "STRESS V5 — 05 — L2, 5 000 материалов";
+    private const string DEPTH3_SECTION_NAME = "STRESS V5 — 06 — L3, 50 000 материалов";
+    private const string TYPES_SECTION_NAME = "STRESS V5 — 07 — статьи + вопросы";
+    private const string EMPTY_SECTION_NAME = "STRESS V5 — 08 — пустой";
+    private const string ONE_FOLDER_SECTION_NAME = "STRESS V5 — 09 — одна папка";
+    private const string FIVE_MATERIALS_SECTION_NAME = "STRESS V5 — 10 — пять материалов";
+    private const string FOLDERS29_SECTION_NAME = "STRESS V5 — 11 — 29 папок";
+    private const string FOLDERS30_SECTION_NAME = "STRESS V5 — 12 — 30 папок";
+    private const string FOLDERS31_SECTION_NAME = "STRESS V5 — 13 — 31 папка";
+    private const string MATERIALS29_SECTION_NAME = "STRESS V5 — 14 — 29 материалов";
+    private const string MATERIALS30_SECTION_NAME = "STRESS V5 — 15 — 30 материалов";
+    private const string MATERIALS31_SECTION_NAME = "STRESS V5 — 16 — 31 материал";
 
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
         var stopwatch = Stopwatch.StartNew();
         await using MnemoraDbContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        logger.LogInformation("Stress seed {Version} started", SeederVersion);
+        logger.LogInformation("Stress seed {Version} started", SEEDER_VERSION);
 
         await EnsureSectionsAndRootsAsync(dbContext, cancellationToken);
         await SeedFolderPagingScenarioAsync(dbContext, cancellationToken);
         await SeedRootMaterialsScenarioAsync(dbContext, cancellationToken);
         await SeedMixedScenarioAsync(dbContext, cancellationToken);
-        await SeedDepthScenarioAsync(dbContext, Depth1SectionName, 1, IntermediateDepthMaterialCount, cancellationToken);
-        await SeedDepthScenarioAsync(dbContext, Depth2SectionName, 2, IntermediateDepthMaterialCount, cancellationToken);
-        await SeedDepthScenarioAsync(dbContext, Depth3SectionName, 3, TargetCount, cancellationToken);
+        await SeedDepthScenarioAsync(dbContext, DEPTH1_SECTION_NAME, 1, INTERMEDIATE_DEPTH_MATERIAL_COUNT, cancellationToken);
+        await SeedDepthScenarioAsync(dbContext, DEPTH2_SECTION_NAME, 2, INTERMEDIATE_DEPTH_MATERIAL_COUNT, cancellationToken);
+        await SeedDepthScenarioAsync(dbContext, DEPTH3_SECTION_NAME, 3, TARGET_COUNT, cancellationToken);
         await SeedTypesScenarioAsync(dbContext, cancellationToken);
         await SeedOneFolderScenarioAsync(dbContext, cancellationToken);
         await SeedFiveMaterialsScenarioAsync(dbContext, cancellationToken);
         await SeedFolderBoundaryScenariosAsync(dbContext, cancellationToken);
         await SeedMaterialBoundaryScenariosAsync(dbContext, cancellationToken);
 
-        logger.LogInformation("Stress seed {Version} completed in {Elapsed}", SeederVersion, stopwatch.Elapsed);
+        logger.LogInformation("Stress seed {Version} completed in {Elapsed}", SEEDER_VERSION, stopwatch.Elapsed);
     }
 
     private async Task EnsureSectionsAndRootsAsync(MnemoraDbContext dbContext, CancellationToken cancellationToken)
     {
-        string pattern = SectionPrefix + "%";
+        string pattern = SECTION_PREFIX + "%";
         int existingCount = await dbContext.Sections
             .FromSqlInterpolated($"SELECT * FROM sections WHERE name LIKE {pattern}")
             .AsNoTracking()
             .CountAsync(cancellationToken);
 
-        if (existingCount >= TargetCount)
+        if (existingCount >= TARGET_COUNT)
         {
             logger.LogInformation("Stress V5 sections already exist: {Count}", existingCount);
             return;
@@ -84,9 +86,9 @@ public sealed class LibraryStressDataSeeder(
         SectionColor sectionColor = Enum.GetValues<SectionColor>()[0];
         SectionIcon sectionIcon = Enum.GetValues<SectionIcon>()[0];
 
-        for (int start = existingCount; start < TargetCount; start += BatchSize)
+        for (int start = existingCount; start < TARGET_COUNT; start += BATCH_SIZE)
         {
-            int end = Math.Min(start + BatchSize, TargetCount);
+            int end = Math.Min(start + BATCH_SIZE, TARGET_COUNT);
             var sections = new List<Section>(end - start);
             var roots = new List<LibraryContainer>(end - start);
 
@@ -105,30 +107,30 @@ public sealed class LibraryStressDataSeeder(
             dbContext.LibraryContainers.AddRange(roots);
             await dbContext.SaveChangesAsync(cancellationToken);
             dbContext.ChangeTracker.Clear();
-            logger.LogInformation("Stress V5 sections + roots: {Done}/{Total}", end, TargetCount);
+            logger.LogInformation("Stress V5 sections + roots: {Done}/{Total}", end, TARGET_COUNT);
         }
     }
 
     private async Task SeedFolderPagingScenarioAsync(MnemoraDbContext dbContext, CancellationToken cancellationToken)
     {
-        Section section = await GetSectionAsync(dbContext, FoldersSectionName, cancellationToken);
+        Section section = await GetSectionAsync(dbContext, FOLDERS_SECTION_NAME, cancellationToken);
         LibraryContainer root = await GetRootAsync(dbContext, section, cancellationToken);
-        await EnsureFoldersAsync(dbContext, root, TargetCount, "STRESS V5 Папка", "50k folders", cancellationToken);
+        await EnsureFoldersAsync(dbContext, root, TARGET_COUNT, "STRESS V5 Папка", "50k folders", cancellationToken);
     }
 
     private async Task SeedRootMaterialsScenarioAsync(MnemoraDbContext dbContext, CancellationToken cancellationToken)
     {
-        Section section = await GetSectionAsync(dbContext, RootMaterialsSectionName, cancellationToken);
+        Section section = await GetSectionAsync(dbContext, ROOT_MATERIALS_SECTION_NAME, cancellationToken);
         LibraryContainer root = await GetRootAsync(dbContext, section, cancellationToken);
-        await EnsureArticlesAsync(dbContext, root, TargetCount, "STRESS V5 Материал root", "50k root materials", cancellationToken);
+        await EnsureArticlesAsync(dbContext, root, TARGET_COUNT, "STRESS V5 Материал root", "50k root materials", cancellationToken);
     }
 
     private async Task SeedMixedScenarioAsync(MnemoraDbContext dbContext, CancellationToken cancellationToken)
     {
-        Section section = await GetSectionAsync(dbContext, MixedSectionName, cancellationToken);
+        Section section = await GetSectionAsync(dbContext, MIXED_SECTION_NAME, cancellationToken);
         LibraryContainer root = await GetRootAsync(dbContext, section, cancellationToken);
-        await EnsureFoldersAsync(dbContext, root, MixedFolderCount, "STRESS V5 Mixed Папка", "mixed folders", cancellationToken);
-        await EnsureArticlesAsync(dbContext, root, MixedMaterialCount, "STRESS V5 Mixed Материал", "mixed materials", cancellationToken);
+        await EnsureFoldersAsync(dbContext, root, MIXED_FOLDER_COUNT, "STRESS V5 Mixed Папка", "mixed folders", cancellationToken);
+        await EnsureArticlesAsync(dbContext, root, MIXED_MATERIAL_COUNT, "STRESS V5 Mixed Материал", "mixed materials", cancellationToken);
     }
 
     private async Task SeedDepthScenarioAsync(
@@ -157,33 +159,33 @@ public sealed class LibraryStressDataSeeder(
 
     private async Task SeedTypesScenarioAsync(MnemoraDbContext dbContext, CancellationToken cancellationToken)
     {
-        Section section = await GetSectionAsync(dbContext, TypesSectionName, cancellationToken);
+        Section section = await GetSectionAsync(dbContext, TYPES_SECTION_NAME, cancellationToken);
         LibraryContainer root = await GetRootAsync(dbContext, section, cancellationToken);
 
-        await EnsureArticlesAsync(dbContext, root, TypeCount, "STRESS V5 Статья", "type articles", cancellationToken);
-        await EnsureStandaloneQuestionsAsync(dbContext, root, TypeCount, "STRESS V5 Вопрос", "standalone questions", cancellationToken);
-        await EnsureLinkedQuestionsAsync(dbContext, root, LinkedQuestionCount, cancellationToken);
+        await EnsureArticlesAsync(dbContext, root, TYPE_COUNT, "STRESS V5 Статья", "type articles", cancellationToken);
+        await EnsureStandaloneQuestionsAsync(dbContext, root, TYPE_COUNT, "STRESS V5 Вопрос", "standalone questions", cancellationToken);
+        await EnsureLinkedQuestionsAsync(dbContext, root, LINKED_QUESTION_COUNT, cancellationToken);
     }
 
     private async Task SeedOneFolderScenarioAsync(MnemoraDbContext dbContext, CancellationToken cancellationToken)
     {
-        Section section = await GetSectionAsync(dbContext, OneFolderSectionName, cancellationToken);
+        Section section = await GetSectionAsync(dbContext, ONE_FOLDER_SECTION_NAME, cancellationToken);
         LibraryContainer root = await GetRootAsync(dbContext, section, cancellationToken);
         await EnsureFoldersAsync(dbContext, root, 1, "Одна папка", "one folder", cancellationToken);
     }
 
     private async Task SeedFiveMaterialsScenarioAsync(MnemoraDbContext dbContext, CancellationToken cancellationToken)
     {
-        Section section = await GetSectionAsync(dbContext, FiveMaterialsSectionName, cancellationToken);
+        Section section = await GetSectionAsync(dbContext, FIVE_MATERIALS_SECTION_NAME, cancellationToken);
         LibraryContainer root = await GetRootAsync(dbContext, section, cancellationToken);
         await EnsureArticlesAsync(dbContext, root, 5, "STRESS V5 Пять материалов", "five materials", cancellationToken);
     }
 
     private async Task SeedFolderBoundaryScenariosAsync(MnemoraDbContext dbContext, CancellationToken cancellationToken)
     {
-        await SeedFolderBoundaryScenarioAsync(dbContext, Folders29SectionName, 29, cancellationToken);
-        await SeedFolderBoundaryScenarioAsync(dbContext, Folders30SectionName, 30, cancellationToken);
-        await SeedFolderBoundaryScenarioAsync(dbContext, Folders31SectionName, 31, cancellationToken);
+        await SeedFolderBoundaryScenarioAsync(dbContext, FOLDERS29_SECTION_NAME, 29, cancellationToken);
+        await SeedFolderBoundaryScenarioAsync(dbContext, FOLDERS30_SECTION_NAME, 30, cancellationToken);
+        await SeedFolderBoundaryScenarioAsync(dbContext, FOLDERS31_SECTION_NAME, 31, cancellationToken);
     }
 
     private async Task SeedFolderBoundaryScenarioAsync(
@@ -199,9 +201,9 @@ public sealed class LibraryStressDataSeeder(
 
     private async Task SeedMaterialBoundaryScenariosAsync(MnemoraDbContext dbContext, CancellationToken cancellationToken)
     {
-        await SeedMaterialBoundaryScenarioAsync(dbContext, Materials29SectionName, 29, cancellationToken);
-        await SeedMaterialBoundaryScenarioAsync(dbContext, Materials30SectionName, 30, cancellationToken);
-        await SeedMaterialBoundaryScenarioAsync(dbContext, Materials31SectionName, 31, cancellationToken);
+        await SeedMaterialBoundaryScenarioAsync(dbContext, MATERIALS29_SECTION_NAME, 29, cancellationToken);
+        await SeedMaterialBoundaryScenarioAsync(dbContext, MATERIALS30_SECTION_NAME, 30, cancellationToken);
+        await SeedMaterialBoundaryScenarioAsync(dbContext, MATERIALS31_SECTION_NAME, 31, cancellationToken);
     }
 
     private async Task SeedMaterialBoundaryScenarioAsync(
@@ -236,9 +238,9 @@ public sealed class LibraryStressDataSeeder(
         FolderColor color = Enum.GetValues<FolderColor>()[0];
         FolderIcon icon = Enum.GetValues<FolderIcon>()[0];
 
-        for (int start = existingCount; start < targetCount; start += BatchSize)
+        for (int start = existingCount; start < targetCount; start += BATCH_SIZE)
         {
-            int end = Math.Min(start + BatchSize, targetCount);
+            int end = Math.Min(start + BATCH_SIZE, targetCount);
             var batch = new List<LibraryContainer>(end - start);
 
             for (int index = start; index < end; index++)
@@ -278,9 +280,9 @@ public sealed class LibraryStressDataSeeder(
             return;
         }
 
-        for (int start = existingCount; start < targetCount; start += BatchSize)
+        for (int start = existingCount; start < targetCount; start += BATCH_SIZE)
         {
-            int end = Math.Min(start + BatchSize, targetCount);
+            int end = Math.Min(start + BATCH_SIZE, targetCount);
             var batch = new List<Article>(end - start);
 
             for (int index = start; index < end; index++)
@@ -288,7 +290,7 @@ public sealed class LibraryStressDataSeeder(
                 Article article = Article.CreateInContainer(
                     targetContainer.Id,
                     MaterialTitle.Create($"{titlePrefix} {index:D5}").Value,
-                    MaterialDifficulty.Medium,
+                    MaterialDifficulty.MEDIUM,
                     MaterialIcon.DefaultArticle,
                     CreateRewards(),
                     Array.Empty<MaterialTag>()).Value;
@@ -323,9 +325,9 @@ public sealed class LibraryStressDataSeeder(
             return;
         }
 
-        for (int start = existingCount; start < targetCount; start += BatchSize)
+        for (int start = existingCount; start < targetCount; start += BATCH_SIZE)
         {
-            int end = Math.Min(start + BatchSize, targetCount);
+            int end = Math.Min(start + BATCH_SIZE, targetCount);
             var batch = new List<Question>(end - start);
 
             for (int index = start; index < end; index++)
@@ -333,7 +335,7 @@ public sealed class LibraryStressDataSeeder(
                 Question question = Question.CreateStandaloneInContainer(
                     targetContainer.Id,
                     MaterialTitle.Create($"{titlePrefix} {index:D5}").Value,
-                    MaterialDifficulty.Medium,
+                    MaterialDifficulty.MEDIUM,
                     MaterialIcon.DefaultQuestion,
                     CreateRewards(),
                     Array.Empty<MaterialTag>()).Value;
@@ -366,9 +368,9 @@ public sealed class LibraryStressDataSeeder(
             return;
         }
 
-        for (int start = existingCount; start < targetCount; start += BatchSize)
+        for (int start = existingCount; start < targetCount; start += BATCH_SIZE)
         {
-            int batchCount = Math.Min(BatchSize, targetCount - start);
+            int batchCount = Math.Min(BATCH_SIZE, targetCount - start);
             List<Article> articles = await dbContext.Materials
                 .AsNoTracking()
                 .OfType<Article>()
@@ -386,7 +388,7 @@ public sealed class LibraryStressDataSeeder(
                 Question question = Question.CreateForArticle(
                     articles[index],
                     MaterialTitle.Create($"STRESS V5 Связанный вопрос {absoluteIndex:D5}").Value,
-                    MaterialDifficulty.Medium,
+                    MaterialDifficulty.MEDIUM,
                     MaterialIcon.DefaultQuestion,
                     CreateRewards()).Value;
                 question.ChangeDisplayOrder(absoluteIndex);
@@ -470,22 +472,22 @@ public sealed class LibraryStressDataSeeder(
 
     private static string GetSectionName(int index) => index switch
     {
-        0 => FoldersSectionName,
-        1 => RootMaterialsSectionName,
-        2 => MixedSectionName,
-        3 => Depth1SectionName,
-        4 => Depth2SectionName,
-        5 => Depth3SectionName,
-        6 => TypesSectionName,
-        7 => EmptySectionName,
-        8 => OneFolderSectionName,
-        9 => FiveMaterialsSectionName,
-        10 => Folders29SectionName,
-        11 => Folders30SectionName,
-        12 => Folders31SectionName,
-        13 => Materials29SectionName,
-        14 => Materials30SectionName,
-        15 => Materials31SectionName,
-        _ => $"{SectionPrefix}Раздел {index:D5}",
+        0 => FOLDERS_SECTION_NAME,
+        1 => ROOT_MATERIALS_SECTION_NAME,
+        2 => MIXED_SECTION_NAME,
+        3 => DEPTH1_SECTION_NAME,
+        4 => DEPTH2_SECTION_NAME,
+        5 => DEPTH3_SECTION_NAME,
+        6 => TYPES_SECTION_NAME,
+        7 => EMPTY_SECTION_NAME,
+        8 => ONE_FOLDER_SECTION_NAME,
+        9 => FIVE_MATERIALS_SECTION_NAME,
+        10 => FOLDERS29_SECTION_NAME,
+        11 => FOLDERS30_SECTION_NAME,
+        12 => FOLDERS31_SECTION_NAME,
+        13 => MATERIALS29_SECTION_NAME,
+        14 => MATERIALS30_SECTION_NAME,
+        15 => MATERIALS31_SECTION_NAME,
+        _ => $"{SECTION_PREFIX}Раздел {index:D5}",
     };
 }

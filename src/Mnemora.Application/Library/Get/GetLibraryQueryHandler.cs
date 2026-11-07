@@ -80,8 +80,8 @@ public sealed class GetLibraryQueryHandler(
                             folder.ParentId!.Value,
                             folder.Depth,
                             folder.Name!.Value,
-                            folder.Color!.Value.ToString(),
-                            folder.Icon!.Value.ToString(),
+                            folder.Color!.Value.ToStableName(),
+                            folder.Icon!.Value.ToStableName(),
                             folder.DisplayOrder,
                             folder.CreatedAt,
                             folder.UpdatedAt)
@@ -101,8 +101,8 @@ public sealed class GetLibraryQueryHandler(
                 .Select(section => new LibrarySectionDto(
                     section.Id.Value,
                     section.Name.Value,
-                    section.Color.ToString(),
-                    section.Icon.ToString(),
+                    section.Color.ToStableName(),
+                    section.Icon.ToStableName(),
                     section.CreatedAt,
                     section.UpdatedAt,
                     GetLastActivityAt(
@@ -169,8 +169,8 @@ public sealed class GetLibraryQueryHandler(
             material.Id.Value,
             material.ContainerId.Value,
             material.Title.Value,
-            material.Type.ToString(),
-            material.Difficulty.ToString(),
+            material.Type.ToStableName(),
+            material.Difficulty.ToStableName(),
             material.Icon.Key,
             material.ExperienceRewards.StudyPoints,
             material.ExperienceRewards.ReviewPoints,
