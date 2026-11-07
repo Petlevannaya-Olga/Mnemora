@@ -53,12 +53,12 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandlerTests
                 container.SectionId == section.Id &&
                 container.ParentId == null);
 
-        LibraryContainer topicFolder = await db.Context.LibraryContainers
+        LibraryContainer firstLevelFolder = await db.Context.LibraryContainers
             .SingleAsync(container =>
                 container.Id == folder.Id);
 
         LibraryContainer nestedFolder = LibraryContainer.CreateFolder(
-            topicFolder,
+            firstLevelFolder,
             FolderName.Create("Nested").Value,
             FolderColor.Teal,
             FolderIcon.Folder).Value;
@@ -70,7 +70,7 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandlerTests
         Article rootArticle = db.CreateArticle(folder.Id, "Root article");
         rootArticle.MoveToContainer(root.Id).IsSuccess.Should().BeTrue();
 
-        Article topicArticle = db.CreateArticle(folder.Id, "LibraryContainer folder article");
+        Article folderArticle = db.CreateArticle(folder.Id, "LibraryContainer folder article");
 
         Article nestedArticle = db.CreateArticle(folder.Id, "Nested article");
         nestedArticle.MoveToContainer(nestedFolder.Id).IsSuccess.Should().BeTrue();
@@ -81,7 +81,7 @@ public sealed class GetLibraryManagementMaterialsPageQueryHandlerTests
 
         await db.AddMaterialsAsync(
             rootArticle,
-            topicArticle,
+            folderArticle,
             nestedArticle,
             linkedQuestion);
 

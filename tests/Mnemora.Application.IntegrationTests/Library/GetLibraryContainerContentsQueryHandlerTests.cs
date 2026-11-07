@@ -26,7 +26,7 @@ public sealed class GetLibraryContainerContentsQueryHandlerTests
                     container.SectionId == section.Id &&
                     container.ParentId == null);
 
-        LibraryContainer topicFolder =
+        LibraryContainer firstLevelFolder =
             await db.Context.LibraryContainers.SingleAsync(
                 container =>
                     container.Id ==
@@ -41,7 +41,7 @@ public sealed class GetLibraryContainerContentsQueryHandlerTests
 
         LibraryContainer nested =
             LibraryContainer.CreateFolder(
-                topicFolder,
+                firstLevelFolder,
                 FolderName.Create("Memory").Value,
                 FolderColor.Teal,
                 FolderIcon.Folder).Value;

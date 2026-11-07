@@ -194,9 +194,9 @@ public sealed class AppSettings
         }
 
         if (!HasExplicitLibraryFoldersViewMode &&
-            LegacyLibraryTopicsViewMode is { } legacyViewMode)
+            LegacyLibraryTopicsViewMode is { } legacyLibraryFoldersViewMode)
         {
-            _libraryFoldersViewMode = legacyViewMode;
+            _libraryFoldersViewMode = legacyLibraryFoldersViewMode;
         }
 
         // Merge dictionary entries without overriding values already saved with new names.

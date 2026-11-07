@@ -49,8 +49,8 @@ public sealed class DeleteSectionCommandHandler(
 
         try
         {
-            // Не используем legacy Topics: новые папки могут существовать
-            // без соответствующей записи в таблице topics.
+            // Проверяем фактические папки раздела, а не устаревшие данные
+            // переходного периода.
             bool hasFolders = await readDbContext.LibraryContainersRead
                 .AnyAsync(
                     container =>
