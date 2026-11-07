@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     xmlns:libraryBehaviors="clr-namespace:Mnemora.Desktop.Views.Library"
     x:Class="Mnemora.Desktop.Views.Library.LibraryContainerView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -1556,7 +1556,7 @@
                     Visibility="{Binding HasMixedError, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <DockPanel>
                         <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource Mnemora.Brush.Error}" Text="{Binding MixedErrorMessage}" />
-                        <Button DockPanel.Dock="Right" Margin="16,0,0,0" Command="{Binding ReloadCommand}" Content="Повторить" Style="{StaticResource MaterialDesignOutlinedButton}" />
+                        <Button DockPanel.Dock="Right" Margin="16,0,0,0" Command="{Binding RetryMixedCommand}" Content="Повторить" Style="{StaticResource MaterialDesignOutlinedButton}" />
                     </DockPanel>
                 </Border>
 

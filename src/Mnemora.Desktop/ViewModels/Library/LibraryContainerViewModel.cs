@@ -63,6 +63,9 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
     private int _mixedFoldersTotalCount = -1;
     private int _mixedMaterialsTotalCount = -1;
     private MixedContentFilter _mixedContentFilter = MixedContentFilter.All;
+    private (int Offset, bool IsPreviousPage)? _failedFoldersPage;
+    private (int Offset, bool IsPreviousPage)? _failedMaterialsPage;
+    private (int Offset, bool IsPreviousPage)? _failedMixedPage;
     private bool _isLoaded;
     private bool _isViewModeLoaded;
 
@@ -732,7 +735,21 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
                 _viewCancellationToken,
                 cancellationToken);
 
-        await ReloadFoldersAsync(linkedCancellationTokenSource.Token);
+        if (_failedFoldersPage is not { } page)
+        {
+            await ReloadFoldersAsync(linkedCancellationTokenSource.Token);
+            return;
+        }
+
+        _failedFoldersPage = null;
+        FoldersErrorMessage = null;
+        await ShowFolderPageAsync(
+            page.Offset,
+            page.IsPreviousPage ? PageWindowInsert.Prepend : PageWindowInsert.Append,
+            _foldersLoadVersion,
+            linkedCancellationTokenSource.Token,
+            isInitialPage: false,
+            isPreviousPage: page.IsPreviousPage);
     }
 
     [RelayCommand]
@@ -743,7 +760,46 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
                 _viewCancellationToken,
                 cancellationToken);
 
-        await ReloadMaterialsAsync(linkedCancellationTokenSource.Token);
+        if (_failedMaterialsPage is not { } page)
+        {
+            await ReloadMaterialsAsync(linkedCancellationTokenSource.Token);
+            return;
+        }
+
+        _failedMaterialsPage = null;
+        MaterialsErrorMessage = null;
+        await ShowMaterialPageAsync(
+            page.Offset,
+            page.IsPreviousPage ? PageWindowInsert.Prepend : PageWindowInsert.Append,
+            _materialsLoadVersion,
+            linkedCancellationTokenSource.Token,
+            isInitialPage: false,
+            isPreviousPage: page.IsPreviousPage);
+    }
+
+    [RelayCommand]
+    private async Task RetryMixedAsync(CancellationToken cancellationToken)
+    {
+        using var linkedCancellationTokenSource =
+            CancellationTokenSource.CreateLinkedTokenSource(
+                _viewCancellationToken,
+                cancellationToken);
+
+        if (_failedMixedPage is not { } page)
+        {
+            await ReloadMixedAsync(linkedCancellationTokenSource.Token);
+            return;
+        }
+
+        _failedMixedPage = null;
+        MixedErrorMessage = null;
+        await ShowMixedPageAsync(
+            page.Offset,
+            page.IsPreviousPage ? PageWindowInsert.Prepend : PageWindowInsert.Append,
+            _mixedLoadVersion,
+            linkedCancellationTokenSource.Token,
+            isInitialPage: false,
+            isPreviousPage: page.IsPreviousPage);
     }
 
     [RelayCommand]
@@ -975,6 +1031,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
     {
         Interlocked.Increment(ref _foldersLoadVersion);
         _folderWindow.Reset();
+        _failedFoldersPage = null;
         FoldersCurrentPageOffset = 0;
         FoldersTotalCount = 0;
         FoldersHasMore = false;
@@ -991,6 +1048,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
     {
         Interlocked.Increment(ref _materialsLoadVersion);
         _materialWindow.Reset();
+        _failedMaterialsPage = null;
         MaterialsCurrentPageOffset = 0;
         MaterialsTotalCount = 0;
         MaterialsHasMore = false;
@@ -1006,6 +1064,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
     {
         Interlocked.Increment(ref _mixedLoadVersion);
         _mixedWindow.Reset();
+        _failedMixedPage = null;
         _mixedFoldersTotalCount = -1;
         _mixedMaterialsTotalCount = -1;
         MixedCurrentPageOffset = 0;
@@ -1024,6 +1083,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
         int version = Interlocked.Increment(ref _foldersLoadVersion);
 
         _folderWindow.Reset();
+        _failedFoldersPage = null;
         FoldersCurrentPageOffset = 0;
         FoldersTotalCount = 0;
         FoldersHasMore = false;
@@ -1161,11 +1221,17 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
 
             if (result.IsFailure)
             {
+                if (!isInitialPage)
+                {
+                    _failedFoldersPage = (offset, isPreviousPage);
+                }
+
                 FoldersErrorMessage = result.Error.FirstOrDefault()?.Message
                                       ?? "Не удалось загрузить папки";
                 return;
             }
 
+            _failedFoldersPage = null;
             _folderWindow.SetTotalCount(result.Value.TotalCount);
             _folderWindow.ShowPage(offset, result.Value.Items, insert);
             RebuildFolders();
@@ -1184,7 +1250,15 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
                 _containerId,
                 offset);
 
-            FoldersErrorMessage = "Не удалось загрузить папки";
+            if (version == _foldersLoadVersion)
+            {
+                if (!isInitialPage)
+                {
+                    _failedFoldersPage = (offset, isPreviousPage);
+                }
+
+                FoldersErrorMessage = "Не удалось загрузить папки";
+            }
         }
         finally
         {
@@ -1263,6 +1337,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
         int version = Interlocked.Increment(ref _materialsLoadVersion);
 
         _materialWindow.Reset();
+        _failedMaterialsPage = null;
         MaterialsCurrentPageOffset = 0;
         MaterialsTotalCount = 0;
         MaterialsHasMore = false;
@@ -1391,11 +1466,17 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
 
             if (result.IsFailure)
             {
+                if (!isInitialPage)
+                {
+                    _failedMaterialsPage = (offset, isPreviousPage);
+                }
+
                 MaterialsErrorMessage = result.Error.FirstOrDefault()?.Message
                                         ?? "Не удалось загрузить материалы";
                 return;
             }
 
+            _failedMaterialsPage = null;
             _materialWindow.SetTotalCount(result.Value.TotalCount);
             _materialWindow.ShowPage(offset, result.Value.Items, insert);
             RebuildMaterials();
@@ -1420,7 +1501,15 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
                 _containerId,
                 offset);
 
-            MaterialsErrorMessage = "Не удалось загрузить материалы";
+            if (version == _materialsLoadVersion)
+            {
+                if (!isInitialPage)
+                {
+                    _failedMaterialsPage = (offset, isPreviousPage);
+                }
+
+                MaterialsErrorMessage = "Не удалось загрузить материалы";
+            }
         }
         finally
         {
@@ -1475,6 +1564,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
         int version = Interlocked.Increment(ref _mixedLoadVersion);
 
         _mixedWindow.Reset();
+        _failedMixedPage = null;
         _mixedFoldersTotalCount = -1;
         _mixedMaterialsTotalCount = -1;
         MixedCurrentPageOffset = 0;
@@ -1594,6 +1684,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
                 return;
             }
 
+            _failedMixedPage = null;
             _mixedWindow.SetTotalCount(totalCount);
             _mixedWindow.ShowPage(offset, items, insert);
             RebuildMixedContent();
@@ -1605,11 +1696,21 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
         }
         catch (Exception exception)
         {
+            if (version != _mixedLoadVersion || cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+
             _logger.LogError(
                 exception,
                 "Не удалось загрузить смешанное содержимое контейнера {ContainerId}, offset {Offset}",
                 _containerId,
                 offset);
+
+            if (!isInitialPage)
+            {
+                _failedMixedPage = (offset, isPreviousPage);
+            }
 
             MixedErrorMessage = exception.Message.StartsWith("Не удалось", StringComparison.Ordinal)
                 ? exception.Message
