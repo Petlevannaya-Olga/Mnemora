@@ -167,6 +167,22 @@ public sealed partial class LibrarySectionManagementViewModel(
     public int MaterialsWindowStartOffset => _materialWindow.WindowStartOffset;
     public int MaterialsWindowEndOffset => _materialWindow.WindowEndOffset;
 
+    // Creation uses the selected location in the tree, not always the section root.
+    // Creating a child folder is unavailable at the maximum folder depth.
+    public LibrarySectionManagementTreeNodeViewModel? GetCreationTarget(bool forFolder)
+    {
+        LibrarySectionManagementTreeNodeViewModel? node = SelectedNode;
+
+        if (node is not { IsNavigationNode: true, ContainerId: not null })
+        {
+            return null;
+        }
+
+        return forFolder && !node.CanCreateChildFolder
+            ? null
+            : node;
+    }
+
     public string SelectedContainerName => SelectedNode?.Name ?? Section?.Name ?? string.Empty;
 
     public string EmptyMaterialsTitle => IsSelectedFolder

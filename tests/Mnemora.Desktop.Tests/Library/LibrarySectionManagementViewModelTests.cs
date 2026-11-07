@@ -139,6 +139,64 @@ public sealed class LibrarySectionManagementViewModelTests
         viewModel.Materials.Should().ContainSingle(item => item.Id == materialId);
     }
 
+    [Fact]
+    public async Task CreationTarget_UsesSelectedFolderAndKeepsSectionRootAvailable()
+    {
+        Guid sectionId = Guid.NewGuid();
+        Guid rootId = Guid.NewGuid();
+        Guid folderId = Guid.NewGuid();
+        var dispatcher = new StubQueryDispatcher(query => query switch
+        {
+            GetLibrarySectionManagementItemsPageQuery => EmptyItemsPage(),
+            GetLibraryHierarchyFoldersPageQuery folders when folders.ContainerId == rootId =>
+                new LibraryHierarchyFoldersPageDto(
+                    [CreateFolder(folderId, sectionId, rootId, "EF Core", 0)],
+                    1,
+                    false),
+            _ => throw Unexpected(query),
+        });
+        var viewModel = new LibrarySectionManagementViewModel(dispatcher);
+        await viewModel.InitializeAsync(CreateSection(sectionId, rootId, 1));
+
+        viewModel.GetCreationTarget(forFolder: false)?.ContainerId.Should().Be(rootId);
+        viewModel.GetCreationTarget(forFolder: true)?.ContainerId.Should().Be(rootId);
+
+        LibrarySectionManagementTreeNodeViewModel root = viewModel.Roots.Single();
+        await viewModel.ExpandAsync(root);
+        LibrarySectionManagementTreeNodeViewModel folder = root.Children.Single(node => node.IsFolder);
+        await viewModel.SelectNodeAsync(folder);
+
+        viewModel.GetCreationTarget(forFolder: false).Should().BeSameAs(folder);
+        viewModel.GetCreationTarget(forFolder: true).Should().BeSameAs(folder);
+    }
+
+    [Fact]
+    public async Task CreationTarget_AtMaximumDepth_AllowsMaterialsButNotChildFolders()
+    {
+        Guid sectionId = Guid.NewGuid();
+        Guid rootId = Guid.NewGuid();
+        var dispatcher = new StubQueryDispatcher(query => query switch
+        {
+            GetLibrarySectionManagementItemsPageQuery => EmptyItemsPage(),
+            _ => throw Unexpected(query),
+        });
+        var viewModel = new LibrarySectionManagementViewModel(dispatcher);
+        await viewModel.InitializeAsync(CreateSection(sectionId, rootId, 0));
+
+        LibrarySectionManagementTreeNodeViewModel parent = viewModel.Roots.Single();
+        for (int depth = 1; depth <= 3; depth++)
+        {
+            Guid folderId = Guid.NewGuid();
+            parent = LibrarySectionManagementTreeNodeViewModel.CreateFolder(
+                CreateFolder(folderId, sectionId, parent.ContainerId!.Value, $"Level {depth}", 0),
+                parent);
+        }
+        await viewModel.SelectNodeAsync(parent);
+
+        viewModel.GetCreationTarget(forFolder: false).Should().BeSameAs(parent);
+        viewModel.GetCreationTarget(forFolder: true).Should().BeNull();
+    }
+
     private static LibrarySectionOverviewDto CreateSection(
         Guid sectionId,
         Guid rootId,

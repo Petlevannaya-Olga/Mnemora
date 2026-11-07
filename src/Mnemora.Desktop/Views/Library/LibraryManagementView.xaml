@@ -1996,6 +1996,7 @@
                             Height="44"
                             MinWidth="130"
                             VerticalAlignment="Center"
+                            IsEnabled="{Binding SectionStructure.SelectedNode.CanCreateChildFolder}"
                             Command="{Binding CreateSectionStructureFolderCommand}"
                             Style="{StaticResource Mnemora.SecondaryButton}">
                         <StackPanel Orientation="Horizontal">

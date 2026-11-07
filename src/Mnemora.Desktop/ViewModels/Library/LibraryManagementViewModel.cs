@@ -835,10 +835,11 @@ public sealed partial class LibraryManagementViewModel(
     [RelayCommand]
     private void StartCreateSectionStructureMaterial()
     {
-        LibrarySectionManagementTreeNodeViewModel? root = SectionStructure.RootNode;
+        LibrarySectionManagementTreeNodeViewModel? target =
+            SectionStructure.GetCreationTarget(forFolder: false);
         LibrarySectionOverviewDto? section = SectionStructure.Section;
 
-        if (root?.ContainerId is not Guid containerId || section is null)
+        if (target?.ContainerId is not Guid containerId || section is null)
         {
             return;
         }
@@ -847,9 +848,9 @@ public sealed partial class LibraryManagementViewModel(
             new LibraryManagementFolderOverviewDto(
                 containerId,
                 section.Id,
-                section.Name,
-                section.Color,
-                "FolderOutline",
+                target.Name,
+                target.Color ?? section.Color,
+                target.Icon ?? "FolderOutline",
                 section.CreatedAt,
                 section.UpdatedAt,
                 section.LastActivityAt,
@@ -871,19 +872,20 @@ public sealed partial class LibraryManagementViewModel(
     private async Task CreateSectionStructureFolderAsync(
         CancellationToken cancellationToken)
     {
-        LibrarySectionManagementTreeNodeViewModel? root = SectionStructure.RootNode;
+        LibrarySectionManagementTreeNodeViewModel? parent =
+            SectionStructure.GetCreationTarget(forFolder: true);
         LibrarySectionOverviewDto? section = SectionStructure.Section;
 
-        if (root?.ContainerId is not Guid rootContainerId || section is null)
+        if (parent?.ContainerId is not Guid parentContainerId || section is null)
         {
             return;
         }
 
         Guid? folderId = dialogService.Show<CreateLibraryFolderDialogViewModel, Guid?>(
             viewModel => viewModel.Initialize(
-                rootContainerId,
-                section.Name,
-                section.Color));
+                parentContainerId,
+                parent.Name,
+                parent.Color ?? section.Color));
 
         if (folderId is null)
         {
@@ -891,6 +893,7 @@ public sealed partial class LibraryManagementViewModel(
         }
 
         notificationService.ShowSuccess("Папка создана");
+        await SectionStructure.ReloadChildrenAndSelectAsync(parent, folderId, cancellationToken);
         await SectionStructure.RefreshSelectedMaterialsAsync(cancellationToken);
         await ReloadSimpleSectionsCoreAsync(cancellationToken);
     }
