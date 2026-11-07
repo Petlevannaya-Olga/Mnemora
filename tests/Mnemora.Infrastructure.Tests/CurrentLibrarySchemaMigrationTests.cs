@@ -11,7 +11,7 @@ namespace Mnemora.Infrastructure.Tests;
 public sealed class CurrentLibrarySchemaMigrationTests
 {
     [Fact]
-    public async Task FreshDatabase_AllMigrations_RemoveOperationalTopicSchema()
+    public async Task FreshDatabase_HasOnlyInitialSchemaAndCurrentTables()
     {
         using var temporaryDirectory = new TemporaryDirectory();
         await using ServiceProvider provider = TestServiceProviderFactory.Create(temporaryDirectory.Path);
@@ -19,23 +19,25 @@ public sealed class CurrentLibrarySchemaMigrationTests
         var factory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<MnemoraDbContext>>();
         await using MnemoraDbContext context = await factory.CreateDbContextAsync();
 
-        // Unlike EnsureCreated, MigrateAsync exercises the real first-run startup path.
+        // MigrateAsync follows the same initialization path as the application.
         await context.Database.MigrateAsync();
 
         Assert.Empty(await context.Database.GetPendingMigrationsAsync());
-        Assert.Equal(0, await ScalarAsync(context,
-            "SELECT COUNT(*) AS Value FROM sqlite_master WHERE type='table' AND name='topics'"));
-        Assert.Equal(0, await ScalarAsync(context,
-            "SELECT COUNT(*) AS Value FROM pragma_table_info('materials') WHERE name='topic_id'"));
-        Assert.Equal(1, await ScalarAsync(context,
-            "SELECT COUNT(*) AS Value FROM sqlite_master WHERE type='table' AND name='legacy_topic_archive'"));
+        Assert.Equal(new[] { "20261107140000_InitialSchema" },
+            (await context.Database.GetAppliedMigrationsAsync()).ToArray());
+        Assert.Equal(4, await ScalarAsync(context,
+            "SELECT COUNT(*) AS Value FROM sqlite_master WHERE type='table' AND name IN ('sections', 'library_containers', 'materials', 'material_tags')"));
         Assert.Equal(0, await ScalarAsync(context,
             "SELECT COUNT(*) AS Value FROM pragma_foreign_key_check"));
-        Assert.DoesNotContain(context.Model.GetEntityTypes(), entity => entity.GetTableName() == "topics");
+        Assert.Equal(4, context.Model.GetEntityTypes()
+            .Select(entity => entity.GetTableName())
+            .Where(tableName => tableName is "sections" or "library_containers" or "materials" or "material_tags")
+            .Distinct()
+            .Count());
     }
 
     [Fact]
-    public async Task FreshMigratedDatabase_PersistsFolderAndMaterialWithoutLegacyTopic()
+    public async Task FreshMigratedDatabase_PersistsFolderAndLinkedMaterials()
     {
         using var temporaryDirectory = new TemporaryDirectory();
         await using ServiceProvider provider = TestServiceProviderFactory.Create(temporaryDirectory.Path);

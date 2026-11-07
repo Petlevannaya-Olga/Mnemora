@@ -190,11 +190,6 @@ public sealed class EditorSetupViewModelTests : IDisposable
             CancellationToken cancellationToken = default) =>
             Task.CompletedTask;
 
-        public Task SaveLibraryManagementViewModeAsync(
-            LibraryManagementViewMode viewMode,
-            CancellationToken cancellationToken = default) =>
-            Task.CompletedTask;
-
         public Task SaveLibraryManagementSectionsViewModeAsync(
             LibraryManagementViewMode viewMode,
             CancellationToken cancellationToken = default) =>

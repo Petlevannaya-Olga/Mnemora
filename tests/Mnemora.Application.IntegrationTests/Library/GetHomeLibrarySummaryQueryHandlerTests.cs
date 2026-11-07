@@ -28,7 +28,7 @@ public sealed class GetHomeLibrarySummaryQueryHandlerTests
     }
 
     [Fact]
-    public async Task Summary_CountsFoldersWithoutLegacyTopicRecords()
+    public async Task Summary_CountsFoldersFromContainers()
     {
         await using var db = await SqliteLibraryTestDatabase.CreateAsync();
         Section section = CreateSection("Containers only");

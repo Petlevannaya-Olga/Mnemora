@@ -118,7 +118,7 @@ public sealed class GetLibraryManagementSectionsPageQueryHandlerTests
     }
 
     [Fact]
-    public async Task SectionCounters_UseContainerSection_WhenLegacyTopicPointsElsewhere()
+    public async Task SectionCounters_UseContainerSection()
     {
         await using var db =
             await SqliteLibraryTestDatabase.CreateAsync();
@@ -126,7 +126,7 @@ public sealed class GetLibraryManagementSectionsPageQueryHandlerTests
         (Section sourceSection, LibraryContainer sourceFolder) =
             await db.CreateSectionAndFolderAsync(
                 sectionName: "Source",
-                folderName: "Legacy folder");
+                folderName: "Nested folder");
 
         Section targetSection = Section.Create(
             SectionName.Create("Target").Value,

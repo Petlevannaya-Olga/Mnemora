@@ -72,12 +72,12 @@ public sealed class GetLibraryMaterialsPageTotalCountTests
         Article nestedArticle = db.CreateArticle(folder.Id, "Nested folder article");
         nestedArticle.MoveToContainer(nestedFolder.Id).IsSuccess.Should().BeTrue();
 
-        Article topicArticle = db.CreateArticle(folder.Id, "First level folder article");
+        Article folderArticle = db.CreateArticle(folder.Id, "First level folder article");
 
         await db.AddMaterialsAsync(
             rootArticle,
             nestedArticle,
-            topicArticle);
+            folderArticle);
 
         var sut = CreateHandler(db);
 

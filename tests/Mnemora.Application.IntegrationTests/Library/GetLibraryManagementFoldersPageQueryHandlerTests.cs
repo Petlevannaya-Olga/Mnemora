@@ -9,7 +9,7 @@ using Xunit;
 
 namespace Mnemora.Application.IntegrationTests.Library;
 
-// Query and fixtures use LibraryContainer directly; they do not create legacy Topic rows.
+// Query and fixtures use LibraryContainer directly.
 public sealed class GetLibraryManagementFoldersPageQueryHandlerTests
 {
     [Fact]
@@ -36,7 +36,7 @@ public sealed class GetLibraryManagementFoldersPageQueryHandlerTests
     }
 
     [Fact]
-    public async Task FirstLevelFolders_ExcludeNestedFolders_WithoutLegacyTopics()
+    public async Task FirstLevelFolders_ExcludeNestedFolders()
     {
         await using var db = await SqliteLibraryTestDatabase.CreateAsync();
         (Section section, _, LibraryContainer folder) =

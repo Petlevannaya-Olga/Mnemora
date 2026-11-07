@@ -267,8 +267,6 @@ public sealed class LibraryContainerPagingRetryTests
             string? obsidianVaultPath, CancellationToken cancellationToken = default) => Task.CompletedTask;
         public Task SaveLibraryOverviewViewModeAsync(LibraryOverviewViewMode viewMode,
             CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public Task SaveLibraryManagementViewModeAsync(LibraryManagementViewMode viewMode,
-            CancellationToken cancellationToken = default) => Task.CompletedTask;
         public Task SaveLibraryManagementSectionsViewModeAsync(LibraryManagementViewMode viewMode,
             CancellationToken cancellationToken = default) => Task.CompletedTask;
         public Task SaveLibraryManagementFoldersViewModeAsync(LibraryManagementViewMode viewMode,

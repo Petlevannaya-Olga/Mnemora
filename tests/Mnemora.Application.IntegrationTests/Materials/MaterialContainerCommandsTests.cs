@@ -15,13 +15,12 @@ using Xunit;
 namespace Mnemora.Application.IntegrationTests.Materials;
 
 /// <summary>
-/// Regression tests: materials in the section root and nested folders must not
-/// require a corresponding row in the obsolete topics table.
+/// Regression tests for materials in the section root and nested folders.
 /// </summary>
 public sealed class MaterialContainerCommandsTests
 {
     [Fact]
-    public async Task CreateArticle_InSectionRootWithoutTopic_PersistsContentAndContainer()
+    public async Task CreateArticle_InSectionRoot_PersistsContentAndContainer()
     {
         await using var host = await ApplicationTestHost.CreateAsync();
         var (rootId, _) = await SeedContainersAsync(host);
@@ -40,8 +39,6 @@ public sealed class MaterialContainerCommandsTests
         Article article = await db.Materials.OfType<Article>()
             .SingleAsync(a => a.Id == MaterialId.Create(result.Value).Value);
         Assert.Equal(rootId, article.ContainerId.Value);
-        Assert.False(await db.Database.SqlQueryRaw<int>(
-            "SELECT count(*) AS Value FROM sqlite_master WHERE type = 'table' AND name = 'topics'").SingleAsync() > 0);
 
         var store = host.Services.GetRequiredService<IMaterialContentStore>();
         var content = await store.ReadArticleAsync(article.Id, CancellationToken.None);
@@ -50,7 +47,7 @@ public sealed class MaterialContainerCommandsTests
     }
 
     [Fact]
-    public async Task CreateStandaloneQuestion_InNestedFolderWithoutTopic_PersistsContainer()
+    public async Task CreateStandaloneQuestion_InNestedFolder_PersistsContainer()
     {
         await using var host = await ApplicationTestHost.CreateAsync();
         var (_, folderId) = await SeedContainersAsync(host);
@@ -70,8 +67,6 @@ public sealed class MaterialContainerCommandsTests
             .SingleAsync(q => q.Id == MaterialId.Create(result.Value).Value);
         Assert.Equal(folderId, question.ContainerId.Value);
         Assert.Null(question.ArticleId);
-        Assert.False(await db.Database.SqlQueryRaw<int>(
-            "SELECT count(*) AS Value FROM sqlite_master WHERE type = 'table' AND name = 'topics'").SingleAsync() > 0);
     }
 
     [Fact]
@@ -116,7 +111,7 @@ public sealed class MaterialContainerCommandsTests
     }
 
     [Fact]
-    public async Task UpdateStandaloneQuestion_ToSectionRootWithoutTopic_ChangesContainer()
+    public async Task UpdateStandaloneQuestion_ToSectionRoot_ChangesContainer()
     {
         await using var host = await ApplicationTestHost.CreateAsync();
         var (rootId, folderId) = await SeedContainersAsync(host);

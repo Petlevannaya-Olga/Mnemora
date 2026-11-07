@@ -18,7 +18,7 @@ namespace Mnemora.Application.IntegrationTests.Library;
 public sealed class LibraryFolderCommandsTests
 {
     [Fact]
-    public async Task CreateInSection_DoesNotCreateLegacyTopic()
+    public async Task CreateInSection_WritesOnlyContainer()
     {
         await using var db = await SqliteLibraryTestDatabase.CreateAsync();
         var (section, root) = await CreateSectionAsync(db);
@@ -35,8 +35,6 @@ public sealed class LibraryFolderCommandsTests
         Assert.Equal("CLR", folder.Name!.Value);
         Assert.Equal(FolderColor.Blue, folder.Color);
         Assert.Equal(FolderIcon.DotNet, folder.Icon);
-        Assert.Equal(0, await db.Context.Database.SqlQueryRaw<int>(
-            "SELECT count(*) AS Value FROM sqlite_master WHERE type = 'table' AND name = 'topics'").SingleAsync());
     }
 
     [Fact]
@@ -57,7 +55,7 @@ public sealed class LibraryFolderCommandsTests
     }
 
     [Fact]
-    public async Task UpdateFolder_ChangesAppearanceWithoutLegacyTopic()
+    public async Task UpdateFolder_ChangesAppearance()
     {
         await using var db = await SqliteLibraryTestDatabase.CreateAsync();
         var (_, root) = await CreateSectionAsync(db);
@@ -74,8 +72,6 @@ public sealed class LibraryFolderCommandsTests
         Assert.Equal("Runtime", persisted.Name!.Value);
         Assert.Equal(FolderColor.Purple, persisted.Color);
         Assert.Equal(FolderIcon.Code, persisted.Icon);
-        Assert.Equal(0, await db.Context.Database.SqlQueryRaw<int>(
-            "SELECT count(*) AS Value FROM sqlite_master WHERE type = 'table' AND name = 'topics'").SingleAsync());
     }
 
     [Fact]
@@ -97,7 +93,7 @@ public sealed class LibraryFolderCommandsTests
     }
 
     [Fact]
-    public async Task DeleteEmptyFolder_LeavesSectionRootAndDoesNotTouchTopics()
+    public async Task DeleteEmptyFolder_LeavesSectionRoot()
     {
         await using var db = await SqliteLibraryTestDatabase.CreateAsync();
         var (_, root) = await CreateSectionAsync(db);

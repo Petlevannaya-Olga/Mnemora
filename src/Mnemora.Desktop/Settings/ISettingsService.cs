@@ -18,10 +18,6 @@ public interface ISettingsService
         LibraryOverviewViewMode viewMode,
         CancellationToken cancellationToken = default);
 
-    Task SaveLibraryManagementViewModeAsync(
-        LibraryManagementViewMode viewMode,
-        CancellationToken cancellationToken = default);
-
     Task SaveLibraryManagementSectionsViewModeAsync(
         LibraryManagementViewMode viewMode,
         CancellationToken cancellationToken = default);

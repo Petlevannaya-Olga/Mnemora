@@ -34,7 +34,7 @@ public sealed class DeleteSectionContainerSafetyTests
     }
 
     [Fact]
-    public async Task FolderWithoutLegacyTopic_BlocksSectionDeletion()
+    public async Task Folder_BlocksSectionDeletion()
     {
         await using var db = await SqliteLibraryTestDatabase.CreateAsync();
         Section section = NewSection("Folder section");
@@ -47,9 +47,6 @@ public sealed class DeleteSectionContainerSafetyTests
         db.Context.LibraryContainers.Add(folder);
         await db.Context.SaveChangesAsync();
         db.Context.ChangeTracker.Clear();
-
-        Assert.Equal(0, await db.Context.Database.SqlQueryRaw<int>(
-            "SELECT count(*) AS Value FROM sqlite_master WHERE type = 'table' AND name = 'topics'").SingleAsync());
         var handler = CreateHandler(db);
         var result = await handler.Handle(new DeleteSectionCommand(section.Id.Value),
             CancellationToken.None);

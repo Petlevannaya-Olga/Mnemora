@@ -135,17 +135,6 @@ public sealed class JsonSettingsService :
             settings => settings.LibraryOverviewViewMode = viewMode,
             cancellationToken);
     }
-    
-    public Task SaveLibraryManagementViewModeAsync(
-        LibraryManagementViewMode viewMode,
-        CancellationToken cancellationToken = default)
-    {
-        ThrowIfDisposed();
-
-        return UpdateAsync(
-            settings => settings.LibraryManagementViewMode = viewMode,
-            cancellationToken);
-    }
 
     public Task SaveLibraryManagementSectionsViewModeAsync(
         LibraryManagementViewMode viewMode,
@@ -366,8 +355,6 @@ public sealed class JsonSettingsService :
             stream,
             _jsonOptions,
             cancellationToken) ?? new AppSettings();
-
-        settings.ApplyLegacySettings();
 
         return settings;
     }

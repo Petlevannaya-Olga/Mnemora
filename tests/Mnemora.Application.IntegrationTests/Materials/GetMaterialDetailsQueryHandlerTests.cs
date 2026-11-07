@@ -16,7 +16,7 @@ namespace Mnemora.Application.IntegrationTests.Materials;
 public sealed class GetMaterialDetailsQueryHandlerTests
 {
     [Fact]
-    public async Task Handle_LoadsArticleFromFolderWithoutTopic()
+    public async Task Handle_LoadsArticleFromFolder()
     {
         await using SqliteLibraryTestDatabase database =
             await SqliteLibraryTestDatabase.CreateAsync();
