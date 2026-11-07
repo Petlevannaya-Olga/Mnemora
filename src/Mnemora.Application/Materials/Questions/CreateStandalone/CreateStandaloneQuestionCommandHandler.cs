@@ -129,11 +129,14 @@ public sealed class CreateStandaloneQuestionCommandHandler(
             throw;
         }
 
-        logger.LogInformation(
-            "Создан самостоятельный вопрос {QuestionId} с названием {QuestionTitle} в контейнере {ContainerId}",
-            question.Id.Value,
-            question.Title.Value,
-            question.ContainerId.Value);
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            InfoLog.StandaloneQuestionCreated(
+                logger,
+                question.Id.Value,
+                question.Title.Value,
+                question.ContainerId.Value);
+        }
 
         return question.Id.Value;
     }

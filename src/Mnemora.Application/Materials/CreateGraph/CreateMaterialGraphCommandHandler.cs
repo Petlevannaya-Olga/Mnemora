@@ -208,11 +208,14 @@ public sealed class CreateMaterialGraphCommandHandler(
             return persistResult.Error;
         }
 
-        logger.LogInformation(
-            "Создана статья {ArticleId}. Новых вопросов: {NewCount}, прикреплено готовых: {ExistingCount}",
-            article.Id.Value,
-            newQuestionsResult.Value.Count,
-            existingQuestionsResult.Value.Count);
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            InfoLog.MaterialGraphArticleCreated(
+                logger,
+                article.Id.Value,
+                newQuestionsResult.Value.Count,
+                existingQuestionsResult.Value.Count);
+        }
 
         return article.Id.Value;
     }
@@ -351,10 +354,10 @@ public sealed class CreateMaterialGraphCommandHandler(
             return persistResult.Error;
         }
 
-        logger.LogInformation(
-            "Создан вопрос {QuestionId}. Статья: {ArticleId}",
-            question.Id.Value,
-            question.ArticleId?.Value);
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            InfoLog.MaterialGraphQuestionCreated(logger, question.Id.Value, question.ArticleId?.Value);
+        }
 
         return question.Id.Value;
     }

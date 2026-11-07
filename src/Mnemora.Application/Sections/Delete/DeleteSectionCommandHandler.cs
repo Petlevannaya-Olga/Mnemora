@@ -120,10 +120,10 @@ public sealed class DeleteSectionCommandHandler(
             return saveResult.Error.ToErrors();
         }
 
-        logger.LogInformation(
-            "Удалён раздел {SectionId} с названием {SectionName}",
-            section.Id.Value,
-            section.Name.Value);
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            InfoLog.SectionDeleted(logger, section.Id.Value, section.Name.Value);
+        }
 
         return section.Id.Value;
     }

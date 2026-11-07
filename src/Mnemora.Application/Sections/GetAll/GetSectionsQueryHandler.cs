@@ -35,7 +35,7 @@ public sealed class GetSectionsQueryHandler(
         catch (OperationCanceledException)
             when (cancellationToken.IsCancellationRequested)
         {
-            logger.LogInformation("Получение разделов было отменено");
+            InfoLog.SectionsRetrievalCancelled(logger);
 
             return CommonErrors.OperationCancelled(
                 "sections.get.cancelled").ToErrors();

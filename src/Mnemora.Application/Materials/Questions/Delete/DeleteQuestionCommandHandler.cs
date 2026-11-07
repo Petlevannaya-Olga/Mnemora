@@ -76,10 +76,10 @@ public sealed class DeleteQuestionCommandHandler(
                 deleteContentResult.Error.Code);
         }
 
-        logger.LogInformation(
-            "Удалён вопрос {QuestionId} с названием {QuestionTitle}",
-            question.Id.Value,
-            question.Title.Value);
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            InfoLog.QuestionDeleted(logger, question.Id.Value, question.Title.Value);
+        }
 
         return question.Id.Value;
     }

@@ -42,7 +42,10 @@ public sealed class SaveLibraryOrderCommandHandler(
             return saveResult.Error.ToErrors();
         }
 
-        logger.LogInformation("Сохранён ручной порядок {Target}. Элементов: {Count}", command.Target, command.OrderedIds.Count);
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            InfoLog.LibraryOrderSaved(logger, command.Target, command.OrderedIds.Count);
+        }
         return UnitResult.Success<Errors>();
     }
 

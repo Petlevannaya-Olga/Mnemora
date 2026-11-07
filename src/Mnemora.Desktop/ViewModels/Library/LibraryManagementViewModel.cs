@@ -2059,7 +2059,7 @@ public sealed partial class LibraryManagementViewModel(
         LibraryManagementViewMode viewMode,
         CancellationToken cancellationToken)
     {
-        LibraryManagementSimplePage page = SimplePage;
+        var page = SimplePage;
 
         if (CurrentSimpleViewMode == viewMode && _isSimpleViewModeLoaded)
         {
@@ -2078,7 +2078,7 @@ public sealed partial class LibraryManagementViewModel(
                 _simpleMaterialsViewMode = viewMode;
                 break;
             default:
-                throw new ArgumentOutOfRangeException(nameof(page), page, null);
+                throw new InvalidOperationException($"Неизвестная страница управления библиотекой: {page}.");
         }
 
         _isSimpleViewModeLoaded = true;
@@ -2098,7 +2098,7 @@ public sealed partial class LibraryManagementViewModel(
                     await settingsService.SaveLibraryManagementMaterialsViewModeAsync(viewMode, cancellationToken);
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(page), page, null);
+                    throw new InvalidOperationException($"Неизвестная страница управления библиотекой: {page}.");
             }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)

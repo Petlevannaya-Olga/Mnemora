@@ -76,11 +76,10 @@ public sealed class CreateSectionCommandHandler(
             return saveResult.Error.ToErrors();
         }
 
-        logger.LogInformation(
-            "Создан раздел {SectionId} с названием {SectionName} и корневым контейнером {ContainerId}",
-            section.Id.Value,
-            section.Name.Value,
-            rootResult.Value.Id.Value);
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            InfoLog.SectionCreated(logger, section.Id.Value, section.Name.Value, rootResult.Value.Id.Value);
+        }
 
         return section.Id.Value;
     }

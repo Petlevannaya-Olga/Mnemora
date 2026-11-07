@@ -77,10 +77,10 @@ public sealed class CreateLibraryFolderCommandHandler(
         if (saveResult.IsFailure)
             return saveResult.Error.ToErrors();
 
-        logger.LogInformation(
-            "Создана папка библиотеки {FolderId} в контейнере {ParentContainerId}",
-            folder.Id.Value,
-            parent.Id.Value);
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            InfoLog.LibraryFolderCreated(logger, folder.Id.Value, parent.Id.Value);
+        }
 
         return folder.Id.Value;
     }

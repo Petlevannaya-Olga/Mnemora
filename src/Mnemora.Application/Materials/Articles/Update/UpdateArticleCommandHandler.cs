@@ -145,11 +145,10 @@ public sealed class UpdateArticleCommandHandler(
             return saveResult.Error.ToErrors();
         }
 
-        logger.LogInformation(
-            "Изменена статья {ArticleId}. Контейнер: {ContainerId}. Перемещено связанных вопросов: {QuestionCount}",
-            article.Id.Value,
-            article.ContainerId.Value,
-            linkedQuestions.Count);
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            InfoLog.ArticleUpdated(logger, article.Id.Value, article.ContainerId.Value, linkedQuestions.Count);
+        }
 
         return article.Id.Value;
     }

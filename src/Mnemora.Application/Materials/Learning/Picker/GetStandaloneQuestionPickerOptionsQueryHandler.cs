@@ -79,8 +79,7 @@ public sealed class GetStandaloneQuestionPickerOptionsQueryHandler(
         catch (OperationCanceledException)
             when (cancellationToken.IsCancellationRequested)
         {
-            logger.LogInformation(
-                "Загрузка самостоятельных вопросов для выбора была отменена");
+            InfoLog.StandaloneQuestionPickerCancelled(logger);
 
             return CommonErrors.OperationCancelled(
                     "material.question.picker.cancelled")

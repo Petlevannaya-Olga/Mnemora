@@ -100,9 +100,10 @@ public sealed class GetLibraryHierarchyFoldersPageQueryHandler(
         catch (OperationCanceledException)
             when (cancellationToken.IsCancellationRequested)
         {
-            logger.LogInformation(
-                "Получение страницы папок дерева для контейнера {ContainerId} было отменено",
-                request.ContainerId);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                InfoLog.HierarchyFoldersPageCancelled(logger, request.ContainerId);
+            }
 
             return CommonErrors.OperationCancelled(
                     "library.hierarchy.folders.page.cancelled")

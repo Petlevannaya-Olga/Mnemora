@@ -127,9 +127,10 @@ public sealed class GetLibraryContainerContentsQueryHandler(
         catch (OperationCanceledException)
             when (cancellationToken.IsCancellationRequested)
         {
-            logger.LogInformation(
-                "Получение содержимого контейнера {ContainerId} было отменено",
-                request.ContainerId);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                InfoLog.ContainerContentsRetrievalCancelled(logger, request.ContainerId);
+            }
 
             return CommonErrors.OperationCancelled(
                     "library.container.contents.cancelled")

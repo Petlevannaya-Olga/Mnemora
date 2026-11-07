@@ -59,8 +59,7 @@ public sealed class GetHomeLibrarySummaryQueryHandler(
         catch (OperationCanceledException)
             when (cancellationToken.IsCancellationRequested)
         {
-            logger.LogInformation(
-                "Получение сводки главной страницы было отменено");
+            InfoLog.HomeSummaryRetrievalCancelled(logger);
 
             return CommonErrors.OperationCancelled(
                 "home.library-summary.cancelled").ToErrors();

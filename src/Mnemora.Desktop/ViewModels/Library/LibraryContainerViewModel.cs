@@ -606,7 +606,10 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
         _viewCancellationToken = cancellationToken;
         _isLoaded = true;
 
-        _logger.LogInformation("Открываем контейнер библиотеки {ContainerId}", _containerId);
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            InfoLog.LibraryContainerOpening(_logger, _containerId);
+        }
         await EnsureViewModeLoadedAsync(cancellationToken);
 
         if (!await LoadMetadataAndBreadcrumbsAsync(cancellationToken))
@@ -936,11 +939,14 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
             }
 
             Contents = result.Value;
-            _logger.LogInformation(
-                "Контейнер {ContainerId} найден: {FoldersCount} папок, {MaterialsCount} материалов",
-                _containerId,
-                result.Value.FoldersCount,
-                result.Value.MaterialsCount);
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                InfoLog.LibraryContainerLoaded(
+                    _logger,
+                    _containerId,
+                    result.Value.FoldersCount,
+                    result.Value.MaterialsCount);
+            }
             await BuildBreadcrumbsAsync(result.Value, cancellationToken);
             return true;
         }
@@ -1487,12 +1493,15 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
             RebuildMaterials();
             SyncMaterialWindowState();
 
-            _logger.LogInformation(
-                "Материалы контейнера {ContainerId}: загружено {ItemsCount}, всего {TotalCount}, offset {Offset}",
-                _containerId,
-                result.Value.Items.Count,
-                result.Value.TotalCount,
-                offset);
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                InfoLog.LibraryContainerMaterialsLoaded(
+                    _logger,
+                    _containerId,
+                    result.Value.Items.Count,
+                    result.Value.TotalCount,
+                    offset);
+            }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {

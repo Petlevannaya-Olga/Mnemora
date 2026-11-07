@@ -179,9 +179,10 @@ public sealed class GetLibraryFoldersPageQueryHandler(
         catch (OperationCanceledException)
             when (cancellationToken.IsCancellationRequested)
         {
-            logger.LogInformation(
-                "Получение страницы папок контейнера {ContainerId} было отменено",
-                request.ContainerId);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                InfoLog.FoldersPageCancelled(logger, request.ContainerId);
+            }
 
             return CommonErrors.OperationCancelled(
                     "library.folders.page.cancelled")

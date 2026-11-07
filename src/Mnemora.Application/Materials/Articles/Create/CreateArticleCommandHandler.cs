@@ -140,11 +140,10 @@ public sealed class CreateArticleCommandHandler(
             throw;
         }
 
-        logger.LogInformation(
-            "Создана статья {ArticleId} с названием {ArticleTitle} в контейнере {ContainerId}",
-            article.Id.Value,
-            article.Title.Value,
-            article.ContainerId.Value);
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            InfoLog.ArticleCreated(logger, article.Id.Value, article.Title.Value, article.ContainerId.Value);
+        }
 
         return article.Id.Value;
     }

@@ -78,9 +78,10 @@ public sealed class GetMaterialLearningLinkOptionsQueryHandler(
         catch (OperationCanceledException)
             when (cancellationToken.IsCancellationRequested)
         {
-            logger.LogInformation(
-                "Загрузка вариантов связей для контейнера {ContainerId} была отменена",
-                query.ContainerId);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                InfoLog.LearningLinkOptionsCancelled(logger, query.ContainerId);
+            }
 
             return CommonErrors.OperationCancelled(
                     "material.learning.options.cancelled")

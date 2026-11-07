@@ -91,10 +91,10 @@ public sealed class UpdateSectionCommandHandler(
             return saveResult.Error.ToErrors();
         }
 
-        logger.LogInformation(
-            "Обновлён раздел {SectionId} с названием {SectionName}",
-            section.Id.Value,
-            section.Name.Value);
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            InfoLog.SectionUpdated(logger, section.Id.Value, section.Name.Value);
+        }
 
         return section.Id.Value;
     }

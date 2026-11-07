@@ -39,8 +39,7 @@ internal sealed class TransactionScope(
         catch (OperationCanceledException)
             when (cancellationToken.IsCancellationRequested)
         {
-            logger.LogInformation(
-                "Фиксация транзакции была отменена");
+            InfoLog.TransactionCommitCancelled(logger);
 
             return CommonErrors.OperationCancelled(
                 "transaction.commit.cancelled");
@@ -82,8 +81,7 @@ internal sealed class TransactionScope(
         catch (OperationCanceledException)
             when (cancellationToken.IsCancellationRequested)
         {
-            logger.LogInformation(
-                "Откат транзакции был отменён");
+            InfoLog.TransactionRollbackCancelled(logger);
 
             return CommonErrors.OperationCancelled(
                 "transaction.rollback.cancelled");

@@ -193,8 +193,7 @@ public sealed class GetLibraryManagementFoldersPageQueryHandler(
         catch (OperationCanceledException)
             when (cancellationToken.IsCancellationRequested)
         {
-            logger.LogInformation(
-                "Получение страницы папок управления было отменено");
+            InfoLog.ManagementFoldersPageCancelled(logger);
 
             return CommonErrors.OperationCancelled(
                 "library.management.folders.page.cancelled")

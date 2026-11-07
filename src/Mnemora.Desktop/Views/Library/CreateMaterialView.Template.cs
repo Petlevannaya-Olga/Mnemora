@@ -100,12 +100,12 @@ public partial class CreateMaterialView
     private async Task<string> CreateTemplateFileAsync(
         string source)
     {
-        string directory =
+        var directory =
             await GetTemplateDirectoryAsync();
 
         Directory.CreateDirectory(directory);
 
-        string fileName = source switch
+        var fileName = source switch
         {
             ARTICLE_SOURCE => "article.md",
             QUESTION_SOURCE => "question.md",
@@ -116,12 +116,12 @@ public partial class CreateMaterialView
                 null),
         };
 
-        string path =
+        var path =
             GetUniqueFilePath(
                 directory,
                 fileName);
 
-        File.WriteAllText(
+        await File.WriteAllTextAsync(
             path,
             GetTemplateContent(source),
             new UTF8Encoding(

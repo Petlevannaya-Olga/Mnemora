@@ -256,8 +256,7 @@ public sealed class GetLibrarySectionsPageQueryHandler(
         catch (OperationCanceledException)
             when (cancellationToken.IsCancellationRequested)
         {
-            logger.LogInformation(
-                "Получение страницы разделов было отменено");
+            InfoLog.SectionsPageCancelled(logger);
 
             return CommonErrors.OperationCancelled(
                     "library.sections.page.cancelled")

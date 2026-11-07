@@ -69,7 +69,10 @@ public sealed class DeleteLibraryFolderCommandHandler(
         if (saveResult.IsFailure)
             return saveResult.Error.ToErrors();
 
-        logger.LogInformation("Удалена пустая папка {FolderId}", folder.Id.Value);
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            InfoLog.EmptyLibraryFolderDeleted(logger, folder.Id.Value);
+        }
         return folder.Id.Value;
     }
 }

@@ -58,9 +58,10 @@ public sealed class CreateSectionFolderCommandHandler(
         if (saveResult.IsFailure)
             return saveResult.Error.ToErrors();
 
-        logger.LogInformation(
-            "Создана папка {FolderId} в разделе {SectionId}",
-            folder.Id.Value, command.SectionId);
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            InfoLog.SectionFolderCreated(logger, folder.Id.Value, command.SectionId);
+        }
         return folder.Id.Value;
     }
 }

@@ -115,9 +115,10 @@ public sealed class GetMaterialDetailsQueryHandler(
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            logger.LogInformation(
-                "Получение материала {MaterialId} было отменено",
-                query.MaterialId);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                InfoLog.MaterialDetailsRetrievalCancelled(logger, query.MaterialId);
+            }
 
             return CommonErrors.OperationCancelled(
                 "material.get.cancelled").ToErrors();

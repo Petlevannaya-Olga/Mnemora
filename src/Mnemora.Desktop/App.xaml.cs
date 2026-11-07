@@ -76,12 +76,12 @@ public partial class App : System.Windows.Application
             if (IsStressLibraryMode(e.Args))
             {
                 var logger = _serviceProvider.GetRequiredService<ILogger<App>>();
-                logger.LogInformation("Stress library seed started");
+                InfoLog.StressLibrarySeedStarted(logger);
 
                 try
                 {
                     await SeedStressLibraryAsync(_serviceProvider);
-                    logger.LogInformation("Stress library seed completed");
+                    InfoLog.StressLibrarySeedCompleted(logger);
                 }
                 catch (Exception exception)
                 {

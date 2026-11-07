@@ -204,11 +204,14 @@ public sealed class UpdateQuestionCommandHandler(
             return saveResult.Error.ToErrors();
         }
 
-        logger.LogInformation(
-            "Изменён вопрос {QuestionId}. Контейнер: {ContainerId}. Статья: {ArticleId}",
-            question.Id.Value,
-            question.ContainerId.Value,
-            question.ArticleId?.Value);
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            InfoLog.QuestionUpdated(
+                logger,
+                question.Id.Value,
+                question.ContainerId.Value,
+                question.ArticleId?.Value);
+        }
 
         return question.Id.Value;
     }

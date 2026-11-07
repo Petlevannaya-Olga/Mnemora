@@ -51,7 +51,10 @@ public sealed class LibraryStressDataSeeder(
         var stopwatch = Stopwatch.StartNew();
         await using MnemoraDbContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        logger.LogInformation("Stress seed {Version} started", SEEDER_VERSION);
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            InfoLog.StressSeedStarted(logger, SEEDER_VERSION);
+        }
 
         await EnsureSectionsAndRootsAsync(dbContext, cancellationToken);
         await SeedFolderPagingScenarioAsync(dbContext, cancellationToken);
@@ -66,7 +69,10 @@ public sealed class LibraryStressDataSeeder(
         await SeedFolderBoundaryScenariosAsync(dbContext, cancellationToken);
         await SeedMaterialBoundaryScenariosAsync(dbContext, cancellationToken);
 
-        logger.LogInformation("Stress seed {Version} completed in {Elapsed}", SEEDER_VERSION, stopwatch.Elapsed);
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            InfoLog.StressSeedCompleted(logger, SEEDER_VERSION, stopwatch.Elapsed);
+        }
     }
 
     private async Task EnsureSectionsAndRootsAsync(MnemoraDbContext dbContext, CancellationToken cancellationToken)
@@ -79,7 +85,10 @@ public sealed class LibraryStressDataSeeder(
 
         if (existingCount >= TARGET_COUNT)
         {
-            logger.LogInformation("Stress V5 sections already exist: {Count}", existingCount);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                InfoLog.StressSectionsAlreadyExist(logger, existingCount);
+            }
             return;
         }
 
@@ -107,7 +116,10 @@ public sealed class LibraryStressDataSeeder(
             dbContext.LibraryContainers.AddRange(roots);
             await dbContext.SaveChangesAsync(cancellationToken);
             dbContext.ChangeTracker.Clear();
-            logger.LogInformation("Stress V5 sections + roots: {Done}/{Total}", end, TARGET_COUNT);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                InfoLog.StressSectionsBatchCompleted(logger, end, TARGET_COUNT);
+            }
         }
     }
 
@@ -231,7 +243,10 @@ public sealed class LibraryStressDataSeeder(
 
         if (existingCount >= targetCount)
         {
-            logger.LogInformation("Stress V5 {Label} already exist: {Count}", logLabel, existingCount);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                InfoLog.StressItemsAlreadyExist(logger, logLabel, existingCount);
+            }
             return;
         }
 
@@ -257,7 +272,10 @@ public sealed class LibraryStressDataSeeder(
             dbContext.LibraryContainers.AddRange(batch);
             await dbContext.SaveChangesAsync(cancellationToken);
             dbContext.ChangeTracker.Clear();
-            logger.LogInformation("Stress V5 {Label}: {Done}/{Total}", logLabel, end, targetCount);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                InfoLog.StressItemsBatchCompleted(logger, logLabel, end, targetCount);
+            }
         }
     }
 
@@ -276,7 +294,10 @@ public sealed class LibraryStressDataSeeder(
 
         if (existingCount >= targetCount)
         {
-            logger.LogInformation("Stress V5 {Label} already exist: {Count}", logLabel, existingCount);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                InfoLog.StressItemsAlreadyExist(logger, logLabel, existingCount);
+            }
             return;
         }
 
@@ -302,7 +323,10 @@ public sealed class LibraryStressDataSeeder(
             dbContext.ChangeTracker.DetectChanges();
             await dbContext.SaveChangesAsync(cancellationToken);
             dbContext.ChangeTracker.Clear();
-            logger.LogInformation("Stress V5 {Label}: {Done}/{Total}", logLabel, end, targetCount);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                InfoLog.StressItemsBatchCompleted(logger, logLabel, end, targetCount);
+            }
         }
     }
 
@@ -321,7 +345,10 @@ public sealed class LibraryStressDataSeeder(
 
         if (existingCount >= targetCount)
         {
-            logger.LogInformation("Stress V5 {Label} already exist: {Count}", logLabel, existingCount);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                InfoLog.StressItemsAlreadyExist(logger, logLabel, existingCount);
+            }
             return;
         }
 
@@ -347,7 +374,10 @@ public sealed class LibraryStressDataSeeder(
             dbContext.ChangeTracker.DetectChanges();
             await dbContext.SaveChangesAsync(cancellationToken);
             dbContext.ChangeTracker.Clear();
-            logger.LogInformation("Stress V5 {Label}: {Done}/{Total}", logLabel, end, targetCount);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                InfoLog.StressItemsBatchCompleted(logger, logLabel, end, targetCount);
+            }
         }
     }
 
@@ -364,7 +394,10 @@ public sealed class LibraryStressDataSeeder(
 
         if (existingCount >= targetCount)
         {
-            logger.LogInformation("Stress V5 linked questions already exist: {Count}", existingCount);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                InfoLog.StressLinkedQuestionsAlreadyExist(logger, existingCount);
+            }
             return;
         }
 
@@ -404,7 +437,10 @@ public sealed class LibraryStressDataSeeder(
             dbContext.ChangeTracker.DetectChanges();
             await dbContext.SaveChangesAsync(cancellationToken);
             dbContext.ChangeTracker.Clear();
-            logger.LogInformation("Stress V5 linked questions: {Done}/{Total}", start + questions.Count, targetCount);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                InfoLog.StressLinkedQuestionsBatchCompleted(logger, start + questions.Count, targetCount);
+            }
         }
     }
 

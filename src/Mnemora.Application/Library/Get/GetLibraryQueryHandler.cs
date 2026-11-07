@@ -117,7 +117,7 @@ public sealed class GetLibraryQueryHandler(
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            logger.LogInformation("Получение библиотеки было отменено");
+            InfoLog.LibraryRetrievalCancelled(logger);
 
             return CommonErrors.OperationCancelled(
                 "library.get.cancelled").ToErrors();

@@ -30,7 +30,7 @@ internal sealed class TransactionManager(
         catch (OperationCanceledException)
             when (cancellationToken.IsCancellationRequested)
         {
-            logger.LogInformation("Создание транзакции было отменено");
+            InfoLog.TransactionStartCancelled(logger);
 
             return CommonErrors.OperationCancelled(
                 "transaction.begin.cancelled");
@@ -56,7 +56,7 @@ internal sealed class TransactionManager(
         catch (OperationCanceledException)
             when (cancellationToken.IsCancellationRequested)
         {
-            logger.LogInformation("Сохранение изменений было отменено");
+            InfoLog.SaveChangesCancelled(logger);
 
             return UnitResult.Failure(
                 CommonErrors.OperationCancelled(

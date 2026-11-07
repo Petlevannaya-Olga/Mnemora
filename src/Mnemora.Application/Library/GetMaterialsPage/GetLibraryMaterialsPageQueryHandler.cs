@@ -162,9 +162,10 @@ public sealed class GetLibraryMaterialsPageQueryHandler(
         catch (OperationCanceledException)
             when (cancellationToken.IsCancellationRequested)
         {
-            logger.LogInformation(
-                "Получение страницы материалов контейнера {ContainerId} было отменено",
-                request.ContainerId);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                InfoLog.MaterialsPageCancelled(logger, request.ContainerId);
+            }
 
             return CommonErrors.OperationCancelled(
                 "library.materials.page.cancelled").ToErrors();

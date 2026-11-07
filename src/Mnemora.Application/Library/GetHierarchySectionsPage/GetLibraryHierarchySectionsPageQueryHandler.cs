@@ -111,8 +111,7 @@ public sealed class GetLibraryHierarchySectionsPageQueryHandler(
         catch (OperationCanceledException)
             when (cancellationToken.IsCancellationRequested)
         {
-            logger.LogInformation(
-                "Получение страницы разделов дерева было отменено");
+            InfoLog.HierarchySectionsPageCancelled(logger);
 
             return CommonErrors.OperationCancelled(
                     "library.hierarchy.sections.page.cancelled")

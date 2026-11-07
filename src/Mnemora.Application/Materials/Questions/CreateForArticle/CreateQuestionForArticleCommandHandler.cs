@@ -121,10 +121,10 @@ public sealed class CreateQuestionForArticleCommandHandler(
             throw;
         }
 
-        logger.LogInformation(
-            "Создан вопрос {QuestionId}, связанный со статьёй {ArticleId}",
-            question.Id.Value,
-            article.Id.Value);
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            InfoLog.ArticleQuestionCreated(logger, question.Id.Value, article.Id.Value);
+        }
 
         return question.Id.Value;
     }

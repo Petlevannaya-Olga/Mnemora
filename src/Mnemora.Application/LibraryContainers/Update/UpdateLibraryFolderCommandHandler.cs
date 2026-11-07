@@ -56,7 +56,10 @@ public sealed class UpdateLibraryFolderCommandHandler(
         if (saveResult.IsFailure)
             return saveResult.Error.ToErrors();
 
-        logger.LogInformation("Обновлена папка {FolderId}", folder.Id.Value);
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            InfoLog.LibraryFolderUpdated(logger, folder.Id.Value);
+        }
         return folder.Id.Value;
     }
 }

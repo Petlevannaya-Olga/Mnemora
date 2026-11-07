@@ -88,10 +88,10 @@ public sealed class DeleteArticleCommandHandler(
                 deleteContentResult.Error.Code);
         }
 
-        logger.LogInformation(
-            "Удалена статья {ArticleId} с названием {ArticleTitle}",
-            article.Id.Value,
-            article.Title.Value);
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            InfoLog.ArticleDeleted(logger, article.Id.Value, article.Title.Value);
+        }
 
         return article.Id.Value;
     }
