@@ -140,7 +140,7 @@ public sealed partial class EditTopicDialogViewModel(
         IsSaving;
 
     public void Initialize(
-        LibraryTopicDto topic)
+        LibraryFolderSnapshotDto topic)
     {
         ArgumentNullException.ThrowIfNull(
             topic);

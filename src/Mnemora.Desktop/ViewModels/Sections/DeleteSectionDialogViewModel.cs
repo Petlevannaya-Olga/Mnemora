@@ -133,7 +133,7 @@ public sealed partial class DeleteSectionDialogViewModel(
             section.Name;
 
         FoldersCount =
-            section.Topics.Count;
+            section.Folders.Count;
 
         ErrorMessage = null;
     }

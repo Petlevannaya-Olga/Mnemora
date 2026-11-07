@@ -69,7 +69,7 @@ public sealed partial class DeleteTopicDialogViewModel(
         IsDeleting;
 
     public void Initialize(
-        LibraryTopicDto topic)
+        LibraryFolderSnapshotDto topic)
     {
         ArgumentNullException.ThrowIfNull(topic);
 

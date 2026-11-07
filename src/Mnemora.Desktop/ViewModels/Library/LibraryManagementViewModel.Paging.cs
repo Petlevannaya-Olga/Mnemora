@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.Input;
@@ -685,7 +685,7 @@ public sealed partial class LibraryManagementViewModel
 
         _simpleTopicsTotalCount = 0;
         _simpleTopicSourceTotalCount = SelectedSection?.SectionOverview?.RootFoldersCount
-                                      ?? SelectedSection?.Section?.Topics.Count
+                                      ?? SelectedSection?.Section?.Folders.Count(folder => folder.Depth == 1)
                                       ?? 0;
         _isSimpleTopicsLoadingNextPage = false;
         _isSimpleTopicsLoadingPreviousPage = false;

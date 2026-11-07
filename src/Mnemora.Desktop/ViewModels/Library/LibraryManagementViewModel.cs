@@ -1129,7 +1129,7 @@ public sealed partial class LibraryManagementViewModel(
         LibraryManagementOrderItemViewModel? item,
         CancellationToken cancellationToken)
     {
-        LibraryTopicDto? topic = item?.Topic ?? FindTopic(item?.Id);
+        LibraryFolderSnapshotDto? topic = item?.Topic ?? FindTopic(item?.Id);
 
         if (topic is null && item is not null)
         {
@@ -1160,7 +1160,7 @@ public sealed partial class LibraryManagementViewModel(
         LibraryManagementOrderItemViewModel? item,
         CancellationToken cancellationToken)
     {
-        LibraryTopicDto? topic = item?.Topic ?? FindTopic(item?.Id);
+        LibraryFolderSnapshotDto? topic = item?.Topic ?? FindTopic(item?.Id);
 
         if (topic is null && item is not null)
         {
@@ -2278,7 +2278,7 @@ public sealed partial class LibraryManagementViewModel(
 
         foreach (var orderItem in orderedItems)
         {
-            LibraryTopicDto? topic = FindTopic(orderItem.Id);
+            LibraryFolderSnapshotDto? topic = FindTopic(orderItem.Id);
 
             Topics.Add(new LibraryManagementOrderItemViewModel(
                 orderItem,
@@ -2573,7 +2573,7 @@ public sealed partial class LibraryManagementViewModel(
             : _library.FirstOrDefault(section => section.Id == id.Value);
     }
 
-    private LibraryTopicDto? FindTopic(Guid? id)
+    private LibraryFolderSnapshotDto? FindTopic(Guid? id)
     {
         if (id is null)
         {
@@ -2581,29 +2581,12 @@ public sealed partial class LibraryManagementViewModel(
         }
 
         return _library
-            .SelectMany(section => section.Topics)
+            .SelectMany(section => section.Folders)
             .FirstOrDefault(topic => topic.Id == id.Value);
     }
 
-    private static IReadOnlyList<LibraryMaterialDto> GetTopicMaterials(LibraryTopicDto? topic)
-    {
-        if (topic is null)
-        {
-            return Array.Empty<LibraryMaterialDto>();
-        }
-
-        // В текущей модели библиотеки Materials является init-свойством LibraryTopicDto.
-        // Reflection оставляет этот ViewModel совместимым и со старой версией контракта,
-        // где у LibraryTopicDto ещё не было списка материалов.
-        var materialsProperty = typeof(LibraryTopicDto).GetProperty("Materials");
-
-        if (materialsProperty?.GetValue(topic) is IEnumerable<LibraryMaterialDto> materials)
-        {
-            return materials.ToArray();
-        }
-
-        return Array.Empty<LibraryMaterialDto>();
-    }
+    private static IReadOnlyList<LibraryMaterialDto> GetTopicMaterials(LibraryFolderSnapshotDto? folder) =>
+        folder?.Materials ?? [];
 
     private static IReadOnlyList<LibraryOrderItemDto> ApplyPendingOrder(
         IReadOnlyList<LibraryOrderItemDto> source,

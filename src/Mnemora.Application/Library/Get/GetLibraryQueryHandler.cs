@@ -1,4 +1,4 @@
-﻿using CSharpFunctionalExtensions;
+using CSharpFunctionalExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Mnemora.Application.Database;
@@ -32,27 +32,27 @@ public sealed class GetLibraryQueryHandler(
                     Array.Empty<LibrarySectionDto>());
             }
 
-            var topics = await readDbContext.LibraryContainersRead
-                .Where(container => container.Depth == 1)
-                .OrderBy(container => container.CreatedAt)
+            // Include root containers and every nested folder. The old query
+            // selected only Depth == 1, losing nested and root materials.
+            var containers = await readDbContext.LibraryContainersRead
+                .OrderBy(container => container.Depth)
+                .ThenBy(container => container.DisplayOrder)
+                .ThenBy(container => container.CreatedAt)
                 .ToListAsync(cancellationToken);
 
-            var sectionIdByContainerId = await readDbContext.LibraryContainersRead
-                .Select(container => new { container.Id, container.SectionId })
-                .ToDictionaryAsync(
-                    container => container.Id.Value,
-                    container => container.SectionId.Value,
-                    cancellationToken);
+            var sectionIdByContainerId = containers.ToDictionary(
+                container => container.Id.Value,
+                container => container.SectionId.Value);
 
             var materials = await readDbContext.MaterialsRead
                 .OrderBy(material => material.CreatedAt)
                 .ToListAsync(cancellationToken);
 
-            var lastTopicActivityBySection = topics
-                .GroupBy(topic => topic.SectionId.Value)
+            var lastContainerActivityBySection = containers
+                .GroupBy(container => container.SectionId.Value)
                 .ToDictionary(
                     group => group.Key,
-                    group => group.Max(topic => topic.UpdatedAt));
+                    group => group.Max(container => container.UpdatedAt));
 
             var lastMaterialActivityBySection = materials
                 .Where(material => sectionIdByContainerId.ContainsKey(material.ContainerId.Value))
@@ -61,28 +61,41 @@ public sealed class GetLibraryQueryHandler(
                     group => group.Key,
                     group => group.Max(material => material.UpdatedAt));
 
-            var materialsByTopic = materials
+            var materialsByContainer = materials
                 .GroupBy(material => material.ContainerId.Value)
                 .ToDictionary(
                     group => group.Key,
                     group => group.Select(MapMaterial).ToArray());
 
-            var topicsBySection = topics
-                .GroupBy(topic => topic.SectionId.Value)
+            // The snapshot is flat by design: ParentId and Depth preserve
+            // nesting without duplicating the same material in ancestor folders.
+            var foldersBySection = containers
+                .Where(container => container.Depth > 0)
+                .GroupBy(container => container.SectionId.Value)
                 .ToDictionary(
                     group => group.Key,
                     group => group
-                        .Select(topic => new LibraryTopicDto(
-                            topic.Id.Value,
-                            topic.Name!.Value,
-                            topic.Color!.Value.ToString(),
-                            topic.Icon!.Value.ToString(),
-                            topic.CreatedAt,
-                            topic.UpdatedAt)
+                        .Select(folder => new LibraryFolderSnapshotDto(
+                            folder.Id.Value,
+                            folder.ParentId!.Value,
+                            folder.Depth,
+                            folder.Name!.Value,
+                            folder.Color!.Value.ToString(),
+                            folder.Icon!.Value.ToString(),
+                            folder.DisplayOrder,
+                            folder.CreatedAt,
+                            folder.UpdatedAt)
                         {
-                            Materials = materialsByTopic.GetValueOrDefault(topic.Id.Value, [])
+                            Materials = materialsByContainer.GetValueOrDefault(folder.Id.Value, [])
                         })
                         .ToArray());
+
+            var rootMaterialsBySection = containers
+                .Where(container => container.Depth == 0)
+                .ToDictionary(
+                    container => container.SectionId.Value,
+                    container => (IReadOnlyList<LibraryMaterialDto>)
+                        materialsByContainer.GetValueOrDefault(container.Id.Value, []));
 
             var result = sections
                 .Select(section => new LibrarySectionDto(
@@ -94,9 +107,10 @@ public sealed class GetLibraryQueryHandler(
                     section.UpdatedAt,
                     GetLastActivityAt(
                         section,
-                        lastTopicActivityBySection,
+                        lastContainerActivityBySection,
                         lastMaterialActivityBySection),
-                    topicsBySection.GetValueOrDefault(section.Id.Value, [])))
+                    foldersBySection.GetValueOrDefault(section.Id.Value, []),
+                    rootMaterialsBySection.GetValueOrDefault(section.Id.Value, [])))
                 .ToArray();
 
             return Result.Success<IReadOnlyList<LibrarySectionDto>, Errors>(result);
@@ -120,15 +134,15 @@ public sealed class GetLibraryQueryHandler(
 
     private static DateTime GetLastActivityAt(
         Section section,
-        IReadOnlyDictionary<Guid, DateTime> lastTopicActivityBySection,
+        IReadOnlyDictionary<Guid, DateTime> lastContainerActivityBySection,
         IReadOnlyDictionary<Guid, DateTime> lastMaterialActivityBySection)
     {
         var lastActivityAt = section.UpdatedAt;
 
-        if (lastTopicActivityBySection.TryGetValue(section.Id.Value, out var lastTopicActivityAt) &&
-            lastTopicActivityAt > lastActivityAt)
+        if (lastContainerActivityBySection.TryGetValue(section.Id.Value, out var lastContainerActivityAt) &&
+            lastContainerActivityAt > lastActivityAt)
         {
-            lastActivityAt = lastTopicActivityAt;
+            lastActivityAt = lastContainerActivityAt;
         }
 
         if (lastMaterialActivityBySection.TryGetValue(section.Id.Value, out var lastMaterialActivityAt) &&

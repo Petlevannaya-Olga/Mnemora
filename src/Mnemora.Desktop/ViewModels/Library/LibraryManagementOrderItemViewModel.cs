@@ -13,7 +13,7 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
         LibraryOrderTarget target,
         int position,
         LibrarySectionDto? section = null,
-        LibraryTopicDto? topic = null,
+        LibraryFolderSnapshotDto? topic = null,
         LibraryMaterialDto? material = null,
         int articleQuestionCount = 0)
     {
@@ -124,7 +124,7 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
 
     // Full-tree DTOs are retained for explicit order/admin scenarios.
     public LibrarySectionDto? Section { get; }
-    public LibraryTopicDto? Topic { get; }
+    public LibraryFolderSnapshotDto? Topic { get; }
     public LibraryMaterialDto? Material { get; }
 
     // Lightweight DTOs are used for normal paged browsing.
@@ -184,9 +184,9 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
 
     public DateTime CreatedAt => SectionOverview?.CreatedAt ?? Section?.CreatedAt ?? DateTime.MinValue;
 
-    public int FoldersCount => SectionOverview?.FoldersCount ?? Section?.Topics.Count ?? 0;
+    public int FoldersCount => SectionOverview?.FoldersCount ?? Section?.Folders.Count ?? 0;
 
-    public int RootFoldersCount => SectionOverview?.RootFoldersCount ?? Section?.Topics.Count ?? 0;
+    public int RootFoldersCount => SectionOverview?.RootFoldersCount ?? Section?.Folders.Count(folder => folder.Depth == 1) ?? 0;
 
     public int MaterialsCount => SectionOverview?.MaterialsCount ?? GetSectionMaterials().Count(IsTopLevelMaterialDto);
 
@@ -354,13 +354,13 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
 
         if (Section is not null)
         {
-            return Section.Topics.Sum(GetTopicMaterialsCount);
+            return GetSectionMaterials().Count(IsTopLevelMaterialDto);
         }
 
         return Topic is not null ? GetTopicMaterialsCount(Topic) : 0;
     }
 
-    private static int GetTopicMaterialsCount(LibraryTopicDto topic) =>
+    private static int GetTopicMaterialsCount(LibraryFolderSnapshotDto topic) =>
         GetTopicMaterials(topic).Count(IsTopLevelMaterialDto);
 
     private static bool IsTopLevelMaterialDto(LibraryMaterialDto material) =>
@@ -374,40 +374,16 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
             return [];
         }
 
-        return Section.Topics.SelectMany(GetTopicMaterials).ToArray();
+        return Section.RootMaterials
+            .Concat(Section.Folders.SelectMany(GetTopicMaterials))
+            .ToArray();
     }
 
-    private static IReadOnlyList<LibraryMaterialDto> GetTopicMaterials(LibraryTopicDto topic)
-    {
-        var property = typeof(LibraryTopicDto).GetProperty("Materials");
+    private static IReadOnlyList<LibraryMaterialDto> GetTopicMaterials(LibraryFolderSnapshotDto folder) =>
+        folder.Materials;
 
-        return property?.GetValue(topic) is IEnumerable<LibraryMaterialDto> materials
-            ? materials.ToArray()
-            : [];
-    }
-
-    private static DateTime GetLastActivityAt(LibrarySectionDto section)
-    {
-        DateTime lastActivityAt = section.CreatedAt;
-
-        foreach (LibraryTopicDto topic in section.Topics)
-        {
-            if (topic.CreatedAt > lastActivityAt)
-            {
-                lastActivityAt = topic.CreatedAt;
-            }
-
-            foreach (LibraryMaterialDto material in GetTopicMaterials(topic))
-            {
-                if (material.UpdatedAt > lastActivityAt)
-                {
-                    lastActivityAt = material.UpdatedAt;
-                }
-            }
-        }
-
-        return lastActivityAt;
-    }
+    private static DateTime GetLastActivityAt(LibrarySectionDto section) =>
+        section.LastActivityAt;
 
     private static DateTime ToLocalTime(DateTime value)
     {
