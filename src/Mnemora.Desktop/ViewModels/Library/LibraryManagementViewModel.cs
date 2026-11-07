@@ -15,7 +15,7 @@ using Mnemora.Desktop.Notifications;
 using Mnemora.Desktop.Settings;
 using Mnemora.Desktop.ViewModels.Common;
 using Mnemora.Desktop.ViewModels.Sections;
-using Mnemora.Desktop.ViewModels.Topics;
+using Mnemora.Desktop.ViewModels.Folders;
 
 namespace Mnemora.Desktop.ViewModels.Library;
 
@@ -23,11 +23,11 @@ public enum LibraryManagementSimplePage
 {
     Sections,
     SectionStructure,
-    Topics,
+    Folders,
     Materials,
 }
 
-public enum LibraryManagementTopicSort
+public enum LibraryManagementFolderSort
 {
     Custom,
     RecentActivity,
@@ -35,9 +35,9 @@ public enum LibraryManagementTopicSort
     Newest,
 }
 
-public sealed record LibraryManagementTopicSortOption(
+public sealed record LibraryManagementFolderSortOption(
     string Name,
-    LibraryManagementTopicSort Sort);
+    LibraryManagementFolderSort Sort);
 
 public enum LibraryManagementMaterialFilter
 {
@@ -70,7 +70,7 @@ public sealed partial class LibraryManagementViewModel(
     : ViewModelBase
 {
     private readonly List<LibrarySectionDto> _library = [];
-    private readonly Dictionary<Guid, Guid[]> _pendingTopicOrders = new();
+    private readonly Dictionary<Guid, Guid[]> _pendingFolderOrders = new();
     private readonly Dictionary<Guid, Guid[]> _pendingMaterialOrders = new();
 
     public CreateMaterialViewModel CreateMaterial { get; } = createMaterialViewModel;
@@ -88,7 +88,7 @@ public sealed partial class LibraryManagementViewModel(
     private CancellationToken _viewCancellationToken;
     private int _simpleSectionLoadVersion;
     private int _simpleSectionSearchVersion;
-    private int _simpleTopicSearchVersion;
+    private int _simpleFolderSearchVersion;
     private int _simpleMaterialSearchVersion;
     private int _simpleMaterialVisibleCount = SimpleMaterialPageSize;
     private int _simpleMaterialsFilteredTotalCount;
@@ -99,10 +99,10 @@ public sealed partial class LibraryManagementViewModel(
     private bool _isManagementColumnSettingsLoaded;
     private bool _isApplyingManagementColumnSettings;
 
-    // Сортировка тем зависит от раздела, а сортировка материалов — от темы.
+    // Сортировка папок зависит от раздела, а сортировка материалов — от папки.
     // Поэтому эти настройки хранятся отдельно для каждого родительского контекста.
-    private readonly Dictionary<Guid, LibraryManagementSortMode> _topicSortBySection = new();
-    private readonly Dictionary<Guid, LibraryManagementSortMode> _materialSortByTopic = new();
+    private readonly Dictionary<Guid, LibraryManagementSortMode> _folderSortBySection = new();
+    private readonly Dictionary<Guid, LibraryManagementSortMode> _materialSortByFolder = new();
 
     private Task? _loadTask;
     private bool _reloadRequested;
@@ -110,12 +110,12 @@ public sealed partial class LibraryManagementViewModel(
     private bool _suppressSelectionReload;
     private int _contextLoadVersion;
     private Guid? _preferredSectionId;
-    private Guid? _preferredTopicId;
+    private Guid? _preferredFolderId;
     private bool _isCreatingMaterialFromSectionStructure;
 
     public ObservableCollection<LibraryManagementOrderItemViewModel> Sections { get; } = [];
 
-    public ObservableCollection<LibraryManagementOrderItemViewModel> Topics { get; } = [];
+    public ObservableCollection<LibraryManagementOrderItemViewModel> Folders { get; } = [];
 
     public ObservableCollection<LibraryManagementOrderItemViewModel> Materials { get; } = [];
 
@@ -125,13 +125,13 @@ public sealed partial class LibraryManagementViewModel(
 
     public ObservableCollection<LibraryManagementSectionRowViewModel> SimpleCompactSectionRows { get; } = [];
 
-    public ObservableCollection<LibraryManagementOrderItemViewModel> SimpleTopics { get; } = [];
+    public ObservableCollection<LibraryManagementOrderItemViewModel> SimpleFolders { get; } = [];
 
     public ObservableCollection<LibraryManagementOrderItemViewModel> SimpleMaterials { get; } = [];
 
-    public ObservableCollection<LibraryManagementTopicRowViewModel> SimpleTopicRows { get; } = [];
+    public ObservableCollection<LibraryManagementFolderRowViewModel> SimpleFolderRows { get; } = [];
 
-    public ObservableCollection<LibraryManagementTopicRowViewModel> SimpleCompactTopicRows { get; } = [];
+    public ObservableCollection<LibraryManagementFolderRowViewModel> SimpleCompactFolderRows { get; } = [];
 
     public IReadOnlyList<LibraryManagementSectionSortOption> SimpleSectionSortOptions { get; } =
     [
@@ -141,12 +141,12 @@ public sealed partial class LibraryManagementViewModel(
         new("Сначала новые", LibraryManagementSectionSort.Newest),
     ];
 
-    public IReadOnlyList<LibraryManagementTopicSortOption> SimpleTopicSortOptions { get; } =
+    public IReadOnlyList<LibraryManagementFolderSortOption> SimpleFolderSortOptions { get; } =
     [
-        new("Мой порядок", LibraryManagementTopicSort.Custom),
-        new("Последняя активность", LibraryManagementTopicSort.RecentActivity),
-        new("По названию", LibraryManagementTopicSort.Name),
-        new("Сначала новые", LibraryManagementTopicSort.Newest),
+        new("Мой порядок", LibraryManagementFolderSort.Custom),
+        new("Последняя активность", LibraryManagementFolderSort.RecentActivity),
+        new("По названию", LibraryManagementFolderSort.Name),
+        new("Сначала новые", LibraryManagementFolderSort.Newest),
     ];
 
     public IReadOnlyList<LibraryManagementMaterialSortOption> SimpleMaterialSortOptions { get; } =
@@ -160,8 +160,8 @@ public sealed partial class LibraryManagementViewModel(
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasError))]
     [NotifyPropertyChangedFor(nameof(IsEmpty))]
-    [NotifyPropertyChangedFor(nameof(IsSimpleTopicsEmpty))]
-    [NotifyPropertyChangedFor(nameof(HasNoSimpleTopicSearchResults))]
+    [NotifyPropertyChangedFor(nameof(IsSimpleFoldersEmpty))]
+    [NotifyPropertyChangedFor(nameof(HasNoSimpleFolderSearchResults))]
     [NotifyPropertyChangedFor(nameof(IsSimpleMaterialsEmpty))]
     [NotifyPropertyChangedFor(nameof(HasNoSimpleMaterialResults))]
     private string? _errorMessage;
@@ -169,13 +169,13 @@ public sealed partial class LibraryManagementViewModel(
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsEmpty))]
     [NotifyCanExecuteChangedFor(nameof(SaveOrderCommand))]
-    [NotifyCanExecuteChangedFor(nameof(AddTopicCommand))]
+    [NotifyCanExecuteChangedFor(nameof(AddFolderCommand))]
     [NotifyCanExecuteChangedFor(nameof(StartCreateMaterialCommand))]
     private bool _isLoading;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsSimpleTopicsEmpty))]
-    [NotifyPropertyChangedFor(nameof(HasNoSimpleTopicSearchResults))]
+    [NotifyPropertyChangedFor(nameof(IsSimpleFoldersEmpty))]
+    [NotifyPropertyChangedFor(nameof(HasNoSimpleFolderSearchResults))]
     [NotifyPropertyChangedFor(nameof(IsSimpleMaterialsEmpty))]
     [NotifyPropertyChangedFor(nameof(HasNoSimpleMaterialResults))]
     [NotifyCanExecuteChangedFor(nameof(SaveOrderCommand))]
@@ -191,17 +191,17 @@ public sealed partial class LibraryManagementViewModel(
     [NotifyPropertyChangedFor(nameof(SelectedPath))]
     [NotifyPropertyChangedFor(nameof(OrderContextName))]
     [NotifyPropertyChangedFor(nameof(HasOrderContext))]
-    [NotifyCanExecuteChangedFor(nameof(AddTopicCommand))]
+    [NotifyCanExecuteChangedFor(nameof(AddFolderCommand))]
     [NotifyCanExecuteChangedFor(nameof(StartCreateMaterialCommand))]
     private LibraryManagementOrderItemViewModel? _selectedSection;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasSelectedTopic))]
+    [NotifyPropertyChangedFor(nameof(HasSelectedFolder))]
     [NotifyPropertyChangedFor(nameof(SelectedPath))]
     [NotifyPropertyChangedFor(nameof(OrderContextName))]
     [NotifyPropertyChangedFor(nameof(HasOrderContext))]
     [NotifyCanExecuteChangedFor(nameof(StartCreateMaterialCommand))]
-    private LibraryManagementOrderItemViewModel? _selectedTopic;
+    private LibraryManagementOrderItemViewModel? _selectedFolder;
 
     [ObservableProperty]
     private LibraryManagementOrderItemViewModel? _selectedMaterial;
@@ -235,7 +235,7 @@ public sealed partial class LibraryManagementViewModel(
     private int _simpleSectionsTotalCount;
 
     private LibraryManagementViewMode _simpleSectionsViewMode = LibraryManagementViewMode.Tiles;
-    private LibraryManagementViewMode _simpleTopicsViewMode = LibraryManagementViewMode.Tiles;
+    private LibraryManagementViewMode _simpleFoldersViewMode = LibraryManagementViewMode.Tiles;
     private LibraryManagementViewMode _simpleMaterialsViewMode = LibraryManagementViewMode.Table;
 
     [ObservableProperty]
@@ -243,11 +243,11 @@ public sealed partial class LibraryManagementViewModel(
         new("Мой порядок", LibraryManagementSectionSort.Custom);
 
     [ObservableProperty]
-    private LibraryManagementTopicSortOption _selectedSimpleTopicSortOption =
-        new("Мой порядок", LibraryManagementTopicSort.Custom);
+    private LibraryManagementFolderSortOption _selectedSimpleFolderSortOption =
+        new("Мой порядок", LibraryManagementFolderSort.Custom);
 
     [ObservableProperty]
-    private string? _simpleTopicSearchText;
+    private string? _simpleFolderSearchText;
 
     [ObservableProperty]
     private LibraryManagementMaterialSortOption _selectedSimpleMaterialSortOption =
@@ -308,7 +308,7 @@ public sealed partial class LibraryManagementViewModel(
     [NotifyPropertyChangedFor(nameof(IsSimpleMode))]
     [NotifyPropertyChangedFor(nameof(IsSimpleSectionsPage))]
     [NotifyPropertyChangedFor(nameof(IsSectionStructurePage))]
-    [NotifyPropertyChangedFor(nameof(IsSimpleTopicsPage))]
+    [NotifyPropertyChangedFor(nameof(IsSimpleFoldersPage))]
     [NotifyPropertyChangedFor(nameof(IsSimpleMaterialsPage))]
     [NotifyPropertyChangedFor(nameof(OrderItems))]
     [NotifyPropertyChangedFor(nameof(OrderTargetTag))]
@@ -322,7 +322,7 @@ public sealed partial class LibraryManagementViewModel(
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsSimpleSectionsPage))]
     [NotifyPropertyChangedFor(nameof(IsSectionStructurePage))]
-    [NotifyPropertyChangedFor(nameof(IsSimpleTopicsPage))]
+    [NotifyPropertyChangedFor(nameof(IsSimpleFoldersPage))]
     [NotifyPropertyChangedFor(nameof(IsSimpleMaterialsPage))]
     [NotifyPropertyChangedFor(nameof(IsSimpleTilesView))]
     [NotifyPropertyChangedFor(nameof(IsSimpleCompactTilesView))]
@@ -338,7 +338,7 @@ public sealed partial class LibraryManagementViewModel(
 
     public bool IsSectionStructurePage => IsSimpleMode && SimplePage == LibraryManagementSimplePage.SectionStructure;
 
-    public bool IsSimpleTopicsPage => IsSimpleMode && SimplePage == LibraryManagementSimplePage.Topics;
+    public bool IsSimpleFoldersPage => IsSimpleMode && SimplePage == LibraryManagementSimplePage.Folders;
 
     public bool IsSimpleMaterialsPage => IsSimpleMode && SimplePage == LibraryManagementSimplePage.Materials;
 
@@ -346,7 +346,7 @@ public sealed partial class LibraryManagementViewModel(
         ActiveOrderTarget switch
         {
             LibraryOrderTarget.Sections => Sections,
-            LibraryOrderTarget.Folders => Topics,
+            LibraryOrderTarget.Folders => Folders,
             LibraryOrderTarget.Materials => Materials,
             _ => Array.Empty<LibraryManagementOrderItemViewModel>(),
         };
@@ -382,7 +382,7 @@ public sealed partial class LibraryManagementViewModel(
         ActiveOrderTarget switch
         {
             LibraryOrderTarget.Folders => SelectedSection?.Name ?? string.Empty,
-            LibraryOrderTarget.Materials => SelectedTopic?.Name ?? string.Empty,
+            LibraryOrderTarget.Materials => SelectedFolder?.Name ?? string.Empty,
             _ => string.Empty,
         };
 
@@ -409,7 +409,7 @@ public sealed partial class LibraryManagementViewModel(
         SimplePage switch
         {
             LibraryManagementSimplePage.Sections => _simpleSectionsViewMode,
-            LibraryManagementSimplePage.Topics => _simpleTopicsViewMode,
+            LibraryManagementSimplePage.Folders => _simpleFoldersViewMode,
             LibraryManagementSimplePage.Materials => _simpleMaterialsViewMode,
             _ => LibraryManagementViewMode.Tiles,
         };
@@ -438,38 +438,38 @@ public sealed partial class LibraryManagementViewModel(
         }
     }
 
-    public bool HasSimpleTopicSource => _simpleTopicSourceTotalCount > 0;
+    public bool HasSimpleFolderSource => _simpleFolderSourceTotalCount > 0;
 
-    public bool HasSimpleTopics => SimpleTopics.Count > 0;
+    public bool HasSimpleFolders => SimpleFolders.Count > 0;
 
-    public bool IsSimpleTopicsEmpty =>
+    public bool IsSimpleFoldersEmpty =>
         !IsContextLoading &&
         !HasError &&
-        !HasSimpleTopicSource &&
-        string.IsNullOrWhiteSpace(SimpleTopicSearchText);
+        !HasSimpleFolderSource &&
+        string.IsNullOrWhiteSpace(SimpleFolderSearchText);
 
-    public bool HasNoSimpleTopicSearchResults =>
+    public bool HasNoSimpleFolderSearchResults =>
         !IsContextLoading &&
         !HasError &&
-        HasSimpleTopicSource &&
-        !HasSimpleTopics &&
-        !string.IsNullOrWhiteSpace(SimpleTopicSearchText);
+        HasSimpleFolderSource &&
+        !HasSimpleFolders &&
+        !string.IsNullOrWhiteSpace(SimpleFolderSearchText);
 
-    public string SimpleTopicsShownCountText
+    public string SimpleFoldersShownCountText
     {
         get
         {
             int visibleCount = Math.Min(
-                SimpleTopicPageSize,
-                Math.Max(0, _simpleTopicsTotalCount - SimpleTopicCurrentPageOffset));
+                SimpleFolderPageSize,
+                Math.Max(0, _simpleFoldersTotalCount - SimpleFolderCurrentPageOffset));
 
             return LibraryRangeTextFormatter.FormatEntity(
                 "Папки",
                 "Папки не найдены",
-                SimpleTopicCurrentPageOffset,
+                SimpleFolderCurrentPageOffset,
                 visibleCount,
-                _simpleTopicsTotalCount,
-                !string.IsNullOrWhiteSpace(SimpleTopicSearchText));
+                _simpleFoldersTotalCount,
+                !string.IsNullOrWhiteSpace(SimpleFolderSearchText));
         }
     }
 
@@ -512,25 +512,25 @@ public sealed partial class LibraryManagementViewModel(
 
     public bool HasSelectedSection => SelectedSection is not null;
 
-    public bool HasSelectedTopic => SelectedTopic is not null;
+    public bool HasSelectedFolder => SelectedFolder is not null;
 
-    public bool HasTopics => Topics.Count > 0;
+    public bool HasFolders => Folders.Count > 0;
 
     public bool HasMaterials => Materials.Count > 0;
 
     public int LoadedMaterialsCount => Materials.Count;
 
     public int TotalMaterialsCount =>
-        SelectedTopic is null
+        SelectedFolder is null
             ? 0
-            : GetTopicMaterials(FindTopic(SelectedTopic.Id)).Count;
+            : GetFolderMaterials(FindFolder(SelectedFolder.Id)).Count;
 
     public string MaterialsShownCountText =>
         $"Показано {LoadedMaterialsCount} из {TotalMaterialsCount}";
 
     public bool HasUnsavedOrder =>
         _pendingSectionOrder is not null ||
-        _pendingTopicOrders.Count > 0 ||
+        _pendingFolderOrders.Count > 0 ||
         _pendingMaterialOrders.Count > 0;
 
     public bool ShowOrderFooter => IsOrderMode || HasUnsavedOrder;
@@ -544,9 +544,9 @@ public sealed partial class LibraryManagementViewModel(
                 return "Выберите раздел";
             }
 
-            return SelectedTopic is null
+            return SelectedFolder is null
                 ? SelectedSection.Name
-                : $"{SelectedSection.Name} / {SelectedTopic.Name}";
+                : $"{SelectedSection.Name} / {SelectedFolder.Name}";
         }
     }
 
@@ -575,25 +575,25 @@ public sealed partial class LibraryManagementViewModel(
         NotifyOrderChanged();
     }
 
-    public void MoveTopic(LibraryManagementOrderItemViewModel item, int targetIndex)
+    public void MoveFolder(LibraryManagementOrderItemViewModel item, int targetIndex)
     {
-        if (SelectedSection is null || !MoveItem(Topics, item, targetIndex))
+        if (SelectedSection is null || !MoveItem(Folders, item, targetIndex))
         {
             return;
         }
 
-        _pendingTopicOrders[SelectedSection.Id] = Topics.Select(topic => topic.Id).ToArray();
+        _pendingFolderOrders[SelectedSection.Id] = Folders.Select(folder => folder.Id).ToArray();
         NotifyOrderChanged();
     }
 
     public void MoveMaterial(LibraryManagementOrderItemViewModel item, int targetIndex)
     {
-        if (SelectedTopic is null || !MoveItem(Materials, item, targetIndex))
+        if (SelectedFolder is null || !MoveItem(Materials, item, targetIndex))
         {
             return;
         }
 
-        _pendingMaterialOrders[SelectedTopic.Id] = Materials.Select(material => material.Id).ToArray();
+        _pendingMaterialOrders[SelectedFolder.Id] = Materials.Select(material => material.Id).ToArray();
         NotifyOrderChanged();
     }
 
@@ -618,11 +618,11 @@ public sealed partial class LibraryManagementViewModel(
                     return Array.Empty<LibraryManagementOrderItemViewModel>();
                 }
 
-                await LoadTopicsAsync(SelectedTopic?.Id, cancellationToken);
+                await LoadFoldersAsync(SelectedFolder?.Id, cancellationToken);
                 break;
 
             case LibraryOrderTarget.Materials:
-                if (SelectedTopic is null)
+                if (SelectedFolder is null)
                 {
                     return Array.Empty<LibraryManagementOrderItemViewModel>();
                 }
@@ -660,7 +660,7 @@ public sealed partial class LibraryManagementViewModel(
         {
             LibraryOrderTarget.Sections => null,
             LibraryOrderTarget.Folders => SelectedSection?.Id,
-            LibraryOrderTarget.Materials => SelectedTopic?.Id,
+            LibraryOrderTarget.Materials => SelectedFolder?.Id,
             _ => throw new ArgumentOutOfRangeException(nameof(target), target, null),
         };
 
@@ -705,9 +705,9 @@ public sealed partial class LibraryManagementViewModel(
                     break;
 
                 case LibraryOrderTarget.Folders:
-                    if (IsSimpleTopicsPage)
+                    if (IsSimpleFoldersPage)
                     {
-                        await ReloadSimpleTopicsPagedAsync(cancellationToken);
+                        await ReloadSimpleFoldersPagedAsync(cancellationToken);
                     }
                     break;
 
@@ -742,7 +742,7 @@ public sealed partial class LibraryManagementViewModel(
     }
 
     [RelayCommand]
-    private async Task ConfigureTopicsOrderAsync(CancellationToken cancellationToken)
+    private async Task ConfigureFoldersOrderAsync(CancellationToken cancellationToken)
     {
         if (SelectedSection is null)
         {
@@ -750,9 +750,9 @@ public sealed partial class LibraryManagementViewModel(
         }
 
         await EnsureOrderLibraryLoadedAsync(cancellationToken);
-        await LoadTopicsAsync(selectedTopicId: null, cancellationToken: cancellationToken);
+        await LoadFoldersAsync(selectedFolderId: null, cancellationToken: cancellationToken);
 
-        if (Topics.Count == 0)
+        if (Folders.Count == 0)
         {
             return;
         }
@@ -763,7 +763,7 @@ public sealed partial class LibraryManagementViewModel(
     [RelayCommand]
     private async Task ConfigureMaterialsOrderAsync(CancellationToken cancellationToken)
     {
-        if (SelectedTopic is null)
+        if (SelectedFolder is null)
         {
             return;
         }
@@ -793,11 +793,11 @@ public sealed partial class LibraryManagementViewModel(
         ActiveOrderTarget = null;
         _orderSnapshot = null;
 
-        if (IsSimpleTopicsPage && SelectedSection is not null)
+        if (IsSimpleFoldersPage && SelectedSection is not null)
         {
-            _ = ReloadSimpleTopicsPagedAsync(_viewCancellationToken);
+            _ = ReloadSimpleFoldersPagedAsync(_viewCancellationToken);
         }
-        else if (IsSimpleMaterialsPage && SelectedTopic is not null)
+        else if (IsSimpleMaterialsPage && SelectedFolder is not null)
         {
             _ = ReloadSimpleMaterialsPagedAsync(_viewCancellationToken);
         }
@@ -823,7 +823,7 @@ public sealed partial class LibraryManagementViewModel(
             return;
         }
 
-        SelectedTopic = null;
+        SelectedFolder = null;
         SelectedSection = new LibraryManagementOrderItemViewModel(item.Source, position: 1);
 
         Task initializationTask = SectionStructure.InitializeAsync(item.Source, cancellationToken);
@@ -896,7 +896,7 @@ public sealed partial class LibraryManagementViewModel(
     }
 
     [RelayCommand]
-    private async Task OpenSimpleTopicAsync(
+    private async Task OpenSimpleFolderAsync(
         LibraryManagementOrderItemViewModel? item,
         CancellationToken cancellationToken)
     {
@@ -907,7 +907,7 @@ public sealed partial class LibraryManagementViewModel(
 
         SimpleMaterialSearchText = null;
         SimpleMaterialFilter = LibraryManagementMaterialFilter.All;
-        SelectedTopic = item;
+        SelectedFolder = item;
         SimplePage = LibraryManagementSimplePage.Materials;
 
         await ReloadSimpleMaterialsPagedAsync(cancellationToken);
@@ -919,11 +919,11 @@ public sealed partial class LibraryManagementViewModel(
         switch (SimplePage)
         {
             case LibraryManagementSimplePage.Materials:
-                SimplePage = LibraryManagementSimplePage.Topics;
+                SimplePage = LibraryManagementSimplePage.Folders;
                 break;
-            case LibraryManagementSimplePage.Topics:
+            case LibraryManagementSimplePage.Folders:
             case LibraryManagementSimplePage.SectionStructure:
-                SelectedTopic = null;
+                SelectedFolder = null;
                 SimplePage = LibraryManagementSimplePage.Sections;
                 break;
         }
@@ -933,13 +933,13 @@ public sealed partial class LibraryManagementViewModel(
     private void StartCreateMaterial()
     {
         if (!CanStartCreateMaterial() ||
-            SelectedTopic is null)
+            SelectedFolder is null)
         {
             return;
         }
 
         CreateMaterial.Initialize(
-            SelectedTopic,
+            SelectedFolder,
             CancelCreateMaterial,
             CompleteCreateMaterial);
 
@@ -948,7 +948,7 @@ public sealed partial class LibraryManagementViewModel(
 
     private bool CanStartCreateMaterial() =>
         SelectedSection is not null &&
-        SelectedTopic is not null &&
+        SelectedFolder is not null &&
         !IsLoading &&
         !IsContextLoading;
 
@@ -972,7 +972,7 @@ public sealed partial class LibraryManagementViewModel(
         if (!refreshSectionStructure)
         {
             _preferredSectionId = SelectedSection?.Id;
-            _preferredTopicId = SelectedTopic?.Id;
+            _preferredFolderId = SelectedFolder?.Id;
         }
 
         _isCreatingMaterialFromSectionStructure = false;
@@ -1033,7 +1033,7 @@ public sealed partial class LibraryManagementViewModel(
         }
 
         _preferredSectionId = sectionId.Value;
-        _preferredTopicId = null;
+        _preferredFolderId = null;
         notificationService.ShowSuccess("Раздел создан");
         await RefreshAfterMutationAsync(cancellationToken);
     }
@@ -1083,15 +1083,15 @@ public sealed partial class LibraryManagementViewModel(
             return;
         }
 
-        _pendingTopicOrders.Remove(section.Id);
+        _pendingFolderOrders.Remove(section.Id);
         _preferredSectionId = null;
-        _preferredTopicId = null;
+        _preferredFolderId = null;
         notificationService.ShowSuccess($"Раздел «{section.Name}» удалён");
         await RefreshAfterMutationAsync(cancellationToken);
     }
 
-    [RelayCommand(CanExecute = nameof(CanAddTopic))]
-    private async Task AddTopicAsync(
+    [RelayCommand(CanExecute = nameof(CanAddFolder))]
+    private async Task AddFolderAsync(
         LibraryManagementOrderItemViewModel? item,
         CancellationToken cancellationToken)
     {
@@ -1110,80 +1110,80 @@ public sealed partial class LibraryManagementViewModel(
             return;
         }
 
-        var topicId = dialogService.Show<CreateTopicDialogViewModel, Guid?>(
+        var folderId = dialogService.Show<CreateFolderDialogViewModel, Guid?>(
             viewModel => viewModel.Initialize(section.Id, section.Name));
 
-        if (topicId is null)
+        if (folderId is null)
         {
             return;
         }
 
         _preferredSectionId = section.Id;
-        _preferredTopicId = topicId.Value;
+        _preferredFolderId = folderId.Value;
         notificationService.ShowSuccess("Папка создана");
         await RefreshAfterMutationAsync(cancellationToken);
     }
 
     [RelayCommand]
-    private async Task EditTopicAsync(
+    private async Task EditFolderAsync(
         LibraryManagementOrderItemViewModel? item,
         CancellationToken cancellationToken)
     {
-        LibraryFolderSnapshotDto? topic = item?.Topic ?? FindTopic(item?.Id);
+        LibraryFolderSnapshotDto? folder = item?.Folder ?? FindFolder(item?.Id);
 
-        if (topic is null && item is not null)
+        if (folder is null && item is not null)
         {
             await EnsureOrderLibraryLoadedAsync(cancellationToken);
-            topic = FindTopic(item.Id);
+            folder = FindFolder(item.Id);
         }
 
-        if (topic is null)
+        if (folder is null)
         {
             return;
         }
 
-        var topicId = dialogService.Show<EditTopicDialogViewModel, Guid?>(
-            viewModel => viewModel.Initialize(topic));
+        var folderId = dialogService.Show<EditFolderDialogViewModel, Guid?>(
+            viewModel => viewModel.Initialize(folder));
 
-        if (topicId is null)
+        if (folderId is null)
         {
             return;
         }
 
-        _preferredTopicId = topic.Id;
+        _preferredFolderId = folder.Id;
         notificationService.ShowSuccess("Изменения папки сохранены");
         await RefreshAfterMutationAsync(cancellationToken);
     }
 
     [RelayCommand]
-    private async Task DeleteTopicAsync(
+    private async Task DeleteFolderAsync(
         LibraryManagementOrderItemViewModel? item,
         CancellationToken cancellationToken)
     {
-        LibraryFolderSnapshotDto? topic = item?.Topic ?? FindTopic(item?.Id);
+        LibraryFolderSnapshotDto? folder = item?.Folder ?? FindFolder(item?.Id);
 
-        if (topic is null && item is not null)
+        if (folder is null && item is not null)
         {
             await EnsureOrderLibraryLoadedAsync(cancellationToken);
-            topic = FindTopic(item.Id);
+            folder = FindFolder(item.Id);
         }
 
-        if (topic is null)
+        if (folder is null)
         {
             return;
         }
 
-        bool wasDeleted = dialogService.Show<DeleteTopicDialogViewModel, bool>(
-            viewModel => viewModel.Initialize(topic));
+        bool wasDeleted = dialogService.Show<DeleteFolderDialogViewModel, bool>(
+            viewModel => viewModel.Initialize(folder));
 
         if (!wasDeleted)
         {
             return;
         }
 
-        _pendingMaterialOrders.Remove(topic.Id);
-        _preferredTopicId = null;
-        notificationService.ShowSuccess($"Папка «{topic.Name}» удалена");
+        _pendingMaterialOrders.Remove(folder.Id);
+        _preferredFolderId = null;
+        notificationService.ShowSuccess($"Папка «{folder.Name}» удалена");
         await RefreshAfterMutationAsync(cancellationToken);
     }
 
@@ -1211,7 +1211,7 @@ public sealed partial class LibraryManagementViewModel(
                 _pendingSectionOrder = null;
             }
 
-            foreach (var pendingOrder in _pendingTopicOrders.ToArray())
+            foreach (var pendingOrder in _pendingFolderOrders.ToArray())
             {
                 if (!await SaveOrderCoreAsync(
                         LibraryOrderTarget.Folders,
@@ -1222,7 +1222,7 @@ public sealed partial class LibraryManagementViewModel(
                     return;
                 }
 
-                _pendingTopicOrders.Remove(pendingOrder.Key);
+                _pendingFolderOrders.Remove(pendingOrder.Key);
             }
 
             foreach (var pendingOrder in _pendingMaterialOrders.ToArray())
@@ -1246,9 +1246,9 @@ public sealed partial class LibraryManagementViewModel(
             {
                 await ReloadSimpleSectionsCoreAsync(cancellationToken);
             }
-            else if (savedTarget == LibraryOrderTarget.Folders && IsSimpleTopicsPage)
+            else if (savedTarget == LibraryOrderTarget.Folders && IsSimpleFoldersPage)
             {
-                await ReloadSimpleTopicsPagedAsync(cancellationToken);
+                await ReloadSimpleFoldersPagedAsync(cancellationToken);
             }
             else if (savedTarget == LibraryOrderTarget.Materials && IsSimpleMaterialsPage)
             {
@@ -1279,7 +1279,7 @@ public sealed partial class LibraryManagementViewModel(
         if (IsOrderMode || _isLoaded)
         {
             _preferredSectionId = SelectedSection?.Id;
-            _preferredTopicId = SelectedTopic?.Id;
+            _preferredFolderId = SelectedFolder?.Id;
             await ReloadOrderLibraryAsync(cancellationToken);
         }
     }
@@ -1322,7 +1322,7 @@ public sealed partial class LibraryManagementViewModel(
     }
 
     [RelayCommand]
-    private async Task AddSimpleTopicAsync(
+    private async Task AddSimpleFolderAsync(
         LibraryManagementSectionViewModel? item,
         CancellationToken cancellationToken)
     {
@@ -1331,16 +1331,16 @@ public sealed partial class LibraryManagementViewModel(
             return;
         }
 
-        var topicId = dialogService.Show<CreateTopicDialogViewModel, Guid?>(
+        var folderId = dialogService.Show<CreateFolderDialogViewModel, Guid?>(
             viewModel => viewModel.Initialize(item.Id, item.Name));
 
-        if (topicId is null)
+        if (folderId is null)
         {
             return;
         }
 
         _preferredSectionId = item.Id;
-        _preferredTopicId = topicId.Value;
+        _preferredFolderId = folderId.Value;
         notificationService.ShowSuccess("Папка создана");
         await RefreshAfterMutationAsync(cancellationToken);
     }
@@ -1420,13 +1420,13 @@ public sealed partial class LibraryManagementViewModel(
         }
     }
 
-    partial void OnSimpleTopicSearchTextChanged(string? value)
+    partial void OnSimpleFolderSearchTextChanged(string? value)
     {
-        int searchVersion = Interlocked.Increment(ref _simpleTopicSearchVersion);
-        _ = ApplySimpleTopicFilterAfterDelayAsync(searchVersion);
+        int searchVersion = Interlocked.Increment(ref _simpleFolderSearchVersion);
+        _ = ApplySimpleFolderFilterAfterDelayAsync(searchVersion);
     }
 
-    partial void OnSelectedSimpleTopicSortOptionChanged(LibraryManagementTopicSortOption value)
+    partial void OnSelectedSimpleFolderSortOptionChanged(LibraryManagementFolderSortOption value)
     {
         if (_isApplyingSimpleSortSettings)
         {
@@ -1436,17 +1436,17 @@ public sealed partial class LibraryManagementViewModel(
         if (SelectedSection is { } section)
         {
             LibraryManagementSortMode sortMode = ToSettingsSort(value.Sort);
-            _topicSortBySection[section.Id] = sortMode;
-            _ = SaveSimpleTopicSortAsync(section.Id, value.Sort);
+            _folderSortBySection[section.Id] = sortMode;
+            _ = SaveSimpleFolderSortAsync(section.Id, value.Sort);
         }
 
-        if (IsSimpleTopicsPage && SelectedSection is not null)
+        if (IsSimpleFoldersPage && SelectedSection is not null)
         {
-            _ = ReloadSimpleTopicsPagedAsync(_viewCancellationToken);
+            _ = ReloadSimpleFoldersPagedAsync(_viewCancellationToken);
         }
         else
         {
-            ApplySimpleTopicFilterAndSort();
+            ApplySimpleFolderFilterAndSort();
         }
     }
 
@@ -1463,14 +1463,14 @@ public sealed partial class LibraryManagementViewModel(
             return;
         }
 
-        if (SelectedTopic is { } topic)
+        if (SelectedFolder is { } folder)
         {
             LibraryManagementSortMode sortMode = ToSettingsSort(value.Sort);
-            _materialSortByTopic[topic.Id] = sortMode;
-            _ = SaveSimpleMaterialSortAsync(topic.Id, value.Sort);
+            _materialSortByFolder[folder.Id] = sortMode;
+            _ = SaveSimpleMaterialSortAsync(folder.Id, value.Sort);
         }
 
-        if (IsSimpleMaterialsPage && SelectedTopic is not null)
+        if (IsSimpleMaterialsPage && SelectedFolder is not null)
         {
             _ = ReloadSimpleMaterialsPagedAsync(_viewCancellationToken);
         }
@@ -1478,7 +1478,7 @@ public sealed partial class LibraryManagementViewModel(
 
     partial void OnSimpleMaterialFilterChanged(LibraryManagementMaterialFilter value)
     {
-        if (IsSimpleMaterialsPage && SelectedTopic is not null)
+        if (IsSimpleMaterialsPage && SelectedFolder is not null)
         {
             _ = ReloadSimpleMaterialsPagedAsync(_viewCancellationToken);
         }
@@ -1487,7 +1487,7 @@ public sealed partial class LibraryManagementViewModel(
     partial void OnSelectedSectionChanged(LibraryManagementOrderItemViewModel? value)
     {
         OnPropertyChanged(nameof(SelectedPath));
-        ApplyTopicSortForSection(value?.Id);
+        ApplyFolderSortForSection(value?.Id);
 
         if (!_isLoaded || _suppressSelectionReload || !IsOrderMode)
         {
@@ -1497,17 +1497,17 @@ public sealed partial class LibraryManagementViewModel(
         _ = ChangeSectionContextSafelyAsync(value);
     }
 
-    partial void OnSelectedTopicChanged(LibraryManagementOrderItemViewModel? value)
+    partial void OnSelectedFolderChanged(LibraryManagementOrderItemViewModel? value)
     {
         OnPropertyChanged(nameof(SelectedPath));
-        ApplyMaterialSortForTopic(value?.Id);
+        ApplyMaterialSortForFolder(value?.Id);
 
         if (!_isLoaded || _suppressSelectionReload || !IsOrderMode)
         {
             return;
         }
 
-        _ = ChangeTopicContextSafelyAsync(value);
+        _ = ChangeFolderContextSafelyAsync(value);
     }
 
     private async Task EnsureOrderLibraryLoadedAsync(CancellationToken cancellationToken)
@@ -1778,7 +1778,7 @@ public sealed partial class LibraryManagementViewModel(
         {
             AppSettings settings = await settingsService.LoadAsync(cancellationToken);
             _simpleSectionsViewMode = settings.LibraryManagementSectionsViewMode;
-            _simpleTopicsViewMode = settings.LibraryManagementTopicsViewMode;
+            _simpleFoldersViewMode = settings.LibraryManagementFoldersViewMode;
             _simpleMaterialsViewMode = settings.LibraryManagementMaterialsViewMode;
             _isSimpleViewModeLoaded = true;
             NotifySimpleViewModeChanged();
@@ -1791,7 +1791,7 @@ public sealed partial class LibraryManagementViewModel(
         {
             logger.LogWarning(exception, "Не удалось загрузить режимы отображения управления библиотекой");
             _simpleSectionsViewMode = LibraryManagementViewMode.Tiles;
-            _simpleTopicsViewMode = LibraryManagementViewMode.Tiles;
+            _simpleFoldersViewMode = LibraryManagementViewMode.Tiles;
             _simpleMaterialsViewMode = LibraryManagementViewMode.Table;
             _isSimpleViewModeLoaded = true;
             NotifySimpleViewModeChanged();
@@ -1809,16 +1809,16 @@ public sealed partial class LibraryManagementViewModel(
         {
             AppSettings settings = await settingsService.LoadAsync(cancellationToken);
 
-            _topicSortBySection.Clear();
-            foreach (var pair in settings.LibraryManagementTopicSortBySection)
+            _folderSortBySection.Clear();
+            foreach (var pair in settings.LibraryManagementFolderSortBySection)
             {
-                _topicSortBySection[pair.Key] = pair.Value;
+                _folderSortBySection[pair.Key] = pair.Value;
             }
 
-            _materialSortByTopic.Clear();
-            foreach (var pair in settings.LibraryManagementMaterialSortByTopic)
+            _materialSortByFolder.Clear();
+            foreach (var pair in settings.LibraryManagementMaterialSortByFolder)
             {
-                _materialSortByTopic[pair.Key] = pair.Value;
+                _materialSortByFolder[pair.Key] = pair.Value;
             }
 
             _isApplyingSimpleSortSettings = true;
@@ -1826,11 +1826,11 @@ public sealed partial class LibraryManagementViewModel(
             SelectedSimpleSectionSortOption = SimpleSectionSortOptions.First(option =>
                 option.Sort == ToSectionSort(settings.LibraryManagementSectionSort));
 
-            // До выбора конкретного раздела/темы дочерние сортировки остаются
+            // До выбора конкретного раздела/папки дочерние сортировки остаются
             // в значении по умолчанию. При смене контекста они восстанавливаются
             // из словарей выше.
-            SelectedSimpleTopicSortOption = SimpleTopicSortOptions.First(option =>
-                option.Sort == LibraryManagementTopicSort.Custom);
+            SelectedSimpleFolderSortOption = SimpleFolderSortOptions.First(option =>
+                option.Sort == LibraryManagementFolderSort.Custom);
 
             SelectedSimpleMaterialSortOption = SimpleMaterialSortOptions.First(option =>
                 option.Sort == LibraryManagementMaterialSort.Custom);
@@ -1845,14 +1845,14 @@ public sealed partial class LibraryManagementViewModel(
         {
             logger.LogWarning(exception, "Не удалось загрузить настройки сортировки управления библиотекой");
 
-            _topicSortBySection.Clear();
-            _materialSortByTopic.Clear();
+            _folderSortBySection.Clear();
+            _materialSortByFolder.Clear();
 
             _isApplyingSimpleSortSettings = true;
             SelectedSimpleSectionSortOption = SimpleSectionSortOptions.First(option =>
                 option.Sort == LibraryManagementSectionSort.Custom);
-            SelectedSimpleTopicSortOption = SimpleTopicSortOptions.First(option =>
-                option.Sort == LibraryManagementTopicSort.Custom);
+            SelectedSimpleFolderSortOption = SimpleFolderSortOptions.First(option =>
+                option.Sort == LibraryManagementFolderSort.Custom);
             SelectedSimpleMaterialSortOption = SimpleMaterialSortOptions.First(option =>
                 option.Sort == LibraryManagementMaterialSort.Custom);
 
@@ -1864,7 +1864,7 @@ public sealed partial class LibraryManagementViewModel(
         }
     }
 
-    private void ApplyTopicSortForSection(Guid? sectionId)
+    private void ApplyFolderSortForSection(Guid? sectionId)
     {
         if (!_isSimpleSortSettingsLoaded || sectionId is null)
         {
@@ -1872,7 +1872,7 @@ public sealed partial class LibraryManagementViewModel(
         }
 
         LibraryManagementSortMode sortMode =
-            _topicSortBySection.TryGetValue(sectionId.Value, out LibraryManagementSortMode savedSort)
+            _folderSortBySection.TryGetValue(sectionId.Value, out LibraryManagementSortMode savedSort)
                 ? savedSort
                 : LibraryManagementSortMode.Custom;
 
@@ -1881,8 +1881,8 @@ public sealed partial class LibraryManagementViewModel(
 
         try
         {
-            SelectedSimpleTopicSortOption = SimpleTopicSortOptions.First(option =>
-                option.Sort == ToTopicSort(sortMode));
+            SelectedSimpleFolderSortOption = SimpleFolderSortOptions.First(option =>
+                option.Sort == ToFolderSort(sortMode));
         }
         finally
         {
@@ -1890,15 +1890,15 @@ public sealed partial class LibraryManagementViewModel(
         }
     }
 
-    private void ApplyMaterialSortForTopic(Guid? topicId)
+    private void ApplyMaterialSortForFolder(Guid? folderId)
     {
-        if (!_isSimpleSortSettingsLoaded || topicId is null)
+        if (!_isSimpleSortSettingsLoaded || folderId is null)
         {
             return;
         }
 
         LibraryManagementSortMode sortMode =
-            _materialSortByTopic.TryGetValue(topicId.Value, out LibraryManagementSortMode savedSort)
+            _materialSortByFolder.TryGetValue(folderId.Value, out LibraryManagementSortMode savedSort)
                 ? savedSort
                 : LibraryManagementSortMode.Custom;
 
@@ -1930,13 +1930,13 @@ public sealed partial class LibraryManagementViewModel(
         }
     }
 
-    private async Task SaveSimpleTopicSortAsync(
+    private async Task SaveSimpleFolderSortAsync(
         Guid sectionId,
-        LibraryManagementTopicSort sort)
+        LibraryManagementFolderSort sort)
     {
         try
         {
-            await settingsService.SaveLibraryManagementTopicSortAsync(
+            await settingsService.SaveLibraryManagementFolderSortAsync(
                 sectionId,
                 ToSettingsSort(sort),
                 CancellationToken.None);
@@ -1945,19 +1945,19 @@ public sealed partial class LibraryManagementViewModel(
         {
             logger.LogWarning(
                 exception,
-                "Не удалось сохранить сортировку тем раздела {SectionId}",
+                "Не удалось сохранить сортировку папок раздела {SectionId}",
                 sectionId);
         }
     }
 
     private async Task SaveSimpleMaterialSortAsync(
-        Guid topicId,
+        Guid folderId,
         LibraryManagementMaterialSort sort)
     {
         try
         {
             await settingsService.SaveLibraryManagementMaterialSortAsync(
-                topicId,
+                folderId,
                 ToSettingsSort(sort),
                 CancellationToken.None);
         }
@@ -1965,8 +1965,8 @@ public sealed partial class LibraryManagementViewModel(
         {
             logger.LogWarning(
                 exception,
-                "Не удалось сохранить сортировку материалов темы {TopicId}",
-                topicId);
+                "Не удалось сохранить сортировку материалов папки {FolderId}",
+                folderId);
         }
     }
 
@@ -1980,14 +1980,14 @@ public sealed partial class LibraryManagementViewModel(
             _ => LibraryManagementSectionSort.Custom,
         };
 
-    private static LibraryManagementTopicSort ToTopicSort(LibraryManagementSortMode sort) =>
+    private static LibraryManagementFolderSort ToFolderSort(LibraryManagementSortMode sort) =>
         sort switch
         {
-            LibraryManagementSortMode.Custom => LibraryManagementTopicSort.Custom,
-            LibraryManagementSortMode.RecentActivity => LibraryManagementTopicSort.RecentActivity,
-            LibraryManagementSortMode.Name => LibraryManagementTopicSort.Name,
-            LibraryManagementSortMode.Newest => LibraryManagementTopicSort.Newest,
-            _ => LibraryManagementTopicSort.Custom,
+            LibraryManagementSortMode.Custom => LibraryManagementFolderSort.Custom,
+            LibraryManagementSortMode.RecentActivity => LibraryManagementFolderSort.RecentActivity,
+            LibraryManagementSortMode.Name => LibraryManagementFolderSort.Name,
+            LibraryManagementSortMode.Newest => LibraryManagementFolderSort.Newest,
+            _ => LibraryManagementFolderSort.Custom,
         };
 
     private static LibraryManagementMaterialSort ToMaterialSort(LibraryManagementSortMode sort) =>
@@ -2010,13 +2010,13 @@ public sealed partial class LibraryManagementViewModel(
             _ => LibraryManagementSortMode.Custom,
         };
 
-    private static LibraryManagementSortMode ToSettingsSort(LibraryManagementTopicSort sort) =>
+    private static LibraryManagementSortMode ToSettingsSort(LibraryManagementFolderSort sort) =>
         sort switch
         {
-            LibraryManagementTopicSort.Custom => LibraryManagementSortMode.Custom,
-            LibraryManagementTopicSort.RecentActivity => LibraryManagementSortMode.RecentActivity,
-            LibraryManagementTopicSort.Name => LibraryManagementSortMode.Name,
-            LibraryManagementTopicSort.Newest => LibraryManagementSortMode.Newest,
+            LibraryManagementFolderSort.Custom => LibraryManagementSortMode.Custom,
+            LibraryManagementFolderSort.RecentActivity => LibraryManagementSortMode.RecentActivity,
+            LibraryManagementFolderSort.Name => LibraryManagementSortMode.Name,
+            LibraryManagementFolderSort.Newest => LibraryManagementSortMode.Newest,
             _ => LibraryManagementSortMode.Custom,
         };
 
@@ -2046,8 +2046,8 @@ public sealed partial class LibraryManagementViewModel(
             case LibraryManagementSimplePage.Sections:
                 _simpleSectionsViewMode = viewMode;
                 break;
-            case LibraryManagementSimplePage.Topics:
-                _simpleTopicsViewMode = viewMode;
+            case LibraryManagementSimplePage.Folders:
+                _simpleFoldersViewMode = viewMode;
                 break;
             case LibraryManagementSimplePage.Materials:
                 _simpleMaterialsViewMode = viewMode;
@@ -2066,8 +2066,8 @@ public sealed partial class LibraryManagementViewModel(
                 case LibraryManagementSimplePage.Sections:
                     await settingsService.SaveLibraryManagementSectionsViewModeAsync(viewMode, cancellationToken);
                     break;
-                case LibraryManagementSimplePage.Topics:
-                    await settingsService.SaveLibraryManagementTopicsViewModeAsync(viewMode, cancellationToken);
+                case LibraryManagementSimplePage.Folders:
+                    await settingsService.SaveLibraryManagementFoldersViewModeAsync(viewMode, cancellationToken);
                     break;
                 case LibraryManagementSimplePage.Materials:
                     await settingsService.SaveLibraryManagementMaterialsViewModeAsync(viewMode, cancellationToken);
@@ -2111,16 +2111,16 @@ public sealed partial class LibraryManagementViewModel(
         _isLoaded = false;
         _library.Clear();
         Sections.Clear();
-        Topics.Clear();
+        Folders.Clear();
         Materials.Clear();
 
         switch (SimplePage)
         {
-            case LibraryManagementSimplePage.Topics when SelectedSection is not null:
-                await ReloadSimpleTopicsPagedAsync(cancellationToken);
+            case LibraryManagementSimplePage.Folders when SelectedSection is not null:
+                await ReloadSimpleFoldersPagedAsync(cancellationToken);
                 break;
 
-            case LibraryManagementSimplePage.Materials when SelectedTopic is not null:
+            case LibraryManagementSimplePage.Materials when SelectedFolder is not null:
                 await ReloadSimpleMaterialsPagedAsync(cancellationToken);
                 break;
         }
@@ -2150,7 +2150,7 @@ public sealed partial class LibraryManagementViewModel(
         ErrorMessage = null;
 
         Guid? selectedSectionId = _preferredSectionId ?? SelectedSection?.Id;
-        Guid? selectedTopicId = _preferredTopicId ?? SelectedTopic?.Id;
+        Guid? selectedFolderId = _preferredFolderId ?? SelectedFolder?.Id;
 
         var libraryResult = await queryDispatcher.SendAsync<
             GetLibraryQuery,
@@ -2178,14 +2178,14 @@ public sealed partial class LibraryManagementViewModel(
         try
         {
             await LoadSectionsAsync(selectedSectionId, cancellationToken);
-            await LoadTopicsAsync(selectedTopicId, cancellationToken);
+            await LoadFoldersAsync(selectedFolderId, cancellationToken);
             await LoadMaterialsAsync(cancellationToken);
         }
         finally
         {
             _isLoaded = true;
             _preferredSectionId = null;
-            _preferredTopicId = null;
+            _preferredFolderId = null;
             NotifyCollectionStateChanged();
         }
     }
@@ -2238,18 +2238,18 @@ public sealed partial class LibraryManagementViewModel(
         }
     }
 
-    private async Task LoadTopicsAsync(Guid? selectedTopicId, CancellationToken cancellationToken)
+    private async Task LoadFoldersAsync(Guid? selectedFolderId, CancellationToken cancellationToken)
     {
-        Topics.Clear();
-        SimpleTopics.Clear();
-        SimpleTopicRows.Clear();
-        SimpleCompactTopicRows.Clear();
-        NotifySimpleTopicsStateChanged();
+        Folders.Clear();
+        SimpleFolders.Clear();
+        SimpleFolderRows.Clear();
+        SimpleCompactFolderRows.Clear();
+        NotifySimpleFoldersStateChanged();
 
         _suppressSelectionReload = true;
         try
         {
-            SelectedTopic = null;
+            SelectedFolder = null;
         }
         finally
         {
@@ -2271,38 +2271,38 @@ public sealed partial class LibraryManagementViewModel(
             return;
         }
 
-        _pendingTopicOrders.TryGetValue(SelectedSection.Id, out Guid[]? pendingOrder);
+        _pendingFolderOrders.TryGetValue(SelectedSection.Id, out Guid[]? pendingOrder);
         IReadOnlyList<LibraryOrderItemDto> orderedItems = ApplyPendingOrder(result, pendingOrder);
 
         int position = 1;
 
         foreach (var orderItem in orderedItems)
         {
-            LibraryFolderSnapshotDto? topic = FindTopic(orderItem.Id);
+            LibraryFolderSnapshotDto? folder = FindFolder(orderItem.Id);
 
-            Topics.Add(new LibraryManagementOrderItemViewModel(
+            Folders.Add(new LibraryManagementOrderItemViewModel(
                 orderItem,
                 LibraryOrderTarget.Folders,
                 position++,
-                topic: topic));
+                folder: folder));
         }
 
         if (pendingOrder is not null)
         {
-            _pendingTopicOrders[SelectedSection.Id] = Topics.Select(topic => topic.Id).ToArray();
+            _pendingFolderOrders[SelectedSection.Id] = Folders.Select(folder => folder.Id).ToArray();
         }
 
         _suppressSelectionReload = true;
         try
         {
-            SelectedTopic = Topics.FirstOrDefault(topic => topic.Id == selectedTopicId);
+            SelectedFolder = Folders.FirstOrDefault(folder => folder.Id == selectedFolderId);
         }
         finally
         {
             _suppressSelectionReload = false;
         }
 
-        ApplySimpleTopicFilterAndSort();
+        ApplySimpleFolderFilterAndSort();
     }
 
     private async Task LoadMaterialsAsync(CancellationToken cancellationToken)
@@ -2312,7 +2312,7 @@ public sealed partial class LibraryManagementViewModel(
         SimpleMaterials.Clear();
         SelectedMaterial = null;
 
-        if (SelectedTopic is null)
+        if (SelectedFolder is null)
         {
             NotifySimpleMaterialsStateChanged();
             NotifyCollectionStateChanged();
@@ -2321,7 +2321,7 @@ public sealed partial class LibraryManagementViewModel(
 
         var result = await LoadOrderItemsAsync(
             LibraryOrderTarget.Materials,
-            SelectedTopic.Id,
+            SelectedFolder.Id,
             cancellationToken);
 
         if (result is null)
@@ -2330,20 +2330,20 @@ public sealed partial class LibraryManagementViewModel(
             return;
         }
 
-        _pendingMaterialOrders.TryGetValue(SelectedTopic.Id, out Guid[]? pendingOrder);
+        _pendingMaterialOrders.TryGetValue(SelectedFolder.Id, out Guid[]? pendingOrder);
         IReadOnlyList<LibraryOrderItemDto> orderedItems = ApplyPendingOrder(result, pendingOrder);
 
-        IReadOnlyList<LibraryMaterialDto> topicMaterials =
-            GetTopicMaterials(
-                FindTopic(
-                    SelectedTopic.Id));
+        IReadOnlyList<LibraryMaterialDto> folderMaterials =
+            GetFolderMaterials(
+                FindFolder(
+                    SelectedFolder.Id));
 
         var materialsById =
-            topicMaterials.ToDictionary(
+            folderMaterials.ToDictionary(
                 material => material.Id);
 
         var questionCountsByArticleId =
-            topicMaterials
+            folderMaterials
                 .Where(material =>
                     string.Equals(
                         material.Type,
@@ -2385,7 +2385,7 @@ public sealed partial class LibraryManagementViewModel(
 
         if (pendingOrder is not null)
         {
-            _pendingMaterialOrders[SelectedTopic.Id] = Materials.Select(material => material.Id).ToArray();
+            _pendingMaterialOrders[SelectedFolder.Id] = Materials.Select(material => material.Id).ToArray();
         }
 
         SelectedMaterial = Materials.FirstOrDefault(material =>
@@ -2422,8 +2422,8 @@ public sealed partial class LibraryManagementViewModel(
 
         try
         {
-            Guid? preferredTopicId = SelectedTopic?.Id;
-            await LoadTopicsAsync(preferredTopicId, CancellationToken.None);
+            Guid? preferredFolderId = SelectedFolder?.Id;
+            await LoadFoldersAsync(preferredFolderId, CancellationToken.None);
 
             if (loadVersion != _contextLoadVersion || SelectedSection?.Id != section?.Id)
             {
@@ -2446,7 +2446,7 @@ public sealed partial class LibraryManagementViewModel(
         }
     }
 
-    private async Task ChangeTopicContextSafelyAsync(LibraryManagementOrderItemViewModel? topic)
+    private async Task ChangeFolderContextSafelyAsync(LibraryManagementOrderItemViewModel? folder)
     {
         int loadVersion = Interlocked.Increment(ref _contextLoadVersion);
         IsContextLoading = true;
@@ -2455,7 +2455,7 @@ public sealed partial class LibraryManagementViewModel(
         {
             await LoadMaterialsAsync(CancellationToken.None);
 
-            if (loadVersion != _contextLoadVersion || SelectedTopic?.Id != topic?.Id)
+            if (loadVersion != _contextLoadVersion || SelectedFolder?.Id != folder?.Id)
             {
                 return;
             }
@@ -2573,7 +2573,7 @@ public sealed partial class LibraryManagementViewModel(
             : _library.FirstOrDefault(section => section.Id == id.Value);
     }
 
-    private LibraryFolderSnapshotDto? FindTopic(Guid? id)
+    private LibraryFolderSnapshotDto? FindFolder(Guid? id)
     {
         if (id is null)
         {
@@ -2582,10 +2582,10 @@ public sealed partial class LibraryManagementViewModel(
 
         return _library
             .SelectMany(section => section.Folders)
-            .FirstOrDefault(topic => topic.Id == id.Value);
+            .FirstOrDefault(folder => folder.Id == id.Value);
     }
 
-    private static IReadOnlyList<LibraryMaterialDto> GetTopicMaterials(LibraryFolderSnapshotDto? folder) =>
+    private static IReadOnlyList<LibraryMaterialDto> GetFolderMaterials(LibraryFolderSnapshotDto? folder) =>
         folder?.Materials ?? [];
 
     private static IReadOnlyList<LibraryOrderItemDto> ApplyPendingOrder(
@@ -2639,17 +2639,17 @@ public sealed partial class LibraryManagementViewModel(
         return true;
     }
 
-    private async Task ApplySimpleTopicFilterAfterDelayAsync(int searchVersion)
+    private async Task ApplySimpleFolderFilterAfterDelayAsync(int searchVersion)
     {
         try
         {
             await Task.Delay(SearchDelay, _viewCancellationToken);
 
-            if (searchVersion == Volatile.Read(ref _simpleTopicSearchVersion) &&
-                IsSimpleTopicsPage &&
+            if (searchVersion == Volatile.Read(ref _simpleFolderSearchVersion) &&
+                IsSimpleFoldersPage &&
                 SelectedSection is not null)
             {
-                await ReloadSimpleTopicsPagedAsync(_viewCancellationToken);
+                await ReloadSimpleFoldersPagedAsync(_viewCancellationToken);
             }
         }
         catch (OperationCanceledException) when (_viewCancellationToken.IsCancellationRequested)
@@ -2658,72 +2658,72 @@ public sealed partial class LibraryManagementViewModel(
         }
     }
 
-    private void ApplySimpleTopicFilterAndSort()
+    private void ApplySimpleFolderFilterAndSort()
     {
-        IEnumerable<LibraryManagementOrderItemViewModel> topics = Topics;
+        IEnumerable<LibraryManagementOrderItemViewModel> folders = Folders;
 
-        if (!string.IsNullOrWhiteSpace(SimpleTopicSearchText))
+        if (!string.IsNullOrWhiteSpace(SimpleFolderSearchText))
         {
-            string search = SimpleTopicSearchText.Trim();
-            topics = topics.Where(topic =>
-                topic.Name.Contains(search, StringComparison.OrdinalIgnoreCase));
+            string search = SimpleFolderSearchText.Trim();
+            folders = folders.Where(folder =>
+                folder.Name.Contains(search, StringComparison.OrdinalIgnoreCase));
         }
 
-        topics = SelectedSimpleTopicSortOption.Sort switch
+        folders = SelectedSimpleFolderSortOption.Sort switch
         {
-            LibraryManagementTopicSort.Custom => topics
-                .OrderBy(topic => topic.Position),
+            LibraryManagementFolderSort.Custom => folders
+                .OrderBy(folder => folder.Position),
 
-            LibraryManagementTopicSort.RecentActivity => topics
-                .OrderByDescending(topic => topic.TopicLastActivityAt)
-                .ThenBy(topic => topic.Name, StringComparer.OrdinalIgnoreCase),
+            LibraryManagementFolderSort.RecentActivity => folders
+                .OrderByDescending(folder => folder.FolderLastActivityAt)
+                .ThenBy(folder => folder.Name, StringComparer.OrdinalIgnoreCase),
 
-            LibraryManagementTopicSort.Name => topics
-                .OrderBy(topic => topic.Name, StringComparer.OrdinalIgnoreCase),
+            LibraryManagementFolderSort.Name => folders
+                .OrderBy(folder => folder.Name, StringComparer.OrdinalIgnoreCase),
 
-            LibraryManagementTopicSort.Newest => topics
-                .OrderByDescending(topic => topic.TopicCreatedAt)
-                .ThenBy(topic => topic.Name, StringComparer.OrdinalIgnoreCase),
+            LibraryManagementFolderSort.Newest => folders
+                .OrderByDescending(folder => folder.FolderCreatedAt)
+                .ThenBy(folder => folder.Name, StringComparer.OrdinalIgnoreCase),
 
-            _ => topics.OrderBy(topic => topic.Position),
+            _ => folders.OrderBy(folder => folder.Position),
         };
 
-        SimpleTopics.Clear();
-        SimpleTopicRows.Clear();
-        SimpleCompactTopicRows.Clear();
+        SimpleFolders.Clear();
+        SimpleFolderRows.Clear();
+        SimpleCompactFolderRows.Clear();
 
-        foreach (LibraryManagementOrderItemViewModel topic in topics)
+        foreach (LibraryManagementOrderItemViewModel folder in folders)
         {
-            SimpleTopics.Add(topic);
-            AddSimpleTopicToRows(SimpleTopicRows, topic, 3);
-            AddSimpleTopicToRows(SimpleCompactTopicRows, topic, 4);
+            SimpleFolders.Add(folder);
+            AddSimpleFolderToRows(SimpleFolderRows, folder, 3);
+            AddSimpleFolderToRows(SimpleCompactFolderRows, folder, 4);
         }
 
-        NotifySimpleTopicsStateChanged();
+        NotifySimpleFoldersStateChanged();
     }
 
-    private static void AddSimpleTopicToRows(
-        ObservableCollection<LibraryManagementTopicRowViewModel> rows,
-        LibraryManagementOrderItemViewModel topic,
+    private static void AddSimpleFolderToRows(
+        ObservableCollection<LibraryManagementFolderRowViewModel> rows,
+        LibraryManagementOrderItemViewModel folder,
         int capacity)
     {
-        LibraryManagementTopicRowViewModel? row = rows.LastOrDefault();
+        LibraryManagementFolderRowViewModel? row = rows.LastOrDefault();
 
         if (row is null)
         {
-            // В первой строке одно место занимает плитка «Создать тему».
-            row = new LibraryManagementTopicRowViewModel(
+            // В первой строке одно место занимает плитка «Создать папку».
+            row = new LibraryManagementFolderRowViewModel(
                 Math.Max(1, capacity - 1),
                 isFirstRow: true);
             rows.Add(row);
         }
         else if (row.IsFull)
         {
-            row = new LibraryManagementTopicRowViewModel(capacity);
+            row = new LibraryManagementFolderRowViewModel(capacity);
             rows.Add(row);
         }
 
-        row.Add(topic);
+        row.Add(folder);
     }
 
     private async Task ApplySimpleMaterialFilterAfterDelayAsync(int searchVersion)
@@ -2734,7 +2734,7 @@ public sealed partial class LibraryManagementViewModel(
 
             if (searchVersion == Volatile.Read(ref _simpleMaterialSearchVersion) &&
                 IsSimpleMaterialsPage &&
-                SelectedTopic is not null)
+                SelectedFolder is not null)
             {
                 await ReloadSimpleMaterialsPagedAsync(_viewCancellationToken);
             }
@@ -2863,7 +2863,7 @@ public sealed partial class LibraryManagementViewModel(
         return target switch
         {
             LibraryOrderTarget.Sections => Sections,
-            LibraryOrderTarget.Folders => Topics,
+            LibraryOrderTarget.Folders => Folders,
             LibraryOrderTarget.Materials => Materials,
             _ => throw new ArgumentOutOfRangeException(nameof(target), target, null),
         };
@@ -2936,16 +2936,16 @@ public sealed partial class LibraryManagementViewModel(
                 break;
 
             case LibraryOrderTarget.Folders when SelectedSection is not null:
-                _pendingTopicOrders.Remove(SelectedSection.Id);
+                _pendingFolderOrders.Remove(SelectedSection.Id);
                 break;
 
-            case LibraryOrderTarget.Materials when SelectedTopic is not null:
-                _pendingMaterialOrders.Remove(SelectedTopic.Id);
+            case LibraryOrderTarget.Materials when SelectedFolder is not null:
+                _pendingMaterialOrders.Remove(SelectedFolder.Id);
                 break;
         }
     }
 
-    private bool CanAddTopic(LibraryManagementOrderItemViewModel? item)
+    private bool CanAddFolder(LibraryManagementOrderItemViewModel? item)
     {
         return !IsLoading && (item is not null || SelectedSection is not null);
     }
@@ -2974,22 +2974,22 @@ public sealed partial class LibraryManagementViewModel(
         LoadNextSimpleSectionPageCommand.NotifyCanExecuteChanged();
     }
 
-    private void NotifySimpleTopicsStateChanged()
+    private void NotifySimpleFoldersStateChanged()
     {
-        OnPropertyChanged(nameof(HasSimpleTopicSource));
-        OnPropertyChanged(nameof(HasSimpleTopics));
-        OnPropertyChanged(nameof(IsSimpleTopicsEmpty));
-        OnPropertyChanged(nameof(HasNoSimpleTopicSearchResults));
-        OnPropertyChanged(nameof(SimpleTopicsShownCountText));
-        OnPropertyChanged(nameof(SimpleTopicsHasMore));
-        OnPropertyChanged(nameof(SimpleTopicsHasPrevious));
-        OnPropertyChanged(nameof(IsSimpleTopicsPaging));
-        OnPropertyChanged(nameof(SimpleTopicsTotalCount));
-        OnPropertyChanged(nameof(SimpleTopicWindowStartOffset));
-        OnPropertyChanged(nameof(SimpleTopicWindowEndOffset));
-        OnPropertyChanged(nameof(SimpleTopicCurrentPageOffset));
-        OnPropertyChanged(nameof(SimpleTopicCachedPageCount));
-        LoadNextSimpleTopicPageCommand.NotifyCanExecuteChanged();
+        OnPropertyChanged(nameof(HasSimpleFolderSource));
+        OnPropertyChanged(nameof(HasSimpleFolders));
+        OnPropertyChanged(nameof(IsSimpleFoldersEmpty));
+        OnPropertyChanged(nameof(HasNoSimpleFolderSearchResults));
+        OnPropertyChanged(nameof(SimpleFoldersShownCountText));
+        OnPropertyChanged(nameof(SimpleFoldersHasMore));
+        OnPropertyChanged(nameof(SimpleFoldersHasPrevious));
+        OnPropertyChanged(nameof(IsSimpleFoldersPaging));
+        OnPropertyChanged(nameof(SimpleFoldersTotalCount));
+        OnPropertyChanged(nameof(SimpleFolderWindowStartOffset));
+        OnPropertyChanged(nameof(SimpleFolderWindowEndOffset));
+        OnPropertyChanged(nameof(SimpleFolderCurrentPageOffset));
+        OnPropertyChanged(nameof(SimpleFolderCachedPageCount));
+        LoadNextSimpleFolderPageCommand.NotifyCanExecuteChanged();
     }
 
     private void NotifySimpleMaterialsStateChanged()
@@ -3014,7 +3014,7 @@ public sealed partial class LibraryManagementViewModel(
     private void NotifyCollectionStateChanged()
     {
         OnPropertyChanged(nameof(IsEmpty));
-        OnPropertyChanged(nameof(HasTopics));
+        OnPropertyChanged(nameof(HasFolders));
         OnPropertyChanged(nameof(HasMaterials));
         OnPropertyChanged(nameof(LoadedMaterialsCount));
         OnPropertyChanged(nameof(TotalMaterialsCount));

@@ -1,10 +1,10 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Windows.Data;
-using Mnemora.Desktop.ViewModels.Topics;
+using Mnemora.Desktop.ViewModels.Folders;
 
 namespace Mnemora.Desktop.Converters;
 
-public sealed class TopicIconConverter : IValueConverter
+public sealed class FolderIconConverter : IValueConverter
 {
     public object Convert(
         object? value,
@@ -12,7 +12,7 @@ public sealed class TopicIconConverter : IValueConverter
         object? parameter,
         CultureInfo culture)
     {
-        return TopicAppearanceOptions.GetIconKind(
+        return FolderAppearanceOptions.GetIconKind(
             value as string);
     }
 

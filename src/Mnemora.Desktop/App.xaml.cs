@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -25,7 +25,7 @@ using Mnemora.Desktop.ViewModels.Pages;
 using Mnemora.Desktop.ViewModels.Sections;
 using Mnemora.Desktop.ViewModels.Shell;
 using Mnemora.Desktop.ViewModels.Startup;
-using Mnemora.Desktop.ViewModels.Topics;
+using Mnemora.Desktop.ViewModels.Folders;
 using Mnemora.Desktop.Views.Startup;
 using Mnemora.Infrastructure;
 
@@ -208,11 +208,11 @@ public partial class App : System.Windows.Application
         services.AddTransient<CreateMaterialViewModel>();
         services.AddTransient<CreateLibraryFolderDialogViewModel>();
         services.AddTransient<LibraryManagementViewModel>();
-        services.AddTransient<DeleteTopicDialogViewModel>();
-        services.AddTransient<EditTopicDialogViewModel>();
+        services.AddTransient<DeleteFolderDialogViewModel>();
+        services.AddTransient<EditFolderDialogViewModel>();
         services.AddTransient<SelectSectionIconDialogViewModel>();
-        services.AddTransient<SelectTopicIconDialogViewModel>();
-        services.AddTransient<CreateTopicDialogViewModel>();
+        services.AddTransient<SelectFolderIconDialogViewModel>();
+        services.AddTransient<CreateFolderDialogViewModel>();
         services.AddTransient<EditSectionDialogViewModel>();
         services.AddTransient<DeleteSectionDialogViewModel>();
         services.AddTransient<PracticeViewModel>();

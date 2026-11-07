@@ -6,16 +6,16 @@ using Mnemora.Contracts.Library;
 using Mnemora.Desktop.Dialogs;
 using Mnemora.Desktop.ViewModels.Common;
 
-namespace Mnemora.Desktop.ViewModels.Topics;
+namespace Mnemora.Desktop.ViewModels.Folders;
 
-public sealed partial class DeleteTopicDialogViewModel(
+public sealed partial class DeleteFolderDialogViewModel(
     ICommandDispatcher commandDispatcher)
     : ViewModelBase,
       IDialogViewModel<bool>
 {
-    private Guid _topicId;
+    private Guid _folderId;
 
-    private string _topicName = string.Empty;
+    private string _folderName = string.Empty;
 
     private string? _errorMessage;
 
@@ -23,11 +23,11 @@ public sealed partial class DeleteTopicDialogViewModel(
 
     public event EventHandler<DialogCloseRequestedEventArgs<bool>>? CloseRequested;
 
-    public string TopicName
+    public string FolderName
     {
-        get => _topicName;
+        get => _folderName;
 
-        private set => SetProperty(ref _topicName, value);
+        private set => SetProperty(ref _folderName, value);
     }
 
     public string? ErrorMessage
@@ -69,15 +69,15 @@ public sealed partial class DeleteTopicDialogViewModel(
         IsDeleting;
 
     public void Initialize(
-        LibraryFolderSnapshotDto topic)
+        LibraryFolderSnapshotDto folder)
     {
-        ArgumentNullException.ThrowIfNull(topic);
+        ArgumentNullException.ThrowIfNull(folder);
 
-        _topicId =
-            topic.Id;
+        _folderId =
+            folder.Id;
 
-        TopicName =
-            topic.Name;
+        FolderName =
+            folder.Name;
 
         ErrorMessage = null;
         IsDeleting = false;
@@ -94,7 +94,7 @@ public sealed partial class DeleteTopicDialogViewModel(
         try
         {
             var command =
-                new DeleteLibraryFolderCommand(_topicId);
+                new DeleteLibraryFolderCommand(_folderId);
 
             var result =
                 await commandDispatcher.SendAsync<
@@ -140,7 +140,7 @@ public sealed partial class DeleteTopicDialogViewModel(
 
     private bool CanDelete()
     {
-        return !IsDeleting && _topicId != Guid.Empty;
+        return !IsDeleting && _folderId != Guid.Empty;
     }
 
     [RelayCommand(CanExecute = nameof(CanCancel))]

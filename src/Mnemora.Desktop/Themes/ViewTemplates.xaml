@@ -1,4 +1,4 @@
-﻿<ResourceDictionary
+<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:home="clr-namespace:Mnemora.Desktop.Views.Home"
@@ -13,8 +13,8 @@
     xmlns:sectionViewModels="clr-namespace:Mnemora.Desktop.ViewModels.Sections"
     xmlns:shell="clr-namespace:Mnemora.Desktop.Views.Shell"
     xmlns:shellViewModels="clr-namespace:Mnemora.Desktop.ViewModels.Shell"
-    xmlns:topics="clr-namespace:Mnemora.Desktop.Views.Topics"
-    xmlns:topicViewModels="clr-namespace:Mnemora.Desktop.ViewModels.Topics">
+    xmlns:folders="clr-namespace:Mnemora.Desktop.Views.Folders"
+    xmlns:folderViewModels="clr-namespace:Mnemora.Desktop.ViewModels.Folders">
 
     <DataTemplate
         DataType="{x:Type onboardingViewModels:ProfileSetupViewModel}">
@@ -67,8 +67,8 @@
     </DataTemplate>
 
     <DataTemplate
-        DataType="{x:Type topicViewModels:CreateTopicDialogViewModel}">
-        <topics:CreateTopicDialogView />
+        DataType="{x:Type folderViewModels:CreateFolderDialogViewModel}">
+        <folders:CreateFolderDialogView />
     </DataTemplate>
 
     <DataTemplate
@@ -102,18 +102,18 @@
     </DataTemplate>
     
     <DataTemplate
-        DataType="{x:Type topicViewModels:SelectTopicIconDialogViewModel}">
-        <topics:SelectTopicIconDialogView />
+        DataType="{x:Type folderViewModels:SelectFolderIconDialogViewModel}">
+        <folders:SelectFolderIconDialogView />
     </DataTemplate>
     
     <DataTemplate
-        DataType="{x:Type topicViewModels:EditTopicDialogViewModel}">
-        <topics:EditTopicDialogView />
+        DataType="{x:Type folderViewModels:EditFolderDialogViewModel}">
+        <folders:EditFolderDialogView />
     </DataTemplate>
     
     <DataTemplate
-        DataType="{x:Type topicViewModels:DeleteTopicDialogViewModel}">
-        <topics:DeleteTopicDialogView />
+        DataType="{x:Type folderViewModels:DeleteFolderDialogViewModel}">
+        <folders:DeleteFolderDialogView />
     </DataTemplate>
     
     <DataTemplate DataType="{x:Type libraryViewModels:LibraryOverviewViewModel}">

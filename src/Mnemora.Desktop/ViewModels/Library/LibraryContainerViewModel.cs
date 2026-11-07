@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -284,7 +284,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(IsTilesView))]
     [NotifyPropertyChangedFor(nameof(IsCompactTilesView))]
     [NotifyPropertyChangedFor(nameof(IsTilesPerRowSelectorVisible))]
-    private LibraryTopicsViewMode _viewMode = LibraryTopicsViewMode.CompactTiles;
+    private LibraryFoldersViewMode _viewMode = LibraryFoldersViewMode.CompactTiles;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(DesiredTilesPerRow))]
@@ -470,9 +470,9 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
     public bool IsQuestionsFilter =>
         SelectedFilterOption.Filter == LibraryMaterialFilter.Questions;
 
-    public bool IsTableView => ViewMode == LibraryTopicsViewMode.Table;
-    public bool IsTilesView => ViewMode == LibraryTopicsViewMode.Tiles;
-    public bool IsCompactTilesView => ViewMode == LibraryTopicsViewMode.CompactTiles;
+    public bool IsTableView => ViewMode == LibraryFoldersViewMode.Table;
+    public bool IsTilesView => ViewMode == LibraryFoldersViewMode.Tiles;
+    public bool IsCompactTilesView => ViewMode == LibraryFoldersViewMode.CompactTiles;
 
     public bool IsTilesPerRowSelectorVisible => !IsTableView;
 
@@ -803,15 +803,15 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
 
     [RelayCommand]
     private Task ShowTilesViewAsync(CancellationToken cancellationToken) =>
-        SetViewModeAsync(LibraryTopicsViewMode.Tiles, cancellationToken);
+        SetViewModeAsync(LibraryFoldersViewMode.Tiles, cancellationToken);
 
     [RelayCommand]
     private Task ShowCompactTilesViewAsync(CancellationToken cancellationToken) =>
-        SetViewModeAsync(LibraryTopicsViewMode.CompactTiles, cancellationToken);
+        SetViewModeAsync(LibraryFoldersViewMode.CompactTiles, cancellationToken);
 
     [RelayCommand]
     private Task ShowTableViewAsync(CancellationToken cancellationToken) =>
-        SetViewModeAsync(LibraryTopicsViewMode.Table, cancellationToken);
+        SetViewModeAsync(LibraryFoldersViewMode.Table, cancellationToken);
 
     partial void OnSearchTextChanged(string? value)
     {
@@ -2035,7 +2035,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
             AppSettings settings =
                 await _settingsService.LoadAsync(cancellationToken);
 
-            ViewMode = settings.LibraryTopicsViewMode;
+            ViewMode = settings.LibraryFoldersViewMode;
             SelectedTilesPerRowOption =
                 LibraryTilesPerRowOptions.Resolve(
                     settings.LibraryTilesPerRow);
@@ -2054,14 +2054,14 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
                 exception,
                 "Не удалось загрузить режим просмотра содержимого библиотеки");
 
-            ViewMode = LibraryTopicsViewMode.CompactTiles;
+            ViewMode = LibraryFoldersViewMode.CompactTiles;
             FoldersPaneRatio = DefaultFoldersPaneRatio;
             _isViewModeLoaded = true;
         }
     }
 
     private async Task SetViewModeAsync(
-        LibraryTopicsViewMode viewMode,
+        LibraryFoldersViewMode viewMode,
         CancellationToken cancellationToken)
     {
         if (ViewMode == viewMode)
@@ -2073,7 +2073,7 @@ public sealed partial class LibraryContainerViewModel : ViewModelBase
 
         try
         {
-            await _settingsService.SaveLibraryTopicsViewModeAsync(
+            await _settingsService.SaveLibraryFoldersViewModeAsync(
                 viewMode,
                 cancellationToken);
         }

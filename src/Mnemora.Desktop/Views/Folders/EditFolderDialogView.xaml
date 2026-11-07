@@ -1,10 +1,10 @@
-﻿<UserControl
-    x:Class="Mnemora.Desktop.Views.Topics.CreateTopicDialogView"
+<UserControl
+    x:Class="Mnemora.Desktop.Views.Folders.EditFolderDialogView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     Width="700"
-    MaxHeight="760"
+    MaxHeight="740"
     Background="Transparent"
     SnapsToDevicePixels="True"
     TextOptions.TextFormattingMode="Display"
@@ -12,38 +12,36 @@
     UseLayoutRounding="True">
 
     <UserControl.InputBindings>
-
         <KeyBinding
             Key="Escape"
             Command="{Binding CancelCommand}" />
-
     </UserControl.InputBindings>
 
     <Grid Margin="22">
 
-        <!-- Отдельный слой тени не размывает текст. -->
+        <!-- Тень вынесена отдельно, чтобы не размывать текст -->
 
         <Border
             Margin="1"
-            Background="{DynamicResource Mnemora.Brush.Surface}"
+            Background="{StaticResource Mnemora.Brush.Surface}"
             CornerRadius="18">
 
             <Border.Effect>
-
                 <DropShadowEffect
                     BlurRadius="26"
                     Color="#061735"
                     Opacity="0.28"
                     ShadowDepth="7" />
-
             </Border.Effect>
 
         </Border>
 
+        <!-- Основная поверхность -->
+
         <Border
             Padding="30,26,30,30"
-            Background="{DynamicResource Mnemora.Brush.Surface}"
-            BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+            Background="{StaticResource Mnemora.Brush.Surface}"
+            BorderBrush="{StaticResource Mnemora.Brush.Border}"
             BorderThickness="1"
             CornerRadius="18">
 
@@ -68,7 +66,7 @@
                     <Border
                         Width="48"
                         Height="48"
-                        Background="#F2EEFF"
+                        Background="{Binding SelectedColor.Brush}"
                         CornerRadius="12">
 
                         <materialDesign:PackIcon
@@ -76,8 +74,8 @@
                             Height="27"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
-                            Foreground="{DynamicResource Mnemora.Brush.Secondary}"
-                            Kind="BookmarkOutline" />
+                            Foreground="White"
+                            Kind="{Binding SelectedIcon.Kind}" />
 
                     </Border>
 
@@ -89,14 +87,14 @@
                         <TextBlock
                             FontSize="21"
                             FontWeight="SemiBold"
-                            Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                            Text="Новая папка" />
+                            Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
+                            Text="Редактирование папки" />
 
                         <TextBlock
                             Margin="0,3,0,0"
                             FontSize="13"
-                            Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                            Text="Добавьте папку и выберите её оформление" />
+                            Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
+                            Text="Измените название и оформление папки" />
 
                     </StackPanel>
 
@@ -116,72 +114,24 @@
 
                 </Grid>
 
-                <!-- Поля -->
+                <!-- Содержимое -->
 
                 <ScrollViewer
                     Grid.Row="1"
                     Margin="0,22,0,0"
-                    MaxHeight="540"
+                    MaxHeight="510"
                     HorizontalScrollBarVisibility="Disabled"
                     VerticalScrollBarVisibility="Auto">
 
                     <StackPanel Margin="0,0,8,0">
 
-                        <!-- Выбранный раздел -->
-
-                        <Border
-                            Padding="14,11"
-                            Background="{DynamicResource Mnemora.Brush.SurfaceMuted}"
-                            CornerRadius="10">
-
-                            <Grid>
-
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-
-                                <materialDesign:PackIcon
-                                    Width="20"
-                                    Height="20"
-                                    VerticalAlignment="Center"
-                                    Foreground="{DynamicResource Mnemora.Brush.PrimaryDark}"
-                                    Kind="FolderOutline" />
-
-                                <TextBlock
-                                    Grid.Column="1"
-                                    Margin="10,0,0,0"
-                                    VerticalAlignment="Center"
-                                    FontSize="14"
-                                    Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                                    Text="Раздел:" />
-
-                                <TextBlock
-                                    Grid.Column="2"
-                                    Margin="6,0,0,0"
-                                    VerticalAlignment="Center"
-                                    FontSize="14"
-                                    FontWeight="SemiBold"
-                                    Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                                    Text="{Binding SectionName}"
-                                    TextTrimming="CharacterEllipsis" />
-
-                            </Grid>
-
-                        </Border>
-
                         <!-- Название -->
 
                         <TextBox
-                            Height="54"
-                            Margin="0,18,0,0"
                             MaxLength="150"
-                            VerticalContentAlignment="Center"
-                            FontSize="16"
+                            Style="{StaticResource MaterialDesignOutlinedTextBox}"
                             Text="{Binding Name,
                                 UpdateSourceTrigger=PropertyChanged}"
-                            Style="{StaticResource MaterialDesignOutlinedTextBox}"
                             materialDesign:HintAssist.Hint="Название папки"
                             materialDesign:TextFieldAssist.HasClearButton="True" />
 
@@ -191,26 +141,23 @@
                             Margin="0,21,0,10"
                             FontSize="13"
                             FontWeight="SemiBold"
-                            Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                            Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
                             Text="Цвет" />
 
                         <ListBox
-                            ItemsSource="{Binding ColorOptions}"
-                            SelectedItem="{Binding SelectedColor}"
                             Background="Transparent"
                             BorderThickness="0"
+                            ItemsSource="{Binding ColorOptions}"
+                            SelectedItem="{Binding SelectedColor}"
                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
 
                             <ListBox.ItemsPanel>
-
                                 <ItemsPanelTemplate>
                                     <WrapPanel />
                                 </ItemsPanelTemplate>
-
                             </ListBox.ItemsPanel>
 
                             <ListBox.ItemContainerStyle>
-
                                 <Style TargetType="ListBoxItem">
 
                                     <Setter
@@ -230,10 +177,10 @@
                                         Value="{x:Null}" />
 
                                     <Setter Property="Template">
-
                                         <Setter.Value>
 
-                                            <ControlTemplate TargetType="ListBoxItem">
+                                            <ControlTemplate
+                                                TargetType="ListBoxItem">
 
                                                 <Border
                                                     x:Name="SelectionBorder"
@@ -284,7 +231,7 @@
                                                         <Setter
                                                             TargetName="SelectionBorder"
                                                             Property="BorderBrush"
-                                                            Value="{DynamicResource Mnemora.Brush.Secondary}" />
+                                                            Value="{StaticResource Mnemora.Brush.PrimaryDark}" />
 
                                                         <Setter
                                                             TargetName="SelectedMark"
@@ -298,11 +245,9 @@
                                             </ControlTemplate>
 
                                         </Setter.Value>
-
                                     </Setter>
 
                                 </Style>
-
                             </ListBox.ItemContainerStyle>
 
                         </ListBox>
@@ -313,13 +258,13 @@
                             Margin="0,20,0,10"
                             FontSize="13"
                             FontWeight="SemiBold"
-                            Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                            Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
                             Text="Иконка" />
 
                         <Border
                             Padding="14"
-                            Background="{DynamicResource Mnemora.Brush.SurfaceMuted}"
-                            BorderBrush="{DynamicResource Mnemora.Brush.Border}"
+                            Background="{StaticResource Mnemora.Brush.SurfaceMuted}"
+                            BorderBrush="{StaticResource Mnemora.Brush.Border}"
                             BorderThickness="1"
                             CornerRadius="11">
 
@@ -330,6 +275,8 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
+
+                                <!-- Предпросмотр -->
 
                                 <Border
                                     Width="58"
@@ -355,13 +302,13 @@
                                     <TextBlock
                                         FontSize="16"
                                         FontWeight="SemiBold"
-                                        Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
+                                        Foreground="{StaticResource Mnemora.Brush.TextPrimary}"
                                         Text="{Binding SelectedIcon.Name}" />
 
                                     <TextBlock
                                         Margin="0,3,0,0"
                                         FontSize="13"
-                                        Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
+                                        Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
                                         Text="{Binding SelectedIcon.Category}" />
 
                                 </StackPanel>
@@ -400,11 +347,10 @@
                         <Border
                             Margin="0,14,0,0"
                             Padding="12,9"
-                            Background="#FFF2F3"
+                            Background="#FFF1F1"
                             CornerRadius="8">
 
                             <Border.Style>
-
                                 <Style TargetType="Border">
 
                                     <Setter
@@ -426,27 +372,31 @@
                                     </Style.Triggers>
 
                                 </Style>
-
                             </Border.Style>
 
-                            <DockPanel>
+                            <Grid>
+
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
 
                                 <materialDesign:PackIcon
                                     Width="19"
                                     Height="19"
-                                    Margin="0,0,9,0"
                                     VerticalAlignment="Top"
-                                    Foreground="#D84040"
+                                    Foreground="#C62828"
                                     Kind="AlertCircleOutline" />
 
                                 <TextBlock
-                                    VerticalAlignment="Center"
+                                    Grid.Column="1"
+                                    Margin="9,0,0,0"
                                     FontSize="13"
-                                    Foreground="#B52E38"
+                                    Foreground="#A52222"
                                     Text="{Binding ErrorMessage}"
                                     TextWrapping="Wrap" />
 
-                            </DockPanel>
+                            </Grid>
 
                         </Border>
 
@@ -474,51 +424,35 @@
 
                     <Button
                         Grid.Column="2"
-                        Command="{Binding CreateCommand}"
+                        Command="{Binding SaveCommand}"
                         IsDefault="True"
                         Style="{StaticResource Mnemora.PrimaryButton}">
 
-                        <StackPanel Orientation="Horizontal">
+                        <TextBlock>
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
 
-                            <materialDesign:PackIcon
-                                Width="20"
-                                Height="20"
-                                VerticalAlignment="Center"
-                                Kind="Plus" />
+                                    <Setter
+                                        Property="Text"
+                                        Value="Сохранить изменения" />
 
-                            <TextBlock
-                                Margin="12,0,0,0"
-                                VerticalAlignment="Center">
+                                    <Style.Triggers>
 
-                                <TextBlock.Style>
+                                        <DataTrigger
+                                            Binding="{Binding IsSaving}"
+                                            Value="True">
 
-                                    <Style TargetType="TextBlock">
+                                            <Setter
+                                                Property="Text"
+                                                Value="Сохраняем..." />
 
-                                        <Setter
-                                            Property="Text"
-                                            Value="Создать папку" />
+                                        </DataTrigger>
 
-                                        <Style.Triggers>
+                                    </Style.Triggers>
 
-                                            <DataTrigger
-                                                Binding="{Binding IsCreating}"
-                                                Value="True">
-
-                                                <Setter
-                                                    Property="Text"
-                                                    Value="Создание..." />
-
-                                            </DataTrigger>
-
-                                        </Style.Triggers>
-
-                                    </Style>
-
-                                </TextBlock.Style>
-
-                            </TextBlock>
-
-                        </StackPanel>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
 
                     </Button>
 

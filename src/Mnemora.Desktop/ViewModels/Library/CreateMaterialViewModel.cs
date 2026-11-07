@@ -13,7 +13,7 @@ using Mnemora.Desktop.Dialogs;
 using Mnemora.Desktop.Editors;
 using Mnemora.Desktop.Settings;
 using Mnemora.Desktop.ViewModels.Common;
-using Mnemora.Desktop.ViewModels.Topics;
+using Mnemora.Desktop.ViewModels.Folders;
 using Mnemora.Domain.Materials;
 using Mnemora.Domain.LibraryContainers;
 
@@ -41,7 +41,7 @@ public sealed partial class CreateMaterialViewModel(
     private Action? _createdRequested;
 
     [ObservableProperty]
-    private LibraryManagementOrderItemViewModel? _selectedTopic;
+    private LibraryManagementOrderItemViewModel? _selectedFolder;
 
     [ObservableProperty]
     private PackIconKind _selectedIconKind =
@@ -205,8 +205,8 @@ public sealed partial class CreateMaterialViewModel(
                 ? "Создать вопрос"
                 : "Создать статью";
 
-    public string SummaryTopicName =>
-        SelectedTopic?.Name
+    public string SummaryFolderName =>
+        SelectedFolder?.Name
         ?? string.Empty;
 
     public bool HasSummaryTags =>
@@ -215,18 +215,18 @@ public sealed partial class CreateMaterialViewModel(
     public bool HasSummaryError =>
         !string.IsNullOrWhiteSpace(SummaryError);
 
-    public bool HasQuestionsMovingToArticleTopic =>
+    public bool HasQuestionsMovingToArticleFolder =>
         AvailableQuestions.Any(question =>
             question.MovesToArticleContainer);
 
-    public int QuestionsMovingToArticleTopicCount =>
+    public int QuestionsMovingToArticleFolderCount =>
         AvailableQuestions.Count(question =>
             question.MovesToArticleContainer);
 
-    public string QuestionsMovingToArticleTopicText =>
-        QuestionsMovingToArticleTopicCount == 0
+    public string QuestionsMovingToArticleFolderText =>
+        QuestionsMovingToArticleFolderCount == 0
             ? string.Empty
-            : $"{FormatCount(QuestionsMovingToArticleTopicCount, "вопрос", "вопроса", "вопросов")} будут перенесены туда же, где статья.";
+            : $"{FormatCount(QuestionsMovingToArticleFolderCount, "вопрос", "вопроса", "вопросов")} будут перенесены туда же, где статья.";
 
     public bool HasLearningOptionsError =>
         !string.IsNullOrWhiteSpace(
@@ -394,14 +394,14 @@ public sealed partial class CreateMaterialViewModel(
     public event EventHandler? Closing;
 
     public void Initialize(
-        LibraryManagementOrderItemViewModel selectedTopic,
+        LibraryManagementOrderItemViewModel selectedFolder,
         Action closeRequested,
         Action? createdRequested = null)
     {
-        ArgumentNullException.ThrowIfNull(selectedTopic);
+        ArgumentNullException.ThrowIfNull(selectedFolder);
         ArgumentNullException.ThrowIfNull(closeRequested);
 
-        SelectedTopic = selectedTopic;
+        SelectedFolder = selectedFolder;
         _closeRequested = closeRequested;
         _createdRequested = createdRequested;
 
@@ -410,7 +410,7 @@ public sealed partial class CreateMaterialViewModel(
 
     public void Reset()
     {
-        SelectedTopic = null;
+        SelectedFolder = null;
         SelectedIconKind = DefaultMaterialIconKind;
         _closeRequested = null;
         _createdRequested = null;
@@ -418,11 +418,11 @@ public sealed partial class CreateMaterialViewModel(
         ResetLearningState();
     }
 
-    partial void OnSelectedTopicChanged(
+    partial void OnSelectedFolderChanged(
         LibraryManagementOrderItemViewModel? value)
     {
         OnPropertyChanged(
-            nameof(SummaryTopicName));
+            nameof(SummaryFolderName));
     }
 
     partial void OnSelectedIconKindChanged(
@@ -506,11 +506,11 @@ public sealed partial class CreateMaterialViewModel(
         SummaryError = null;
         IsSummaryCreating = false;
 
-        OnPropertyChanged(nameof(SummaryTopicName));
+        OnPropertyChanged(nameof(SummaryFolderName));
         OnPropertyChanged(nameof(HasSummaryTags));
-        OnPropertyChanged(nameof(HasQuestionsMovingToArticleTopic));
-        OnPropertyChanged(nameof(QuestionsMovingToArticleTopicCount));
-        OnPropertyChanged(nameof(QuestionsMovingToArticleTopicText));
+        OnPropertyChanged(nameof(HasQuestionsMovingToArticleFolder));
+        OnPropertyChanged(nameof(QuestionsMovingToArticleFolderCount));
+        OnPropertyChanged(nameof(QuestionsMovingToArticleFolderText));
     }
 
     public void SetSummaryError(string? message)
@@ -645,7 +645,7 @@ public sealed partial class CreateMaterialViewModel(
 
         try
         {
-            if (SelectedTopic is null)
+            if (SelectedFolder is null)
             {
                 LearningOptionsError =
                     "Не удалось определить место создаваемого материала.";
@@ -659,7 +659,7 @@ public sealed partial class CreateMaterialViewModel(
                     GetMaterialLearningLinkOptionsQuery,
                     MaterialLearningLinkOptionsDto>(
                     new GetMaterialLearningLinkOptionsQuery(
-                        SelectedTopic.Id),
+                        SelectedFolder.Id),
                     cancellationToken);
 
             if (cancellationToken
@@ -728,7 +728,7 @@ public sealed partial class CreateMaterialViewModel(
     {
         ArgumentNullException.ThrowIfNull(selectedQuestions);
 
-        if (SelectedTopic is null)
+        if (SelectedFolder is null)
         {
             throw new InvalidOperationException(
                 "Не удалось определить место создаваемой статьи.");
@@ -748,8 +748,8 @@ public sealed partial class CreateMaterialViewModel(
             AvailableQuestions.Add(
                 new LearningQuestionOptionViewModel(
                     question,
-                    SelectedTopic.Id,
-                    SelectedTopic.Name));
+                    SelectedFolder.Id,
+                    SelectedFolder.Name));
         }
 
         NotifySelectedQuestionsChanged();
@@ -907,14 +907,14 @@ public sealed partial class CreateMaterialViewModel(
     private void OpenIconPicker()
     {
         var currentOption =
-            TopicAppearanceOptions.Icons
+            FolderAppearanceOptions.Icons
                 .FirstOrDefault(option =>
                     option.Kind ==
                     SelectedIconKind)
-            ?? TopicAppearanceOptions.Icons[0];
+            ?? FolderAppearanceOptions.Icons[0];
 
         var selectedIcon = dialogService
-            .Show<SelectTopicIconDialogViewModel, FolderIcon?>(
+            .Show<SelectFolderIconDialogViewModel, FolderIcon?>(
                 viewModel =>
                     viewModel.Initialize(
                         currentOption.Value));
@@ -925,7 +925,7 @@ public sealed partial class CreateMaterialViewModel(
         }
 
         var selectedOption =
-            TopicAppearanceOptions.Icons
+            FolderAppearanceOptions.Icons
                 .FirstOrDefault(option =>
                     option.Value ==
                     selectedIcon.Value);
@@ -943,14 +943,14 @@ public sealed partial class CreateMaterialViewModel(
     private void OpenRelatedQuestionIconPicker()
     {
         var currentOption =
-            TopicAppearanceOptions.Icons
+            FolderAppearanceOptions.Icons
                 .FirstOrDefault(option =>
                     option.Kind ==
                     RelatedQuestionIconKind)
-            ?? TopicAppearanceOptions.Icons[0];
+            ?? FolderAppearanceOptions.Icons[0];
 
         var selectedIcon = dialogService
-            .Show<SelectTopicIconDialogViewModel, FolderIcon?>(
+            .Show<SelectFolderIconDialogViewModel, FolderIcon?>(
                 viewModel =>
                     viewModel.Initialize(
                         currentOption.Value));
@@ -961,7 +961,7 @@ public sealed partial class CreateMaterialViewModel(
         }
 
         var selectedOption =
-            TopicAppearanceOptions.Icons
+            FolderAppearanceOptions.Icons
                 .FirstOrDefault(option =>
                     option.Value ==
                     selectedIcon.Value);
@@ -1030,13 +1030,13 @@ public sealed partial class CreateMaterialViewModel(
             nameof(SelectedLinkedQuestionIds));
 
         OnPropertyChanged(
-            nameof(HasQuestionsMovingToArticleTopic));
+            nameof(HasQuestionsMovingToArticleFolder));
 
         OnPropertyChanged(
-            nameof(QuestionsMovingToArticleTopicCount));
+            nameof(QuestionsMovingToArticleFolderCount));
 
         OnPropertyChanged(
-            nameof(QuestionsMovingToArticleTopicText));
+            nameof(QuestionsMovingToArticleFolderText));
 
         NotifyArticleQuestionsChanged();
     }

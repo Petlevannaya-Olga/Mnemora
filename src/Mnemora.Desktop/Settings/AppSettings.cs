@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 
 namespace Mnemora.Desktop.Settings;
 
@@ -6,7 +6,7 @@ public sealed class AppSettings
 {
     private LibraryOverviewViewMode _libraryOverviewViewMode = LibraryOverviewViewMode.Tiles;
     private LibraryManagementViewMode _libraryManagementSectionsViewMode = LibraryManagementViewMode.Tiles;
-    private LibraryManagementViewMode _libraryManagementTopicsViewMode = LibraryManagementViewMode.Tiles;
+    private LibraryManagementViewMode _libraryManagementFoldersViewMode = LibraryManagementViewMode.Tiles;
     private LibraryManagementViewMode _libraryManagementMaterialsViewMode = LibraryManagementViewMode.Table;
 
     public string? UserName { get; set; }
@@ -43,13 +43,13 @@ public sealed class AppSettings
         }
     }
 
-    public LibraryManagementViewMode LibraryManagementTopicsViewMode
+    public LibraryManagementViewMode LibraryManagementFoldersViewMode
     {
-        get => _libraryManagementTopicsViewMode;
+        get => _libraryManagementFoldersViewMode;
         set
         {
-            _libraryManagementTopicsViewMode = value;
-            HasExplicitLibraryManagementTopicsViewMode = true;
+            _libraryManagementFoldersViewMode = value;
+            HasExplicitLibraryManagementFoldersViewMode = true;
         }
     }
 
@@ -72,12 +72,22 @@ public sealed class AppSettings
         set
         {
             _libraryManagementSectionsViewMode = value;
-            _libraryManagementTopicsViewMode = value;
+            _libraryManagementFoldersViewMode = value;
             _libraryManagementMaterialsViewMode = value;
         }
     }
 
-    public LibraryTopicsViewMode LibraryTopicsViewMode { get; set; } = LibraryTopicsViewMode.CompactTiles;
+    private LibraryFoldersViewMode _libraryFoldersViewMode = LibraryFoldersViewMode.CompactTiles;
+
+    public LibraryFoldersViewMode LibraryFoldersViewMode
+    {
+        get => _libraryFoldersViewMode;
+        set
+        {
+            _libraryFoldersViewMode = value;
+            HasExplicitLibraryFoldersViewMode = true;
+        }
+    }
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public int? LibraryTilesPerRow { get; set; }
@@ -86,9 +96,9 @@ public sealed class AppSettings
 
     public LibraryManagementSortMode LibraryManagementSectionSort { get; set; } = LibraryManagementSortMode.Custom;
 
-    public Dictionary<Guid, LibraryManagementSortMode> LibraryManagementTopicSortBySection { get; set; } = [];
+    public Dictionary<Guid, LibraryManagementSortMode> LibraryManagementFolderSortBySection { get; set; } = [];
 
-    public Dictionary<Guid, LibraryManagementSortMode> LibraryManagementMaterialSortByTopic { get; set; } = [];
+    public Dictionary<Guid, LibraryManagementSortMode> LibraryManagementMaterialSortByFolder { get; set; } = [];
 
     public HashSet<LibraryManagementSectionColumn> LibraryManagementSectionColumns { get; set; } =
     [
@@ -110,6 +120,24 @@ public sealed class AppSettings
         LibraryManagementContentColumn.Updated,
     ];
 
+    // Read-only compatibility aliases for settings.json written before the folder migration.
+    // New settings are serialized under the Folder property names.
+    [JsonPropertyName("libraryManagementTopicsViewMode")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public LibraryManagementViewMode? LegacyLibraryManagementTopicsViewMode { get; set; }
+
+    [JsonPropertyName("libraryTopicsViewMode")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public LibraryFoldersViewMode? LegacyLibraryTopicsViewMode { get; set; }
+
+    [JsonPropertyName("libraryManagementTopicSortBySection")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public Dictionary<Guid, LibraryManagementSortMode>? LegacyLibraryManagementTopicSortBySection { get; set; }
+
+    [JsonPropertyName("libraryManagementMaterialSortByTopic")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public Dictionary<Guid, LibraryManagementSortMode>? LegacyLibraryManagementMaterialSortByTopic { get; set; }
+
     [JsonPropertyName("libraryViewMode")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public LibraryOverviewViewMode? LegacyLibraryViewMode { get; set; }
@@ -125,7 +153,10 @@ public sealed class AppSettings
     internal bool HasExplicitLibraryManagementSectionsViewMode { get; private set; }
 
     [JsonIgnore]
-    internal bool HasExplicitLibraryManagementTopicsViewMode { get; private set; }
+    internal bool HasExplicitLibraryFoldersViewMode { get; private set; }
+
+    [JsonIgnore]
+    internal bool HasExplicitLibraryManagementFoldersViewMode { get; private set; }
 
     [JsonIgnore]
     internal bool HasExplicitLibraryManagementMaterialsViewMode { get; private set; }
@@ -144,9 +175,9 @@ public sealed class AppSettings
                 _libraryManagementSectionsViewMode = legacyManagementViewMode;
             }
 
-            if (!HasExplicitLibraryManagementTopicsViewMode)
+            if (!HasExplicitLibraryManagementFoldersViewMode)
             {
-                _libraryManagementTopicsViewMode = legacyManagementViewMode;
+                _libraryManagementFoldersViewMode = legacyManagementViewMode;
             }
 
             if (!HasExplicitLibraryManagementMaterialsViewMode)
@@ -154,6 +185,43 @@ public sealed class AppSettings
                 _libraryManagementMaterialsViewMode = legacyManagementViewMode;
             }
         }
+
+        // Prefer a new property if both old and new JSON keys are present.
+        if (!HasExplicitLibraryManagementFoldersViewMode &&
+            LegacyLibraryManagementTopicsViewMode is { } legacyFoldersViewMode)
+        {
+            _libraryManagementFoldersViewMode = legacyFoldersViewMode;
+        }
+
+        if (!HasExplicitLibraryFoldersViewMode &&
+            LegacyLibraryTopicsViewMode is { } legacyViewMode)
+        {
+            _libraryFoldersViewMode = legacyViewMode;
+        }
+
+        // Merge dictionary entries without overriding values already saved with new names.
+        LibraryManagementFolderSortBySection ??= [];
+        if (LegacyLibraryManagementTopicSortBySection is not null)
+        {
+            foreach (var (sectionId, sortMode) in LegacyLibraryManagementTopicSortBySection)
+            {
+                LibraryManagementFolderSortBySection.TryAdd(sectionId, sortMode);
+            }
+        }
+
+        LibraryManagementMaterialSortByFolder ??= [];
+        if (LegacyLibraryManagementMaterialSortByTopic is not null)
+        {
+            foreach (var (folderId, sortMode) in LegacyLibraryManagementMaterialSortByTopic)
+            {
+                LibraryManagementMaterialSortByFolder.TryAdd(folderId, sortMode);
+            }
+        }
+
+        LegacyLibraryManagementTopicsViewMode = null;
+        LegacyLibraryTopicsViewMode = null;
+        LegacyLibraryManagementTopicSortBySection = null;
+        LegacyLibraryManagementMaterialSortByTopic = null;
 
         LegacyLibraryViewMode = null;
         LegacyLibraryManagementViewMode = null;

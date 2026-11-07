@@ -186,11 +186,11 @@ public sealed class LibraryOverviewPagingRetryTests
             CancellationToken cancellationToken = default) => Task.CompletedTask;
         public Task SaveLibraryManagementSectionsViewModeAsync(LibraryManagementViewMode viewMode,
             CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public Task SaveLibraryManagementTopicsViewModeAsync(LibraryManagementViewMode viewMode,
+        public Task SaveLibraryManagementFoldersViewModeAsync(LibraryManagementViewMode viewMode,
             CancellationToken cancellationToken = default) => Task.CompletedTask;
         public Task SaveLibraryManagementMaterialsViewModeAsync(LibraryManagementViewMode viewMode,
             CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public Task SaveLibraryTopicsViewModeAsync(LibraryTopicsViewMode viewMode,
+        public Task SaveLibraryFoldersViewModeAsync(LibraryFoldersViewMode viewMode,
             CancellationToken cancellationToken = default) => Task.CompletedTask;
         public Task SaveLibraryTilesPerRowAsync(int? tilesPerRow,
             CancellationToken cancellationToken = default) => Task.CompletedTask;
@@ -198,9 +198,9 @@ public sealed class LibraryOverviewPagingRetryTests
             CancellationToken cancellationToken = default) => Task.CompletedTask;
         public Task SaveLibraryManagementSectionSortAsync(LibraryManagementSortMode sortMode,
             CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public Task SaveLibraryManagementTopicSortAsync(Guid sectionId, LibraryManagementSortMode sortMode,
+        public Task SaveLibraryManagementFolderSortAsync(Guid sectionId, LibraryManagementSortMode sortMode,
             CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public Task SaveLibraryManagementMaterialSortAsync(Guid topicId, LibraryManagementSortMode sortMode,
+        public Task SaveLibraryManagementMaterialSortAsync(Guid folderId, LibraryManagementSortMode sortMode,
             CancellationToken cancellationToken = default) => Task.CompletedTask;
         public Task SaveLibraryManagementSectionColumnsAsync(IReadOnlyCollection<LibraryManagementSectionColumn> columns,
             CancellationToken cancellationToken = default) => Task.CompletedTask;

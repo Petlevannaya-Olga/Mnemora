@@ -19,7 +19,7 @@ public partial class LibraryManagementView : UserControl
 {
     private CancellationTokenSource? _loadCancellationTokenSource;
     private bool _isSectionsScrollPageLoadRunning;
-    private bool _isTopicsScrollPageLoadRunning;
+    private bool _isFoldersScrollPageLoadRunning;
     private bool _isMaterialsScrollPageLoadRunning;
     private bool _isSectionStructureMaterialsScrollPageLoadRunning;
     private bool _isSectionStructureTreeSelectionRunning;
@@ -169,7 +169,7 @@ public partial class LibraryManagementView : UserControl
         }
     }
 
-    private async void TopicsScroll_OnScrollChanged(
+    private async void FoldersScroll_OnScrollChanged(
         object sender,
         ScrollChangedEventArgs e)
     {
@@ -187,47 +187,47 @@ public partial class LibraryManagementView : UserControl
             return;
         }
 
-        viewModel.UpdateSimpleTopicViewport(
+        viewModel.UpdateSimpleFolderViewport(
             GetLogicalEntityOffset(
                 sender,
                 scrollViewer.VerticalOffset,
                 viewModel.IsSimpleTilesView ? 3 : 4,
-                viewModel.SimpleTopicWindowStartOffset == 0));
+                viewModel.SimpleFolderWindowStartOffset == 0));
 
-        if (_isTopicsScrollPageLoadRunning ||
+        if (_isFoldersScrollPageLoadRunning ||
             (!IsNearTop(scrollViewer) && !IsNearBottom(scrollViewer)))
         {
             return;
         }
 
-        _isTopicsScrollPageLoadRunning = true;
+        _isFoldersScrollPageLoadRunning = true;
         CancellationToken cancellationToken =
             _loadCancellationTokenSource?.Token ?? CancellationToken.None;
         bool loadPreviousPage =
-            IsNearTop(scrollViewer) && viewModel.SimpleTopicsHasPrevious;
+            IsNearTop(scrollViewer) && viewModel.SimpleFoldersHasPrevious;
 
         try
         {
             while (IsLoaded &&
                    ReferenceEquals(DataContext, viewModel) &&
                    IsNearTop(scrollViewer) &&
-                   viewModel.SimpleTopicsHasPrevious)
+                   viewModel.SimpleFoldersHasPrevious)
             {
-                int startOffsetBeforeLoading = viewModel.SimpleTopicWindowStartOffset;
-                int endOffsetBeforeLoading = viewModel.SimpleTopicWindowEndOffset;
-                Guid? anchorId = viewModel.SimpleTopics.FirstOrDefault()?.Id;
+                int startOffsetBeforeLoading = viewModel.SimpleFolderWindowStartOffset;
+                int endOffsetBeforeLoading = viewModel.SimpleFolderWindowEndOffset;
+                Guid? anchorId = viewModel.SimpleFolders.FirstOrDefault()?.Id;
 
-                await viewModel.LoadPreviousSimpleTopicWindowAsync(cancellationToken);
+                await viewModel.LoadPreviousSimpleFolderWindowAsync(cancellationToken);
 
                 if (anchorId is Guid id)
                 {
-                    ScrollTopicAnchorIntoView(sender, viewModel, id);
+                    ScrollFolderAnchorIntoView(sender, viewModel, id);
                 }
 
                 await WaitForScrollLayoutAsync();
 
-                if (startOffsetBeforeLoading == viewModel.SimpleTopicWindowStartOffset &&
-                    endOffsetBeforeLoading == viewModel.SimpleTopicWindowEndOffset)
+                if (startOffsetBeforeLoading == viewModel.SimpleFolderWindowStartOffset &&
+                    endOffsetBeforeLoading == viewModel.SimpleFolderWindowEndOffset)
                 {
                     break;
                 }
@@ -241,23 +241,23 @@ public partial class LibraryManagementView : UserControl
             while (IsLoaded &&
                    ReferenceEquals(DataContext, viewModel) &&
                    IsNearBottom(scrollViewer) &&
-                   viewModel.LoadNextSimpleTopicPageCommand.CanExecute(null))
+                   viewModel.LoadNextSimpleFolderPageCommand.CanExecute(null))
             {
-                int startOffsetBeforeLoading = viewModel.SimpleTopicWindowStartOffset;
-                int endOffsetBeforeLoading = viewModel.SimpleTopicWindowEndOffset;
-                Guid? anchorId = viewModel.SimpleTopics.LastOrDefault()?.Id;
+                int startOffsetBeforeLoading = viewModel.SimpleFolderWindowStartOffset;
+                int endOffsetBeforeLoading = viewModel.SimpleFolderWindowEndOffset;
+                Guid? anchorId = viewModel.SimpleFolders.LastOrDefault()?.Id;
 
-                await viewModel.LoadNextSimpleTopicWindowAsync(cancellationToken);
+                await viewModel.LoadNextSimpleFolderWindowAsync(cancellationToken);
 
                 if (anchorId is Guid id)
                 {
-                    ScrollTopicAnchorIntoView(sender, viewModel, id);
+                    ScrollFolderAnchorIntoView(sender, viewModel, id);
                 }
 
                 await WaitForScrollLayoutAsync();
 
-                if (startOffsetBeforeLoading == viewModel.SimpleTopicWindowStartOffset &&
-                    endOffsetBeforeLoading == viewModel.SimpleTopicWindowEndOffset)
+                if (startOffsetBeforeLoading == viewModel.SimpleFolderWindowStartOffset &&
+                    endOffsetBeforeLoading == viewModel.SimpleFolderWindowEndOffset)
                 {
                     break;
                 }
@@ -269,7 +269,7 @@ public partial class LibraryManagementView : UserControl
         }
         finally
         {
-            _isTopicsScrollPageLoadRunning = false;
+            _isFoldersScrollPageLoadRunning = false;
         }
     }
 
@@ -330,7 +330,7 @@ public partial class LibraryManagementView : UserControl
         }
     }
 
-    private static void ScrollTopicAnchorIntoView(
+    private static void ScrollFolderAnchorIntoView(
         object sender,
         LibraryManagementViewModel viewModel,
         Guid anchorId)
@@ -338,7 +338,7 @@ public partial class LibraryManagementView : UserControl
         if (sender is DataGrid grid)
         {
             LibraryManagementOrderItemViewModel? item =
-                viewModel.SimpleTopics.FirstOrDefault(topic => topic.Id == anchorId);
+                viewModel.SimpleFolders.FirstOrDefault(folder => folder.Id == anchorId);
 
             if (item is not null)
             {
@@ -350,13 +350,13 @@ public partial class LibraryManagementView : UserControl
 
         if (sender is ListBox listBox)
         {
-            IEnumerable<LibraryManagementTopicRowViewModel> rows =
-                ReferenceEquals(listBox.ItemsSource, viewModel.SimpleCompactTopicRows)
-                    ? viewModel.SimpleCompactTopicRows
-                    : viewModel.SimpleTopicRows;
+            IEnumerable<LibraryManagementFolderRowViewModel> rows =
+                ReferenceEquals(listBox.ItemsSource, viewModel.SimpleCompactFolderRows)
+                    ? viewModel.SimpleCompactFolderRows
+                    : viewModel.SimpleFolderRows;
 
-            LibraryManagementTopicRowViewModel? row = rows.FirstOrDefault(
-                candidate => candidate.Topics.Any(topic => topic.Id == anchorId));
+            LibraryManagementFolderRowViewModel? row = rows.FirstOrDefault(
+                candidate => candidate.Folders.Any(folder => folder.Id == anchorId));
 
             if (row is not null)
             {
@@ -863,12 +863,12 @@ public partial class LibraryManagementView : UserControl
         e.Handled = true;
     }
 
-    private void SimpleTopicTableRow_OnMouseLeftButtonUp(
+    private void SimpleFolderTableRow_OnMouseLeftButtonUp(
         object sender,
         MouseButtonEventArgs e)
     {
         if (sender is not DataGridRow row ||
-            row.DataContext is not LibraryManagementOrderItemViewModel topic ||
+            row.DataContext is not LibraryManagementOrderItemViewModel folder ||
             DataContext is not LibraryManagementViewModel viewModel)
         {
             return;
@@ -880,9 +880,9 @@ public partial class LibraryManagementView : UserControl
             return;
         }
 
-        if (viewModel.OpenSimpleTopicCommand.CanExecute(topic))
+        if (viewModel.OpenSimpleFolderCommand.CanExecute(folder))
         {
-            viewModel.OpenSimpleTopicCommand.Execute(topic);
+            viewModel.OpenSimpleFolderCommand.Execute(folder);
             e.Handled = true;
         }
     }
@@ -894,7 +894,7 @@ public partial class LibraryManagementView : UserControl
         await ShowOrderDialogAsync(LibraryOrderTarget.Sections);
     }
 
-    private async void ConfigureTopicsOrder_OnClick(
+    private async void ConfigureFoldersOrder_OnClick(
         object sender,
         RoutedEventArgs e)
     {
@@ -934,7 +934,7 @@ public partial class LibraryManagementView : UserControl
             string? contextName = target switch
             {
                 LibraryOrderTarget.Folders => viewModel.SelectedSection?.Name,
-                LibraryOrderTarget.Materials => viewModel.SelectedTopic?.Name,
+                LibraryOrderTarget.Materials => viewModel.SelectedFolder?.Name,
                 _ => null,
             };
 

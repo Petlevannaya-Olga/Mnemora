@@ -21,10 +21,10 @@ public sealed class LibraryPagingArchitectureTests
     }
 
     [Fact]
-    public void Topics_UseBoundedPagedWindow()
+    public void Folders_UseBoundedPagedWindow()
     {
         FieldInfo? field = typeof(LibraryManagementViewModel).GetField(
-            "_simpleTopicWindow",
+            "_simpleFolderWindow",
             BindingFlags.Instance | BindingFlags.NonPublic);
 
         field.Should().NotBeNull();

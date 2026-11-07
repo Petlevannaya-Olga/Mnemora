@@ -1,10 +1,10 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Windows.Data;
-using Mnemora.Desktop.ViewModels.Topics;
+using Mnemora.Desktop.ViewModels.Folders;
 
 namespace Mnemora.Desktop.Converters;
 
-public sealed class TopicColorConverter : IValueConverter
+public sealed class FolderColorConverter : IValueConverter
 {
     public object Convert(
         object? value,
@@ -12,7 +12,7 @@ public sealed class TopicColorConverter : IValueConverter
         object? parameter,
         CultureInfo culture)
     {
-        return TopicAppearanceOptions.GetColorBrush(
+        return FolderAppearanceOptions.GetColorBrush(
             value as string);
     }
 

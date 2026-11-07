@@ -15,9 +15,9 @@ public sealed partial class LibraryManagementViewModel
 {
     private const int SimpleSectionVisiblePageLimit = 7;
     private const int SimpleSectionCachePageLimit = 10;
-    private const int SimpleTopicPageSize = LibraryPagingDefaults.PageSize;
-    private const int SimpleTopicVisiblePageLimit = 7;
-    private const int SimpleTopicCachePageLimit = 10;
+    private const int SimpleFolderPageSize = LibraryPagingDefaults.PageSize;
+    private const int SimpleFolderVisiblePageLimit = 7;
+    private const int SimpleFolderCachePageLimit = 10;
     private const int SimpleMaterialVisiblePageLimit = 7;
     private const int SimpleMaterialCachePageLimit = 10;
 
@@ -27,11 +27,11 @@ public sealed partial class LibraryManagementViewModel
     private readonly Dictionary<int, Task<LibraryManagementSectionsPageDto?>> _simpleSectionInFlight = [];
     private readonly object _simpleSectionInFlightGate = new();
 
-    private readonly BoundedPagedWindow<LibraryManagementFolderOverviewDto> _simpleTopicWindow =
-        new(SimpleTopicPageSize, SimpleTopicVisiblePageLimit, SimpleTopicCachePageLimit);
+    private readonly BoundedPagedWindow<LibraryManagementFolderOverviewDto> _simpleFolderWindow =
+        new(SimpleFolderPageSize, SimpleFolderVisiblePageLimit, SimpleFolderCachePageLimit);
 
-    private readonly Dictionary<int, Task<LibraryManagementFoldersPageDto?>> _simpleTopicInFlight = [];
-    private readonly object _simpleTopicInFlightGate = new();
+    private readonly Dictionary<int, Task<LibraryManagementFoldersPageDto?>> _simpleFolderInFlight = [];
+    private readonly object _simpleFolderInFlightGate = new();
 
     private readonly BoundedPageCache<LibraryManagementMaterialOverviewDto> _simpleMaterialPageCache =
         new(SimpleMaterialCachePageLimit);
@@ -43,12 +43,12 @@ public sealed partial class LibraryManagementViewModel
     private bool _isSimpleSectionsLoadingPreviousPage;
     private CancellationTokenSource? _simpleSectionContextCancellation;
 
-    private int _simpleTopicsTotalCount;
-    private int _simpleTopicSourceTotalCount;
-    private int _simpleTopicLoadVersion;
-    private bool _isSimpleTopicsLoadingNextPage;
-    private bool _isSimpleTopicsLoadingPreviousPage;
-    private CancellationTokenSource? _simpleTopicContextCancellation;
+    private int _simpleFoldersTotalCount;
+    private int _simpleFolderSourceTotalCount;
+    private int _simpleFolderLoadVersion;
+    private bool _isSimpleFoldersLoadingNextPage;
+    private bool _isSimpleFoldersLoadingPreviousPage;
+    private CancellationTokenSource? _simpleFolderContextCancellation;
 
     private int _simpleMaterialLoadVersion;
     private int _simpleMaterialWindowStartOffset;
@@ -74,25 +74,25 @@ public sealed partial class LibraryManagementViewModel
     public int SimpleSectionCachedPageCount => _simpleSectionWindow.CachedPageCount;
     public int SimpleSectionCachedItemUpperBound => _simpleSectionWindow.CachedItemUpperBound;
 
-    public bool SimpleTopicsHasMore =>
-        _simpleTopicWindow.HasNext &&
-        !_isSimpleTopicsLoadingNextPage;
+    public bool SimpleFoldersHasMore =>
+        _simpleFolderWindow.HasNext &&
+        !_isSimpleFoldersLoadingNextPage;
 
-    public bool SimpleTopicsHasPrevious =>
-        _simpleTopicWindow.HasPrevious &&
-        !_isSimpleTopicsLoadingPreviousPage;
+    public bool SimpleFoldersHasPrevious =>
+        _simpleFolderWindow.HasPrevious &&
+        !_isSimpleFoldersLoadingPreviousPage;
 
-    public bool IsSimpleTopicsLoadingNextPage => _isSimpleTopicsLoadingNextPage;
-    public bool IsSimpleTopicsLoadingPreviousPage => _isSimpleTopicsLoadingPreviousPage;
-    public bool IsSimpleTopicsPaging =>
-        _isSimpleTopicsLoadingNextPage ||
-        _isSimpleTopicsLoadingPreviousPage;
-    public int SimpleTopicsTotalCount => _simpleTopicsTotalCount;
-    public int SimpleTopicWindowStartOffset => _simpleTopicWindow.WindowStartOffset;
-    public int SimpleTopicWindowEndOffset => _simpleTopicWindow.WindowEndOffset;
-    public int SimpleTopicCurrentPageOffset => _simpleTopicWindow.CurrentPageOffset;
-    public int SimpleTopicCachedPageCount => _simpleTopicWindow.CachedPageCount;
-    public int SimpleTopicCachedItemUpperBound => _simpleTopicWindow.CachedItemUpperBound;
+    public bool IsSimpleFoldersLoadingNextPage => _isSimpleFoldersLoadingNextPage;
+    public bool IsSimpleFoldersLoadingPreviousPage => _isSimpleFoldersLoadingPreviousPage;
+    public bool IsSimpleFoldersPaging =>
+        _isSimpleFoldersLoadingNextPage ||
+        _isSimpleFoldersLoadingPreviousPage;
+    public int SimpleFoldersTotalCount => _simpleFoldersTotalCount;
+    public int SimpleFolderWindowStartOffset => _simpleFolderWindow.WindowStartOffset;
+    public int SimpleFolderWindowEndOffset => _simpleFolderWindow.WindowEndOffset;
+    public int SimpleFolderCurrentPageOffset => _simpleFolderWindow.CurrentPageOffset;
+    public int SimpleFolderCachedPageCount => _simpleFolderWindow.CachedPageCount;
+    public int SimpleFolderCachedItemUpperBound => _simpleFolderWindow.CachedItemUpperBound;
 
     public bool SimpleMaterialsHasPrevious =>
         _simpleMaterialWindowStartOffset > 0 &&
@@ -485,274 +485,274 @@ public sealed partial class LibraryManagementViewModel
         OnPropertyChanged(nameof(SimpleSectionsShownCountText));
     }
 
-    private async Task ReloadSimpleTopicsPagedAsync(CancellationToken cancellationToken)
+    private async Task ReloadSimpleFoldersPagedAsync(CancellationToken cancellationToken)
     {
         if (SelectedSection is null)
         {
-            ClearSimpleTopicsPagedState();
+            ClearSimpleFoldersPagedState();
             return;
         }
 
-        int loadVersion = ResetSimpleTopicPagingState(cancellationToken);
+        int loadVersion = ResetSimpleFolderPagingState(cancellationToken);
         IsContextLoading = true;
         ErrorMessage = null;
 
         try
         {
-            LibraryManagementFoldersPageDto? page = await GetSimpleTopicPageAsync(
+            LibraryManagementFoldersPageDto? page = await GetSimpleFolderPageAsync(
                 offset: 0,
                 loadVersion,
-                _simpleTopicContextCancellation!.Token,
+                _simpleFolderContextCancellation!.Token,
                 reportFailure: true);
 
-            if (page is null || loadVersion != _simpleTopicLoadVersion)
+            if (page is null || loadVersion != _simpleFolderLoadVersion)
             {
                 return;
             }
 
-            ApplyTopicPageTotals(page);
-            _simpleTopicWindow.ShowPage(0, page.Items, PageWindowInsert.Append);
-            RebuildSimpleTopicWindow();
-            NotifySimpleTopicsStateChanged();
+            ApplyFolderPageTotals(page);
+            _simpleFolderWindow.ShowPage(0, page.Items, PageWindowInsert.Append);
+            RebuildSimpleFolderWindow();
+            NotifySimpleFoldersStateChanged();
         }
         finally
         {
-            if (loadVersion == _simpleTopicLoadVersion)
+            if (loadVersion == _simpleFolderLoadVersion)
             {
                 IsContextLoading = false;
-                NotifySimpleTopicsStateChanged();
+                NotifySimpleFoldersStateChanged();
             }
         }
     }
 
-    public async Task LoadNextSimpleTopicWindowAsync(CancellationToken cancellationToken = default)
+    public async Task LoadNextSimpleFolderWindowAsync(CancellationToken cancellationToken = default)
     {
-        if (!CanLoadNextSimpleTopicPage() || SelectedSection is null)
+        if (!CanLoadNextSimpleFolderPage() || SelectedSection is null)
         {
             return;
         }
 
-        int loadVersion = _simpleTopicLoadVersion;
-        int offset = _simpleTopicWindow.NextOffset;
+        int loadVersion = _simpleFolderLoadVersion;
+        int offset = _simpleFolderWindow.NextOffset;
 
-        if (_simpleTopicWindow.TryGetCachedPage(
+        if (_simpleFolderWindow.TryGetCachedPage(
                 offset,
                 out IReadOnlyList<LibraryManagementFolderOverviewDto> cached))
         {
-            _simpleTopicWindow.ShowPage(offset, cached, PageWindowInsert.Append);
-            RebuildSimpleTopicWindow();
-            NotifySimpleTopicsStateChanged();
+            _simpleFolderWindow.ShowPage(offset, cached, PageWindowInsert.Append);
+            RebuildSimpleFolderWindow();
+            NotifySimpleFoldersStateChanged();
             return;
         }
 
-        _isSimpleTopicsLoadingNextPage = true;
-        OnPropertyChanged(nameof(IsSimpleTopicsLoadingNextPage));
-        NotifySimpleTopicsStateChanged();
+        _isSimpleFoldersLoadingNextPage = true;
+        OnPropertyChanged(nameof(IsSimpleFoldersLoadingNextPage));
+        NotifySimpleFoldersStateChanged();
 
         try
         {
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(
-                _simpleTopicContextCancellation?.Token ?? _viewCancellationToken,
+                _simpleFolderContextCancellation?.Token ?? _viewCancellationToken,
                 cancellationToken);
 
             await YieldForPagingLoaderAsync(linked.Token);
 
-            LibraryManagementFoldersPageDto? page = await GetSimpleTopicPageAsync(
+            LibraryManagementFoldersPageDto? page = await GetSimpleFolderPageAsync(
                 offset,
                 loadVersion,
                 linked.Token,
                 reportFailure: true);
 
-            if (page is null || loadVersion != _simpleTopicLoadVersion)
+            if (page is null || loadVersion != _simpleFolderLoadVersion)
             {
                 return;
             }
 
-            ApplyTopicPageTotals(page);
+            ApplyFolderPageTotals(page);
 
             if (page.Items.Count == 0)
             {
                 return;
             }
 
-            _simpleTopicWindow.ShowPage(offset, page.Items, PageWindowInsert.Append);
-            RebuildSimpleTopicWindow();
-            NotifySimpleTopicsStateChanged();
+            _simpleFolderWindow.ShowPage(offset, page.Items, PageWindowInsert.Append);
+            RebuildSimpleFolderWindow();
+            NotifySimpleFoldersStateChanged();
         }
         finally
         {
-            if (loadVersion == _simpleTopicLoadVersion)
+            if (loadVersion == _simpleFolderLoadVersion)
             {
-                _isSimpleTopicsLoadingNextPage = false;
-                OnPropertyChanged(nameof(IsSimpleTopicsLoadingNextPage));
-                LoadNextSimpleTopicPageCommand.NotifyCanExecuteChanged();
-                NotifySimpleTopicsStateChanged();
+                _isSimpleFoldersLoadingNextPage = false;
+                OnPropertyChanged(nameof(IsSimpleFoldersLoadingNextPage));
+                LoadNextSimpleFolderPageCommand.NotifyCanExecuteChanged();
+                NotifySimpleFoldersStateChanged();
             }
         }
     }
 
-    public async Task LoadPreviousSimpleTopicWindowAsync(CancellationToken cancellationToken = default)
+    public async Task LoadPreviousSimpleFolderWindowAsync(CancellationToken cancellationToken = default)
     {
-        if (!SimpleTopicsHasPrevious ||
+        if (!SimpleFoldersHasPrevious ||
             IsContextLoading ||
-            _isSimpleTopicsLoadingNextPage ||
-            _isSimpleTopicsLoadingPreviousPage ||
+            _isSimpleFoldersLoadingNextPage ||
+            _isSimpleFoldersLoadingPreviousPage ||
             SelectedSection is null)
         {
             return;
         }
 
-        int loadVersion = _simpleTopicLoadVersion;
-        int offset = _simpleTopicWindow.PreviousOffset;
+        int loadVersion = _simpleFolderLoadVersion;
+        int offset = _simpleFolderWindow.PreviousOffset;
 
-        if (_simpleTopicWindow.TryGetCachedPage(
+        if (_simpleFolderWindow.TryGetCachedPage(
                 offset,
                 out IReadOnlyList<LibraryManagementFolderOverviewDto> cached))
         {
-            _simpleTopicWindow.ShowPage(offset, cached, PageWindowInsert.Prepend);
-            RebuildSimpleTopicWindow();
-            NotifySimpleTopicsStateChanged();
+            _simpleFolderWindow.ShowPage(offset, cached, PageWindowInsert.Prepend);
+            RebuildSimpleFolderWindow();
+            NotifySimpleFoldersStateChanged();
             return;
         }
 
-        _isSimpleTopicsLoadingPreviousPage = true;
-        OnPropertyChanged(nameof(IsSimpleTopicsLoadingPreviousPage));
-        NotifySimpleTopicsStateChanged();
+        _isSimpleFoldersLoadingPreviousPage = true;
+        OnPropertyChanged(nameof(IsSimpleFoldersLoadingPreviousPage));
+        NotifySimpleFoldersStateChanged();
 
         try
         {
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(
-                _simpleTopicContextCancellation?.Token ?? _viewCancellationToken,
+                _simpleFolderContextCancellation?.Token ?? _viewCancellationToken,
                 cancellationToken);
 
             await YieldForPagingLoaderAsync(linked.Token);
 
-            LibraryManagementFoldersPageDto? page = await GetSimpleTopicPageAsync(
+            LibraryManagementFoldersPageDto? page = await GetSimpleFolderPageAsync(
                 offset,
                 loadVersion,
                 linked.Token,
                 reportFailure: true);
 
-            if (page is null || loadVersion != _simpleTopicLoadVersion || page.Items.Count == 0)
+            if (page is null || loadVersion != _simpleFolderLoadVersion || page.Items.Count == 0)
             {
                 return;
             }
 
-            ApplyTopicPageTotals(page);
-            _simpleTopicWindow.ShowPage(offset, page.Items, PageWindowInsert.Prepend);
-            RebuildSimpleTopicWindow();
-            NotifySimpleTopicsStateChanged();
+            ApplyFolderPageTotals(page);
+            _simpleFolderWindow.ShowPage(offset, page.Items, PageWindowInsert.Prepend);
+            RebuildSimpleFolderWindow();
+            NotifySimpleFoldersStateChanged();
         }
         finally
         {
-            if (loadVersion == _simpleTopicLoadVersion)
+            if (loadVersion == _simpleFolderLoadVersion)
             {
-                _isSimpleTopicsLoadingPreviousPage = false;
-                OnPropertyChanged(nameof(IsSimpleTopicsLoadingPreviousPage));
-                NotifySimpleTopicsStateChanged();
+                _isSimpleFoldersLoadingPreviousPage = false;
+                OnPropertyChanged(nameof(IsSimpleFoldersLoadingPreviousPage));
+                NotifySimpleFoldersStateChanged();
             }
         }
     }
 
-    [RelayCommand(CanExecute = nameof(CanLoadNextSimpleTopicPage))]
-    private Task LoadNextSimpleTopicPageAsync(CancellationToken cancellationToken) =>
-        LoadNextSimpleTopicWindowAsync(cancellationToken);
+    [RelayCommand(CanExecute = nameof(CanLoadNextSimpleFolderPage))]
+    private Task LoadNextSimpleFolderPageAsync(CancellationToken cancellationToken) =>
+        LoadNextSimpleFolderWindowAsync(cancellationToken);
 
-    private bool CanLoadNextSimpleTopicPage() =>
-        IsSimpleTopicsPage &&
-        _simpleTopicWindow.HasNext &&
-        !_isSimpleTopicsLoadingNextPage &&
-        !_isSimpleTopicsLoadingPreviousPage &&
+    private bool CanLoadNextSimpleFolderPage() =>
+        IsSimpleFoldersPage &&
+        _simpleFolderWindow.HasNext &&
+        !_isSimpleFoldersLoadingNextPage &&
+        !_isSimpleFoldersLoadingPreviousPage &&
         !IsContextLoading &&
         !HasError;
 
-    private int ResetSimpleTopicPagingState(CancellationToken cancellationToken)
+    private int ResetSimpleFolderPagingState(CancellationToken cancellationToken)
     {
-        int loadVersion = Interlocked.Increment(ref _simpleTopicLoadVersion);
+        int loadVersion = Interlocked.Increment(ref _simpleFolderLoadVersion);
 
-        _simpleTopicContextCancellation?.Cancel();
-        _simpleTopicContextCancellation?.Dispose();
-        _simpleTopicContextCancellation = CancellationTokenSource.CreateLinkedTokenSource(
+        _simpleFolderContextCancellation?.Cancel();
+        _simpleFolderContextCancellation?.Dispose();
+        _simpleFolderContextCancellation = CancellationTokenSource.CreateLinkedTokenSource(
             _viewCancellationToken,
             cancellationToken);
 
-        _simpleTopicWindow.Reset();
+        _simpleFolderWindow.Reset();
 
-        lock (_simpleTopicInFlightGate)
+        lock (_simpleFolderInFlightGate)
         {
-            _simpleTopicInFlight.Clear();
+            _simpleFolderInFlight.Clear();
         }
 
-        _simpleTopicsTotalCount = 0;
-        _simpleTopicSourceTotalCount = SelectedSection?.SectionOverview?.RootFoldersCount
+        _simpleFoldersTotalCount = 0;
+        _simpleFolderSourceTotalCount = SelectedSection?.SectionOverview?.RootFoldersCount
                                       ?? SelectedSection?.Section?.Folders.Count(folder => folder.Depth == 1)
                                       ?? 0;
-        _isSimpleTopicsLoadingNextPage = false;
-        _isSimpleTopicsLoadingPreviousPage = false;
-        SimpleTopics.Clear();
-        SimpleTopicRows.Clear();
-        SimpleCompactTopicRows.Clear();
-        NotifySimpleTopicsStateChanged();
+        _isSimpleFoldersLoadingNextPage = false;
+        _isSimpleFoldersLoadingPreviousPage = false;
+        SimpleFolders.Clear();
+        SimpleFolderRows.Clear();
+        SimpleCompactFolderRows.Clear();
+        NotifySimpleFoldersStateChanged();
 
         return loadVersion;
     }
 
-    private void ClearSimpleTopicsPagedState()
+    private void ClearSimpleFoldersPagedState()
     {
-        Interlocked.Increment(ref _simpleTopicLoadVersion);
-        _simpleTopicContextCancellation?.Cancel();
-        _simpleTopicContextCancellation?.Dispose();
-        _simpleTopicContextCancellation = null;
-        _simpleTopicWindow.Reset();
+        Interlocked.Increment(ref _simpleFolderLoadVersion);
+        _simpleFolderContextCancellation?.Cancel();
+        _simpleFolderContextCancellation?.Dispose();
+        _simpleFolderContextCancellation = null;
+        _simpleFolderWindow.Reset();
 
-        lock (_simpleTopicInFlightGate)
+        lock (_simpleFolderInFlightGate)
         {
-            _simpleTopicInFlight.Clear();
+            _simpleFolderInFlight.Clear();
         }
 
-        _simpleTopicsTotalCount = 0;
-        _simpleTopicSourceTotalCount = 0;
-        _isSimpleTopicsLoadingNextPage = false;
-        _isSimpleTopicsLoadingPreviousPage = false;
-        SimpleTopics.Clear();
-        SimpleTopicRows.Clear();
-        SimpleCompactTopicRows.Clear();
-        NotifySimpleTopicsStateChanged();
+        _simpleFoldersTotalCount = 0;
+        _simpleFolderSourceTotalCount = 0;
+        _isSimpleFoldersLoadingNextPage = false;
+        _isSimpleFoldersLoadingPreviousPage = false;
+        SimpleFolders.Clear();
+        SimpleFolderRows.Clear();
+        SimpleCompactFolderRows.Clear();
+        NotifySimpleFoldersStateChanged();
     }
 
-    private async Task<LibraryManagementFoldersPageDto?> GetSimpleTopicPageAsync(
+    private async Task<LibraryManagementFoldersPageDto?> GetSimpleFolderPageAsync(
         int offset,
         int loadVersion,
         CancellationToken cancellationToken,
         bool reportFailure)
     {
-        if (loadVersion != _simpleTopicLoadVersion || SelectedSection is null)
+        if (loadVersion != _simpleFolderLoadVersion || SelectedSection is null)
         {
             return null;
         }
 
-        if (_simpleTopicWindow.TryGetCachedPage(
+        if (_simpleFolderWindow.TryGetCachedPage(
                 offset,
                 out IReadOnlyList<LibraryManagementFolderOverviewDto> cached))
         {
             return new LibraryManagementFoldersPageDto(
                 cached,
                 offset + cached.Count,
-                offset + cached.Count < _simpleTopicsTotalCount,
-                _simpleTopicsTotalCount);
+                offset + cached.Count < _simpleFoldersTotalCount,
+                _simpleFoldersTotalCount);
         }
 
         Task<LibraryManagementFoldersPageDto?> task;
 
-        lock (_simpleTopicInFlightGate)
+        lock (_simpleFolderInFlightGate)
         {
-            if (!_simpleTopicInFlight.TryGetValue(offset, out task!))
+            if (!_simpleFolderInFlight.TryGetValue(offset, out task!))
             {
                 Guid sectionId = SelectedSection.Id;
-                string? search = SimpleTopicSearchText;
-                LibraryManagementTopicSort sort = SelectedSimpleTopicSortOption.Sort;
+                string? search = SimpleFolderSearchText;
+                LibraryManagementFolderSort sort = SelectedSimpleFolderSortOption.Sort;
 
-                task = QuerySimpleTopicPageAsync(
+                task = QuerySimpleFolderPageAsync(
                     sectionId,
                     search,
                     sort,
@@ -760,7 +760,7 @@ public sealed partial class LibraryManagementViewModel
                     cancellationToken,
                     reportFailure);
 
-                _simpleTopicInFlight[offset] = task;
+                _simpleFolderInFlight[offset] = task;
             }
         }
 
@@ -769,34 +769,34 @@ public sealed partial class LibraryManagementViewModel
             LibraryManagementFoldersPageDto? page = await task;
 
             if (page is null ||
-                loadVersion != _simpleTopicLoadVersion ||
+                loadVersion != _simpleFolderLoadVersion ||
                 cancellationToken.IsCancellationRequested)
             {
                 return null;
             }
 
-            _simpleTopicWindow.StorePage(offset, page.Items);
+            _simpleFolderWindow.StorePage(offset, page.Items);
             return page;
         }
         finally
         {
-            lock (_simpleTopicInFlightGate)
+            lock (_simpleFolderInFlightGate)
             {
-                if (_simpleTopicInFlight.TryGetValue(
+                if (_simpleFolderInFlight.TryGetValue(
                         offset,
                         out Task<LibraryManagementFoldersPageDto?>? current) &&
                     ReferenceEquals(current, task))
                 {
-                    _simpleTopicInFlight.Remove(offset);
+                    _simpleFolderInFlight.Remove(offset);
                 }
             }
         }
     }
 
-    private async Task<LibraryManagementFoldersPageDto?> QuerySimpleTopicPageAsync(
+    private async Task<LibraryManagementFoldersPageDto?> QuerySimpleFolderPageAsync(
         Guid sectionId,
         string? search,
-        LibraryManagementTopicSort sort,
+        LibraryManagementFolderSort sort,
         int offset,
         CancellationToken cancellationToken,
         bool reportFailure)
@@ -806,9 +806,9 @@ public sealed partial class LibraryManagementViewModel
             var query = new GetLibraryManagementFoldersPageQuery(
                 sectionId,
                 search,
-                ToTopicPageSort(sort),
+                ToFolderPageSort(sort),
                 offset,
-                SimpleTopicPageSize);
+                SimpleFolderPageSize);
 
             var result = await queryDispatcher.SendAsync<
                 GetLibraryManagementFoldersPageQuery,
@@ -826,7 +826,7 @@ public sealed partial class LibraryManagementViewModel
                 if (reportFailure)
                 {
                     ErrorMessage = result.Error.FirstOrDefault()?.Message
-                                   ?? "Не удалось загрузить темы";
+                                   ?? "Не удалось загрузить папки";
                 }
 
                 return null;
@@ -840,37 +840,37 @@ public sealed partial class LibraryManagementViewModel
         }
         catch (Exception exception)
         {
-            logger.LogError(exception, "Не удалось загрузить страницу тем {Offset}", offset);
+            logger.LogError(exception, "Не удалось загрузить страницу папок {Offset}", offset);
 
             if (reportFailure)
             {
-                ErrorMessage = "Не удалось загрузить темы";
+                ErrorMessage = "Не удалось загрузить папки";
             }
 
             return null;
         }
     }
 
-    private void ApplyTopicPageTotals(LibraryManagementFoldersPageDto page)
+    private void ApplyFolderPageTotals(LibraryManagementFoldersPageDto page)
     {
-        _simpleTopicsTotalCount = page.TotalCount;
-        _simpleTopicWindow.SetTotalCount(page.TotalCount);
+        _simpleFoldersTotalCount = page.TotalCount;
+        _simpleFolderWindow.SetTotalCount(page.TotalCount);
 
-        if (string.IsNullOrWhiteSpace(SimpleTopicSearchText))
+        if (string.IsNullOrWhiteSpace(SimpleFolderSearchText))
         {
-            _simpleTopicSourceTotalCount = page.TotalCount;
+            _simpleFolderSourceTotalCount = page.TotalCount;
         }
     }
 
-    private void RebuildSimpleTopicWindow()
+    private void RebuildSimpleFolderWindow()
     {
-        SimpleTopics.Clear();
-        SimpleTopicRows.Clear();
-        SimpleCompactTopicRows.Clear();
+        SimpleFolders.Clear();
+        SimpleFolderRows.Clear();
+        SimpleCompactFolderRows.Clear();
 
-        foreach (int offset in _simpleTopicWindow.VisibleOffsets)
+        foreach (int offset in _simpleFolderWindow.VisibleOffsets)
         {
-            if (!_simpleTopicWindow.TryGetCachedPage(
+            if (!_simpleFolderWindow.TryGetCachedPage(
                     offset,
                     out IReadOnlyList<LibraryManagementFolderOverviewDto> page))
             {
@@ -879,52 +879,52 @@ public sealed partial class LibraryManagementViewModel
 
             int position = offset + 1;
 
-            foreach (LibraryManagementFolderOverviewDto topic in page)
+            foreach (LibraryManagementFolderOverviewDto folder in page)
             {
-                SimpleTopics.Add(new LibraryManagementOrderItemViewModel(topic, position++));
+                SimpleFolders.Add(new LibraryManagementOrderItemViewModel(folder, position++));
             }
         }
 
-        RebuildSimpleTopicRows(SimpleTopicRows, capacity: 3);
-        RebuildSimpleTopicRows(SimpleCompactTopicRows, capacity: 4);
+        RebuildSimpleFolderRows(SimpleFolderRows, capacity: 3);
+        RebuildSimpleFolderRows(SimpleCompactFolderRows, capacity: 4);
     }
 
-    private void RebuildSimpleTopicRows(
-        ObservableCollection<LibraryManagementTopicRowViewModel> rows,
+    private void RebuildSimpleFolderRows(
+        ObservableCollection<LibraryManagementFolderRowViewModel> rows,
         int capacity)
     {
-        bool showCreateTile = _simpleTopicWindow.WindowStartOffset == 0;
+        bool showCreateTile = _simpleFolderWindow.WindowStartOffset == 0;
         int index = 0;
 
-        while (index < SimpleTopics.Count)
+        while (index < SimpleFolders.Count)
         {
             bool isFirstRow = rows.Count == 0 && showCreateTile;
             int rowCapacity = isFirstRow ? Math.Max(1, capacity - 1) : capacity;
-            var row = new LibraryManagementTopicRowViewModel(rowCapacity, isFirstRow);
+            var row = new LibraryManagementFolderRowViewModel(rowCapacity, isFirstRow);
 
-            for (int count = 0; count < rowCapacity && index < SimpleTopics.Count; count++, index++)
+            for (int count = 0; count < rowCapacity && index < SimpleFolders.Count; count++, index++)
             {
-                row.Add(SimpleTopics[index]);
+                row.Add(SimpleFolders[index]);
             }
 
             rows.Add(row);
         }
     }
 
-    public void UpdateSimpleTopicViewport(double logicalItemOffset)
+    public void UpdateSimpleFolderViewport(double logicalItemOffset)
     {
-        if (!_simpleTopicWindow.UpdateViewport(logicalItemOffset))
+        if (!_simpleFolderWindow.UpdateViewport(logicalItemOffset))
         {
             return;
         }
 
-        OnPropertyChanged(nameof(SimpleTopicCurrentPageOffset));
-        OnPropertyChanged(nameof(SimpleTopicsShownCountText));
+        OnPropertyChanged(nameof(SimpleFolderCurrentPageOffset));
+        OnPropertyChanged(nameof(SimpleFoldersShownCountText));
     }
 
     private async Task ReloadSimpleMaterialsPagedAsync(CancellationToken cancellationToken)
     {
-        if (SelectedTopic is null)
+        if (SelectedFolder is null)
         {
             ClearSimpleMaterialsPagedState();
             return;
@@ -965,7 +965,7 @@ public sealed partial class LibraryManagementViewModel
 
     public async Task LoadNextSimpleMaterialWindowAsync(CancellationToken cancellationToken = default)
     {
-        if (!CanLoadNextSimpleMaterialPage() || SelectedTopic is null)
+        if (!CanLoadNextSimpleMaterialPage() || SelectedFolder is null)
         {
             return;
         }
@@ -1034,7 +1034,7 @@ public sealed partial class LibraryManagementViewModel
             IsContextLoading ||
             _isSimpleMaterialsLoadingNextPage ||
             _isSimpleMaterialsLoadingPreviousPage ||
-            SelectedTopic is null)
+            SelectedFolder is null)
         {
             return;
         }
@@ -1158,7 +1158,7 @@ public sealed partial class LibraryManagementViewModel
         CancellationToken cancellationToken,
         bool reportFailure)
     {
-        if (loadVersion != _simpleMaterialLoadVersion || SelectedTopic is null)
+        if (loadVersion != _simpleMaterialLoadVersion || SelectedFolder is null)
         {
             return null;
         }
@@ -1179,13 +1179,13 @@ public sealed partial class LibraryManagementViewModel
         {
             if (!_simpleMaterialInFlight.TryGetValue(offset, out task!))
             {
-                Guid topicId = SelectedTopic.Id;
+                Guid folderId = SelectedFolder.Id;
                 string? search = SimpleMaterialSearchText;
                 LibraryManagementMaterialFilter filter = SimpleMaterialFilter;
                 LibraryManagementMaterialSort sort = SelectedSimpleMaterialSortOption.Sort;
 
                 task = QuerySimpleMaterialPageAsync(
-                    topicId,
+                    folderId,
                     search,
                     filter,
                     sort,
@@ -1223,7 +1223,7 @@ public sealed partial class LibraryManagementViewModel
     }
 
     private async Task<LibraryManagementMaterialsPageDto?> QuerySimpleMaterialPageAsync(
-        Guid topicId,
+        Guid folderId,
         string? search,
         LibraryManagementMaterialFilter filter,
         LibraryManagementMaterialSort sort,
@@ -1234,7 +1234,7 @@ public sealed partial class LibraryManagementViewModel
         try
         {
             var query = new GetLibraryManagementMaterialsPageQuery(
-                topicId,
+                folderId,
                 search,
                 ToMaterialPageFilter(filter),
                 ToMaterialPageSort(sort),
@@ -1389,13 +1389,13 @@ public sealed partial class LibraryManagementViewModel
             !string.IsNullOrWhiteSpace(SimpleMaterialSearchText));
     }
 
-    private static LibraryManagementFolderPageSort ToTopicPageSort(LibraryManagementTopicSort sort) =>
+    private static LibraryManagementFolderPageSort ToFolderPageSort(LibraryManagementFolderSort sort) =>
         sort switch
         {
-            LibraryManagementTopicSort.Custom => LibraryManagementFolderPageSort.Custom,
-            LibraryManagementTopicSort.RecentActivity => LibraryManagementFolderPageSort.RecentActivity,
-            LibraryManagementTopicSort.Name => LibraryManagementFolderPageSort.Name,
-            LibraryManagementTopicSort.Newest => LibraryManagementFolderPageSort.Newest,
+            LibraryManagementFolderSort.Custom => LibraryManagementFolderPageSort.Custom,
+            LibraryManagementFolderSort.RecentActivity => LibraryManagementFolderPageSort.RecentActivity,
+            LibraryManagementFolderSort.Name => LibraryManagementFolderPageSort.Name,
+            LibraryManagementFolderSort.Newest => LibraryManagementFolderPageSort.Newest,
             _ => LibraryManagementFolderPageSort.Custom,
         };
 

@@ -4,7 +4,7 @@ using Mnemora.Desktop.ViewModels.Sections;
 using Mnemora.Domain.Sections;
 using Mnemora.Domain.LibraryContainers;
 
-namespace Mnemora.Desktop.ViewModels.Topics;
+namespace Mnemora.Desktop.ViewModels.Folders;
 
 public sealed record FolderColorOption(
     FolderColor Value,
@@ -16,7 +16,7 @@ public sealed record FolderIconOption(
     string Category,
     PackIconKind Kind);
 
-public static class TopicAppearanceOptions
+public static class FolderAppearanceOptions
 {
     public static IReadOnlyList<FolderColorOption> Colors { get; } =
         CreateColors();
@@ -28,14 +28,14 @@ public static class TopicAppearanceOptions
     {
         var options = new List<FolderColorOption>();
 
-        foreach (var topicColor in Enum.GetValues<FolderColor>())
+        foreach (var folderColor in Enum.GetValues<FolderColor>())
         {
             if (!Enum.TryParse<SectionColor>(
-                    topicColor.ToString(),
+                    folderColor.ToString(),
                     out var sectionColor))
             {
                 throw new InvalidOperationException(
-                    $"Для цвета папки '{topicColor}' не найден цвет раздела.");
+                    $"Для цвета папки '{folderColor}' не найден цвет раздела.");
             }
 
             var sectionOption = SectionAppearanceOptions.Colors
@@ -45,12 +45,12 @@ public static class TopicAppearanceOptions
             if (sectionOption is null)
             {
                 throw new InvalidOperationException(
-                    $"Для цвета папки '{topicColor}' не настроена кисть.");
+                    $"Для цвета папки '{folderColor}' не настроена кисть.");
             }
 
             options.Add(
                 new FolderColorOption(
-                    topicColor,
+                    folderColor,
                     sectionOption.Brush));
         }
 
@@ -61,16 +61,16 @@ public static class TopicAppearanceOptions
     {
         var options = new List<FolderIconOption>();
 
-        // Keep previous icon choices and ordering, without using TopicIcon.
+        // Keep previous icon choices and ordering, without using FolderIcon.
         // The original picker started with Bookmark, then the section icons.
         IEnumerable<FolderIcon> iconChoices = new[] { FolderIcon.Bookmark }.Concat(
             Enum.GetValues<SectionIcon>()
                 .Where(icon => icon != SectionIcon.Folder)
                 .Select(icon => Enum.Parse<FolderIcon>(icon.ToString())));
 
-        foreach (var topicIcon in iconChoices)
+        foreach (var folderIcon in iconChoices)
         {
-            if (topicIcon == FolderIcon.Bookmark)
+            if (folderIcon == FolderIcon.Bookmark)
             {
                 options.Add(
                     new FolderIconOption(
@@ -85,11 +85,11 @@ public static class TopicAppearanceOptions
             }
 
             if (!Enum.TryParse<SectionIcon>(
-                    topicIcon.ToString(),
+                    folderIcon.ToString(),
                     out var sectionIcon))
             {
                 throw new InvalidOperationException(
-                    $"Для иконки папки '{topicIcon}' не найдена соответствующая иконка раздела.");
+                    $"Для иконки папки '{folderIcon}' не найдена соответствующая иконка раздела.");
             }
 
             var sectionOption = SectionAppearanceOptions.Icons
@@ -99,12 +99,12 @@ public static class TopicAppearanceOptions
             if (sectionOption is null)
             {
                 throw new InvalidOperationException(
-                    $"Для иконки папки '{topicIcon}' не настроено отображение.");
+                    $"Для иконки папки '{folderIcon}' не настроено отображение.");
             }
 
             options.Add(
                 new FolderIconOption(
-                    topicIcon,
+                    folderIcon,
                     sectionOption.Name,
                     sectionOption.Category,
                     sectionOption.Kind));

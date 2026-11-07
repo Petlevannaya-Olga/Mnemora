@@ -50,7 +50,7 @@ public sealed class LibraryRangeTextFormatterTests
     [InlineData("Разделы", "Разделы не найдены", 30, 30, 127, true, "Разделы 31–60 из 127 найденных")]
     [InlineData("Темы", "Темы не найдены", 4980, 20, 5000, false, "Темы 4 981–5 000 из 5 000")]
     [InlineData("Темы", "Темы не найдены", 0, 0, 0, true, "Темы не найдены")]
-    public void FormatEntity_UsesSameRangeRulesForSectionsAndTopics(
+    public void FormatEntity_UsesSameRangeRulesForSectionsAndFolders(
         string entityLabel,
         string emptyText,
         int startOffset,

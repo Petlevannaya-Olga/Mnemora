@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -158,14 +158,14 @@ public sealed class JsonSettingsService :
             cancellationToken);
     }
 
-    public Task SaveLibraryManagementTopicsViewModeAsync(
+    public Task SaveLibraryManagementFoldersViewModeAsync(
         LibraryManagementViewMode viewMode,
         CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
 
         return UpdateAsync(
-            settings => settings.LibraryManagementTopicsViewMode = viewMode,
+            settings => settings.LibraryManagementFoldersViewMode = viewMode,
             cancellationToken);
     }
 
@@ -180,14 +180,14 @@ public sealed class JsonSettingsService :
             cancellationToken);
     }
 
-    public Task SaveLibraryTopicsViewModeAsync(
-        LibraryTopicsViewMode viewMode,
+    public Task SaveLibraryFoldersViewModeAsync(
+        LibraryFoldersViewMode viewMode,
         CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
 
         return UpdateAsync(
-            settings => settings.LibraryTopicsViewMode = viewMode,
+            settings => settings.LibraryFoldersViewMode = viewMode,
             cancellationToken);
     }
 
@@ -242,7 +242,7 @@ public sealed class JsonSettingsService :
             cancellationToken);
     }
 
-    public Task SaveLibraryManagementTopicSortAsync(
+    public Task SaveLibraryManagementFolderSortAsync(
         Guid sectionId,
         LibraryManagementSortMode sortMode,
         CancellationToken cancellationToken = default)
@@ -252,14 +252,14 @@ public sealed class JsonSettingsService :
         return UpdateAsync(
             settings =>
             {
-                settings.LibraryManagementTopicSortBySection ??= [];
-                settings.LibraryManagementTopicSortBySection[sectionId] = sortMode;
+                settings.LibraryManagementFolderSortBySection ??= [];
+                settings.LibraryManagementFolderSortBySection[sectionId] = sortMode;
             },
             cancellationToken);
     }
 
     public Task SaveLibraryManagementMaterialSortAsync(
-        Guid topicId,
+        Guid folderId,
         LibraryManagementSortMode sortMode,
         CancellationToken cancellationToken = default)
     {
@@ -268,8 +268,8 @@ public sealed class JsonSettingsService :
         return UpdateAsync(
             settings =>
             {
-                settings.LibraryManagementMaterialSortByTopic ??= [];
-                settings.LibraryManagementMaterialSortByTopic[topicId] = sortMode;
+                settings.LibraryManagementMaterialSortByFolder ??= [];
+                settings.LibraryManagementMaterialSortByFolder[folderId] = sortMode;
             },
             cancellationToken);
     }

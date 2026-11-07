@@ -121,7 +121,7 @@ public sealed class MarkdownEditorServiceTests
             CancellationToken cancellationToken = default) =>
             Task.CompletedTask;
 
-        public Task SaveLibraryManagementTopicsViewModeAsync(
+        public Task SaveLibraryManagementFoldersViewModeAsync(
             LibraryManagementViewMode viewMode,
             CancellationToken cancellationToken = default) =>
             Task.CompletedTask;
@@ -131,8 +131,8 @@ public sealed class MarkdownEditorServiceTests
             CancellationToken cancellationToken = default) =>
             Task.CompletedTask;
 
-        public Task SaveLibraryTopicsViewModeAsync(
-            LibraryTopicsViewMode viewMode,
+        public Task SaveLibraryFoldersViewModeAsync(
+            LibraryFoldersViewMode viewMode,
             CancellationToken cancellationToken = default) =>
             Task.CompletedTask;
 
@@ -151,14 +151,14 @@ public sealed class MarkdownEditorServiceTests
             CancellationToken cancellationToken = default) =>
             Task.CompletedTask;
 
-        public Task SaveLibraryManagementTopicSortAsync(
+        public Task SaveLibraryManagementFolderSortAsync(
             Guid sectionId,
             LibraryManagementSortMode sortMode,
             CancellationToken cancellationToken = default) =>
             Task.CompletedTask;
 
         public Task SaveLibraryManagementMaterialSortAsync(
-            Guid topicId,
+            Guid folderId,
             LibraryManagementSortMode sortMode,
             CancellationToken cancellationToken = default) =>
             Task.CompletedTask;

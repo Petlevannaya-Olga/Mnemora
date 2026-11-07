@@ -5,9 +5,9 @@ using Mnemora.Desktop.Dialogs;
 using Mnemora.Desktop.ViewModels.Common;
 using Mnemora.Domain.LibraryContainers;
 
-namespace Mnemora.Desktop.ViewModels.Topics;
+namespace Mnemora.Desktop.ViewModels.Folders;
 
-public sealed partial class CreateTopicDialogViewModel(
+public sealed partial class CreateFolderDialogViewModel(
     ICommandDispatcher commandDispatcher,
     IDialogService dialogService)
     : ViewModelBase,
@@ -20,19 +20,19 @@ public sealed partial class CreateTopicDialogViewModel(
     private bool _isCreating;
 
     private FolderColorOption _selectedColor =
-        TopicAppearanceOptions.Colors[0];
+        FolderAppearanceOptions.Colors[0];
 
     private FolderIconOption _selectedIcon =
-        TopicAppearanceOptions.Icons[0];
+        FolderAppearanceOptions.Icons[0];
 
     public event EventHandler<DialogCloseRequestedEventArgs<Guid?>>?
         CloseRequested;
 
     public IReadOnlyList<FolderColorOption> ColorOptions =>
-        TopicAppearanceOptions.Colors;
+        FolderAppearanceOptions.Colors;
 
     public IReadOnlyList<FolderIconOption> IconOptions =>
-        TopicAppearanceOptions.Icons;
+        FolderAppearanceOptions.Icons;
 
     public string SectionName
     {
@@ -135,10 +135,10 @@ public sealed partial class CreateTopicDialogViewModel(
         Name = string.Empty;
 
         SelectedColor =
-            TopicAppearanceOptions.Colors[0];
+            FolderAppearanceOptions.Colors[0];
 
         SelectedIcon =
-            TopicAppearanceOptions.Icons[0];
+            FolderAppearanceOptions.Icons[0];
 
         ErrorMessage = null;
         IsCreating = false;
@@ -225,7 +225,7 @@ public sealed partial class CreateTopicDialogViewModel(
     private void OpenIconPicker()
     {
         var selectedIcon = dialogService.Show<
-            SelectTopicIconDialogViewModel,
+            SelectFolderIconDialogViewModel,
             FolderIcon?>(
             viewModel => viewModel.Initialize(
                 SelectedIcon.Value));

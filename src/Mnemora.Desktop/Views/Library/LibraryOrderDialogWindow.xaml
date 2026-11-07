@@ -379,7 +379,7 @@
                                     FontWeight="SemiBold"
                                     Foreground="{DynamicResource Mnemora.Brush.Secondary}"
                                     Text="Мой порядок" />
-                                <Run Text=" — ваш персональный порядок отображения разделов, тем и материалов." />
+                                <Run Text=" — ваш персональный порядок отображения разделов, папок и материалов." />
                             </TextBlock>
 
                             <TextBlock

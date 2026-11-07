@@ -5,9 +5,9 @@ using Mnemora.Desktop.Dialogs;
 using Mnemora.Desktop.ViewModels.Common;
 using Mnemora.Domain.LibraryContainers;
 
-namespace Mnemora.Desktop.ViewModels.Topics;
+namespace Mnemora.Desktop.ViewModels.Folders;
 
-public sealed partial class SelectTopicIconDialogViewModel
+public sealed partial class SelectFolderIconDialogViewModel
     : ViewModelBase,
       IDialogViewModel<FolderIcon?>
 {
@@ -17,17 +17,17 @@ public sealed partial class SelectTopicIconDialogViewModel
     private string _selectedCategory = "Все";
     private FolderIconOption? _selectedIcon;
 
-    public SelectTopicIconDialogViewModel()
+    public SelectFolderIconDialogViewModel()
     {
         _iconsView = new ListCollectionView(
-            TopicAppearanceOptions.Icons.ToList());
+            FolderAppearanceOptions.Icons.ToList());
 
         _iconsView.Filter = FilterIcon;
 
         Categories =
         [
             "Все",
-            .. TopicAppearanceOptions.Icons
+            .. FolderAppearanceOptions.Icons
                 .Select(icon => icon.Category)
                 .Distinct()
                 .OrderBy(category => category)
@@ -98,10 +98,10 @@ public sealed partial class SelectTopicIconDialogViewModel
         SelectedCategory = "Все";
 
         SelectedIcon =
-            TopicAppearanceOptions.Icons
+            FolderAppearanceOptions.Icons
                 .FirstOrDefault(icon =>
                     icon.Value == selectedIcon)
-            ?? TopicAppearanceOptions.Icons[0];
+            ?? FolderAppearanceOptions.Icons[0];
     }
 
     [RelayCommand(CanExecute = nameof(CanSelect))]

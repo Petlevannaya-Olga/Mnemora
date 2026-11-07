@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     x:Class="Mnemora.Desktop.Views.Library.LibraryManagementView"
     x:Name="Root"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -32,7 +32,7 @@
 
         <converters:SectionColorConverter x:Key="SectionColorConverter" />
         <converters:SectionIconConverter x:Key="SectionIconConverter" />
-        <converters:TopicColorConverter x:Key="TopicColorConverter" />
+        <converters:FolderColorConverter x:Key="FolderColorConverter" />
         <converters:LibraryRangeCounterTextConverter x:Key="LibraryRangeCounterTextConverter" />
         <converters:LibraryFolderColorConverter x:Key="LibraryFolderColorConverter" />
         <converters:LibraryFolderIconConverter x:Key="LibraryFolderIconConverter" />
@@ -221,7 +221,7 @@
             </Setter>
         </Style>
 
-        <Style x:Key="TopicItemStyle" TargetType="ListBoxItem">
+        <Style x:Key="FolderItemStyle" TargetType="ListBoxItem">
             <Setter Property="Padding" Value="0" />
             <Setter Property="Margin" Value="0" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
@@ -1049,8 +1049,8 @@
             </Grid>
         </DataTemplate>
 
-        <!-- Простой режим: карточки тем в стиле Обзора/Управления. -->
-        <Style x:Key="SimpleTopicCardStyle" TargetType="Border">
+        <!-- Простой режим: карточки папок в стиле Обзора/Управления. -->
+        <Style x:Key="SimpleFolderCardStyle" TargetType="Border">
             <Setter Property="MinHeight" Value="154" />
             <Setter Property="Margin" Value="0,0,16,16" />
             <Setter Property="Padding" Value="22" />
@@ -1060,13 +1060,13 @@
             <Setter Property="CornerRadius" Value="16" />
         </Style>
 
-        <DataTemplate x:Key="SimpleTopicCardTemplate">
+        <DataTemplate x:Key="SimpleFolderCardTemplate">
             <Grid>
-                <Button Command="{Binding DataContext.OpenSimpleTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                <Button Command="{Binding DataContext.OpenSimpleFolderCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                         CommandParameter="{Binding}"
                         Style="{StaticResource SectionNavigationButtonStyle}"
                         ToolTip="Открыть папку">
-                    <Border Style="{StaticResource SimpleTopicCardStyle}">
+                    <Border Style="{StaticResource SimpleFolderCardStyle}">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
@@ -1083,7 +1083,7 @@
 
                                 <Border Width="54"
                                         Height="54"
-                                        Background="{Binding TopicColor, Converter={StaticResource TopicColorConverter}}"
+                                        Background="{Binding FolderColor, Converter={StaticResource FolderColorConverter}}"
                                         CornerRadius="13">
                                     <materialDesign:PackIcon Width="29"
                                                              Height="29"
@@ -1120,7 +1120,7 @@
                                                VerticalAlignment="Center"
                                                FontSize="13"
                                                Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                                               Text="{Binding TopicMaterialsSummaryText}" />
+                                               Text="{Binding FolderMaterialsSummaryText}" />
                                 </StackPanel>
                             </Border>
                         </Grid>
@@ -1132,13 +1132,13 @@
                             HorizontalAlignment="Right"
                             VerticalAlignment="Top"
                             Orientation="Horizontal">
-                    <Button Command="{Binding DataContext.EditTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                    <Button Command="{Binding DataContext.EditFolderCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                             CommandParameter="{Binding}"
                             Style="{StaticResource SmallIconButtonStyle}"
                             ToolTip="Редактировать папку">
                         <materialDesign:PackIcon Width="17" Height="17" Kind="PencilOutline" />
                     </Button>
-                    <Button Command="{Binding DataContext.DeleteTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                    <Button Command="{Binding DataContext.DeleteFolderCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                             CommandParameter="{Binding}"
                             Foreground="#C62828"
                             Style="{StaticResource SmallIconButtonStyle}"
@@ -1149,9 +1149,9 @@
             </Grid>
         </DataTemplate>
 
-        <DataTemplate x:Key="SimpleCompactTopicCardTemplate">
+        <DataTemplate x:Key="SimpleCompactFolderCardTemplate">
             <Grid>
-                <Button Command="{Binding DataContext.OpenSimpleTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                <Button Command="{Binding DataContext.OpenSimpleFolderCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                         CommandParameter="{Binding}"
                         Style="{StaticResource SectionNavigationButtonStyle}"
                         ToolTip="Открыть папку">
@@ -1167,7 +1167,7 @@
                                     Height="46"
                                     HorizontalAlignment="Left"
                                     VerticalAlignment="Top"
-                                    Background="{Binding TopicColor, Converter={StaticResource TopicColorConverter}}"
+                                    Background="{Binding FolderColor, Converter={StaticResource FolderColorConverter}}"
                                     CornerRadius="11">
                                 <materialDesign:PackIcon Width="25"
                                                          Height="25"
@@ -1177,7 +1177,7 @@
                                                          Kind="{Binding IconKind}" />
                             </Border>
 
-                            <!-- Нижняя строка: название темы слева, количество материалов справа. -->
+                            <!-- Нижняя строка: название папки слева, количество материалов справа. -->
                             <Grid Grid.Row="1" Margin="0,6,0,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -1209,7 +1209,7 @@
                                                VerticalAlignment="Center"
                                                FontSize="12"
                                                Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                                               Text="{Binding TopicMaterialsCount}" />
+                                               Text="{Binding FolderMaterialsCount}" />
                                 </StackPanel>
                             </Grid>
                         </Grid>
@@ -1223,7 +1223,7 @@
                             Orientation="Horizontal">
                     <Button Width="27"
                             Height="26"
-                            Command="{Binding DataContext.EditTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                            Command="{Binding DataContext.EditFolderCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                             CommandParameter="{Binding}"
                             Style="{StaticResource SmallIconButtonStyle}"
                             ToolTip="Редактировать папку">
@@ -1231,7 +1231,7 @@
                     </Button>
                     <Button Width="27"
                             Height="26"
-                            Command="{Binding DataContext.DeleteTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                            Command="{Binding DataContext.DeleteFolderCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                             CommandParameter="{Binding}"
                             Foreground="#C62828"
                             Style="{StaticResource SmallIconButtonStyle}"
@@ -1242,13 +1242,13 @@
             </Grid>
         </DataTemplate>
 
-        <Style x:Key="SimpleTopicTableRowStyle" TargetType="DataGridRow">
+        <Style x:Key="SimpleFolderTableRowStyle" TargetType="DataGridRow">
             <Setter Property="MinHeight" Value="72" />
             <Setter Property="Background" Value="{DynamicResource Mnemora.Brush.Surface}" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-            <EventSetter Event="MouseLeftButtonUp" Handler="SimpleTopicTableRow_OnMouseLeftButtonUp" />
+            <EventSetter Event="MouseLeftButtonUp" Handler="SimpleFolderTableRow_OnMouseLeftButtonUp" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="DataGridRow">
@@ -2373,10 +2373,10 @@
             </Grid>
         </Grid>
 
-        <!-- ПРОСТОЙ РЕЖИМ: темы выбранного раздела -->
+        <!-- ПРОСТОЙ РЕЖИМ: папки выбранного раздела -->
         <Grid Grid.Row="2"
               Margin="32,28,32,28"
-              Visibility="{Binding IsSimpleTopicsPage, Converter={StaticResource BooleanToVisibilityConverter}}">
+              Visibility="{Binding IsSimpleFoldersPage, Converter={StaticResource BooleanToVisibilityConverter}}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -2454,7 +2454,7 @@
 
                 <TextBox Height="52"
                          VerticalContentAlignment="Center"
-                         Text="{Binding SimpleTopicSearchText, UpdateSourceTrigger=PropertyChanged}"
+                         Text="{Binding SimpleFolderSearchText, UpdateSourceTrigger=PropertyChanged}"
                          materialDesign:HintAssist.Hint="Поиск по названию папки..."
                          materialDesign:TextFieldAssist.HasClearButton="True"
                          Style="{StaticResource MaterialDesignOutlinedTextBox}" />
@@ -2463,8 +2463,8 @@
                           Height="52"
                           VerticalContentAlignment="Center"
                           DisplayMemberPath="Name"
-                          ItemsSource="{Binding SimpleTopicSortOptions}"
-                          SelectedItem="{Binding SelectedSimpleTopicSortOption, Mode=TwoWay}"
+                          ItemsSource="{Binding SimpleFolderSortOptions}"
+                          SelectedItem="{Binding SelectedSimpleFolderSortOption, Mode=TwoWay}"
                           materialDesign:HintAssist.Hint="Сортировка"
                           Style="{StaticResource MaterialDesignOutlinedComboBox}" />
 
@@ -2494,9 +2494,9 @@
                         Height="44"
                         MinWidth="190"
                         VerticalAlignment="Center"
-                        Click="ConfigureTopicsOrder_OnClick"
+                        Click="ConfigureFoldersOrder_OnClick"
                         Style="{StaticResource Mnemora.SecondaryButton}"
-                        Visibility="{Binding HasSimpleTopicSource, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        Visibility="{Binding HasSimpleFolderSource, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Width="18"
                                                  Height="18"
@@ -2511,14 +2511,14 @@
 
             <Grid Grid.Row="3">
                 <!-- Большие плитки: виртуализируем строки по 3 карточки. -->
-                <ListBox ItemsSource="{Binding SimpleTopicRows}"
+                <ListBox ItemsSource="{Binding SimpleFolderRows}"
                          ItemContainerStyle="{StaticResource SimpleSectionListBoxItemStyle}"
                          Background="Transparent"
                          BorderThickness="0"
                          ScrollViewer.CanContentScroll="True"
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                          ScrollViewer.VerticalScrollBarVisibility="Auto"
-                         ScrollViewer.ScrollChanged="TopicsScroll_OnScrollChanged"
+                         ScrollViewer.ScrollChanged="FoldersScroll_OnScrollChanged"
                          VirtualizingPanel.IsVirtualizing="True"
                          VirtualizingPanel.VirtualizationMode="Recycling">
                     <ListBox.Style>
@@ -2527,7 +2527,7 @@
                             <Style.Triggers>
                                 <MultiDataTrigger>
                                     <MultiDataTrigger.Conditions>
-                                        <Condition Binding="{Binding HasSimpleTopics}" Value="True" />
+                                        <Condition Binding="{Binding HasSimpleFolders}" Value="True" />
                                         <Condition Binding="{Binding IsSimpleTilesView}" Value="True" />
                                     </MultiDataTrigger.Conditions>
                                     <Setter Property="Visibility" Value="Visible" />
@@ -2550,7 +2550,7 @@
                                 </Grid.ColumnDefinitions>
 
                                 <Button Grid.Column="0"
-                                        Command="{Binding DataContext.AddTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                        Command="{Binding DataContext.AddFolderCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                         ToolTip="Создать папку">
                                     <Button.Style>
                                         <Style TargetType="Button" BasedOn="{StaticResource CreateLargeEntityTileButtonStyle}">
@@ -2575,8 +2575,8 @@
                                 </Button>
 
                                 <ItemsControl Grid.Column="1" Grid.ColumnSpan="2"
-                                              ItemsSource="{Binding Topics}"
-                                              ItemTemplate="{StaticResource SimpleTopicCardTemplate}">
+                                              ItemsSource="{Binding Folders}"
+                                              ItemTemplate="{StaticResource SimpleFolderCardTemplate}">
                                     <ItemsControl.Style>
                                         <Style TargetType="ItemsControl">
                                             <Setter Property="Visibility" Value="Collapsed" />
@@ -2595,8 +2595,8 @@
                                 </ItemsControl>
 
                                 <ItemsControl Grid.Column="0" Grid.ColumnSpan="3"
-                                              ItemsSource="{Binding Topics}"
-                                              ItemTemplate="{StaticResource SimpleTopicCardTemplate}">
+                                              ItemsSource="{Binding Folders}"
+                                              ItemTemplate="{StaticResource SimpleFolderCardTemplate}">
                                     <ItemsControl.Style>
                                         <Style TargetType="ItemsControl">
                                             <Setter Property="Visibility" Value="Visible" />
@@ -2619,14 +2619,14 @@
                 </ListBox>
 
                 <!-- Компактные плитки: 4 карточки в строке, как на уровне разделов. -->
-                <ListBox ItemsSource="{Binding SimpleCompactTopicRows}"
+                <ListBox ItemsSource="{Binding SimpleCompactFolderRows}"
                          ItemContainerStyle="{StaticResource SimpleSectionListBoxItemStyle}"
                          Background="Transparent"
                          BorderThickness="0"
                          ScrollViewer.CanContentScroll="True"
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                          ScrollViewer.VerticalScrollBarVisibility="Auto"
-                         ScrollViewer.ScrollChanged="TopicsScroll_OnScrollChanged"
+                         ScrollViewer.ScrollChanged="FoldersScroll_OnScrollChanged"
                          VirtualizingPanel.IsVirtualizing="True"
                          VirtualizingPanel.VirtualizationMode="Recycling">
                     <ListBox.Style>
@@ -2635,7 +2635,7 @@
                             <Style.Triggers>
                                 <MultiDataTrigger>
                                     <MultiDataTrigger.Conditions>
-                                        <Condition Binding="{Binding HasSimpleTopics}" Value="True" />
+                                        <Condition Binding="{Binding HasSimpleFolders}" Value="True" />
                                         <Condition Binding="{Binding IsSimpleCompactTilesView}" Value="True" />
                                     </MultiDataTrigger.Conditions>
                                     <Setter Property="Visibility" Value="Visible" />
@@ -2659,7 +2659,7 @@
                                 </Grid.ColumnDefinitions>
 
                                 <Button Grid.Column="0"
-                                        Command="{Binding DataContext.AddTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                        Command="{Binding DataContext.AddFolderCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                         ToolTip="Создать папку">
                                     <Button.Style>
                                         <Style TargetType="Button" BasedOn="{StaticResource CreateCompactEntityTileButtonStyle}">
@@ -2682,8 +2682,8 @@
                                 </Button>
 
                                 <ItemsControl Grid.Column="1" Grid.ColumnSpan="3"
-                                              ItemsSource="{Binding Topics}"
-                                              ItemTemplate="{StaticResource SimpleCompactTopicCardTemplate}">
+                                              ItemsSource="{Binding Folders}"
+                                              ItemTemplate="{StaticResource SimpleCompactFolderCardTemplate}">
                                     <ItemsControl.Style>
                                         <Style TargetType="ItemsControl">
                                             <Setter Property="Visibility" Value="Collapsed" />
@@ -2702,8 +2702,8 @@
                                 </ItemsControl>
 
                                 <ItemsControl Grid.Column="0" Grid.ColumnSpan="4"
-                                              ItemsSource="{Binding Topics}"
-                                              ItemTemplate="{StaticResource SimpleCompactTopicCardTemplate}">
+                                              ItemsSource="{Binding Folders}"
+                                              ItemTemplate="{StaticResource SimpleCompactFolderCardTemplate}">
                                     <ItemsControl.Style>
                                         <Style TargetType="ItemsControl">
                                             <Setter Property="Visibility" Value="Visible" />
@@ -2737,7 +2737,7 @@
                             <Style.Triggers>
                                 <MultiDataTrigger>
                                     <MultiDataTrigger.Conditions>
-                                        <Condition Binding="{Binding HasSimpleTopics}" Value="True" />
+                                        <Condition Binding="{Binding HasSimpleFolders}" Value="True" />
                                         <Condition Binding="{Binding IsSimpleTableView}" Value="True" />
                                     </MultiDataTrigger.Conditions>
                                     <Setter Property="Visibility" Value="Visible" />
@@ -2746,7 +2746,7 @@
                         </Style>
                     </Border.Style>
 
-                    <DataGrid ItemsSource="{Binding SimpleTopics}"
+                    <DataGrid ItemsSource="{Binding SimpleFolders}"
                               AutoGenerateColumns="False"
                               Background="Transparent"
                               BorderThickness="0"
@@ -2764,12 +2764,12 @@
                               HorizontalScrollBarVisibility="Disabled"
                               IsReadOnly="True"
                               RowHeaderWidth="0"
-                              RowStyle="{StaticResource SimpleTopicTableRowStyle}"
+                              RowStyle="{StaticResource SimpleFolderTableRowStyle}"
                               SelectionMode="Single"
                               SelectionUnit="FullRow"
                               VerticalScrollBarVisibility="Auto"
                               ScrollViewer.CanContentScroll="True"
-                              ScrollViewer.ScrollChanged="TopicsScroll_OnScrollChanged"
+                              ScrollViewer.ScrollChanged="FoldersScroll_OnScrollChanged"
                               VirtualizingPanel.IsVirtualizing="True"
                               VirtualizingPanel.VirtualizationMode="Recycling">
                         <DataGrid.Columns>
@@ -2791,7 +2791,7 @@
                                             <Border Width="44"
                                                     Height="44"
                                                     VerticalAlignment="Center"
-                                                    Background="{Binding TopicColor, Converter={StaticResource TopicColorConverter}}"
+                                                    Background="{Binding FolderColor, Converter={StaticResource FolderColorConverter}}"
                                                     CornerRadius="11">
                                                 <materialDesign:PackIcon Width="23"
                                                                          Height="23"
@@ -2810,7 +2810,7 @@
                                                 <TextBlock Margin="0,3,0,0"
                                                            FontSize="12"
                                                            Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                                                           Text="{Binding TopicMaterialsSummaryText}" />
+                                                           Text="{Binding FolderMaterialsSummaryText}" />
                                             </StackPanel>
                                         </Grid>
                                     </DataTemplate>
@@ -2827,7 +2827,7 @@
                                     <DataTemplate>
                                         <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
                                             <materialDesign:PackIcon Style="{StaticResource SimpleSectionCountIconStyle}" Kind="FormatListBulleted" />
-                                            <TextBlock Style="{StaticResource SimpleSectionTableNumberStyle}" Text="{Binding TopicMaterialsCount}" />
+                                            <TextBlock Style="{StaticResource SimpleSectionTableNumberStyle}" Text="{Binding FolderMaterialsCount}" />
                                         </StackPanel>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
@@ -2843,7 +2843,7 @@
                                     <DataTemplate>
                                         <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
                                             <materialDesign:PackIcon Style="{StaticResource SimpleSectionCountIconStyle}" Kind="FileDocumentOutline" />
-                                            <TextBlock Style="{StaticResource SimpleSectionTableNumberStyle}" Text="{Binding TopicArticlesCount}" />
+                                            <TextBlock Style="{StaticResource SimpleSectionTableNumberStyle}" Text="{Binding FolderArticlesCount}" />
                                         </StackPanel>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
@@ -2859,19 +2859,19 @@
                                     <DataTemplate>
                                         <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
                                             <materialDesign:PackIcon Style="{StaticResource SimpleSectionCountIconStyle}" Kind="HelpCircleOutline" />
-                                            <TextBlock Style="{StaticResource SimpleSectionTableNumberStyle}" Text="{Binding TopicQuestionsCount}" />
+                                            <TextBlock Style="{StaticResource SimpleSectionTableNumberStyle}" Text="{Binding FolderQuestionsCount}" />
                                         </StackPanel>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
                             <DataGridTextColumn Width="118"
-                                                Binding="{Binding TopicCreatedAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
+                                                Binding="{Binding FolderCreatedAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
                                                 CellStyle="{StaticResource SimpleSectionTableDateCellStyle}"
                                                 Header="Создана" />
 
                             <DataGridTextColumn Width="124"
-                                                Binding="{Binding TopicLastActivityAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
+                                                Binding="{Binding FolderLastActivityAtLocal, StringFormat={}{0:dd.MM.yyyy}}"
                                                 CellStyle="{StaticResource SimpleSectionTableDateCellStyle}"
                                                 Header="Активность" />
 
@@ -2885,13 +2885,13 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
-                                            <Button Command="{Binding DataContext.EditTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                            <Button Command="{Binding DataContext.EditFolderCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                                     CommandParameter="{Binding}"
                                                     Style="{StaticResource SmallIconButtonStyle}"
                                                     ToolTip="Редактировать папку">
                                                 <materialDesign:PackIcon Width="16" Height="16" Kind="PencilOutline" />
                                             </Button>
-                                            <Button Command="{Binding DataContext.DeleteTopicCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                            <Button Command="{Binding DataContext.DeleteFolderCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                                     CommandParameter="{Binding}"
                                                     Foreground="#C62828"
                                                     Style="{StaticResource SmallIconButtonStyle}"
@@ -2913,7 +2913,7 @@
                         <Style TargetType="StackPanel">
                             <Setter Property="Visibility" Value="Collapsed" />
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsSimpleTopicsEmpty}" Value="True">
+                                <DataTrigger Binding="{Binding IsSimpleFoldersEmpty}" Value="True">
                                     <Setter Property="Visibility" Value="Visible" />
                                 </DataTrigger>
                             </Style.Triggers>
@@ -2939,7 +2939,7 @@
                     <Button Height="42"
                             Margin="0,20,0,0"
                             HorizontalAlignment="Center"
-                            Command="{Binding AddTopicCommand}"
+                            Command="{Binding AddFolderCommand}"
                             Style="{StaticResource Mnemora.PrimaryButton}">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Width="18" Height="18" Kind="BookPlusOutline" />
@@ -2950,7 +2950,7 @@
 
                 <StackPanel HorizontalAlignment="Center"
                             VerticalAlignment="Center"
-                            Visibility="{Binding HasNoSimpleTopicSearchResults, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            Visibility="{Binding HasNoSimpleFolderSearchResults, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <materialDesign:PackIcon Width="48"
                                              Height="48"
                                              HorizontalAlignment="Center"
@@ -2991,8 +2991,8 @@
                            VerticalAlignment="Center"
                            FontSize="13"
                            Foreground="{DynamicResource Mnemora.Brush.TextSecondary}"
-                           Text="{Binding SimpleTopicsShownCountText}"
-                           Visibility="{Binding HasSimpleTopicSource, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                           Text="{Binding SimpleFoldersShownCountText}"
+                           Visibility="{Binding HasSimpleFolderSource, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
                 <Border Padding="14,10"
                         HorizontalAlignment="Center"
@@ -3000,7 +3000,7 @@
                             Background="#F0061735"
                         CornerRadius="12"
                         IsHitTestVisible="False"
-                        Visibility="{Binding IsSimpleTopicsPaging, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        Visibility="{Binding IsSimpleFoldersPaging, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <loading:LoadingIndicator ShowDelay="0" IndicatorLength="200"
                                               IndicatorThickness="6"
                                               Message="Загружаем папки..."
@@ -3011,14 +3011,14 @@
                 <Button Height="42"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Center"
-                        Command="{Binding AddTopicCommand}">
+                        Command="{Binding AddFolderCommand}">
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource Mnemora.PrimaryButton}">
                             <Setter Property="Visibility" Value="Collapsed" />
                             <Style.Triggers>
                                 <MultiDataTrigger>
                                     <MultiDataTrigger.Conditions>
-                                        <Condition Binding="{Binding HasSimpleTopicSource}" Value="True" />
+                                        <Condition Binding="{Binding HasSimpleFolderSource}" Value="True" />
                                         <Condition Binding="{Binding IsSimpleTableView}" Value="True" />
                                     </MultiDataTrigger.Conditions>
                                     <Setter Property="Visibility" Value="Visible" />
@@ -3034,7 +3034,7 @@
             </Grid>
         </Grid>
 
-        <!-- ПРОСТОЙ РЕЖИМ: материалы выбранной темы -->
+        <!-- ПРОСТОЙ РЕЖИМ: материалы выбранной папки -->
         <Grid Grid.Row="2"
               Margin="32,28,32,28"
               Visibility="{Binding IsSimpleMaterialsPage, Converter={StaticResource BooleanToVisibilityConverter}}">
@@ -3046,7 +3046,7 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <!-- Back-link как на уровне тем: текущую тему не дублируем в крошках. -->
+            <!-- Back-link как на уровне папок: текущую папку не дублируем в крошках. -->
             <Button Grid.Row="0"
                     Margin="0,0,0,20"
                     Padding="0"
@@ -3067,7 +3067,7 @@
                 </StackPanel>
             </Button>
 
-            <!-- Шапка выбранной темы — по тому же шаблону, что шапка раздела. -->
+            <!-- Шапка выбранной папки — по тому же шаблону, что шапка раздела. -->
             <Grid Grid.Row="1" Margin="0,0,0,24">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -3076,14 +3076,14 @@
 
                 <Border Width="64"
                         Height="64"
-                        Background="{Binding SelectedTopic.TopicColor, Converter={StaticResource TopicColorConverter}}"
+                        Background="{Binding SelectedFolder.FolderColor, Converter={StaticResource FolderColorConverter}}"
                         CornerRadius="15">
                     <materialDesign:PackIcon Width="34"
                                              Height="34"
                                              HorizontalAlignment="Center"
                                              VerticalAlignment="Center"
                                              Foreground="White"
-                                             Kind="{Binding SelectedTopic.IconKind}" />
+                                             Kind="{Binding SelectedFolder.IconKind}" />
                 </Border>
 
                 <StackPanel Grid.Column="1"
@@ -3092,7 +3092,7 @@
                     <TextBlock FontSize="26"
                                FontWeight="SemiBold"
                                Foreground="{DynamicResource Mnemora.Brush.TextPrimary}"
-                               Text="{Binding SelectedTopic.Name}"
+                               Text="{Binding SelectedFolder.Name}"
                                TextTrimming="CharacterEllipsis" />
                     <TextBlock Margin="0,5,0,0"
                                FontSize="14"
@@ -3164,7 +3164,7 @@
             </Grid>
 
             <Grid Grid.Row="3">
-                <!-- Таблица материалов: те же таблицные стили, что в управлении разделами/темами. -->
+                <!-- Таблица материалов: те же таблицные стили, что в управлении разделами/папками. -->
                 <Border Background="{DynamicResource Mnemora.Brush.Surface}"
                         BorderBrush="{DynamicResource Mnemora.Brush.Border}"
                         BorderThickness="1"
@@ -3308,7 +3308,7 @@
                     </DataGrid>
                 </Border>
 
-                <!-- Пустая тема занимает всё свободное место, как в Обзоре. -->
+                <!-- Пустая папка занимает всё свободное место, как в Обзоре. -->
                 <StackPanel HorizontalAlignment="Center"
                             VerticalAlignment="Center"
                             Visibility="{Binding IsSimpleMaterialsEmpty, Converter={StaticResource BooleanToVisibilityConverter}}">
@@ -3475,7 +3475,7 @@
             </StackPanel>
         </Border>
 
-        <!-- Создание материала открывается поверх текущей темы.
+        <!-- Создание материала открывается поверх текущей папки.
              Видимость контролирует LibraryManagementViewModel,
              а состояние мастера живёт в отдельном CreateMaterialViewModel. -->
         <Grid Grid.RowSpan="4"

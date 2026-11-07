@@ -13,7 +13,7 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
         LibraryOrderTarget target,
         int position,
         LibrarySectionDto? section = null,
-        LibraryFolderSnapshotDto? topic = null,
+        LibraryFolderSnapshotDto? folder = null,
         LibraryMaterialDto? material = null,
         int articleQuestionCount = 0)
     {
@@ -24,7 +24,7 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
         Details = orderItem.Details;
         Target = target;
         Section = section;
-        Topic = topic;
+        Folder = folder;
         Material = material;
         ArticleQuestionCount = articleQuestionCount;
         IconKind = ResolveIcon(orderItem.Icon, target, orderItem.Details);
@@ -54,17 +54,17 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
     /// Lightweight first-level folder item for the paged browse mode.
     /// </summary>
     public LibraryManagementOrderItemViewModel(
-        LibraryManagementFolderOverviewDto topic,
+        LibraryManagementFolderOverviewDto folder,
         int position)
     {
-        ArgumentNullException.ThrowIfNull(topic);
+        ArgumentNullException.ThrowIfNull(folder);
 
-        TopicOverview = topic;
-        Id = topic.Id;
-        Name = topic.Name;
+        FolderOverview = folder;
+        Id = folder.Id;
+        Name = folder.Name;
         Details = "Папка";
         Target = LibraryOrderTarget.Folders;
-        IconKind = ResolveIcon(topic.Icon, Target, Details);
+        IconKind = ResolveIcon(folder.Icon, Target, Details);
         _position = position;
     }
 
@@ -124,12 +124,12 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
 
     // Full-tree DTOs are retained for explicit order/admin scenarios.
     public LibrarySectionDto? Section { get; }
-    public LibraryFolderSnapshotDto? Topic { get; }
+    public LibraryFolderSnapshotDto? Folder { get; }
     public LibraryMaterialDto? Material { get; }
 
     // Lightweight DTOs are used for normal paged browsing.
     public LibrarySectionOverviewDto? SectionOverview { get; }
-    public LibraryManagementFolderOverviewDto? TopicOverview { get; }
+    public LibraryManagementFolderOverviewDto? FolderOverview { get; }
     public LibraryManagementMaterialOverviewDto? MaterialOverview { get; }
     public LibrarySectionManagementItemDto? SectionManagementItem { get; }
 
@@ -259,52 +259,52 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
 
     public DateTime? UpdatedAtLocal => MaterialUpdatedAt?.ToLocalTime();
 
-    public string TopicColor => TopicOverview?.Color ?? Topic?.Color ?? string.Empty;
+    public string FolderColor => FolderOverview?.Color ?? Folder?.Color ?? string.Empty;
 
-    public DateTime TopicCreatedAt => TopicOverview?.CreatedAt ?? Topic?.CreatedAt ?? DateTime.MinValue;
+    public DateTime FolderCreatedAt => FolderOverview?.CreatedAt ?? Folder?.CreatedAt ?? DateTime.MinValue;
 
-    public DateTime TopicCreatedAtLocal => TopicOverview is not null
-        ? ToLocalTime(TopicOverview.CreatedAt)
-        : Topic is null
+    public DateTime FolderCreatedAtLocal => FolderOverview is not null
+        ? ToLocalTime(FolderOverview.CreatedAt)
+        : Folder is null
             ? DateTime.MinValue
-            : ToLocalTime(Topic.CreatedAt);
+            : ToLocalTime(Folder.CreatedAt);
 
-    public int TopicMaterialsCount => TopicOverview?.MaterialsCount ?? (Topic is null ? 0 : GetTopicMaterialsCount(Topic));
+    public int FolderMaterialsCount => FolderOverview?.MaterialsCount ?? (Folder is null ? 0 : GetFolderMaterialsCount(Folder));
 
-    public int TopicArticlesCount => TopicOverview?.ArticlesCount ?? (Topic is null
+    public int FolderArticlesCount => FolderOverview?.ArticlesCount ?? (Folder is null
         ? 0
-        : GetTopicMaterials(Topic).Count(material =>
+        : GetFolderMaterials(Folder).Count(material =>
             string.Equals(material.Type, "Article", StringComparison.OrdinalIgnoreCase)));
 
-    public int TopicQuestionsCount => TopicOverview?.QuestionsCount ?? (Topic is null
+    public int FolderQuestionsCount => FolderOverview?.QuestionsCount ?? (Folder is null
         ? 0
-        : GetTopicMaterials(Topic).Count(material =>
+        : GetFolderMaterials(Folder).Count(material =>
             string.Equals(material.Type, "Question", StringComparison.OrdinalIgnoreCase) &&
             material.ArticleId is null));
 
-    public string TopicMaterialsSummaryText => TopicMaterialsCount == 0
+    public string FolderMaterialsSummaryText => FolderMaterialsCount == 0
         ? "Материалов пока нет"
-        : FormatCount(TopicMaterialsCount, "материал", "материала", "материалов");
+        : FormatCount(FolderMaterialsCount, "материал", "материала", "материалов");
 
-    public DateTime TopicLastActivityAt
+    public DateTime FolderLastActivityAt
     {
         get
         {
-            if (TopicOverview is not null)
+            if (FolderOverview is not null)
             {
-                return TopicOverview.LastActivityAt;
+                return FolderOverview.LastActivityAt;
             }
 
-            if (Topic is null)
+            if (Folder is null)
             {
                 return DateTime.MinValue;
             }
 
-            DateTime lastActivityAt = Topic.UpdatedAt > Topic.CreatedAt
-                ? Topic.UpdatedAt
-                : Topic.CreatedAt;
+            DateTime lastActivityAt = Folder.UpdatedAt > Folder.CreatedAt
+                ? Folder.UpdatedAt
+                : Folder.CreatedAt;
 
-            foreach (LibraryMaterialDto material in GetTopicMaterials(Topic))
+            foreach (LibraryMaterialDto material in GetFolderMaterials(Folder))
             {
                 if (material.UpdatedAt > lastActivityAt)
                 {
@@ -316,15 +316,15 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
         }
     }
 
-    public DateTime TopicLastActivityAtLocal => TopicLastActivityAt == DateTime.MinValue
+    public DateTime FolderLastActivityAtLocal => FolderLastActivityAt == DateTime.MinValue
         ? DateTime.MinValue
-        : ToLocalTime(TopicLastActivityAt);
+        : ToLocalTime(FolderLastActivityAt);
 
-    public string TopicActivityText => TopicOverview is null && Topic is null
+    public string FolderActivityText => FolderOverview is null && Folder is null
         ? string.Empty
-        : TopicLastActivityAt > TopicCreatedAt
-            ? $"Активность {TopicLastActivityAtLocal:dd.MM.yyyy}"
-            : $"Создана {TopicCreatedAtLocal:dd.MM.yyyy}";
+        : FolderLastActivityAt > FolderCreatedAt
+            ? $"Активность {FolderLastActivityAtLocal:dd.MM.yyyy}"
+            : $"Создана {FolderCreatedAtLocal:dd.MM.yyyy}";
 
     public bool HasItemCount => GetItemCount() > 0;
 
@@ -347,9 +347,9 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
             return SectionOverview.MaterialsCount;
         }
 
-        if (TopicOverview is not null)
+        if (FolderOverview is not null)
         {
-            return TopicOverview.MaterialsCount;
+            return FolderOverview.MaterialsCount;
         }
 
         if (Section is not null)
@@ -357,11 +357,11 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
             return GetSectionMaterials().Count(IsTopLevelMaterialDto);
         }
 
-        return Topic is not null ? GetTopicMaterialsCount(Topic) : 0;
+        return Folder is not null ? GetFolderMaterialsCount(Folder) : 0;
     }
 
-    private static int GetTopicMaterialsCount(LibraryFolderSnapshotDto topic) =>
-        GetTopicMaterials(topic).Count(IsTopLevelMaterialDto);
+    private static int GetFolderMaterialsCount(LibraryFolderSnapshotDto folder) =>
+        GetFolderMaterials(folder).Count(IsTopLevelMaterialDto);
 
     private static bool IsTopLevelMaterialDto(LibraryMaterialDto material) =>
         !string.Equals(material.Type, "Question", StringComparison.OrdinalIgnoreCase) ||
@@ -375,11 +375,11 @@ public sealed partial class LibraryManagementOrderItemViewModel : ObservableObje
         }
 
         return Section.RootMaterials
-            .Concat(Section.Folders.SelectMany(GetTopicMaterials))
+            .Concat(Section.Folders.SelectMany(GetFolderMaterials))
             .ToArray();
     }
 
-    private static IReadOnlyList<LibraryMaterialDto> GetTopicMaterials(LibraryFolderSnapshotDto folder) =>
+    private static IReadOnlyList<LibraryMaterialDto> GetFolderMaterials(LibraryFolderSnapshotDto folder) =>
         folder.Materials;
 
     private static DateTime GetLastActivityAt(LibrarySectionDto section) =>

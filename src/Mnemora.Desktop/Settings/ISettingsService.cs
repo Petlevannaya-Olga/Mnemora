@@ -1,4 +1,4 @@
-﻿namespace Mnemora.Desktop.Settings;
+namespace Mnemora.Desktop.Settings;
 
 public interface ISettingsService
 {
@@ -26,7 +26,7 @@ public interface ISettingsService
         LibraryManagementViewMode viewMode,
         CancellationToken cancellationToken = default);
 
-    Task SaveLibraryManagementTopicsViewModeAsync(
+    Task SaveLibraryManagementFoldersViewModeAsync(
         LibraryManagementViewMode viewMode,
         CancellationToken cancellationToken = default);
 
@@ -34,8 +34,8 @@ public interface ISettingsService
         LibraryManagementViewMode viewMode,
         CancellationToken cancellationToken = default);
 
-    Task SaveLibraryTopicsViewModeAsync(
-        LibraryTopicsViewMode viewMode,
+    Task SaveLibraryFoldersViewModeAsync(
+        LibraryFoldersViewMode viewMode,
         CancellationToken cancellationToken = default);
 
     Task SaveLibraryTilesPerRowAsync(
@@ -52,13 +52,13 @@ public interface ISettingsService
         LibraryManagementSortMode sortMode,
         CancellationToken cancellationToken = default);
 
-    Task SaveLibraryManagementTopicSortAsync(
+    Task SaveLibraryManagementFolderSortAsync(
         Guid sectionId,
         LibraryManagementSortMode sortMode,
         CancellationToken cancellationToken = default);
 
     Task SaveLibraryManagementMaterialSortAsync(
-        Guid topicId,
+        Guid folderId,
         LibraryManagementSortMode sortMode,
         CancellationToken cancellationToken = default);
 

@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -337,7 +337,7 @@ public partial class CreateMaterialView : UserControl
             preview.IsQuestion =
                 isQuestion;
             preview.LocationName =
-                viewModel.SelectedTopic?.Name
+                viewModel.SelectedFolder?.Name
                 ?? string.Empty;
             preview.Difficulty =
                 difficulty;

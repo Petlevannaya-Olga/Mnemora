@@ -7,15 +7,15 @@ using Mnemora.Desktop.Dialogs;
 using Mnemora.Desktop.ViewModels.Common;
 using Mnemora.Domain.LibraryContainers;
 
-namespace Mnemora.Desktop.ViewModels.Topics;
+namespace Mnemora.Desktop.ViewModels.Folders;
 
-public sealed partial class EditTopicDialogViewModel(
+public sealed partial class EditFolderDialogViewModel(
     ICommandDispatcher commandDispatcher,
     IDialogService dialogService)
     : ViewModelBase,
       IDialogViewModel<Guid?>
 {
-    private Guid _topicId;
+    private Guid _folderId;
 
     private string _name =
         string.Empty;
@@ -25,20 +25,20 @@ public sealed partial class EditTopicDialogViewModel(
     private bool _isSaving;
 
     private FolderColorOption _selectedColor =
-        TopicAppearanceOptions.Colors[0];
+        FolderAppearanceOptions.Colors[0];
 
     private FolderIconOption _selectedIcon =
-        TopicAppearanceOptions.Icons[0];
+        FolderAppearanceOptions.Icons[0];
 
     public event EventHandler<
         DialogCloseRequestedEventArgs<Guid?>>?
         CloseRequested;
 
     public IReadOnlyList<FolderColorOption> ColorOptions =>
-        TopicAppearanceOptions.Colors;
+        FolderAppearanceOptions.Colors;
 
     public IReadOnlyList<FolderIconOption> IconOptions =>
-        TopicAppearanceOptions.Icons;
+        FolderAppearanceOptions.Icons;
 
     public string Name
     {
@@ -140,24 +140,24 @@ public sealed partial class EditTopicDialogViewModel(
         IsSaving;
 
     public void Initialize(
-        LibraryFolderSnapshotDto topic)
+        LibraryFolderSnapshotDto folder)
     {
         ArgumentNullException.ThrowIfNull(
-            topic);
+            folder);
 
-        _topicId =
-            topic.Id;
+        _folderId =
+            folder.Id;
 
         Name =
-            topic.Name;
+            folder.Name;
 
         SelectedColor =
             GetColorOption(
-                topic.Color);
+                folder.Color);
 
         SelectedIcon =
             GetIconOption(
-                topic.Icon);
+                folder.Icon);
 
         ErrorMessage = null;
         IsSaving = false;
@@ -175,7 +175,7 @@ public sealed partial class EditTopicDialogViewModel(
         {
             var command =
                 new UpdateLibraryFolderCommand(
-                    _topicId,
+                    _folderId,
                     Name,
                     SelectedColor.Value,
                     SelectedIcon.Value);
@@ -229,7 +229,7 @@ public sealed partial class EditTopicDialogViewModel(
     private bool CanSave()
     {
         return !IsSaving &&
-               _topicId != Guid.Empty &&
+               _folderId != Guid.Empty &&
                !string.IsNullOrWhiteSpace(
                    Name);
     }
@@ -255,7 +255,7 @@ public sealed partial class EditTopicDialogViewModel(
     {
         var selectedIcon =
             dialogService.Show<
-                SelectTopicIconDialogViewModel,
+                SelectFolderIconDialogViewModel,
                 FolderIcon?>(
                 viewModel =>
                     viewModel.Initialize(

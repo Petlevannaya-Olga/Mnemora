@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.IO;
 using CommunityToolkit.Mvvm.Input;
 using Mnemora.Application.Home.GetLibrarySummary;
@@ -12,7 +12,7 @@ using Mnemora.Desktop.ViewModels.Common;
 using Mnemora.Desktop.ViewModels.Library;
 using Mnemora.Desktop.ViewModels.Onboarding;
 using Mnemora.Desktop.ViewModels.Sections;
-using Mnemora.Desktop.ViewModels.Topics;
+using Mnemora.Desktop.ViewModels.Folders;
 using Mnemora.Shared;
 
 namespace Mnemora.Desktop.ViewModels.Home;
@@ -279,7 +279,7 @@ public sealed partial class HomeViewModel : ViewModelBase
         }
 
         var folderId = _dialogService.Show<
-            CreateTopicDialogViewModel,
+            CreateFolderDialogViewModel,
             Guid?>(viewModel => viewModel.Initialize(
             section.Id,
             section.Name));

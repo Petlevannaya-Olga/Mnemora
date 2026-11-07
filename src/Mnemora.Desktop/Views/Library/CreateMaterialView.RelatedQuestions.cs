@@ -17,7 +17,7 @@ public partial class CreateMaterialView
         e.Handled = true;
 
         if (DataContext is not CreateMaterialViewModel viewModel ||
-            viewModel.SelectedTopic is null)
+            viewModel.SelectedFolder is null)
         {
             return;
         }
@@ -34,8 +34,8 @@ public partial class CreateMaterialView
             new RelatedQuestionPickerViewModel(
                 options,
                 viewModel.SelectedLinkedQuestionIds,
-                viewModel.SelectedTopic.Id,
-                viewModel.SelectedTopic.Name);
+                viewModel.SelectedFolder.Id,
+                viewModel.SelectedFolder.Name);
 
         var dialog =
             new RelatedQuestionPickerWindow(

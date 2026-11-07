@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="Mnemora.Desktop.Views.Sections.CreateSectionDialogView"
+<UserControl x:Class="Mnemora.Desktop.Views.Sections.CreateSectionDialogView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
@@ -76,7 +76,7 @@
 
                         <TextBlock
                             Margin="0,3,0,0"
-                            Text="Создайте область для связанных тем"
+                            Text="Создайте область для связанных папок и материалов"
                             Foreground="{StaticResource Mnemora.Brush.TextSecondary}"
                             FontSize="13" />
 
