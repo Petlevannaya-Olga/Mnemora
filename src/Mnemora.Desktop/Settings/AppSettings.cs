@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Mnemora.Desktop.Settings;
@@ -120,31 +121,10 @@ public sealed class AppSettings
         LibraryManagementContentColumn.Updated,
     ];
 
-    // Read-only compatibility aliases for settings.json written before the folder migration.
-    // New settings are serialized under the Folder property names.
-    [JsonPropertyName("libraryManagementTopicsViewMode")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public LibraryManagementViewMode? LegacyLibraryManagementTopicsViewMode { get; set; }
-
-    [JsonPropertyName("libraryTopicsViewMode")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public LibraryFoldersViewMode? LegacyLibraryTopicsViewMode { get; set; }
-
-    [JsonPropertyName("libraryManagementTopicSortBySection")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public Dictionary<Guid, LibraryManagementSortMode>? LegacyLibraryManagementTopicSortBySection { get; set; }
-
-    [JsonPropertyName("libraryManagementMaterialSortByTopic")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public Dictionary<Guid, LibraryManagementSortMode>? LegacyLibraryManagementMaterialSortByTopic { get; set; }
-
-    [JsonPropertyName("libraryViewMode")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public LibraryOverviewViewMode? LegacyLibraryViewMode { get; set; }
-
-    [JsonPropertyName("libraryManagementViewMode")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public LibraryManagementViewMode? LegacyLibraryManagementViewMode { get; set; }
+    // Unknown keys are retained for forward compatibility. Old library keys
+    // are consumed and removed by LegacyLibrarySettingsCompatibility on load.
+    [JsonExtensionData]
+    public Dictionary<string, JsonElement>? AdditionalJsonSettings { get; set; }
 
     [JsonIgnore]
     internal bool HasExplicitLibraryOverviewViewMode { get; private set; }
@@ -161,69 +141,5 @@ public sealed class AppSettings
     [JsonIgnore]
     internal bool HasExplicitLibraryManagementMaterialsViewMode { get; private set; }
 
-    internal void ApplyLegacySettings()
-    {
-        if (!HasExplicitLibraryOverviewViewMode && LegacyLibraryViewMode is { } legacyViewMode)
-        {
-            _libraryOverviewViewMode = legacyViewMode;
-        }
-
-        if (LegacyLibraryManagementViewMode is { } legacyManagementViewMode)
-        {
-            if (!HasExplicitLibraryManagementSectionsViewMode)
-            {
-                _libraryManagementSectionsViewMode = legacyManagementViewMode;
-            }
-
-            if (!HasExplicitLibraryManagementFoldersViewMode)
-            {
-                _libraryManagementFoldersViewMode = legacyManagementViewMode;
-            }
-
-            if (!HasExplicitLibraryManagementMaterialsViewMode)
-            {
-                _libraryManagementMaterialsViewMode = legacyManagementViewMode;
-            }
-        }
-
-        // Prefer a new property if both old and new JSON keys are present.
-        if (!HasExplicitLibraryManagementFoldersViewMode &&
-            LegacyLibraryManagementTopicsViewMode is { } legacyFoldersViewMode)
-        {
-            _libraryManagementFoldersViewMode = legacyFoldersViewMode;
-        }
-
-        if (!HasExplicitLibraryFoldersViewMode &&
-            LegacyLibraryTopicsViewMode is { } legacyLibraryFoldersViewMode)
-        {
-            _libraryFoldersViewMode = legacyLibraryFoldersViewMode;
-        }
-
-        // Merge dictionary entries without overriding values already saved with new names.
-        LibraryManagementFolderSortBySection ??= [];
-        if (LegacyLibraryManagementTopicSortBySection is not null)
-        {
-            foreach (var (sectionId, sortMode) in LegacyLibraryManagementTopicSortBySection)
-            {
-                LibraryManagementFolderSortBySection.TryAdd(sectionId, sortMode);
-            }
-        }
-
-        LibraryManagementMaterialSortByFolder ??= [];
-        if (LegacyLibraryManagementMaterialSortByTopic is not null)
-        {
-            foreach (var (folderId, sortMode) in LegacyLibraryManagementMaterialSortByTopic)
-            {
-                LibraryManagementMaterialSortByFolder.TryAdd(folderId, sortMode);
-            }
-        }
-
-        LegacyLibraryManagementTopicsViewMode = null;
-        LegacyLibraryTopicsViewMode = null;
-        LegacyLibraryManagementTopicSortBySection = null;
-        LegacyLibraryManagementMaterialSortByTopic = null;
-
-        LegacyLibraryViewMode = null;
-        LegacyLibraryManagementViewMode = null;
-    }
+    internal void ApplyLegacySettings() => LegacyLibrarySettingsCompatibility.Apply(this);
 }

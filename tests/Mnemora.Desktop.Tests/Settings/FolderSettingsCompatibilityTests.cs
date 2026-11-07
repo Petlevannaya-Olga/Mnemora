@@ -101,6 +101,66 @@ public sealed class FolderSettingsCompatibilityTests
         settings.LibraryManagementMaterialsViewMode.Should().Be(LibraryManagementViewMode.Table);
     }
 
+    [Fact]
+    public void OldFolderMode_TakesPrecedence_OverOldGenericManagementMode()
+    {
+        AppSettings settings = ReadSettings("""
+            {
+              "libraryManagementViewMode": "Table",
+              "libraryManagementTopicsViewMode": "Tiles"
+            }
+            """);
+
+        settings.LibraryManagementSectionsViewMode.Should().Be(LibraryManagementViewMode.Table);
+        settings.LibraryManagementFoldersViewMode.Should().Be(LibraryManagementViewMode.Tiles);
+        settings.LibraryManagementMaterialsViewMode.Should().Be(LibraryManagementViewMode.Table);
+    }
+
+    [Fact]
+    public void OldAndNewSortDictionaries_AreMergedWithoutOverwritingNewKeys()
+    {
+        Guid sharedSectionId = Guid.NewGuid();
+        Guid legacyOnlySectionId = Guid.NewGuid();
+
+        string json = $$"""
+            {
+              "libraryManagementFolderSortBySection": {
+                "{{sharedSectionId}}": "Newest"
+              },
+              "libraryManagementTopicSortBySection": {
+                "{{sharedSectionId}}": "Name",
+                "{{legacyOnlySectionId}}": "RecentActivity"
+              }
+            }
+            """;
+
+        AppSettings settings = ReadSettings(json);
+
+        settings.LibraryManagementFolderSortBySection[sharedSectionId]
+            .Should().Be(LibraryManagementSortMode.Newest);
+        settings.LibraryManagementFolderSortBySection[legacyOnlySectionId]
+            .Should().Be(LibraryManagementSortMode.RecentActivity);
+    }
+
+    [Fact]
+    public void UnknownJsonSettings_ArePreserved_ButOldLibraryKeysAreRemoved()
+    {
+        AppSettings settings = ReadSettings("""
+            {
+              "libraryTopicsViewMode": "Tiles",
+              "newerFeaturePreference": { "enabled": true }
+            }
+            """);
+
+        string savedJson = JsonSerializer.Serialize(settings, JsonOptions);
+
+        savedJson.Should().NotContain("libraryTopicsViewMode");
+        savedJson.Should().Contain("newerFeaturePreference");
+        using JsonDocument document = JsonDocument.Parse(savedJson);
+        document.RootElement.GetProperty("newerFeaturePreference")
+            .GetProperty("enabled").GetBoolean().Should().BeTrue();
+    }
+
     private static AppSettings ReadSettings(string json)
     {
         AppSettings settings = JsonSerializer.Deserialize<AppSettings>(json, JsonOptions)!;
